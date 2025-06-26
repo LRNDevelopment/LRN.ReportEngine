@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.104.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LRN.CommonLogger\LRN.CommonLogger.csproj" />
+    <ProjectReference Include="..\LRN.DataAccess\LRN.DataAccess.csproj" />
+    <ProjectReference Include="..\LRN.ExcelToSqlETL\LRN.ExcelToSqlETL.Core.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,156 @@
+{
+  "SheetName": "Transactions",
+  "TargetTable": "dbo.Staging_Transactions",
+  "Columns": [
+    {
+      "ExcelColumn": "Collected",
+      "SqlColumn": "CollectedDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Received",
+      "SqlColumn": "ReceivedDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Accessioned",
+      "SqlColumn": "AccessionedDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Resulted",
+      "SqlColumn": "ResultedDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Outstanding",
+      "SqlColumn": "Outstanding",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Turnaround",
+      "SqlColumn": "Turnaround",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Status",
+      "SqlColumn": "SpecimenStatus",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "SpecimenID",
+      "SqlColumn": "AccessionNo",
+      "DataType": "string",
+      "Required": true
+    },
+    {
+      "ExcelColumn": "LabID",
+      "SqlColumn": "PerformingLab",
+      "DataType": "string",
+      "Required": false,
+    }
+    {
+      "ExcelColumn": "Patient",
+      "SqlColumn": "PatientName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Payer",
+      "SqlColumn": "PayerName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "MemberID",
+      "SqlColumn": "MemberID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "RelToInsured",
+      "SqlColumn": "RelToInsured",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "SelfPay",
+      "SqlColumn": "SelfPay",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "AccountPay",
+      "SqlColumn": "AccountPay",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ContractPay",
+      "SqlColumn": "ContractPay",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Customer",
+      "SqlColumn": "ClinicName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "OperationsGroup",
+      "SqlColumn": "OperationsGroup",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "SalesRep",
+      "SqlColumn": "SalesRep",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Reference",
+      "SqlColumn": "Reference",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Analtyics",
+      "SqlColumn": "Analtyics",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "TestType",
+      "SqlColumn": "TestType",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ScrubSettings",
+      "SqlColumn": "ScrubSettings",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Actions",
+      "SqlColumn": "Actions",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "OrderInfo",
+      "SqlColumn": "OrderInfo",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

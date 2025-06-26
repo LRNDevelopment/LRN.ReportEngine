@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="TemplateFiles\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0-preview.4.25258.110" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LRN.CommonLogger\LRN.CommonLogger.csproj" />
+    <ProjectReference Include="..\LRN.DataAccess\LRN.DataAccess.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,48 @@
+{
+  "SheetName": "",
+  "TargetTable": "dbo.VisitAgaistAccessionStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "Void",
+      "SqlColumn": "Void",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Office Key",
+      "SqlColumn": "OfficeKey",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Visit Number",
+      "SqlColumn": "VisitNumber",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Entry Date",
+      "SqlColumn": "EntryDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Service Date",
+      "SqlColumn": "ServiceDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Reference ID",
+      "SqlColumn": "AccessionNo",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

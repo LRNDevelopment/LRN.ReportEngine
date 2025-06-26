@@ -1,0 +1,186 @@
+{
+  "SheetName": "",
+  "TargetTable": "dbo.TransactionDetailStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "Office Key",
+      "SqlColumn": "LabIdentityKey",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Transaction Type",
+      "SqlColumn": "TransactionType",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Chart Number",
+      "SqlColumn": "ChartNumber",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient Name",
+      "SqlColumn": "PatientName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Financial Class",
+      "SqlColumn": "FinancialClass",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Visit #",
+      "SqlColumn": "VisitNo",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Facility Name",
+      "SqlColumn": "FacilityName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Provider Profile",
+      "SqlColumn": "ProviderProfile",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Charge Code",
+      "SqlColumn": "ChargeCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Transaction Code",
+      "SqlColumn": "TransactionCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Transaction Code Desc",
+      "SqlColumn": "TransactionCodeDesc",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Modifiers",
+      "SqlColumn": "Modifiers",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Visit - Primary Carrier",
+      "SqlColumn": "VisitPrimaryCarrier",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Visit - Secondary Carrier",
+      "SqlColumn": "VisitSecondaryCarrier",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Transaction Carrier",
+      "SqlColumn": "TransactionCarrier",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Primary Dx (ICD-9)",
+      "SqlColumn": "PrimaryDxICD9",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Primary Dx (ICD-10)",
+      "SqlColumn": "PrimaryDxICD10",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Payment Method",
+      "SqlColumn": "PaymentMethod",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Check Number",
+      "SqlColumn": "CheckNumber",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Date of Service",
+      "SqlColumn": "DateofService",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Date of Entry",
+      "SqlColumn": "DateofEntry",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Date of Deposit",
+      "SqlColumn": "DateofDeposit",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Void",
+      "SqlColumn": "Void",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Units",
+      "SqlColumn": "Units",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Charges",
+      "SqlColumn": "TotalBilledAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient Payments",
+      "SqlColumn": "PatientPaidAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Insurance Payments",
+      "SqlColumn": "InsurancePaidAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Total Payments",
+      "SqlColumn": "TotalPaidAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Adjustments",
+      "SqlColumn": "AdjustmentAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

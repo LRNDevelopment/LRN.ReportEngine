@@ -1,0 +1,73 @@
+{
+  "SheetName": "To Bill,Medicare On Hold,MO Medicaid on Hold,Missing Info,PGX,Billed,Paid,Zero Pay Done",
+  "UseSheetName": true,
+  "TargetTable": "dbo.PrismBillingStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "Specimen ID",
+      "SqlColumn": "SpecimenID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Customer",
+      "SqlColumn": "Customer",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Notes",
+      "SqlColumn": "Notes",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Payments",
+      "SqlColumn": "Payments",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "LAB",
+      "SqlColumn": "LAB",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Test Info",
+      "SqlColumn": "TestInfo",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "MEDS",
+      "SqlColumn": "MEDS",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Paid",
+      "SqlColumn": "Paid",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "F",
+      "SqlColumn": "SpecimenID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Accession",
+      "SqlColumn": "SpecimenID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

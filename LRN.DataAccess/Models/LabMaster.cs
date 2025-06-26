@@ -1,0 +1,15 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace LRN.DataAccess.Models;
+
+public partial class LabMaster
+{
+    public int LabId { get; set; }
+
+    public string LabName { get; set; } = null!;
+
+    public bool IsActive { get; set; }
+
+    public DateTime? CreatedOn { get; set; }
+}

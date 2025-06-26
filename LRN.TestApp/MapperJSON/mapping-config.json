@@ -1,0 +1,39 @@
+{
+  "Mappings": [
+    {
+      "FileIdentifier": "LIS",
+      "JsonMappingPath": "LISFile.json",
+      "FileType": 1
+    },
+    {
+      "FileIdentifier": "Collection",
+      "JsonMappingPath": "Custom_Collection.json",
+      "FileType": 2
+    },
+    {
+      "FileIdentifier": "Transaction",
+      "JsonMappingPath": "Transaction_Detail.json",
+      "FileType": 4
+    },
+    {
+      "FileIdentifier": "Visit",
+      "JsonMappingPath": "VisitAgainstAccession.json",
+      "FileType": 3
+    },
+    {
+      "FileIdentifier": "Panel",
+      "JsonMappingPath": "PanelGroup.json",
+      "FileType": 7
+    },
+    {
+      "FileIdentifier": "Prism Billing",
+      "JsonMappingPath": "PrismBillingSheel.json",
+      "FileType": 6
+    },
+    {
+      "FileIdentifier": "Denial",
+      "JsonMappingPath": "DenialTrackingDetail.json",
+      "FileType": 5
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace LRN.DataAccess.Models;
+
+public partial class PanelGroup
+{
+    public int PanelGroupId { get; set; }
+
+    public string PanelName { get; set; } = null!;
+
+    public string OrderInfo { get; set; } = null!;
+
+    public bool? IsActive { get; set; }
+
+    public DateTime? CreatedOn { get; set; }
+}

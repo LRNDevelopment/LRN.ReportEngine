@@ -37,6 +37,12 @@ public partial class TransactionMaster
 
     public string? CheckNumber { get; set; }
 
+    public DateOnly? DateofService { get; set; }
+
+    public DateOnly? DateofEntry { get; set; }
+
+    public DateOnly? DateofDeposit { get; set; }
+
     public string? Void { get; set; }
 
     public int? Units { get; set; }

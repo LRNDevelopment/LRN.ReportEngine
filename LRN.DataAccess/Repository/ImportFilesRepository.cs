@@ -3,8 +3,11 @@ using LRN.DataAccess.Context;
 using LRN.DataAccess.Models;
 using LRN.DataAccess.Repository.Interfaces;
 using LRN.ExcelToSqlETL.Core.DtoModels;
+using LRN.ExcelToSqlETL.Core.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Data;
 using static LRN.ExcelToSqlETL.Core.Constants.CommonConst;
 
 namespace LRN.DataAccess.Repository
@@ -148,7 +151,7 @@ namespace LRN.DataAccess.Repository
                 foreach (var file in files)
                 {
                     file.ProcessedOn = DateTime.Now;
-                    file.FileStatus = (int)FileStatus.ImportSuccess;
+                    file.FileStatus = (int)FileStatusEnum.ImportSuccess;
                 }
 
                 await UpdateImportFilesAsync(files);
@@ -161,5 +164,56 @@ namespace LRN.DataAccess.Repository
                 throw new ApplicationException("An error occurred while processing import files.", ex);
             }
         }
+
+        public async Task<List<ImportFileDto>> GetImportFilesAsync()
+        {
+            var results = new List<ImportFileDto>();
+            using var conn = _dbContext.Database.GetDbConnection();
+            using var cmd = conn.CreateCommand();
+
+            cmd.CommandText = @"
+        SELECT ImportedFileID, ImportFileName, FileTypeName, c.FileStatus AS FileStatusName, 
+               ExcelRowCount, ImportedRowCount, ImportedOn, ProcessedOn,a.LabId,l.LabName 
+        FROM ImportedFiles a
+        JOIN ImportFilTypes b ON a.FileType = b.FileTypeId
+        JOIN FileStatuses c ON a.FileStatus = c.FileStatusId
+        JOIN LabMaster l on a.LabId = l.LabID";
+            cmd.CommandType = System.Data.CommandType.Text;
+
+            await conn.OpenAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                results.Add(new ImportFileDto
+                {
+                    ImportedFileId = reader["ImportedFileID"] != DBNull.Value ? Convert.ToInt32(reader["ImportedFileID"]) : (int?)null,
+                    ImportFileName = reader["ImportFileName"]?.ToString(),
+                    FileTypeName = reader["FileTypeName"]?.ToString(),
+                    FileStatusName = reader["FileStatusName"]?.ToString(),
+                    ExcelRowCount = reader["ExcelRowCount"] != DBNull.Value ? Convert.ToInt32(reader["ExcelRowCount"]) : (int?)null,
+                    ImportedRowCount = reader["ImportedRowCount"] != DBNull.Value ? Convert.ToInt32(reader["ImportedRowCount"]) : (int?)null,
+                    ImportedOn = reader["ImportedOn"] != DBNull.Value ? Convert.ToDateTime(reader["ImportedOn"]) : (DateTime?)null,
+                    ProcessedOn = reader["ProcessedOn"] != DBNull.Value ? Convert.ToDateTime(reader["ProcessedOn"]) : (DateTime?)null,
+                    LabName = reader["LabName"]?.ToString()
+                });
+            }
+
+            return results;
+        }
+
+        public async Task<List<ImportFileTypesDto>> GetImportFilesTypesAsync()
+        {
+            var results = await _dbContext.ImportFilTypes
+                .Select(c => new ImportFileTypesDto
+                {
+                    FileTypeId = c.FileTypeId,
+                    FileTypeName = c.FileTypeName
+                })
+                .ToListAsync();
+
+            return results;
+        }
+
     }
 }

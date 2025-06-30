@@ -25,7 +25,7 @@ namespace LRN.ExcelToSqlETL.Core.Models
         [PropertyName(ColumnName = "ReferringProvider")]
         public string? ReferringProviderName { get; set; }
         [PropertyName(ColumnName = "Facility")]
-        public string Facility { get; set; }
+        public string? Facility { get; set; }
         [PropertyName(ColumnName = "ChartNum")]
         public string? ChartNumber { get; set; }
         [PropertyName(ColumnName = "PatientName")]

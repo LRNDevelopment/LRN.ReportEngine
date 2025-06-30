@@ -12,4 +12,6 @@ public partial class InsurancePayerMaster
     public bool IsActive { get; set; }
 
     public DateTime? CreatedOn { get; set; }
+
+    public virtual ICollection<BillingMaster> BillingMasters { get; set; } = new List<BillingMaster>();
 }

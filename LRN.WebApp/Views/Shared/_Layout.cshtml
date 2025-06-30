@@ -1,0 +1,24 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - File Upload App</title>
+    <link rel="stylesheet" href="/css/site.css" />
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <span class="logo">📁 MyUploader</span>
+            <a href="/Upload" class="nav-link">Upload</a>
+            <a href="#" class="nav-link">Download Report</a>
+        </div>
+        <div class="navbar-right">
+            <a href="/Account/Logout" class="nav-link logout">Logout</a>
+        </div>
+    </nav>
+    <div class="main-container">
+        @RenderBody()
+    </div>
+</body>
+</html>

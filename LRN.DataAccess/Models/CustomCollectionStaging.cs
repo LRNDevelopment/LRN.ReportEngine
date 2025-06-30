@@ -21,25 +21,25 @@ public partial class CustomCollectionStaging
 
     public string? PatientName { get; set; }
 
-    public DateTime? Dob { get; set; }
+    public DateOnly? Dob { get; set; }
 
     public string? ResponsibleParty { get; set; }
 
     public string? MemberId { get; set; }
 
-    public int? ClaimId { get; set; }
+    public int? VisitNumber { get; set; }
 
     public string? ClientAccNum { get; set; }
 
     public string? AccessionNo { get; set; }
 
-    public DateTime? BeginDos { get; set; }
+    public DateOnly? BeginDos { get; set; }
 
-    public DateTime? EndDos { get; set; }
+    public DateOnly? EndDos { get; set; }
 
-    public DateTime? ChargeEntryDate { get; set; }
+    public DateOnly? ChargeEntryDate { get; set; }
 
-    public DateTime? LastBillDate { get; set; }
+    public DateOnly? LastBillDate { get; set; }
 
     public string? BillingFrequency { get; set; }
 

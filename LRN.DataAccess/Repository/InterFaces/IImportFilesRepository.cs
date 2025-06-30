@@ -13,4 +13,8 @@ public interface IImportFilesRepository
     Task<ImportFileDto> AddImportFileAync(ImportFileDto file);
 
     Task UpdateFileAsync(ImportFileDto file);
+
+    Task<List<ImportFileDto>> GetImportFilesAsync();
+
+    Task<List<ImportFileTypesDto>> GetImportFilesTypesAsync();
 }

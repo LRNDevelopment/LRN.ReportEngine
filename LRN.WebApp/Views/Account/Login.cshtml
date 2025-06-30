@@ -1,0 +1,11 @@
+@model LoginViewModel
+<link href="~/css/site.css" rel="stylesheet" />
+<div class="container">
+    <form method="post" class="form-card" style="max-width:50%;margin:200px;margin-bottom:100px;">
+        <h2>Login</h2>
+        <input name="Username" placeholder="Username" class="input-field" />
+        <input name="Password" type="password" placeholder="Password" class="input-field" />
+        <button type="submit" class="btn">Login</button>
+        <p class="error">@ViewBag.Message</p>
+    </form>
+</div>

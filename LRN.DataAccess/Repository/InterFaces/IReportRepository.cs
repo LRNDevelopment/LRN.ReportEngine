@@ -13,6 +13,11 @@ namespace LRN.DataAccess.Repository.InterFaces
         List<LISMasterData> GetLISMasterReport(DateTime? startDate, DateTime? endDate);
 
         List<ProdBillingData> GetProductionDataAsync(DateTime? startDate, DateTime? endDate);
+        List<CollectionData> GetCollectionDateByDateAsync(DateTime? startDate, DateTime? endDate);
+
+        List<ClaimDetailDateOnlyDto> GetProdLineLevelAsync(DateTime? startDate, DateTime? endDate);
+
+        List<ClaimDetailDateOnlyDto> GetProdLineLevelManualAsync(DateTime? startDate, DateTime? endDate);
         List<InsightData> GetInsightData();
     }
 }

@@ -12,4 +12,6 @@ public partial class ClinicMaster
     public bool ClinicStatus { get; set; }
 
     public DateTime? CreatedOn { get; set; }
+
+    public virtual ICollection<Lismaster> Lismasters { get; set; } = new List<Lismaster>();
 }

@@ -150,7 +150,7 @@ namespace ExcelETLWinApp
 
                     importFileDtos.ExcelRowCount = result.TotalRows;
                     importFileDtos.ImportedRowCount = result.ImportedRows;
-                    importFileDtos.FileStatus = (int)FileStatus.ImportSuccess;
+                    importFileDtos.FileStatus = (int)FileStatusEnum.ImportSuccess;
                     importFileDtos.ImportedOn = DateTime.Now;
 
                     _logger.Info($"Imported {result.ImportedRows} rows to {mapping.TargetTable} for file {fileName}");

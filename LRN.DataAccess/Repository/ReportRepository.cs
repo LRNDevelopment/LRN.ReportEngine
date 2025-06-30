@@ -38,7 +38,7 @@ namespace LRN.DataAccess.Repository
                 var fromParam = new SqlParameter("@StartDate", (object?)startDate ?? DBNull.Value);
                 var toParam = new SqlParameter("@EndDate", (object?)endDate ?? DBNull.Value);
 
-                var result = _dbContext.LabResults
+                var result = _dbContext.Set<LISMasterData>()
                     .FromSqlRaw("EXEC [sp_GetLISMasterReportByDateRange]", fromParam, toParam)
                     .ToList();
 
@@ -89,17 +89,100 @@ namespace LRN.DataAccess.Repository
                 var fromParam = new SqlParameter("@FromDate", (object?)startDate ?? DBNull.Value);
                 var toParam = new SqlParameter("@ToDate", (object?)endDate ?? DBNull.Value);
 
-                var result = _dbContext.ProdData
+                var result = _dbContext.Set<ProdBillingData>()
                     .FromSqlRaw("EXEC [sp_GetProductionReportMaster] @FromDate, @ToDate", fromParam, toParam)
                     .ToList();
 
-                return result.ToList();
+                return result;
             }
             catch (Exception ex)
             {
                 throw;
             }
         }
+
+
+        public List<CollectionData> GetCollectionDateByDateAsync(DateTime? startDate, DateTime? endDate)
+        {
+            try
+            {
+                var fromParam = new SqlParameter("@FromDate", (object?)startDate ?? DBNull.Value);
+                var toParam = new SqlParameter("@ToDate", (object?)endDate ?? DBNull.Value);
+
+                var result = _dbContext.Set<CollectionData>()
+                    .FromSqlRaw("EXEC [sp_GetCollectionReport] @FromDate, @ToDate", fromParam, toParam)
+                    .ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public List<ClaimDetailDateOnlyDto> GetProdLineLevelAsync(DateTime? startDate, DateTime? endDate)
+        {
+            try
+            {
+                var fromParam = new SqlParameter("@FromDate", (object?)startDate ?? DBNull.Value);
+                var toParam = new SqlParameter("@ToDate", (object?)endDate ?? DBNull.Value);
+
+                // Execute stored procedure - returns list of ClaimDetailDto with DateTime? properties
+                var efResults = _dbContext.Set<ClaimDetailDto>()
+                    .FromSqlRaw("EXEC [sp_GetProductionLineLevelReport] @FromDate, @ToDate", fromParam, toParam)
+                    .ToList();
+
+                // Map DateTime? to DateOnly? using your mapper
+                var projectedResults = ClaimDetailMapper.ProjectToDateOnlyDto(efResults);
+
+                return projectedResults;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error fetching production line level: {ex.Message}", ex);
+                throw;
+            }
+        }
+
+        public List<ClaimDetailDateOnlyDto> GetProdLineLevelManualAsync(DateTime? startDate, DateTime? endDate)
+        {
+            var results = new List<ClaimDetailDateOnlyDto>();
+            using var conn = _dbContext.Database.GetDbConnection();
+            using var cmd = conn.CreateCommand();
+
+            cmd.CommandText = "sp_GetProductionLineLevelReport";
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+            cmd.Parameters.Add(new SqlParameter("@FromDate", (object?)startDate ?? DBNull.Value));
+            cmd.Parameters.Add(new SqlParameter("@ToDate", (object?)endDate ?? DBNull.Value));
+
+            conn.OpenAsync();
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                results.Add(new ClaimDetailDateOnlyDto
+                {
+                    // Assume BeginDOS is at ordinal 0
+                    BeginDOS = reader.IsDBNull(5) ? null : DateOnly.FromDateTime(reader.GetDateTime(5))
+                    //BeginDOS = reader.IsDBNull(5) ? null : DateOnly.FromDateTime(reader.GetDateTime(9))
+                    //BeginDOS = reader.IsDBNull(5) ? null : DateOnly.FromDateTime(reader.GetDateTime(10))
+                    //BeginDOS = reader.IsDBNull(5) ? null : DateOnly.FromDateTime(reader.GetDateTime(11))
+                    //BeginDOS = reader.IsDBNull(5) ? null : DateOnly.FromDateTime(reader.GetDateTime(12))
+                    //BeginDOS = reader.IsDBNull(5) ? null : DateOnly.FromDateTime(reader.GetDateTime(17))
+                    //BeginDOS = reader.IsDBNull(5) ? null : DateOnly.FromDateTime(reader.GetDateTime(18))
+                    //BeginDOS = reader.IsDBNull(5) ? null : DateOnly.FromDateTime(reader.GetDateTime(19))
+
+
+                    // Continue with other fields...
+                });
+            }
+
+            return results;
+        }
+
+
         public List<InsightData> GetInsightData()
         {
             var query = @"

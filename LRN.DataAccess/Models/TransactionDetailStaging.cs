@@ -45,11 +45,11 @@ public partial class TransactionDetailStaging
 
     public string? CheckNumber { get; set; }
 
-    public DateTime? DateofService { get; set; }
+    public DateOnly? DateofService { get; set; }
 
-    public DateTime? DateofEntry { get; set; }
+    public DateOnly? DateofEntry { get; set; }
 
-    public DateTime? DateofDeposit { get; set; }
+    public DateOnly? DateofDeposit { get; set; }
 
     public string? Void { get; set; }
 

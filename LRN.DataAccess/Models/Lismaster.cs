@@ -11,7 +11,7 @@ public partial class Lismaster
 
     public int? LabId { get; set; }
 
-    public int? BillingLab { get; set; }
+    public int? BillingProviderId { get; set; }
 
     public string? PatientName { get; set; }
 
@@ -27,7 +27,7 @@ public partial class Lismaster
 
     public string? PrimaryGroupNo { get; set; }
 
-    public DateTime? PrimaryEffectiveDate { get; set; }
+    public DateOnly? PrimaryEffectiveDate { get; set; }
 
     public string? RelationshipToInsurance { get; set; }
 
@@ -37,17 +37,17 @@ public partial class Lismaster
 
     public string? SecondaryGroupNo { get; set; }
 
-    public DateTime? SecondaryEffectiveDate { get; set; }
+    public DateOnly? SecondaryEffectiveDate { get; set; }
 
-    public DateTime? SampleCollectedDate { get; set; }
+    public DateOnly? SampleCollectedDate { get; set; }
 
-    public DateTime? SampleReceivedDate { get; set; }
+    public DateOnly? SampleReceivedDate { get; set; }
 
-    public DateTime? SampleAccessionedDate { get; set; }
+    public DateOnly? SampleAccessionedDate { get; set; }
 
-    public DateTime? SampleResultedDate { get; set; }
+    public DateOnly? SampleResultedDate { get; set; }
 
-    public DateTime? SampleRunDate { get; set; }
+    public DateOnly? SampleRunDate { get; set; }
 
     public int? SampleStatusId { get; set; }
 
@@ -99,9 +99,9 @@ public partial class Lismaster
 
     public string? BillingStatus { get; set; }
 
-    public DateTime? FirstBilledDate { get; set; }
+    public DateOnly? FirstBilledDate { get; set; }
 
-    public DateTime? ChargeEntryDate { get; set; }
+    public DateOnly? ChargeEntryDate { get; set; }
 
     public string? VisitNumber { get; set; }
 
@@ -116,4 +116,28 @@ public partial class Lismaster
     public string? ScrubSettings { get; set; }
 
     public string? Actions { get; set; }
+
+    public DateTime? CreatedOn { get; set; }
+
+    public string? CreatedBy { get; set; }
+
+    public virtual ICollection<BillingMaster> BillingMasters { get; set; } = new List<BillingMaster>();
+
+    public virtual BillingProviderMaster? BillingProvider { get; set; }
+
+    public virtual ClinicMaster? Clinic { get; set; }
+
+    public virtual LabMaster? Lab { get; set; }
+
+    public virtual OperationsGroupMaster? OperationalGroup { get; set; }
+
+    public virtual PanelGroup? Panel { get; set; }
+
+    public virtual PayerTypeMaster? PayerType { get; set; }
+
+    public virtual ReferringProviderMaster? ReferringProvider { get; set; }
+
+    public virtual SpecimenStatus? SampleStatus { get; set; }
+
+    public virtual TestTypeMaster? TestType { get; set; }
 }

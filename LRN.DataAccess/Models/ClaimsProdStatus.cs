@@ -5,11 +5,9 @@ namespace LRN.DataAccess.Models;
 
 public partial class ClaimsProdStatus
 {
-    public int ClaimId { get; set; }
+    public int VisitNumber { get; set; }
 
-    public DateOnly? SampleResultedDate { get; set; }
-
-    public DateOnly? FirstBillDate { get; set; }
+    public string Cptcode { get; set; } = null!;
 
     public double? BilledAmount { get; set; }
 
@@ -32,4 +30,8 @@ public partial class ClaimsProdStatus
     public string? DenialCode { get; set; }
 
     public string? FinalStatus { get; set; }
+
+    public string? ClaimSubStatus { get; set; }
+
+    public DateTime? CreatedOn { get; set; }
 }

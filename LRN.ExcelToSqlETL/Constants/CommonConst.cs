@@ -18,10 +18,14 @@ namespace LRN.ExcelToSqlETL.Core.Constants
         public static string LISMaster_Template { get; set; }
         public static string ProdMaster_Template { get; set; }
 
+        public static string CollectionTemplate { get; set; }
         public static string DefaultConnection { get; set; }
         public static string DownloadFilePath { get; set; }
+        public static string ImportFilePath { get; set; }
 
-        public enum FileStatus
+        
+
+        public enum FileStatusEnum
         {
             [Description("Import Successful")]
             ImportSuccess = 1,

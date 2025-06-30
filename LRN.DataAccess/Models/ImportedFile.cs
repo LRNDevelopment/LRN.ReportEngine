@@ -20,4 +20,6 @@ public partial class ImportedFile
     public DateTime? ImportedOn { get; set; }
 
     public DateTime? ProcessedOn { get; set; }
+
+    public int LabId { get; set; }
 }

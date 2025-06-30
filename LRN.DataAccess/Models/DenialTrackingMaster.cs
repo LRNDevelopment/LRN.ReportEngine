@@ -15,11 +15,11 @@ public partial class DenialTrackingMaster
 
     public string? TransactionCarrierCode { get; set; }
 
-    public DateTime? PaymentDate { get; set; }
+    public DateOnly? PaymentDate { get; set; }
 
     public string? PaymentReasonCode { get; set; }
 
-    public DateTime? DateOfService { get; set; }
+    public DateOnly? DateOfService { get; set; }
 
     public decimal? ChargeAmount { get; set; }
 
@@ -35,9 +35,9 @@ public partial class DenialTrackingMaster
 
     public string? NextAction { get; set; }
 
-    public DateTime? LastActionDate { get; set; }
+    public DateOnly? LastActionDate { get; set; }
 
-    public DateTime? NextActionDate { get; set; }
+    public DateOnly? NextActionDate { get; set; }
 
     public string? Note { get; set; }
 

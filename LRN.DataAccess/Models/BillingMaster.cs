@@ -9,7 +9,7 @@ public partial class BillingMaster
 
     public long? LismasterId { get; set; }
 
-    public string AccessionNo { get; set; } = null!;
+    public string? AccessionNo { get; set; }
 
     public string? VisitNumber { get; set; }
 
@@ -25,21 +25,19 @@ public partial class BillingMaster
 
     public string? MemberId { get; set; }
 
-    public DateTime? BeginDos { get; set; }
+    public DateOnly? BeginDos { get; set; }
 
-    public DateTime? EndDos { get; set; }
+    public DateOnly? EndDos { get; set; }
 
-    public DateTime? ChargeEntryDate { get; set; }
+    public DateOnly? ChargeEntryDate { get; set; }
 
-    public DateTime? FirstBillDate { get; set; }
+    public DateOnly? FirstBillDate { get; set; }
 
     public string? BillingFrequency { get; set; }
 
     public string? ChargeEnteredBy { get; set; }
 
     public string? Cptcode { get; set; }
-
-    public string? CptcodeDescription { get; set; }
 
     public string? Pos { get; set; }
 
@@ -48,6 +46,12 @@ public partial class BillingMaster
     public string? Modifier { get; set; }
 
     public string? Icd10code { get; set; }
+
+    public int? Units { get; set; }
+
+    public DateOnly? CheckDate { get; set; }
+
+    public DateOnly? PaymentPostedDate { get; set; }
 
     public decimal? BilledAmount { get; set; }
 
@@ -67,7 +71,21 @@ public partial class BillingMaster
 
     public decimal? TotalBalance { get; set; }
 
+    public string? FinalClaimStatus { get; set; }
+
+    public string? CheckNumber { get; set; }
+
+    public string? ChartNumber { get; set; }
+
     public DateTime? CreatedOn { get; set; }
 
     public DateTime? UpdatedOn { get; set; }
+
+    public virtual BillingProviderMaster BillingProvider { get; set; } = null!;
+
+    public virtual Lismaster? Lismaster { get; set; }
+
+    public virtual PayerTypeMaster? PayerType { get; set; }
+
+    public virtual InsurancePayerMaster? PrimaryPayer { get; set; }
 }

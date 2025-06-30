@@ -115,7 +115,7 @@ public class ExcelEtlProcessor
 
                     currentFileDto.ExcelRowCount = result.TotalRows;
                     currentFileDto.ImportedRowCount = result.ImportedRows;
-                    currentFileDto.FileStatus = (int)FileStatus.ImportSuccess;
+                    currentFileDto.FileStatus = (int)FileStatusEnum.ImportSuccess;
                     currentFileDto.ImportedOn = DateTime.Now;
 
                     await _importRepo.UpdateFileAsync(currentFileDto);
@@ -129,7 +129,7 @@ public class ExcelEtlProcessor
                 var failedDto = importFileDtos.FirstOrDefault(f => f.ImportFileName == fileName);
                 if (failedDto != null)
                 {
-                    failedDto.FileStatus = (int)FileStatus.ImportFailed;
+                    failedDto.FileStatus = (int)FileStatusEnum.ImportFailed;
                     failedDto.ImportedOn = DateTime.Now;
                 }
             }

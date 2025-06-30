@@ -62,4 +62,6 @@ static void ConfigStaticSettings(IConfiguration config)
     CommonConst.ProdMaster_Template = config["TemplatePath:ProdMaster"];
     CommonConst.DefaultConnection = config["ConnectionStrings:DefaultConnection"];
     CommonConst.DownloadFilePath = config["FilePaths:DownloadFilePath"];
+    CommonConst.CollectionTemplate = config["TemplatePath:CollectionTemplate"];
+    CommonConst.ImportFilePath = config["TemplatePath:ImportFilePath"];
 }

@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.ExcelGenerator", "LRN.E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.ReportBridge", "LRN.ReportBridge\LRN.ReportBridge.csproj", "{28F6259F-FA62-4A61-A13B-70674B286643}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.WebApp", "LRN.WebApp\LRN.WebApp.csproj", "{88536A54-AAA5-46FA-9C0D-26E674EC04BA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,6 +127,18 @@ Global
 		{28F6259F-FA62-4A61-A13B-70674B286643}.Release|x64.Build.0 = Release|Any CPU
 		{28F6259F-FA62-4A61-A13B-70674B286643}.Release|x86.ActiveCfg = Release|Any CPU
 		{28F6259F-FA62-4A61-A13B-70674B286643}.Release|x86.Build.0 = Release|Any CPU
+		{88536A54-AAA5-46FA-9C0D-26E674EC04BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88536A54-AAA5-46FA-9C0D-26E674EC04BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88536A54-AAA5-46FA-9C0D-26E674EC04BA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{88536A54-AAA5-46FA-9C0D-26E674EC04BA}.Debug|x64.Build.0 = Debug|Any CPU
+		{88536A54-AAA5-46FA-9C0D-26E674EC04BA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{88536A54-AAA5-46FA-9C0D-26E674EC04BA}.Debug|x86.Build.0 = Debug|Any CPU
+		{88536A54-AAA5-46FA-9C0D-26E674EC04BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88536A54-AAA5-46FA-9C0D-26E674EC04BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88536A54-AAA5-46FA-9C0D-26E674EC04BA}.Release|x64.ActiveCfg = Release|Any CPU
+		{88536A54-AAA5-46FA-9C0D-26E674EC04BA}.Release|x64.Build.0 = Release|Any CPU
+		{88536A54-AAA5-46FA-9C0D-26E674EC04BA}.Release|x86.ActiveCfg = Release|Any CPU
+		{88536A54-AAA5-46FA-9C0D-26E674EC04BA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

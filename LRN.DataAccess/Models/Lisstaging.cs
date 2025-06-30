@@ -7,13 +7,13 @@ public partial class Lisstaging
 {
     public long LisstagingId { get; set; }
 
-    public DateTime? CollectedDate { get; set; }
+    public DateOnly? CollectedDate { get; set; }
 
-    public DateTime? ReceivedDate { get; set; }
+    public DateOnly? ReceivedDate { get; set; }
 
-    public DateTime? AccessionedDate { get; set; }
+    public DateOnly? AccessionedDate { get; set; }
 
-    public DateTime? ResultedDate { get; set; }
+    public DateOnly? ResultedDate { get; set; }
 
     public string? Outstanding { get; set; }
 

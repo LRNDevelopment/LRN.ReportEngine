@@ -13,9 +13,9 @@ public partial class VisitAgaistAccessionStaging
 
     public string? VisitNumber { get; set; }
 
-    public DateTime? EntryDate { get; set; }
+    public DateOnly? EntryDate { get; set; }
 
-    public DateTime? ServiceDate { get; set; }
+    public DateOnly? ServiceDate { get; set; }
 
     public string? AccessionNo { get; set; }
 

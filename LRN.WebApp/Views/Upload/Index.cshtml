@@ -1,0 +1,86 @@
+@model List<FileUpload>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" href="/css/site.css">
+<div class="container">
+    <div class="upload-box">
+        <form id="uploadForm" asp-action="UploadFile" method="post" enctype="multipart/form-data" class="upload-form-inline">
+            <select id="lab" name="lab" class="input-field">
+                <option value="">Select Lab</option>
+                <option>Prism</option>
+            </select>
+
+            <select id="fileType" name="fileType" class="input-field">
+                <option value="">Select Report Type</option>
+                <option>LIS Master</option>
+                <option>Custom Collection Report</option>
+                <option>Visit Aggainst Accession</option>
+                <option>Transaction Report</option>
+                <option>Denial Tracking</option>
+                <option>Prism Billing Sheet</option>
+            </select>
+
+            <input type="file" id="file" name="file" class="input-field file-input" />
+            <button type="submit" class="btn">Upload</button>
+        </form>
+        <p id="validationMessage" class="error-message"></p>
+    </div>
+
+
+
+
+    <div class="table-container" style="max-height:500px;overflow:scroll;">
+        <table>
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Lab</th>
+                    <th>File Type</th>
+                    <th>Uploaded On</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.ImportFileName</td>
+                        <td>Prism</td>
+                        <td>@item.FileTypeName</td>
+                        <td>@item.ImportedOn</td>
+                        <td class="@item.FileStatusName.ToLower()">@item.FileStatusName</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    document.getElementById("uploadForm").addEventListener("submit", function (e) {
+        const lab = document.getElementById("lab").value;
+        const fileType = document.getElementById("fileType").value;
+        const file = document.getElementById("file").files[0];
+        const message = document.getElementById("validationMessage");
+
+        message.textContent = "";
+
+        if (!lab) {
+            message.textContent = "Please select a Lab.";
+            e.preventDefault();
+            return;
+        }
+
+        if (!fileType) {
+            message.textContent = "Please select a Report Type.";
+            e.preventDefault();
+            return;
+        }
+
+        if (!file) {
+            message.textContent = "Please select a File to upload.";
+            e.preventDefault();
+            return;
+        }
+    });
+</script>

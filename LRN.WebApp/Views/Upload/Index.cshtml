@@ -3,32 +3,18 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 <link rel="stylesheet" href="/css/site.css">
+
 <div class="container">
     <div class="upload-box">
         <form id="uploadForm" asp-action="UploadFile" method="post" enctype="multipart/form-data" class="upload-form-inline">
-            <select id="lab" name="lab" class="input-field">
-                <option value="">Select Lab</option>
-                <option>Prism</option>
-            </select>
-
-            <select id="fileType" name="fileType" class="input-field">
-                <option value="">Select Report Type</option>
-                <option>LIS Master</option>
-                <option>Custom Collection Report</option>
-                <option>Visit Aggainst Accession</option>
-                <option>Transaction Report</option>
-                <option>Denial Tracking</option>
-                <option>Prism Billing Sheet</option>
-            </select>
+            @Html.DropDownList("lab", (List<SelectListItem>)ViewBag.Labs, new { @class = "input-field", @id = "lab" })
+            @Html.DropDownList("fileType", (List<SelectListItem>)ViewBag.FileTypes, new { @class = "input-field", @id = "fileType" })
 
             <input type="file" id="file" name="file" class="input-field file-input" />
             <button type="submit" class="btn">Upload</button>
         </form>
         <p id="validationMessage" class="error-message"></p>
     </div>
-
-
-
 
     <div class="table-container" style="max-height:500px;overflow:scroll;">
         <table>
@@ -56,6 +42,7 @@
         </table>
     </div>
 </div>
+
 <script>
     document.getElementById("uploadForm").addEventListener("submit", function (e) {
         const lab = document.getElementById("lab").value;

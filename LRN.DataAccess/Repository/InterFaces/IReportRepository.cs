@@ -1,4 +1,5 @@
 ﻿using LRN.DataAccess.Models;
+using LRN.ExcelToSqlETL.Core.DtoModels;
 using LRN.ExcelToSqlETL.Core.Models;
 using System;
 using System.Collections.Generic;
@@ -19,5 +20,7 @@ namespace LRN.DataAccess.Repository.InterFaces
 
         List<ClaimDetailDateOnlyDto> GetProdLineLevelManualAsync(DateTime? startDate, DateTime? endDate);
         List<InsightData> GetInsightData();
+
+        Task<List<ImportFileTypesDto>> GetImportFileTypesAsync();
     }
 }

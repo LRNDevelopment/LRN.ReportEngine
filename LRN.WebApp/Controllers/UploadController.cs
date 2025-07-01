@@ -1,10 +1,12 @@
 using Common.Logging;
 using LRN.DataAccess.Repository.Interfaces;
+using LRN.DataAccess.Repository.InterFaces;
 using LRN.ExcelToSqlETL.Core.Constants;
 using LRN.ExcelToSqlETL.Core.DtoModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,7 +18,6 @@ public class UploadController : Controller
     private readonly ILoggerService _logger;
     private readonly IConfiguration _config;
     private readonly IImportFilesRepository _importRepo;
-
     public UploadController(
        ILoggerService logger,
        IConfiguration config,
@@ -31,23 +32,47 @@ public class UploadController : Controller
     {
         var result = await _importRepo.GetImportFilesAsync();
         var files = new List<FileUpload>();
-        
+
+        // Labs dropdown
+        ViewBag.Labs = new List<SelectListItem>
+        {
+            new SelectListItem { Text = "Select Lab", Value = "" },
+            new SelectListItem { Text = "Prism", Value = "3" }
+        };
+
+        // FileTypes dropdown
+        var importfile = await _importRepo.GetImportFilesTypesAsync(); // Make sure GetImportFileTypes() is async
+        ViewBag.FileTypes = new List<SelectListItem>
+        {
+            new SelectListItem { Text = "Select Report Type", Value = "" }
+        };
+
+        ViewBag.FileTypes.AddRange(importfile.Select(l => new SelectListItem
+        {
+            Text = l.FileTypeName,
+            Value = l.FileTypeId.ToString()
+        }));
+
+        // Build FileUpload view model list
         foreach (var file in result)
         {
-            var _file = new FileUpload();
-            _file.FileType = file.FileType;
-            _file.ProcessedOn = file.ProcessedOn;
-            _file.ImportedOn = file.ImportedOn;
-            _file.ImportedRowCount = file.ImportedRowCount;
-            _file.ExcelRowCount = file.ExcelRowCount;
-            _file.FileStatus = file.FileStatus;
-            _file.FileStatusName = file.FileStatusName;
-            _file.FileTypeName = file.FileTypeName;
-            _file.ImportFileName = file.ImportFileName;
-            files.Add(_file);
+            files.Add(new FileUpload
+            {
+                FileType = file.FileType,
+                ProcessedOn = file.ProcessedOn,
+                ImportedOn = file.ImportedOn,
+                ImportedRowCount = file.ImportedRowCount,
+                ExcelRowCount = file.ExcelRowCount,
+                FileStatus = file.FileStatus,
+                FileStatusName = file.FileStatusName,
+                FileTypeName = file.FileTypeName,
+                ImportFileName = file.ImportFileName
+            });
         }
-        return View(files); // Pass List<ImportFileDto> to view
+
+        return View(files);
     }
+
 
     [HttpPost]
     public async Task<IActionResult> UploadFile(string lab, string fileType, IFormFile file)

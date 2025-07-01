@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using LRN.DataAccess.Context;
-using LRN.DataAccess.Models;
 using LRN.DataAccess.Repository.InterFaces;
 using LRN.ExcelToSqlETL.Core.Constants;
+using LRN.ExcelToSqlETL.Core.DtoModels;
 using LRN.ExcelToSqlETL.Core.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -39,16 +39,17 @@ namespace LRN.DataAccess.Repository
                 var toParam = new SqlParameter("@EndDate", (object?)endDate ?? DBNull.Value);
 
                 var result = _dbContext.Set<LISMasterData>()
-                    .FromSqlRaw("EXEC [sp_GetLISMasterReportByDateRange]", fromParam, toParam)
+                    .FromSqlRaw("EXEC [sp_GetLISMasterReportByDateRange] @StartDate, @EndDate", fromParam, toParam)
                     .ToList();
 
-                return result.ToList();
+                return result;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
         }
+
 
         public static async Task<DataTable> GetDataTableFromStoredProcedureAsync(string procName, string connStr, Dictionary<string, object?> parameters)
         {
@@ -279,5 +280,11 @@ namespace LRN.DataAccess.Repository
         }
 
 
+        public async Task<List<ImportFileTypesDto>> GetImportFileTypesAsync()
+        {
+            var result = await _dbContext.ImportFilTypes.ToListAsync();
+            var importFiles = _mapper.Map<List<ImportFileTypesDto>>(result);
+            return importFiles;
+        }
     }
 }

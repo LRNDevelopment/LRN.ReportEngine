@@ -10,6 +10,6 @@ namespace LRN.DataAccess.Repository.InterFaces
 {
     public interface ILookUpRepository
     {
-        Task<List<ImportFileTypesDto>> GetImportFileTypes();
+        Task<List<ImportFileTypesDto>> GetImportFileTypesAsync();
     }
 }

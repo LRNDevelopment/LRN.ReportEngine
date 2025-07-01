@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using LRN.DataAccess.Models;
+﻿using LRN.DataAccess.Models;
+using LRN.ExcelToSqlETL.Core.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
 
 namespace LRN.DataAccess.Context;
 
@@ -80,12 +81,27 @@ public partial class LRNDbContext : DbContext
 
     public virtual DbSet<VisitAgaistAccessionStaging> VisitAgaistAccessionStagings { get; set; }
 
+    public DbSet<ProdBillingData> ProdData { get; set; } // Not a real table, just used for SP mapping
+
+    public DbSet<LISMasterData> LabResults { get; set; } // Not a real table, just used for SP mapping
+
+    public DbSet<ClaimDetailDateOnlyDto> ClaimDetailDateOnlyDto { get; set; } // Not a real table, just used for SP mapping
+
+    public DbSet<CollectionData> CollectionData { get; set; } // Not a real table, just used for SP mapping
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Data Source=Jameel;Initial Catalog=PrismLRN;Trusted_Connection=True;TrustServerCertificate=True;");
+        => optionsBuilder.UseSqlServer("data source=Jameel;initial catalog=PrismLRN;trusted_connection=true;TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<ProdBillingData>().HasNoKey();
+
+        modelBuilder.Entity<LISMasterData>().HasNoKey();
+
+        modelBuilder.Entity<ClaimDetailDateOnlyDto>().HasNoKey();
+
+        modelBuilder.Entity<CollectionData>().HasNoKey();
+
         modelBuilder.Entity<BillingMaster>(entity =>
         {
             entity.HasKey(e => e.BillingMasterId).HasName("PK__BillingM__4D6560C1F23F6975");

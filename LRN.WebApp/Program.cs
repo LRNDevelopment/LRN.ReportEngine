@@ -15,43 +15,47 @@ var configuration = builder.Configuration;
 // Add services to the container
 builder.Services.AddControllersWithViews();
 
-// Authentication setup
+// Authentication setup (cookie authentication)
 builder.Services.AddAuthentication("Cookies")
     .AddCookie("Cookies", options =>
     {
-        options.LoginPath = "/Account/Login";
+        options.LoginPath = "/Account/Login"; // Define where users will be redirected if not authenticated
     });
 
-// Register EF DbContext
+// Register EF DbContext with SQL Server
 builder.Services.AddDbContext<LRNDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
 
-
-// Register dependencies
+// Register scoped dependencies (for Dependency Injection)
 builder.Services.AddScoped<ILoggerService, LogManagerService>();
 builder.Services.AddScoped<IImportFilesRepository, ImportFilesRepository>();
 builder.Services.AddScoped<ILookUpRepository, LookUpRepository>();
 
-// Register AutoMapper
+// Register AutoMapper (for object-to-object mapping)
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+// Configure static settings (if you have static file paths or config settings)
+ConfigStaticSettings(builder.Configuration);
 
 var app = builder.Build();
 
-// Configure static settings after building the app
-ConfigStaticSettings(app.Configuration);
+// Middleware setup
+app.UseStaticFiles();    // Serve static files (e.g., images, CSS, JavaScript)
+app.UseRouting();        // Enable routing
+app.UseAuthentication(); // Enable authentication
+app.UseAuthorization();  // Enable authorization
 
-// Middleware
-app.UseStaticFiles();
-app.UseRouting();
-app.UseAuthentication();
-app.UseAuthorization();
-
-// MVC route
+// Define MVC routes (default controller and action)
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Upload}/{action=Index}/{id?}");
+    pattern: "{controller=Upload}/{action=Index}/{id?}"
+);
 
-// Static config initializer
+// Start the application
+app.Run();
+
+// Static settings initialization method (configures paths and constants)
 static void ConfigStaticSettings(IConfiguration config)
 {
     CommonConst.InputFilePath = config["FilePaths:InputFilePath"];
@@ -59,10 +63,8 @@ static void ConfigStaticSettings(IConfiguration config)
     CommonConst.MappingJSONPath = config["FilePaths:MappingJSONPath"];
     CommonConst.LISMaster_Template = config["TemplatePath:LISMaster"];
     CommonConst.ProdMaster_Template = config["TemplatePath:ProdMaster"];
-    CommonConst.DefaultConnection = config.GetConnectionString("DefaultConnection"); // ✅ Correct way
+    CommonConst.DefaultConnection = config.GetConnectionString("DefaultConnection");
     CommonConst.DownloadFilePath = config["FilePaths:DownloadFilePath"];
     CommonConst.CollectionTemplate = config["TemplatePath:CollectionTemplate"];
     CommonConst.ImportFilePath = config["FilePaths:ImportFilePath"];
 }
-
-app.Run();

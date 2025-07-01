@@ -204,16 +204,29 @@ namespace LRN.DataAccess.Repository
 
         public async Task<List<ImportFileTypesDto>> GetImportFilesTypesAsync()
         {
-            var results = await _dbContext.ImportFilTypes
-                .Select(c => new ImportFileTypesDto
+            var results = new List<ImportFileTypesDto>();
+            using var conn = _dbContext.Database.GetDbConnection();
+            using var cmd = conn.CreateCommand();
+
+            cmd.CommandText = @"Select FileTypeId, FileTypeName from ImportFilTypes";
+            cmd.CommandType = System.Data.CommandType.Text;
+
+            await conn.OpenAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                results.Add(new ImportFileTypesDto
                 {
-                    FileTypeId = c.FileTypeId,
-                    FileTypeName = c.FileTypeName
-                })
-                .ToListAsync();
+                    // Corrected column mapping for FileTypeName
+                    FileTypeId = reader["FileTypeId"] != DBNull.Value ? Convert.ToInt32(reader["FileTypeId"]) : 0,
+                    FileTypeName = reader["FileTypeName"] != DBNull.Value ? reader["FileTypeName"].ToString() : string.Empty
+                });
+            }
 
             return results;
         }
+
 
     }
 }

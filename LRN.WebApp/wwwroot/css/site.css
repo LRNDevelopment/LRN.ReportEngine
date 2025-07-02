@@ -1,3 +1,4 @@
+/* === Base Styles === */
 body {
     font-family: 'Segoe UI', sans-serif;
     background: #f5f5f5;
@@ -5,82 +6,120 @@ body {
     padding: 0;
 }
 
+/* === Navbar === */
 .navbar {
     background-color: #007bff;
-    padding: 10px 20px;
+    padding: 4px 30px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
 .navbar-left, .navbar-right {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 20px;
 }
 
-.logo {
-    font-weight: bold;
-    font-size: 1.2em;
+.logo img {
+    height: 45px;
+    width: auto;
+    display: block;
+    margin-right: 20px;
+    object-fit: contain;
 }
 
 .nav-link {
     color: white;
     text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    padding: 6px 10px;
 }
 
     .nav-link:hover {
         text-decoration: underline;
+        background-color: rgba(255,255,255,0.1);
+        border-radius: 4px;
     }
 
 .logout {
     background-color: #dc3545;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border-radius: 5px;
+    font-weight: 600;
 }
 
+/* === Layout Containers === */
 .main-container {
-    padding: 30px;
+    padding: 40px 20px;
 }
 
 .container {
     max-width: 1024px;
-    margin: 20px auto;
+    margin: 0 auto;
     padding: 20px;
 }
 
+/* === Card / Form Layout === */
 .form-card {
     background: white;
-    padding: 20px;
+    padding: 25px;
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 15px;
 }
 
+/* === Inputs === */
 .input-field {
-    padding: 10px;
+    padding: 10px 14px;
     font-size: 1rem;
     border: 1px solid #ccc;
     border-radius: 5px;
+    flex: 1;
 }
 
+/* === Buttons === */
 .btn {
-    padding: 10px;
+    padding: 10px 18px;
     background-color: #007bff;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 1rem;
+    font-weight: bold;
 }
 
     .btn:hover {
         background-color: #0056b3;
     }
 
+/* === Upload Form Inline === */
+.upload-box {
+    background-color: #fff;
+    padding: 20px 25px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+}
+
+.upload-form-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+}
+
+/* === Table === */
 .table-container {
     margin-top: 30px;
     overflow-x: auto;
@@ -89,8 +128,8 @@ body {
 table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 1rem;
     background-color: #fff;
+    font-size: 1rem;
 }
 
 th, td {
@@ -113,6 +152,7 @@ tbody tr:hover {
     transition: background-color 0.3s;
 }
 
+/* === Status Text === */
 .completed {
     color: green;
     font-weight: bold;
@@ -123,55 +163,8 @@ tbody tr:hover {
     font-weight: bold;
 }
 
-.error {
+.error, .error-message {
     color: red;
     font-weight: bold;
-}
-
-.error-message {
-    color: red;
-    font-weight: bold;
-}
-
-.upload-box {
-    background-color: #fff;
-    padding: 15px 20px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    margin-bottom: 25px;
-}
-
-.upload-form-inline {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-}
-
-    .upload-form-inline .input-field {
-        min-width: 180px;
-        padding: 8px 12px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-    }
-
-    .upload-form-inline .btn {
-        padding: 10px 16px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        font-weight: bold;
-        cursor: pointer;
-    }
-
-        .upload-form-inline .btn:hover {
-            background-color: #0056b3;
-        }
-
-.error-message {
-    color: red;
     margin-top: 10px;
-    font-weight: bold;
 }

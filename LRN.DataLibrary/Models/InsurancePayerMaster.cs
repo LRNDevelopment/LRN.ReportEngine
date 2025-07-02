@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace LRN.DataLibrary.Models;
+
+public partial class InsurancePayerMaster
+{
+    public int InsurancePayerId { get; set; }
+
+    public string PayerName { get; set; } = null!;
+
+    public bool IsActive { get; set; }
+
+    public DateTime? CreatedOn { get; set; }
+
+    public virtual ICollection<BillingMaster> BillingMasters { get; set; } = new List<BillingMaster>();
+}

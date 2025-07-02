@@ -1,0 +1,51 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace LRN.DataLibrary.Models;
+
+public partial class DenialTrackingMaster
+{
+    public int DenailTrackId { get; set; }
+
+    public int? LismasterId { get; set; }
+
+    public string? VisitNumber { get; set; }
+
+    public string? Cptcodes { get; set; }
+
+    public string? TransactionCarrierCode { get; set; }
+
+    public DateOnly? PaymentDate { get; set; }
+
+    public string? PaymentReasonCode { get; set; }
+
+    public DateOnly? DateOfService { get; set; }
+
+    public decimal? ChargeAmount { get; set; }
+
+    public decimal? TotalBalance { get; set; }
+
+    public decimal? TotalAdjustment { get; set; }
+
+    public decimal? ReasonAmount { get; set; }
+
+    public string? DenailUser { get; set; }
+
+    public string? LastAction { get; set; }
+
+    public string? NextAction { get; set; }
+
+    public DateOnly? LastActionDate { get; set; }
+
+    public DateOnly? NextActionDate { get; set; }
+
+    public string? Note { get; set; }
+
+    public string? DenialCategoryCode { get; set; }
+
+    public string? DenialCategoryDescription { get; set; }
+
+    public DateTime? CreateOn { get; set; }
+
+    public DateTime? UpdatedOn { get; set; }
+}

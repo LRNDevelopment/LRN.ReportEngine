@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using LRN.DataAccess.Models;
+using LRN.DataLibrary.Models;
 using LRN.ExcelToSqlETL.Core.DtoModels;
 using LRN.ExcelToSqlETL.Core.Models;
 

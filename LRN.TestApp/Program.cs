@@ -1,8 +1,8 @@
 ﻿using Common.Logging;
 using LRN.DataAccess.Context;
-using LRN.DataAccess.Repository;
-using LRN.DataAccess.Repository.Interfaces;
-using LRN.DataAccess.Repository.InterFaces;
+using LRN.DataLibrary;
+using LRN.DataLibrary.Repository;
+using LRN.DataLibrary.Repository.Interfaces;
 using LRN.ExcelETL.Service.Services;
 using LRN.ExcelGenerator.Utils;
 using LRN.ExcelToSqlETL.Core.Constants;
@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using AutoMapper;
 
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration((context, config) =>
@@ -21,38 +22,44 @@ var host = Host.CreateDefaultBuilder(args)
     {
         IConfiguration configuration = context.Configuration;
 
-        // Register DbContext
-        services.AddDbContext<LRNDbContext>(options =>
+        // ✅ EF Core
+        services.AddDbContext<LRN.DataLibrary.LRNDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
-        // Register application services
+        // ✅ AutoMapper
+        services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+        // ✅ Dapper Context
+        services.AddSingleton<DapperContext>(sp =>
+            new DapperContext(configuration.GetConnectionString("DefaultConnection")!));
+
+        // ✅ Core & Utility Services
         services.AddSingleton<ILoggerService, LogManagerService>();
         services.AddSingleton<IExcelMapperLoader, JsonExcelMapperLoader>();
         services.AddSingleton<IFileReader, ExcelFileReader>();
         services.AddSingleton<IDataValidator, MappingValidator>();
         services.AddSingleton<IDataImporter, SqlDataImporter>();
+
+        // ✅ ETL Runners
         services.AddSingleton<ExcelEtlProcessor>();
         services.AddSingleton<ExcelWriter>();
 
-        // Register repository with scoped lifetime
+        // ✅ Repositories
         services.AddScoped<IImportFilesRepository, ImportFilesRepository>();
-        services.AddScoped<IReportRepository, ReportRepository>();
-        services.AddAutoMapper(typeof(MappingProfile));
+        services.AddScoped<IReportRepository, ReportRepository>(); // Uses EF Core + manual + Dapper
 
-        // Set static config
+        // ✅ Static config constants
         ConfigStaticSettings(configuration);
-
-
     })
     .Build();
 
-//////// Run the ETL processor
-//var app = host.Services.GetRequiredService<ExcelEtlProcessor>();
-//await app.RunAsync();
 
-var app = host.Services.GetRequiredService<ExcelWriter>();
-await app.RunAsync();
+// ✅ Entry Point – you can switch to ETL if needed
+var excelWriter = host.Services.GetRequiredService<ExcelWriter>();
+await excelWriter.RunAsync();
 
+
+// ✅ Global Configuration
 static void ConfigStaticSettings(IConfiguration config)
 {
     CommonConst.InputFilePath = config["FilePaths:InputFilePath"];

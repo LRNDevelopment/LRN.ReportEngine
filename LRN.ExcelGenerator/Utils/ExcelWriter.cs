@@ -1,6 +1,6 @@
 ﻿using ClosedXML.Excel;
 using Common.Logging;
-using LRN.DataAccess.Repository.InterFaces;
+using LRN.DataLibrary.Repository.Interfaces;
 using LRN.ExcelToSqlETL.Core.Constants;
 using LRN.ExcelToSqlETL.Core.Models;
 using Microsoft.Extensions.Configuration;

@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using Common.Logging;
-using LRN.DataAccess.Context;
-using LRN.DataAccess.Repository;
-using LRN.DataAccess.Repository.Interfaces;
-using LRN.DataAccess.Repository.InterFaces;
+using LRN.DataLibrary;
+using LRN.DataLibrary.Repository;
+using LRN.DataLibrary.Repository.Interfaces;
 using LRN.ExcelToSqlETL.Core.Constants;
-using Microsoft.EntityFrameworkCore;
+using System.Data;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,47 +15,52 @@ var configuration = builder.Configuration;
 // Add services to the container
 builder.Services.AddControllersWithViews();
 
-// Authentication setup (cookie authentication)
+// ✅ Configure Cookie Authentication
 builder.Services.AddAuthentication("Cookies")
     .AddCookie("Cookies", options =>
     {
-        options.LoginPath = "/Account/Login"; // Define where users will be redirected if not authenticated
+        options.LoginPath = "/Account/Login";
     });
 
-// Register EF DbContext with SQL Server
-builder.Services.AddDbContext<LRNDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+// ✅ Register DapperContext
+builder.Services.AddSingleton<DapperContext>(sp =>
+    new DapperContext(configuration.GetConnectionString("DefaultConnection")!)
 );
 
-// Register scoped dependencies (for Dependency Injection)
+// ✅ Optionally register IDbConnection if you inject it directly
+builder.Services.AddScoped<IDbConnection>(sp =>
+{
+    var context = sp.GetRequiredService<DapperContext>();
+    return context.CreateConnection();
+});
+
+// ✅ Register application services
 builder.Services.AddScoped<ILoggerService, LogManagerService>();
 builder.Services.AddScoped<IImportFilesRepository, ImportFilesRepository>();
 builder.Services.AddScoped<ILookUpRepository, LookUpRepository>();
 
-// Register AutoMapper (for object-to-object mapping)
+// ✅ AutoMapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-// Configure static settings (if you have static file paths or config settings)
-ConfigStaticSettings(builder.Configuration);
+// ✅ Configure constants and file paths
+ConfigStaticSettings(configuration);
 
 var app = builder.Build();
 
-// Middleware setup
-app.UseStaticFiles();    // Serve static files (e.g., images, CSS, JavaScript)
-app.UseRouting();        // Enable routing
-app.UseAuthentication(); // Enable authentication
-app.UseAuthorization();  // Enable authorization
+// ✅ Middleware
+app.UseStaticFiles();
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
 
-// Define MVC routes (default controller and action)
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Upload}/{action=Index}/{id?}"
 );
 
-// Start the application
 app.Run();
 
-// Static settings initialization method (configures paths and constants)
+// ✅ Static config method
 static void ConfigStaticSettings(IConfiguration config)
 {
     CommonConst.InputFilePath = config["FilePaths:InputFilePath"];

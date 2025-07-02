@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
-using LRN.DataAccess.Models;
+using LRN.DataLibrary;
+using LRN.DataLibrary.Models;
 using LRN.ExcelToSqlETL.Core.DtoModels;
 
 namespace LRN.WebApp.Mapper

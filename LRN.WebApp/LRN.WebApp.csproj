@@ -11,8 +11,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\LRN.CommonLogger\LRN.CommonLogger.csproj" />
-    <ProjectReference Include="..\LRN.DataAccess\LRN.DataAccess.csproj" />
+    <ProjectReference Include="..\LRN.DataLibrary\LRN.DataLibrary.csproj" />
   </ItemGroup>
 
 </Project>

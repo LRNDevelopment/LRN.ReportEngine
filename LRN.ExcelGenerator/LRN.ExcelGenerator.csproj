@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LRN.CommonLogger\LRN.CommonLogger.csproj" />
-    <ProjectReference Include="..\LRN.DataAccess\LRN.DataAccess.csproj" />
+    <ProjectReference Include="..\LRN.DataLibrary\LRN.DataLibrary.csproj" />
   </ItemGroup>
 
 </Project>

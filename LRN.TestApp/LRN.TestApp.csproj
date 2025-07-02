@@ -19,6 +19,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\LRN.CommonLogger\LRN.CommonLogger.csproj" />
+		<ProjectReference Include="..\LRN.DataLibrary\LRN.DataLibrary.csproj" />
 		<ProjectReference Include="..\LRN.ExcelETL.Service\LRN.ExcelETL.Service.csproj" />
 		<ProjectReference Include="..\LRN.ExcelGenerator\LRN.ExcelGenerator.csproj" />
 		<ProjectReference Include="..\LRN.ExcelToSqlETL\LRN.ExcelToSqlETL.Core.csproj" />

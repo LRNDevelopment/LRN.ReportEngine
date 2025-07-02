@@ -1,6 +1,5 @@
 using Common.Logging;
-using LRN.DataAccess.Repository.Interfaces;
-using LRN.DataAccess.Repository.InterFaces;
+using LRN.DataLibrary.Repository.Interfaces;
 using LRN.ExcelToSqlETL.Core.Constants;
 using LRN.ExcelToSqlETL.Core.DtoModels;
 using Microsoft.AspNetCore.Authorization;
@@ -18,14 +17,17 @@ public class UploadController : Controller
     private readonly ILoggerService _logger;
     private readonly IConfiguration _config;
     private readonly IImportFilesRepository _importRepo;
+    private readonly ILookUpRepository _lookupRepo;
     public UploadController(
        ILoggerService logger,
        IConfiguration config,
-       IImportFilesRepository importRepo)
+       IImportFilesRepository importRepo,
+       ILookUpRepository lookupRepo)
     {
         _logger = logger;
         _config = config;
         _importRepo = importRepo;
+        _lookupRepo = lookupRepo;
     }
 
     public async Task<IActionResult> Index()
@@ -41,7 +43,7 @@ public class UploadController : Controller
         };
 
         // FileTypes dropdown
-        var importfile = await _importRepo.GetImportFilesTypesAsync(); // Make sure GetImportFileTypes() is async
+        var importfile = await _lookupRepo.GetImportFileTypesAsync(); // Make sure GetImportFileTypes() is async
         ViewBag.FileTypes = new List<SelectListItem>
         {
             new SelectListItem { Text = "Select Report Type", Value = "" }

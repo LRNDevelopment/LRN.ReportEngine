@@ -4,8 +4,10 @@ using LRN.DataLibrary;
 using LRN.DataLibrary.Repository;
 using LRN.DataLibrary.Repository.Interfaces;
 using LRN.ExcelToSqlETL.Core.Constants;
-using System.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
+using System.Configuration;
+using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +28,8 @@ builder.Services.AddAuthentication("Cookies")
 builder.Services.AddSingleton<DapperContext>(sp =>
     new DapperContext(configuration.GetConnectionString("DefaultConnection")!)
 );
+builder.Services.AddDbContext<LRNDbContext>(options =>
+    options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
 // ✅ Optionally register IDbConnection if you inject it directly
 builder.Services.AddScoped<IDbConnection>(sp =>

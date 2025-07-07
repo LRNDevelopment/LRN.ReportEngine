@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.ServiceProcess;
 using System.Threading.Tasks;
 
 [Authorize]
@@ -18,6 +19,7 @@ public class UploadController : Controller
     private readonly IConfiguration _config;
     private readonly IImportFilesRepository _importRepo;
     private readonly ILookUpRepository _lookupRepo;
+
     public UploadController(
        ILoggerService logger,
        IConfiguration config,
@@ -38,22 +40,17 @@ public class UploadController : Controller
         // Labs dropdown
         ViewBag.Labs = new List<SelectListItem>
         {
-            new SelectListItem { Text = "Select Lab", Value = "" },
             new SelectListItem { Text = "Prism", Value = "3" }
         };
 
         // FileTypes dropdown
         var importfile = await _lookupRepo.GetImportFileTypesAsync(); // Make sure GetImportFileTypes() is async
-        ViewBag.FileTypes = new List<SelectListItem>
-        {
-            new SelectListItem { Text = "Select Report Type", Value = "" }
-        };
 
-        ViewBag.FileTypes.AddRange(importfile.Select(l => new SelectListItem
+        ViewBag.FileTypes = importfile.Select(l => new SelectListItem
         {
             Text = l.FileTypeName,
             Value = l.FileTypeId.ToString()
-        }));
+        }).ToList();
 
         // Build FileUpload view model list
         foreach (var file in result)
@@ -75,34 +72,47 @@ public class UploadController : Controller
         return View(files);
     }
 
-
-    [HttpPost]
-    public async Task<IActionResult> UploadFile(string lab, string fileType, IFormFile file)
+    public async Task<IActionResult> UploadFile(IFormFile file, string lab, string fileType)
     {
-        if (file != null && file.Length > 0)
+        try
         {
-            var uploadsFolder = Path.Combine(CommonConst.ImportFilePath);
-
-
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
-
-            var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            if (file != null && file.Length > 0)
             {
-                await file.CopyToAsync(stream);
+                var uploadsFolder = Path.Combine(CommonConst.ImportFilePath);
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                ImportFileDto fileDto = new ImportFileDto
+                {
+                    ImportFileName = Path.GetFileName(file.FileName),
+                    FileType = int.Parse(fileType),
+                    FileStatus = (int)CommonConst.FileStatusEnum.ImportQueued,
+                    ImportFilePath = filePath,
+                    ImportedOn = DateTime.Now,
+                    LabId = int.Parse(lab)
+                };
+
+                await _importRepo.AddImportFileAync(fileDto);
+
+                _logger.Info($"File uploaded: {file.FileName}, Lab: {lab}, Type: {fileType}");
+
             }
-
-            ImportFileDto fileDto = new ImportFileDto();
-            fileDto.ImportFileName = Path.GetFileName(file.FileName);
-            //fileDto.FileType = fileType;
-            // TODO: Insert file metadata into database here via _importRepo
-
-            _logger.Info($"File uploaded: {file.FileName}, Lab: {lab}, Type: {fileType}");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"An error occurred while uploading the file: {ex.Message}");
         }
 
         return RedirectToAction("Index");
     }
+
+
 }

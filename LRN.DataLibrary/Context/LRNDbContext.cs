@@ -8,12 +8,8 @@ namespace LRN.DataLibrary;
 
 public partial class LRNDbContext : DbContext
 {
-    public LRNDbContext()
-    {
-    }
-
     public LRNDbContext(DbContextOptions<LRNDbContext> options)
-        : base(options)
+         : base(options)
     {
     }
 

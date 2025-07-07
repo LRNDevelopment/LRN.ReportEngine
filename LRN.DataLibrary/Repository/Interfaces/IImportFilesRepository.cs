@@ -11,4 +11,6 @@ public interface IImportFilesRepository
     Task UpdateFileAsync(ImportFileDto file);
     Task<List<ImportFileDto>> GetImportFilesAsync();
     Task<List<ImportFileTypesDto>> GetImportFilesTypesAsync();
+
+    Task<ImportFileDto> GetImportFileById(int fileId);
 }

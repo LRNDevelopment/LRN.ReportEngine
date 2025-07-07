@@ -163,8 +163,25 @@ tbody tr:hover {
     font-weight: bold;
 }
 
+.queued, .waiting {
+    color: blue;
+    font-weight: bold;
+}
+
+.warning {
+    color: yellow;
+    font-weight: bold;
+}
+
 .error, .error-message {
     color: red;
     font-weight: bold;
     margin-top: 10px;
+}
+
+.text-danger {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 5px;
+    display: block;
 }

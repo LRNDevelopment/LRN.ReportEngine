@@ -1,6 +1,6 @@
 using Common.Logging;
 using DocumentFormat.OpenXml.InkML;
-using LRN.DataAccess.Repository.Interfaces;
+using LRN.DataLibrary.Repository.Interfaces;
 using LRN.ExcelToSqlETL.Core.DtoModels;
 using LRN.ExcelToSqlETL.Core.Interface;
 using LRN.ExcelToSqlETL.Core.Models;

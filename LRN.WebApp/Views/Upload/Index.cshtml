@@ -6,13 +6,31 @@
 
 <div class="container">
     <div class="upload-box">
-        <form id="uploadForm" asp-action="UploadFile" method="post" enctype="multipart/form-data" class="upload-form-inline">
-            @Html.DropDownList("lab", (List<SelectListItem>)ViewBag.Labs, new { @class = "input-field", @id = "lab" })
-            @Html.DropDownList("fileType", (List<SelectListItem>)ViewBag.FileTypes, new { @class = "input-field", @id = "fileType" })
+        @using (Html.BeginForm("UploadFile", "Upload", FormMethod.Post, new { enctype = "multipart/form-data", @class = "upload-form-inline", id = "uploadForm", onsubmit = "return validateForm();" }))
+        {
+            @Html.AntiForgeryToken()
+           <div class="form-group" style="margin-bottom: 1rem;">
+            @Html.DropDownList("lab", (List<SelectListItem>)ViewBag.Labs, "Select Lab", new { @class = "input-field form-control", @id = "lab", @name = "lab" })
+            <div id="lab-error" class="text-danger"></div>
+        </div>
 
-            <input type="file" id="file" name="file" class="input-field file-input" />
-            <button type="submit" class="btn">Upload</button>
-        </form>
+        <div class="form-group" style="margin-bottom: 1rem;">
+            @Html.DropDownList("fileType", (List<SelectListItem>)ViewBag.FileTypes, "Select File Type", new { @class = "input-field form-control", @id = "fileType", @name = "fileType" })
+            <div id="fileType-error" class="text-danger"></div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+            <input type="file" id="file" name="file" class="input-field file-input form-control" />
+            <div id="file-error" class="text-danger"></div>
+        </div>
+
+        <div class="form-group"  style="margin-bottom: 1rem;">
+            <button type="submit" class="btn btn-primary">Upload</button>
+        </div>
+
+        }
+
+
         <p id="validationMessage" class="error-message"></p>
     </div>
 
@@ -24,6 +42,8 @@
                     <th>Lab</th>
                     <th>File Type</th>
                     <th>Uploaded On</th>
+                    <th>Excel Row Count</th>
+                    <th>Imported Row Count</th>
                     <th>Status</th>
                 </tr>
             </thead>
@@ -35,6 +55,8 @@
                         <td>Prism</td>
                         <td>@item.FileTypeName</td>
                         <td>@item.ImportedOn</td>
+                         <td>@item.ImportedRowCount</td>
+                          <td>@item.ImportedOn</td>
                         <td class="@item.FileStatusName.ToLower()">@item.FileStatusName</td>
                     </tr>
                 }
@@ -44,30 +66,48 @@
 </div>
 
 <script>
-    document.getElementById("uploadForm").addEventListener("submit", function (e) {
+    function validateForm() {
         const lab = document.getElementById("lab").value;
         const fileType = document.getElementById("fileType").value;
-        const file = document.getElementById("file").files[0];
-        const message = document.getElementById("validationMessage");
+        const fileInput = document.getElementById("file");
+        const file = fileInput.value;
 
-        message.textContent = "";
+        // Clear all previous error messages
+        document.getElementById("lab-error").innerText = "";
+        document.getElementById("fileType-error").innerText = "";
+        document.getElementById("file-error").innerText = "";
+
+        let isValid = true;
 
         if (!lab) {
-            message.textContent = "Please select a Lab.";
-            e.preventDefault();
-            return;
+            showError("lab", "Please select a lab");
+            isValid = false;
         }
 
         if (!fileType) {
-            message.textContent = "Please select a Report Type.";
-            e.preventDefault();
-            return;
+            showError("fileType", "Please select a file type");
+            isValid = false;
         }
 
         if (!file) {
-            message.textContent = "Please select a File to upload.";
-            e.preventDefault();
-            return;
+            showError("file", "Please upload a file");
+            isValid = false;
+        } else {
+            const allowedExtensions = /(\.xlsx|\.xls|\.csv)$/i;
+            if (!allowedExtensions.exec(file)) {
+                showError("file", "Invalid file type");
+                isValid = false;
+            }
         }
-    });
+
+        return isValid;
+    }
+
+    function showError(inputId, message) {
+        const errorDiv = document.getElementById(`${inputId}-error`);
+        if (errorDiv) {
+            errorDiv.innerText = message;
+        }
+    }
 </script>
+

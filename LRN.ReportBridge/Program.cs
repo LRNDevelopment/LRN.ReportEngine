@@ -1,7 +1,7 @@
 using Common.Logging;
-using LRN.DataAccess.Context;
-using LRN.DataAccess.Repository;
-using LRN.DataAccess.Repository.Interfaces;
+using LRN.DataLibrary;
+using LRN.DataLibrary.Repository;
+using LRN.DataLibrary.Repository.Interfaces;
 using LRN.ExcelETL.Service.Services;
 using LRN.ExcelToSqlETL.Core.Constants;
 using LRN.ExcelToSqlETL.Core.Interface;

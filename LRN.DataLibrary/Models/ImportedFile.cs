@@ -22,4 +22,6 @@ public partial class ImportedFile
     public DateTime? ProcessedOn { get; set; }
 
     public int LabId { get; set; }
+
+    public string ImportFilePath { get; set; }
 }

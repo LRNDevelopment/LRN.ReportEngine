@@ -23,7 +23,7 @@ namespace LRN.ExcelToSqlETL.Core.Constants
         public static string DownloadFilePath { get; set; }
         public static string ImportFilePath { get; set; }
 
-        
+
 
         public enum FileStatusEnum
         {
@@ -34,7 +34,16 @@ namespace LRN.ExcelToSqlETL.Core.Constants
             ImportFailed = 2,
 
             [Description("Import InProgresss")]
-            ImportInProgresss = 3
+            ImportInProgresss = 3,
+
+            [Description("Import Queued")]
+            ImportQueued = 4,
+
+            [Description("Import Waiting")]
+            ImportWaiting = 5,
+
+            [Description("Import Warning")]
+            ImportWarning = 6
         }
 
         public enum ImportFileType

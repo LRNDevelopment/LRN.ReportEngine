@@ -1,6 +1,5 @@
 ﻿using Common.Logging;
-using LRN.DataAccess.Repository.Interfaces;
-using LRN.ExcelToSqlETL.Core.Constants;
+using LRN.DataLibrary.Repository.Interfaces;
 using LRN.ExcelToSqlETL.Core.DtoModels;
 using LRN.ExcelToSqlETL.Core.Interface;
 using LRN.ExcelToSqlETL.Core.Models;
@@ -9,87 +8,45 @@ using Newtonsoft.Json;
 using System.Data;
 using static LRN.ExcelToSqlETL.Core.Constants.CommonConst;
 
-namespace LRN.ExcelETL.Service.Services;
-
-public class ExcelEtlProcessor
+namespace LRN.ExcelETL.Service.Services
 {
-    private readonly IExcelMapperLoader _mapper;
-    private readonly IFileReader _reader;
-    private readonly IDataValidator _validator;
-    private readonly IDataImporter _importer;
-    private readonly ILoggerService _logger;
-    private readonly IConfiguration _config;
-    private readonly IImportFilesRepository _importRepo;
-
-    public ExcelEtlProcessor(
-        IExcelMapperLoader mapper,
-        IFileReader reader,
-        IDataValidator validator,
-        IDataImporter importer,
-        ILoggerService logger,
-        IConfiguration config,
-        IImportFilesRepository importRepo)
+    public class ExcelEtlProcessor
     {
-        _mapper = mapper;
-        _reader = reader;
-        _validator = validator;
-        _importer = importer;
-        _logger = logger;
-        _config = config;
-        _importRepo = importRepo;
-    }
+        private readonly IExcelMapperLoader _mapper;
+        private readonly IFileReader _reader;
+        private readonly IDataValidator _validator;
+        private readonly IDataImporter _importer;
+        private readonly ILoggerService _logger;
+        private readonly IConfiguration _config;
+        private readonly IImportFilesRepository _importRepo;
 
-    public async Task RunAsync()
-    {
-        _logger.Info("-----------Bulk Copy Process Initiated--------------");
-
-        var configPath = MappingJSONPath;
-        if (!File.Exists(configPath))
+        public ExcelEtlProcessor(
+            IExcelMapperLoader mapper,
+            IFileReader reader,
+            IDataValidator validator,
+            IDataImporter importer,
+            ILoggerService logger,
+            IConfiguration config,
+            IImportFilesRepository importRepo)
         {
-            _logger.Error($"Mapping config file not found: {configPath}");
-            return;
+            _mapper = mapper;
+            _reader = reader;
+            _validator = validator;
+            _importer = importer;
+            _logger = logger;
+            _config = config;
+            _importRepo = importRepo;
         }
 
-        var masterConfig = JsonConvert.DeserializeObject<MappingConfigRoot>(File.ReadAllText(configPath));
-        var excelFiles = Directory.GetFiles(InputFilePath, "*.xlsx");
-
-        var importFileDtos = excelFiles.Select(file => new ImportFileDto
+        private async Task HandleFileProcessingAsync(ImportFileDto fileDto, string fileName, string jsonPath)
         {
-            ImportFileName = Path.GetFileName(file)
-        }).ToList();
-
-        importFileDtos = await _importRepo.InsertImportFilesDataAsync(importFileDtos);
-
-        foreach (var file in excelFiles)
-        {
-            string fileName = Path.GetFileName(file);
-            _logger.Info($"File Processing Start for: {fileName}");
-
             try
             {
-                var mappingDtl = _validator.FileMapping(masterConfig, fileName);
-                var jsonPath = Path.Combine(JSONPath, mappingDtl.JsonMappingPath);
-
-                if (!File.Exists(jsonPath))
-                {
-                    _logger.Error($"Mapping file not found: {jsonPath}");
-                    continue;
-                }
+                _logger.Info($"Processing file {fileName}...");
 
                 var mapping = _mapper.LoadMapping(jsonPath);
-                _logger.Info($"Loaded mapping from: {jsonPath}");
-
-                using var stream = File.OpenRead(file);
+                using var stream = File.OpenRead(fileDto.ImportFilePath);
                 var readResults = await _reader.ReadAsync(stream, mapping);
-
-                var currentFileDto = importFileDtos.FirstOrDefault(f => f.ImportFileName == fileName);
-                if (currentFileDto == null)
-                {
-                    _logger.Error($"ImportFileDto not found for: {fileName}");
-                    continue;
-                }
-
-                currentFileDto.FileType = int.Parse(mappingDtl.FileType);
 
                 foreach (var result in readResults)
                 {
@@ -103,42 +60,131 @@ public class ExcelEtlProcessor
                         continue;
                     }
 
-                    if (result.Data.Columns.Contains("ImportedFileID") && currentFileDto.ImportedFileId != null)
+                    if (result.Data.Columns.Contains("ImportedFileID"))
                     {
                         foreach (DataRow row in result.Data.Rows)
                         {
-                            row["ImportedFileID"] = currentFileDto.ImportedFileId;
+                            row["ImportedFileID"] = fileDto.ImportedFileId;
                         }
                     }
 
                     await _importer.ImportAsync(result.Data, mapping.TargetTable);
 
-                    currentFileDto.ExcelRowCount = result.TotalRows;
-                    currentFileDto.ImportedRowCount = result.ImportedRows;
-                    currentFileDto.FileStatus = (int)FileStatusEnum.ImportSuccess;
-                    currentFileDto.ImportedOn = DateTime.Now;
+                    // Update file stats after import
+                    fileDto.ExcelRowCount = result.TotalRows;
+                    fileDto.ImportedRowCount = result.ImportedRows;
+                    fileDto.FileStatus = (int)FileStatusEnum.ImportInProgresss;
 
-                    await _importRepo.UpdateFileAsync(currentFileDto);
-
-                    _logger.Info($"Imported {result.ImportedRows} rows to {mapping.TargetTable} for file {fileName}");
+                    await _importRepo.UpdateFileAsync(fileDto);
+                    _logger.Info($"Imported {result.ImportedRows} rows to {mapping.TargetTable}.");
                 }
             }
             catch (Exception ex)
             {
                 _logger.Error($"Error processing file {fileName}: {ex.Message}");
-                var failedDto = importFileDtos.FirstOrDefault(f => f.ImportFileName == fileName);
-                if (failedDto != null)
-                {
-                    failedDto.FileStatus = (int)FileStatusEnum.ImportFailed;
-                    failedDto.ImportedOn = DateTime.Now;
-                }
+                fileDto.FileStatus = (int)FileStatusEnum.ImportFailed;
+                await _importRepo.UpdateFileAsync(fileDto);
             }
-
-            _logger.Info($"File Processing completed for: {fileName}");
         }
 
-        await _importRepo.ProcessImportFilesAsync(importFileDtos);
+        private async Task ProcessFilesAsync(List<ImportFileDto> files)
+        {
+            foreach (var file in files)
+            {
+                string fileName = Path.GetFileName(file.ImportFileName);
+                _logger.Info($"File Processing Start for: {fileName}");
 
-        _logger.Info("-----------Bulk Copy Process Completed--------------");
+                var mappingDtl = _validator.FileMapping(JsonConvert.DeserializeObject<MappingConfigRoot>(File.ReadAllText(MappingJSONPath)), fileName);
+                var jsonPath = Path.Combine(JSONPath, mappingDtl.JsonMappingPath);
+
+                if (!File.Exists(jsonPath))
+                {
+                    _logger.Error($"Mapping file not found: {jsonPath}");
+                    file.FileStatus = (int)FileStatusEnum.ImportFailed;
+                    await _importRepo.UpdateFileAsync(file);
+                    continue;
+                }
+
+                // Update file status to InProgress
+                file.FileStatus = (int)FileStatusEnum.ImportInProgresss;
+                await _importRepo.UpdateFileAsync(file);
+
+                await HandleFileProcessingAsync(file, fileName, jsonPath);
+
+                _logger.Info($"File Processing completed for: {fileName}");
+            }
+        }
+
+        public async Task ProcessImportFileAsync(int fileId)
+        {
+            _logger.Info("-----------Bulk Copy Process Initiated--------------");
+
+            var file = await _importRepo.GetImportFileById(fileId);
+            if (file == null)
+            {
+                _logger.Error($"File with ID {fileId} not found.");
+                return;
+            }
+
+            try
+            {
+                string configPath = MappingJSONPath;
+
+                if (!File.Exists(configPath))
+                {
+                    _logger.Error($"Mapping config file not found: {configPath}");
+                    return;
+                }
+
+                var masterConfig = JsonConvert.DeserializeObject<MappingConfigRoot>(File.ReadAllText(configPath));
+                file.FileStatus = (int)FileStatusEnum.ImportInProgresss;
+                await _importRepo.UpdateFileAsync(file);
+
+                var mappingDtl = _validator.FileMapping(masterConfig, file.ImportFileName);
+                var jsonPath = Path.Combine(JSONPath, mappingDtl.JsonMappingPath);
+
+                if (!File.Exists(jsonPath))
+                {
+                    _logger.Error($"Mapping file not found: {jsonPath}");
+                    return;
+                }
+
+                await HandleFileProcessingAsync(file, file.ImportFileName, jsonPath);
+                file.FileStatus = (int)FileStatusEnum.ImportSuccess;
+                await _importRepo.UpdateFileAsync(file);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Error processing file {file.ImportFileName}: {ex.Message}");
+                file.FileStatus = (int)FileStatusEnum.ImportFailed;
+                await _importRepo.UpdateFileAsync(file);
+            }
+        }
+
+        public async Task RunAsync()
+        {
+            _logger.Info("-----------Bulk Copy Process Initiated--------------");
+
+            var configPath = MappingJSONPath;
+            if (!File.Exists(configPath))
+            {
+                _logger.Error($"Mapping config file not found: {configPath}");
+                return;
+            }
+
+            var masterConfig = JsonConvert.DeserializeObject<MappingConfigRoot>(File.ReadAllText(configPath));
+            var excelFiles = Directory.GetFiles(InputFilePath, "*.xlsx");
+
+            var importFileDtos = excelFiles.Select(file => new ImportFileDto
+            {
+                ImportFileName = Path.GetFileName(file)
+            }).ToList();
+
+            importFileDtos = await _importRepo.InsertImportFilesDataAsync(importFileDtos);
+
+            await ProcessFilesAsync(importFileDtos);
+
+            _logger.Info("-----------Bulk Copy Process Completed--------------");
+        }
     }
 }

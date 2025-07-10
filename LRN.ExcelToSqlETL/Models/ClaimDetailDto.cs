@@ -41,6 +41,17 @@ namespace LRN.ExcelToSqlETL.Core.Models
         public decimal? PatientBalance { get; set; }
         public decimal? TotalBalance { get; set; }
         public string? FinalClaimStatus { get; set; }
+
+        public string? LabName { get; set; }
+
+        public string? ClinicName { get; set; }
+
+        public string? OperationsGroup { get; set; }
+
+        public string? TestType { get; set; }
+
+        public string? ReferringProviderName { get; set; }
+        public string? PanelGroup { get; set; }
     }
 
     public class ClaimDetailDateOnlyDto
@@ -143,6 +154,24 @@ namespace LRN.ExcelToSqlETL.Core.Models
 
         [PropertyName(ColumnName = "FinalClaimStatus")]
         public string? FinalClaimStatus { get; set; }
+
+        [PropertyName(ColumnName = "LabName")]
+        public string? LabName { get; set; }
+
+        [PropertyName(ColumnName = "ClinicName")]
+        public string? ClinicName { get; set; }
+
+        [PropertyName(ColumnName = "OperationsGroup")]
+        public string? OperationsGroup { get; set; }
+
+        [PropertyName(ColumnName = "TestType")]
+        public string? TestType { get; set; }
+
+        [PropertyName(ColumnName = "ReferringProviderName")]
+        public string? ReferringProviderName { get; set; }
+
+        [PropertyName(ColumnName = "PanelGroup")]
+        public string? PanelGroup { get; set; }
     }
 
     public static class DateTimeExtensions

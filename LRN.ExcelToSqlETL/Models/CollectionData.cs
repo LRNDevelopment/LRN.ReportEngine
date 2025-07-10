@@ -95,5 +95,14 @@ namespace LRN.ExcelToSqlETL.Core.Models
         public decimal? T60Amount { get; set; }
         [PropertyName(ColumnName = "Claim Status")]
         public string? FinalStatus { get; set; }
+
+        [PropertyName(ColumnName = "TestType")]
+        public string? TestType { get; set; }
+
+        [PropertyName(ColumnName = "ClinicName")]
+        public string? ClinicName { get; set; }
+
+        [PropertyName(ColumnName = "PanelGroup")]
+        public string? PanelGroup { get; set; }
     }
 }

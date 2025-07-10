@@ -1,9 +1,10 @@
-using Common.Logging;
+﻿using Common.Logging;
 using LRN.DataLibrary;
 using LRN.DataLibrary.Repository;
 using LRN.DataLibrary.Repository.Interfaces;
 using LRN.ExcelETL.Service.Services;
 using LRN.ExcelGenerator.Utils;
+using LRN.ExcelToSqlETL.Core.Constants;
 using LRN.ExcelToSqlETL.Core.Interface;
 using Microsoft.EntityFrameworkCore;
 
@@ -51,12 +52,26 @@ namespace LRN.ETLWorkerService
                     services.AddScoped<IImportFilesRepository, ImportFilesRepository>();
                     services.AddScoped<IReportRepository, ReportRepository>();
 
-                    // Register the worker service as scoped (it consumes scoped services)
-                    services.AddScoped<FileProcessingWorker>();
+                    ConfigStaticSettings(configuration);
 
                     // Register the hosted service (background worker)
                     services.AddHostedService<FileProcessingWorker>();
                 });
+
+
+        }
+
+        static void ConfigStaticSettings(IConfiguration config)
+        {
+            CommonConst.InputFilePath = config["FilePaths:InputFilePath"];
+            CommonConst.JSONPath = config["FilePaths:JSONPath"];
+            CommonConst.MappingJSONPath = config["FilePaths:MappingJSONPath"];
+            CommonConst.LISMaster_Template = config["TemplatePath:LISMaster"];
+            CommonConst.ProdMaster_Template = config["TemplatePath:ProdMaster"];
+            CommonConst.DefaultConnection = config["ConnectionStrings:DefaultConnection"];
+            CommonConst.DownloadFilePath = config["FilePaths:DownloadFilePath"];
+            CommonConst.CollectionTemplate = config["TemplatePath:CollectionTemplate"];
+            CommonConst.ImportFilePath = config["TemplatePath:ImportFilePath"];
         }
     }
 }

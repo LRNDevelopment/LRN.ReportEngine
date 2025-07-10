@@ -14,7 +14,7 @@ namespace LRN.ExcelToSqlETL.Core.Models
         public string? VisitNumber { get; set; }
         [PropertyName(ColumnName = "Accession # per Dakota")]
         public string? AccessionNo { get; set; }
-        [PropertyName(ColumnName = "Panel Group")]
+        [PropertyName(ColumnName = "Panel Name")]
         public string? PanelName { get; set; }
         [PropertyName(ColumnName = "Carrier")]
         public string? Carrier { get; set; }
@@ -90,5 +90,18 @@ namespace LRN.ExcelToSqlETL.Core.Models
         public decimal? T60Amount { get; set; }
         [PropertyName(ColumnName = "Claim Status")]
         public string? FinalStatus { get; set; }
+
+        [PropertyName(ColumnName = "Adjudicated Count")]
+        public string? AdjudicatedCount { get; set; }
+
+        [PropertyName(ColumnName = "TestType")]
+        public string? TestType { get; set; }
+
+        [PropertyName(ColumnName = "ClinicName")]
+        public string? ClinicName { get; set; }
+
+        [PropertyName(ColumnName = "PanelGroup")]
+        public string? PanelGroup { get; set; }
+
     }
 }

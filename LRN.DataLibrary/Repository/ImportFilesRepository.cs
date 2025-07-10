@@ -77,7 +77,7 @@ public class ImportFilesRepository : IImportFilesRepository
     public async Task<List<ImportFileDto>> GetImportFilesAsync()
     {
         const string query = @"SELECT ImportedFileID AS ImportedFileId, ImportFileName, FileTypeName, c.FileStatus AS FileStatusName,
-               ExcelRowCount, ImportedRowCount, ImportedOn, ProcessedOn, a.LabId, l.LabName,ImportFilePath 
+               ExcelRowCount, ImportedRowCount, ImportedOn, ProcessedOn, a.LabId, l.LabName,ImportFilePath,c.FileStatusId 
         FROM ImportedFiles a
         JOIN ImportFilTypes b ON a.FileType = b.FileTypeId
         JOIN FileStatuses c ON a.FileStatus = c.FileStatusId

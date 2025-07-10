@@ -31,5 +31,7 @@ namespace LRN.ExcelToSqlETL.Core.DtoModels
 
         public string LabName { get; set; }
         public string ImportFilePath { get; set; }
+
+        public int FileStatusId { get; set; }
     }
 }

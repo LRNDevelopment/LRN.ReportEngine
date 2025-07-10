@@ -1,11 +1,15 @@
 ﻿using Common.Logging;
 using LRN.DataLibrary.Repository.Interfaces;
+using LRN.ExcelToSqlETL.Core.Constants;
 using LRN.ExcelToSqlETL.Core.DtoModels;
 using LRN.ExcelToSqlETL.Core.Interface;
 using LRN.ExcelToSqlETL.Core.Models;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System.Data;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using static LRN.ExcelToSqlETL.Core.Constants.CommonConst;
 
 namespace LRN.ExcelETL.Service.Services
@@ -19,7 +23,7 @@ namespace LRN.ExcelETL.Service.Services
         private readonly ILoggerService _logger;
         private readonly IConfiguration _config;
         private readonly IImportFilesRepository _importRepo;
-
+        private static List<FileLog> ImportLog;
         public ExcelEtlProcessor(
             IExcelMapperLoader mapper,
             IFileReader reader,
@@ -36,6 +40,7 @@ namespace LRN.ExcelETL.Service.Services
             _logger = logger;
             _config = config;
             _importRepo = importRepo;
+            ImportLog = new List<FileLog>();
         }
 
         private async Task HandleFileProcessingAsync(ImportFileDto fileDto, string fileName, string jsonPath)
@@ -43,6 +48,7 @@ namespace LRN.ExcelETL.Service.Services
             try
             {
                 _logger.Info($"Processing file {fileName}...");
+
 
                 var mapping = _mapper.LoadMapping(jsonPath);
                 using var stream = File.OpenRead(fileDto.ImportFilePath);
@@ -118,7 +124,7 @@ namespace LRN.ExcelETL.Service.Services
         public async Task ProcessImportFileAsync(int fileId)
         {
             _logger.Info("-----------Bulk Copy Process Initiated--------------");
-
+            ImportLog.Add(new FileLog { FileId = fileId, LogType = "Info", LogMessage = "Import Process Started" });
             var file = await _importRepo.GetImportFileById(fileId);
             if (file == null)
             {
@@ -163,28 +169,37 @@ namespace LRN.ExcelETL.Service.Services
 
         public async Task RunAsync()
         {
-            _logger.Info("-----------Bulk Copy Process Initiated--------------");
-
-            var configPath = MappingJSONPath;
-            if (!File.Exists(configPath))
+            try
             {
-                _logger.Error($"Mapping config file not found: {configPath}");
-                return;
+                _logger.Info("-----------Bulk Copy Process Initiated--------------");
+
+                var configPath = MappingJSONPath;
+                if (!File.Exists(configPath))
+                {
+                    _logger.Error($"Mapping config file not found: {configPath}");
+                    return;
+                }
+
+                var masterConfig = JsonConvert.DeserializeObject<MappingConfigRoot>(File.ReadAllText(configPath));
+                var excelFiles = Directory.GetFiles(InputFilePath, "*.xlsx");
+
+                var importFileDtos = excelFiles.Select(file => new ImportFileDto
+                {
+                    ImportFileName = Path.GetFileName(file)
+                }).ToList();
+
+                importFileDtos = await _importRepo.InsertImportFilesDataAsync(importFileDtos);
+
+                await ProcessFilesAsync(importFileDtos);
+
+                _logger.Info("-----------Bulk Copy Process Completed--------------");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Error on importing data : ", ex);
+                throw;
             }
 
-            var masterConfig = JsonConvert.DeserializeObject<MappingConfigRoot>(File.ReadAllText(configPath));
-            var excelFiles = Directory.GetFiles(InputFilePath, "*.xlsx");
-
-            var importFileDtos = excelFiles.Select(file => new ImportFileDto
-            {
-                ImportFileName = Path.GetFileName(file)
-            }).ToList();
-
-            importFileDtos = await _importRepo.InsertImportFilesDataAsync(importFileDtos);
-
-            await ProcessFilesAsync(importFileDtos);
-
-            _logger.Info("-----------Bulk Copy Process Completed--------------");
         }
     }
 }

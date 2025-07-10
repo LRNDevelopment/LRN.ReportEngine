@@ -165,5 +165,8 @@ namespace LRN.ExcelToSqlETL.Core.Models
 
         [PropertyName(ColumnName = "Actions")]
         public string? Actions { get; set; }
+
+        [PropertyName(ColumnName = "PanelGroup")]
+        public string? PanelGroup { get; set; }
     }
 }

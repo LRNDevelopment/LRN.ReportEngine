@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using AutoMapper;
 
+
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration((context, config) =>
     {
@@ -53,9 +54,14 @@ var host = Host.CreateDefaultBuilder(args)
     .Build();
 
 
-// ✅ Entry Point – you can switch to ETL if needed
+ //✅ Entry Point – you can switch to ETL if needed
 var excelWriter = host.Services.GetRequiredService<ExcelWriter>();
 await excelWriter.RunAsync();
+
+////////// Run the ETL processor
+//var app = host.Services.GetRequiredService<ExcelEtlProcessor>();
+//await app.RunAsync();
+
 
 
 // ✅ Global Configuration

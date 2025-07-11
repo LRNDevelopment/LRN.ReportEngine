@@ -13,7 +13,8 @@ namespace LRN.ExcelETL.Service.Services
     public class MappingValidator : IDataValidator
     {
         private static ILoggerService _logger = new LogManagerService();
-        public ValidationResult Validate(DataTable table, ExcelSheetMapping mapping)
+        private static List<FileLog> ImportLog = new List<FileLog>();
+        public ValidationResult Validate(DataTable table, ExcelSheetMapping mapping, int fileId)
         {
             try
             {
@@ -22,7 +23,10 @@ namespace LRN.ExcelETL.Service.Services
                 foreach (var col in mapping.Columns)
                 {
                     if (col.Required && !table.Columns.Contains(col.SqlColumn))
+                    {
+                        ImportLog.Add(new FileLog { FileId = fileId, LogType = "Error", LogMessage = ($"Missing column: {col.SqlColumn}") });
                         result.Errors.Add($"Missing column: {col.SqlColumn}");
+                    }
                 }
 
                 foreach (DataRow row in table.Rows)
@@ -31,7 +35,12 @@ namespace LRN.ExcelETL.Service.Services
                     {
                         var value = row[col.SqlColumn]?.ToString();
                         if (!IsValid(value, col.DataType))
+                        {
+                            ImportLog.Add(new FileLog { FileId = fileId, LogType = "Error", LogMessage = $"Invalid {col.DataType} in column {col.SqlColumn}: {value}" });
+
                             result.Errors.Add($"Invalid {col.DataType} in column {col.SqlColumn}: {value}");
+
+                        }
                     }
                 }
 
@@ -39,6 +48,8 @@ namespace LRN.ExcelETL.Service.Services
             }
             catch (Exception ex)
             {
+                ImportLog.Add(new FileLog { FileId = fileId, LogType = "Error", LogMessage = "Error Occured on MappingValidator - Validate : " + ex.ToString() });
+
                 _logger.Error("Error Occured on MappingValidator - Validate : " + ex.ToString());
                 return null;
             }

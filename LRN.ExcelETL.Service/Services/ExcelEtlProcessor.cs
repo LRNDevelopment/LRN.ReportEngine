@@ -24,6 +24,8 @@ namespace LRN.ExcelETL.Service.Services
         private readonly IConfiguration _config;
         private readonly IImportFilesRepository _importRepo;
         private static List<FileLog> ImportLog;
+        private static int _fileId = 0;
+
         public ExcelEtlProcessor(
             IExcelMapperLoader mapper,
             IFileReader reader,
@@ -52,15 +54,16 @@ namespace LRN.ExcelETL.Service.Services
 
                 var mapping = _mapper.LoadMapping(jsonPath);
                 using var stream = File.OpenRead(fileDto.ImportFilePath);
-                var readResults = await _reader.ReadAsync(stream, mapping);
+                var readResults = await _reader.ReadAsync(stream, mapping, _fileId);
 
                 foreach (var result in readResults)
                 {
-                    var validation = _validator.Validate(result.Data, mapping);
+                    var validation = _validator.Validate(result.Data, mapping, _fileId);
                     if (!validation.IsValid)
                     {
                         foreach (var error in validation.Errors)
                         {
+                            ImportLog.Add(new FileLog { FileId = _fileId, LogType = "Error", LogMessage = $"Validation error in {fileName}: {error}" });
                             _logger.Error($"Validation error in {fileName}: {error}");
                         }
                         continue;
@@ -74,7 +77,7 @@ namespace LRN.ExcelETL.Service.Services
                         }
                     }
 
-                    await _importer.ImportAsync(result.Data, mapping.TargetTable);
+                    await _importer.ImportAsync(result.Data, mapping.TargetTable, _fileId);
 
                     // Update file stats after import
                     fileDto.ExcelRowCount = result.TotalRows;
@@ -124,11 +127,14 @@ namespace LRN.ExcelETL.Service.Services
         public async Task ProcessImportFileAsync(int fileId)
         {
             _logger.Info("-----------Bulk Copy Process Initiated--------------");
+            _fileId = fileId;
+
             ImportLog.Add(new FileLog { FileId = fileId, LogType = "Info", LogMessage = "Import Process Started" });
             var file = await _importRepo.GetImportFileById(fileId);
             if (file == null)
             {
                 _logger.Error($"File with ID {fileId} not found.");
+                ImportLog.Add(new FileLog { FileId = fileId, LogType = "Error", LogMessage = $"File with ID {fileId} not found" });
                 return;
             }
 
@@ -139,6 +145,7 @@ namespace LRN.ExcelETL.Service.Services
                 if (!File.Exists(configPath))
                 {
                     _logger.Error($"Mapping config file not found: {configPath}");
+                    ImportLog.Add(new FileLog { FileId = fileId, LogType = "Error", LogMessage = $"Mapping config file not found: {configPath}" });
                     return;
                 }
 
@@ -152,6 +159,7 @@ namespace LRN.ExcelETL.Service.Services
                 if (!File.Exists(jsonPath))
                 {
                     _logger.Error($"Mapping file not found: {jsonPath}");
+                    ImportLog.Add(new FileLog { FileId = fileId, LogType = "Error", LogMessage = $"Mapping file not found: {jsonPath}" });
                     return;
                 }
 
@@ -162,9 +170,18 @@ namespace LRN.ExcelETL.Service.Services
             catch (Exception ex)
             {
                 _logger.Error($"Error processing file {file.ImportFileName}: {ex.Message}");
+
+                ImportLog.Add(new FileLog
+                {
+                    FileId = fileId,
+                    LogType = "Error",
+                    LogMessage = $"Error processing file {file.ImportFileName}: {ex.Message} : INNER EXCEPTION : {(ex.InnerException != null ? ex.InnerException.Message : string.Empty)}"
+                });
+
                 file.FileStatus = (int)FileStatusEnum.ImportFailed;
                 await _importRepo.UpdateFileAsync(file);
             }
+
         }
 
         public async Task RunAsync()

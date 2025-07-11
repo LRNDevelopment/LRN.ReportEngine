@@ -1,5 +1,6 @@
 ﻿using Common.Logging;
 using LRN.ExcelToSqlETL.Core.Interface;
+using LRN.ExcelToSqlETL.Core.Models;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -15,12 +16,13 @@ namespace LRN.ExcelETL.Service.Services
     {
         private readonly string _connectionString;
         private static ILoggerService _logger = new LogManagerService();
+        private static List<FileLog> ImportLog = new List<FileLog>();
         public SqlDataImporter(IConfiguration config)
         {
             _connectionString = config.GetConnectionString("DefaultConnection");
         }
 
-        public async Task ImportAsync(DataTable data, string tableName)
+        public async Task ImportAsync(DataTable data, string tableName, int fileId)
         {
             try
             {
@@ -43,6 +45,8 @@ namespace LRN.ExcelETL.Service.Services
             }
             catch (Exception ex)
             {
+                ImportLog.Add(new FileLog { FileId = fileId, LogType = "Error", LogMessage = "Error Occured on SqlDataImporter - ImportAsync : " + ex.ToString() });
+
                 _logger.Error("Error Occured on SqlDataImporter - ImportAsync : " + ex.ToString());
                 throw;
             }

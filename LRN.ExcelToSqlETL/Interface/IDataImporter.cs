@@ -4,6 +4,6 @@ namespace LRN.ExcelToSqlETL.Core.Interface
 {
     public interface IDataImporter
     {
-        Task ImportAsync(DataTable data, string tableName);
+        Task ImportAsync(DataTable data, string tableName, int fileId);
     }
 }

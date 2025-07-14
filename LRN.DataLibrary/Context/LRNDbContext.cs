@@ -75,6 +75,8 @@ public partial class LRNDbContext : DbContext
 
     public virtual DbSet<TransactionSummary> TransactionSummaries { get; set; }
 
+    public DbSet<ImportFileLog> ImportFileLogs { get; set; }
+
     public virtual DbSet<VisitAgaistAccessionStaging> VisitAgaistAccessionStagings { get; set; }
 
     public DbSet<ProdBillingData> ProdData { get; set; } // Not a real table, just used for SP mapping
@@ -103,6 +105,10 @@ public partial class LRNDbContext : DbContext
             entity.HasKey(e => e.BillingMasterId).HasName("PK__BillingM__4D6560C1F23F6975");
 
             entity.ToTable("BillingMaster");
+
+            modelBuilder.Entity<ImportFileLog>()
+               .Property(b => b.CreatedOn)
+               .HasDefaultValueSql("GETDATE()");
 
             entity.HasIndex(e => new { e.VisitNumber, e.ChargeEntryDate, e.FirstBillDate, e.LismasterId, e.PrimaryPayerId, e.PayerTypeId, e.BillingProviderId, e.Modifier }, "IX_BillingMaster_VisitNumber");
 

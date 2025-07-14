@@ -1,25 +1,18 @@
 ﻿using ClosedXML.Excel;
 using Common.Logging;
-using DocumentFormat.OpenXml.Spreadsheet;
 using LRN.ExcelToSqlETL.Core.Interface;
 using LRN.ExcelToSqlETL.Core.Models;
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 
 public class ExcelFileReader : IFileReader
 {
     private static readonly ILoggerService _logger = new LogManagerService();
     private static List<FileLog> ImportLog = new List<FileLog>();
-    private static int _fileId = 0;
-    public async Task<List<ExcelReadResult>> ReadAsync(Stream stream, ExcelSheetMapping mapping, int fileId)
+    private static int _ImportFileId = 0;
+    public async Task<List<ExcelReadResult>> ReadAsync(Stream stream, ExcelSheetMapping mapping, int ImportFileId)
     {
-        _fileId = fileId;
+        _ImportFileId = ImportFileId;
         return mapping.UseDynamicSchema
             ? await ReadDynamicAsync(stream, mapping)
             : await ReadMappedAsync(stream, mapping);
@@ -64,7 +57,7 @@ public class ExcelFileReader : IFileReader
                 catch (Exception ex)
                 {
                     _logger.Warn($"Skipping sheet '{worksheet.Name}' due to mismatch: {ex.Message}");
-                    ImportLog.Add(new FileLog { FileId = _fileId, LogType = "Warning", LogMessage = $"Skipping sheet '{worksheet.Name}' due to mismatch: {ex.Message}" });
+                    ImportLog.Add(new FileLog { ImportFileId = _ImportFileId, LogType = "Warning", LogMessage = $"Skipping sheet '{worksheet.Name}' due to mismatch: {ex.Message}" });
                     continue;
                 }
             }
@@ -72,7 +65,7 @@ public class ExcelFileReader : IFileReader
             _logger.Info($"Finished reading mapped Excel. Total Rows: {totalRows}, Imported: {importedRows}, Errors: {errorRows}");
 
 
-            ImportLog.Add(new FileLog { FileId = _fileId, LogType = "Info", LogMessage = $"Finished reading mapped Excel. Total Rows: {totalRows}, Imported: {importedRows}, Errors: {errorRows}" });
+            ImportLog.Add(new FileLog { ImportFileId = _ImportFileId, LogType = "Info", LogMessage = $"Finished reading mapped Excel. Total Rows: {totalRows}, Imported: {importedRows}, Errors: {errorRows}" });
 
             return new List<ExcelReadResult> {
                 new ExcelReadResult {
@@ -87,7 +80,7 @@ public class ExcelFileReader : IFileReader
         {
             _logger.Error($"Error in ReadMappedAsync: {ex}");
 
-            ImportLog.Add(new FileLog { FileId = _fileId, LogType = "Error", LogMessage = $"Error in ReadMappedAsync: {ex}" });
+            ImportLog.Add(new FileLog { ImportFileId = _ImportFileId, LogType = "Error", LogMessage = $"Error in ReadMappedAsync: {ex}" });
 
             return null;
         }
@@ -157,7 +150,7 @@ public class ExcelFileReader : IFileReader
 
             _logger.Info($"Finished reading dynamic Excel. Total Rows: {totalRows}");
 
-            ImportLog.Add(new FileLog { FileId = _fileId, LogType = "Info", LogMessage = $"Finished reading dynamic Excel. Total Rows: {totalRows}" });
+            ImportLog.Add(new FileLog { ImportFileId = _ImportFileId, LogType = "Info", LogMessage = $"Finished reading dynamic Excel. Total Rows: {totalRows}" });
 
 
             return new List<ExcelReadResult> {
@@ -173,7 +166,7 @@ public class ExcelFileReader : IFileReader
         {
             _logger.Error($"Error in ReadDynamicAsync: {ex}");
 
-            ImportLog.Add(new FileLog { FileId = _fileId, LogType = "Error", LogMessage = $"Error in ReadMappedAsync: {ex}" });
+            ImportLog.Add(new FileLog { ImportFileId = _ImportFileId, LogType = "Error", LogMessage = $"Error in ReadMappedAsync: {ex}" });
 
             return null;
         }
@@ -211,7 +204,7 @@ public class ExcelFileReader : IFileReader
                     hasError = true;
                     _logger.Warn($"Row {rowNum} in sheet '{sheetName}' has error in column '{colMap.ExcelColumn}': {ex.Message}");
 
-                    ImportLog.Add(new FileLog { FileId = _fileId, LogType = "Error", LogMessage = $"Row {rowNum} in sheet '{sheetName}' has error in column '{colMap.ExcelColumn}': {ex.Message}" });
+                    ImportLog.Add(new FileLog { ImportFileId = _ImportFileId, LogType = "Error", LogMessage = $"Row {rowNum} in sheet '{sheetName}' has error in column '{colMap.ExcelColumn}': {ex.Message}" });
 
                 }
             }
@@ -276,7 +269,7 @@ public class ExcelFileReader : IFileReader
         if (duplicates.Any())
         {
             var msg = $"Duplicate header(s) found: {string.Join(", ", duplicates)}";
-            ImportLog.Add(new FileLog { FileId = _fileId, LogType = "Error", LogMessage = msg });
+            ImportLog.Add(new FileLog { ImportFileId = _ImportFileId, LogType = "Error", LogMessage = msg });
             _logger.Error(msg);
             throw new Exception(msg);
         }
@@ -293,7 +286,7 @@ public class ExcelFileReader : IFileReader
 
         if (missing.Any())
         {
-            ImportLog.Add(new FileLog { FileId = _fileId, LogType = "Error", LogMessage = $"Missing required column(s): {string.Join(", ", missing)}" });
+            ImportLog.Add(new FileLog { ImportFileId = _ImportFileId, LogType = "Error", LogMessage = $"Missing required column(s): {string.Join(", ", missing)}" });
 
             throw new Exception($"Missing required column(s): {string.Join(", ", missing)}");
         }
@@ -314,7 +307,7 @@ public class ExcelFileReader : IFileReader
             if (matches >= mapping.Columns.Count * 0.7)
                 return i;
         }
-        ImportLog.Add(new FileLog { FileId = _fileId, LogType = "Error", LogMessage = $"Header row not found in the top {scanLimit} rows." });
+        ImportLog.Add(new FileLog { ImportFileId = _ImportFileId, LogType = "Error", LogMessage = $"Header row not found in the top {scanLimit} rows." });
 
         throw new Exception($"Header row not found in the top {scanLimit} rows.");
     }
@@ -354,7 +347,7 @@ public class ExcelFileReader : IFileReader
         }
         catch (Exception ex)
         {
-            ImportLog.Add(new FileLog { FileId = _fileId, LogType = "Error", LogMessage = $"Erro on importing {ex.ToString()}." });
+            ImportLog.Add(new FileLog { ImportFileId = _ImportFileId, LogType = "Error", LogMessage = $"Erro on importing {ex.ToString()}." });
 
             throw;
         }

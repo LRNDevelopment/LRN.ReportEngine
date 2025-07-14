@@ -25,3 +25,12 @@ public partial class ImportedFile
 
     public string ImportFilePath { get; set; }
 }
+public class ImportFileLog
+{
+    public int ImportFileId { get; set; }  // Corresponds to [ImportFileId]
+    public string LogType { get; set; }    // Corresponds to [LogType]
+    public string LogMessage { get; set; } // Corresponds to [LogMessage]
+    public int? RowNo { get; set; }        // Corresponds to [RowNo]
+    public string ColumnName { get; set; } // Corresponds to [ColumnName]
+    public DateTime? CreatedOn { get; set; } // Corresponds to [CreatedOn]
+}

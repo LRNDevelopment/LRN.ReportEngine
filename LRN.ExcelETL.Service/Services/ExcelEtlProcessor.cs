@@ -63,7 +63,7 @@ namespace LRN.ExcelETL.Service.Services
                     {
                         foreach (var error in validation.Errors)
                         {
-                            ImportLog.Add(new FileLog { FileId = _fileId, LogType = "Error", LogMessage = $"Validation error in {fileName}: {error}" });
+                            ImportLog.Add(new FileLog { ImportFileId = _fileId, LogType = "Error", LogMessage = $"Validation error in {fileName}: {error}" });
                             _logger.Error($"Validation error in {fileName}: {error}");
                         }
                         continue;
@@ -129,12 +129,12 @@ namespace LRN.ExcelETL.Service.Services
             _logger.Info("-----------Bulk Copy Process Initiated--------------");
             _fileId = fileId;
 
-            ImportLog.Add(new FileLog { FileId = fileId, LogType = "Info", LogMessage = "Import Process Started" });
+            ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Info", LogMessage = "Import Process Started" });
             var file = await _importRepo.GetImportFileById(fileId);
             if (file == null)
             {
                 _logger.Error($"File with ID {fileId} not found.");
-                ImportLog.Add(new FileLog { FileId = fileId, LogType = "Error", LogMessage = $"File with ID {fileId} not found" });
+                ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = $"File with ID {fileId} not found" });
                 return;
             }
 
@@ -145,7 +145,7 @@ namespace LRN.ExcelETL.Service.Services
                 if (!File.Exists(configPath))
                 {
                     _logger.Error($"Mapping config file not found: {configPath}");
-                    ImportLog.Add(new FileLog { FileId = fileId, LogType = "Error", LogMessage = $"Mapping config file not found: {configPath}" });
+                    ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = $"Mapping config file not found: {configPath}" });
                     return;
                 }
 
@@ -159,7 +159,7 @@ namespace LRN.ExcelETL.Service.Services
                 if (!File.Exists(jsonPath))
                 {
                     _logger.Error($"Mapping file not found: {jsonPath}");
-                    ImportLog.Add(new FileLog { FileId = fileId, LogType = "Error", LogMessage = $"Mapping file not found: {jsonPath}" });
+                    ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = $"Mapping file not found: {jsonPath}" });
                     return;
                 }
 
@@ -173,7 +173,7 @@ namespace LRN.ExcelETL.Service.Services
 
                 ImportLog.Add(new FileLog
                 {
-                    FileId = fileId,
+                    ImportFileId = fileId,
                     LogType = "Error",
                     LogMessage = $"Error processing file {file.ImportFileName}: {ex.Message} : INNER EXCEPTION : {(ex.InnerException != null ? ex.InnerException.Message : string.Empty)}"
                 });

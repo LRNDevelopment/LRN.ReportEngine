@@ -123,12 +123,12 @@ namespace ExcelETLWinApp
                 _logger.Info($"Loaded mapping from: {jsonPath}");
 
                 using var stream = File.OpenRead(selectedUploadFilePath);
-                var readResults = await _reader.ReadAsync(stream, mapping);
+                var readResults = await _reader.ReadAsync(stream, mapping, (int)importFileDtos.ImportedFileId);
 
 
                 foreach (var result in readResults)
                 {
-                    var validation = _validator.Validate(result.Data, mapping);
+                    var validation = _validator.Validate(result.Data, mapping, (int)importFileDtos.ImportedFileId);
                     if (!validation.IsValid)
                     {
                         foreach (var error in validation.Errors)
@@ -146,7 +146,7 @@ namespace ExcelETLWinApp
                         }
                     }
 
-                    await _importer.ImportAsync(result.Data, mapping.TargetTable);
+                    await _importer.ImportAsync(result.Data, mapping.TargetTable, (int)importFileDtos.ImportedFileId);
 
                     importFileDtos.ExcelRowCount = result.TotalRows;
                     importFileDtos.ImportedRowCount = result.ImportedRows;

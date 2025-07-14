@@ -45,7 +45,7 @@ namespace LRN.ExcelETL.Service.Services
             }
             catch (Exception ex)
             {
-                ImportLog.Add(new FileLog { FileId = fileId, LogType = "Error", LogMessage = "Error Occured on SqlDataImporter - ImportAsync : " + ex.ToString() });
+                ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = "Error Occured on SqlDataImporter - ImportAsync : " + ex.ToString() });
 
                 _logger.Error("Error Occured on SqlDataImporter - ImportAsync : " + ex.ToString());
                 throw;

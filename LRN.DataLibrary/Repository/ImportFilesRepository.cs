@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using LRN.DataLibrary.Repository.Interfaces;
 using LRN.ExcelToSqlETL.Core.DtoModels;
+using LRN.ExcelToSqlETL.Core.Models;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
@@ -110,4 +111,18 @@ public class ImportFilesRepository : IImportFilesRepository
         return result;
     }
 
+    public async Task<List<FileLog>> InsertFileLog(List<FileLog> fileLogs)
+    {
+        if (!fileLogs.Any())
+            return new List<FileLog>();
+
+        const string sql = @"INSERT INTO [dbo].[ImportFileLogs] ([ImportFileId],[LogType],[LogMessage],[RowNo],[ColumnName],[CreatedOn])
+                                     VALUES (@ImportFileId,@LogType,@LogMessage,@RowNo,@ColumnName,GETDATE());";
+        using var connection = _context.CreateConnection();
+        foreach (var log in fileLogs)
+        {
+            await connection.ExecuteAsync(sql, log);
+        }
+        return fileLogs;
+    }
 }

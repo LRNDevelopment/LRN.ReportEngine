@@ -1,4 +1,5 @@
 ﻿using LRN.ExcelToSqlETL.Core.DtoModels;
+using LRN.ExcelToSqlETL.Core.Models;
 
 namespace LRN.DataLibrary.Repository.Interfaces;
 
@@ -13,4 +14,6 @@ public interface IImportFilesRepository
     Task<List<ImportFileTypesDto>> GetImportFilesTypesAsync();
 
     Task<ImportFileDto> GetImportFileById(int fileId);
+
+    Task<List<FileLog>> InsertFileLog(List<FileLog> fileLogs);
 }

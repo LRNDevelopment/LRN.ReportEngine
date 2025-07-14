@@ -24,7 +24,7 @@ namespace LRN.ExcelETL.Service.Services
                 {
                     if (col.Required && !table.Columns.Contains(col.SqlColumn))
                     {
-                        ImportLog.Add(new FileLog { FileId = fileId, LogType = "Error", LogMessage = ($"Missing column: {col.SqlColumn}") });
+                        ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = ($"Missing column: {col.SqlColumn}") });
                         result.Errors.Add($"Missing column: {col.SqlColumn}");
                     }
                 }
@@ -36,7 +36,7 @@ namespace LRN.ExcelETL.Service.Services
                         var value = row[col.SqlColumn]?.ToString();
                         if (!IsValid(value, col.DataType))
                         {
-                            ImportLog.Add(new FileLog { FileId = fileId, LogType = "Error", LogMessage = $"Invalid {col.DataType} in column {col.SqlColumn}: {value}" });
+                            ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = $"Invalid {col.DataType} in column {col.SqlColumn}: {value}" });
 
                             result.Errors.Add($"Invalid {col.DataType} in column {col.SqlColumn}: {value}");
 
@@ -48,7 +48,7 @@ namespace LRN.ExcelETL.Service.Services
             }
             catch (Exception ex)
             {
-                ImportLog.Add(new FileLog { FileId = fileId, LogType = "Error", LogMessage = "Error Occured on MappingValidator - Validate : " + ex.ToString() });
+                ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = "Error Occured on MappingValidator - Validate : " + ex.ToString() });
 
                 _logger.Error("Error Occured on MappingValidator - Validate : " + ex.ToString());
                 return null;

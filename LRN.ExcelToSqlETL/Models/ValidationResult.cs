@@ -8,7 +8,7 @@
 
     public class FileLog
     {
-        public int FileId { get; set; }
+        public int ImportFileId { get; set; }
         public string LogMessage { get; set; }
 
         public string LogType { get; set; }

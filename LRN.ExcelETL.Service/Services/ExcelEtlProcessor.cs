@@ -85,6 +85,9 @@ namespace LRN.ExcelETL.Service.Services
                     fileDto.FileStatus = (int)FileStatusEnum.ImportInProgresss;
 
                     await _importRepo.UpdateFileAsync(fileDto);
+
+                    await _importRepo.ProcessImportFilesAsync(fileDto);
+
                     _logger.Info($"Imported {result.ImportedRows} rows to {mapping.TargetTable}.");
                 }
             }

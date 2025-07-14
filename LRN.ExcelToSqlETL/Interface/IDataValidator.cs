@@ -10,7 +10,7 @@ namespace LRN.ExcelToSqlETL.Core.Interface
 {
     public interface IDataValidator
     {
-        ValidationResult Validate(DataTable data, ExcelSheetMapping mapping, int fileId);
+        Task<ValidationResult> Validate(DataTable data, ExcelSheetMapping mapping, int fileId);
 
         MappingEntry FileMapping(MappingConfigRoot masterConfig, string filename);
     }

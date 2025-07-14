@@ -128,7 +128,7 @@ namespace ExcelETLWinApp
 
                 foreach (var result in readResults)
                 {
-                    var validation = _validator.Validate(result.Data, mapping, (int)importFileDtos.ImportedFileId);
+                    var validation = _validator.Validate(result.Data, mapping, (int)importFileDtos.ImportedFileId).Result;
                     if (!validation.IsValid)
                     {
                         foreach (var error in validation.Errors)

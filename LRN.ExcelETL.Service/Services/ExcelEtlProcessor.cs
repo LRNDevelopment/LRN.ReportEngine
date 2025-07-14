@@ -58,7 +58,7 @@ namespace LRN.ExcelETL.Service.Services
 
                 foreach (var result in readResults)
                 {
-                    var validation = _validator.Validate(result.Data, mapping, _fileId);
+                    var validation = _validator.Validate(result.Data, mapping, _fileId).Result;
                     if (!validation.IsValid)
                     {
                         foreach (var error in validation.Errors)
@@ -167,8 +167,12 @@ namespace LRN.ExcelETL.Service.Services
                 }
 
                 await HandleFileProcessingAsync(file, file.ImportFileName, jsonPath);
+
                 file.FileStatus = (int)FileStatusEnum.ImportSuccess;
+
                 await _importRepo.UpdateFileAsync(file);
+
+                await _importRepo.InsertFileLog(ImportLog);
             }
             catch (Exception ex)
             {
@@ -183,6 +187,7 @@ namespace LRN.ExcelETL.Service.Services
 
                 file.FileStatus = (int)FileStatusEnum.ImportFailed;
                 await _importRepo.UpdateFileAsync(file);
+                await _importRepo.InsertFileLog(ImportLog);
             }
 
         }

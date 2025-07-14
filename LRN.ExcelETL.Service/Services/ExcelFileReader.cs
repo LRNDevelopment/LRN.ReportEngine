@@ -1,5 +1,6 @@
 ﻿using ClosedXML.Excel;
 using Common.Logging;
+using LRN.DataLibrary.Repository.Interfaces;
 using LRN.ExcelToSqlETL.Core.Interface;
 using LRN.ExcelToSqlETL.Core.Models;
 using System.Data;
@@ -8,14 +9,25 @@ using System.Globalization;
 public class ExcelFileReader : IFileReader
 {
     private static readonly ILoggerService _logger = new LogManagerService();
-    private static List<FileLog> ImportLog = new List<FileLog>();
+    private static List<FileLog> ImportLog;
     private static int _ImportFileId = 0;
+    private readonly IImportFilesRepository _importRepo;
+
+    public ExcelFileReader(
+         IImportFilesRepository importRepo)
+    {
+        _importRepo = importRepo;
+        ImportLog = new List<FileLog>();
+    }
+
     public async Task<List<ExcelReadResult>> ReadAsync(Stream stream, ExcelSheetMapping mapping, int ImportFileId)
     {
         _ImportFileId = ImportFileId;
         return mapping.UseDynamicSchema
             ? await ReadDynamicAsync(stream, mapping)
             : await ReadMappedAsync(stream, mapping);
+
+        await _importRepo.InsertFileLog(ImportLog);
     }
 
     private async Task<List<ExcelReadResult>> ReadMappedAsync(Stream stream, ExcelSheetMapping mapping)

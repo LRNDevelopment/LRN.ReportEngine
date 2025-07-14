@@ -1,11 +1,11 @@
 ﻿using Common.Logging;
+using LRN.DataLibrary.Repository.Interfaces;
 using LRN.ExcelToSqlETL.Core.Interface;
 using LRN.ExcelToSqlETL.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace LRN.ExcelETL.Service.Services
@@ -14,18 +14,26 @@ namespace LRN.ExcelETL.Service.Services
     {
         private static ILoggerService _logger = new LogManagerService();
         private static List<FileLog> ImportLog = new List<FileLog>();
-        public ValidationResult Validate(DataTable table, ExcelSheetMapping mapping, int fileId)
+        private readonly IImportFilesRepository _importRepo;
+
+        public MappingValidator(IImportFilesRepository importRepo)
         {
+            _importRepo = importRepo;
+        }
+
+        public async Task<ValidationResult> Validate(DataTable table, ExcelSheetMapping mapping, int fileId)
+        {
+            var result = new ValidationResult();
+
             try
             {
-                var result = new ValidationResult();
-
                 foreach (var col in mapping.Columns)
                 {
                     if (col.Required && !table.Columns.Contains(col.SqlColumn))
                     {
-                        ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = ($"Missing column: {col.SqlColumn}") });
-                        result.Errors.Add($"Missing column: {col.SqlColumn}");
+                        var msg = $"Missing column: {col.SqlColumn}";
+                        ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = msg });
+                        result.Errors.Add(msg);
                     }
                 }
 
@@ -36,24 +44,24 @@ namespace LRN.ExcelETL.Service.Services
                         var value = row[col.SqlColumn]?.ToString();
                         if (!IsValid(value, col.DataType))
                         {
-                            ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = $"Invalid {col.DataType} in column {col.SqlColumn}: {value}" });
-
-                            result.Errors.Add($"Invalid {col.DataType} in column {col.SqlColumn}: {value}");
-
+                            var msg = $"Invalid {col.DataType} in column {col.SqlColumn}: {value}";
+                            ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = msg });
+                            result.Errors.Add(msg);
                         }
                     }
                 }
 
-                return result;
+                await _importRepo.InsertFileLog(ImportLog);
             }
             catch (Exception ex)
             {
-                ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = "Error Occured on MappingValidator - Validate : " + ex.ToString() });
-
-                _logger.Error("Error Occured on MappingValidator - Validate : " + ex.ToString());
-                return null;
+                var err = "Error Occurred on MappingValidator - Validate : " + ex.ToString();
+                ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = err });
+                await _importRepo.InsertFileLog(ImportLog);
+                _logger.Error(err);
             }
 
+            return result;
         }
 
         private bool IsValid(string? value, string dataType)
@@ -71,10 +79,12 @@ namespace LRN.ExcelETL.Service.Services
 
         public MappingEntry FileMapping(MappingConfigRoot masterConfig, string filename)
         {
-            var matchedMapping = masterConfig.Mappings.FirstOrDefault(m => filename.Contains(m.FileIdentifier, StringComparison.OrdinalIgnoreCase));
+            var matchedMapping = masterConfig.Mappings.FirstOrDefault(m =>
+                filename.Contains(m.FileIdentifier, StringComparison.OrdinalIgnoreCase));
 
             if (matchedMapping == null)
                 throw new Exception("No mapping found for this file name.");
+
             return matchedMapping;
         }
     }

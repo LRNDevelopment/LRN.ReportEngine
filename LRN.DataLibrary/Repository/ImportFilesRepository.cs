@@ -1,5 +1,7 @@
 ﻿using Dapper;
+using LRN.DataLibrary.Models;
 using LRN.DataLibrary.Repository.Interfaces;
+using LRN.ExcelToSqlETL.Core.Constants;
 using LRN.ExcelToSqlETL.Core.DtoModels;
 using Microsoft.Data.SqlClient;
 using System.Data;
@@ -52,19 +54,46 @@ public class ImportFilesRepository : IImportFilesRepository
         await UpdateImportFilesAsync(new List<ImportFileDto> { file });
     }
 
-    public async Task ProcessImportFilesAsync(List<ImportFileDto> files)
+    public async Task ProcessImportFilesAsync(ImportFileDto file)
     {
         using var connection = _context.CreateConnection();
         using var transaction = connection.BeginTransaction();
         try
         {
             await connection.ExecuteAsync("sp_InsertMasterData", transaction: transaction, commandType: CommandType.StoredProcedure);
-            // Additional stored procedure calls would go here as in EF version
-            foreach (var file in files)
+            if (file != null)
             {
-                file.ProcessedOn = DateTime.Now;
+                if (file.FileType == (int)CommonConst.ImportFileType.LIS_Report)
+                {
+
+                }
+                else if (file.FileType == (int)CommonConst.ImportFileType.Custom_Collection)
+                {
+
+                }
+                else if (file.FileType == (int)CommonConst.ImportFileType.Visit_Against_Accession)
+                {
+
+                }
+                else if (file.FileType == (int)CommonConst.ImportFileType.Transaction_Detail_Report)
+                {
+
+                }
+                else if (file.FileType == (int)CommonConst.ImportFileType.Denial_Tracking_Report)
+                {
+
+                }
+                else if (file.FileType == (int)CommonConst.ImportFileType.Prism_Billing_Sheet)
+                {
+
+                }
+                else if (file.FileType == (int)CommonConst.ImportFileType.Panel_Group)
+                {
+
+                }
+                
             }
-            await UpdateImportFilesAsync(files);
+            // Additional stored procedure calls would go here as in EF version
             transaction.Commit();
         }
         catch
@@ -73,6 +102,8 @@ public class ImportFilesRepository : IImportFilesRepository
             throw;
         }
     }
+
+
 
     public async Task<List<ImportFileDto>> GetImportFilesAsync()
     {

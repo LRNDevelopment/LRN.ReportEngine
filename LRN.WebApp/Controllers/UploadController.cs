@@ -101,6 +101,7 @@ public class UploadController : Controller
                 };
 
                 await _importRepo.AddImportFileAync(fileDto);
+                TempData["UploadSuccess"] = "true";
 
                 _logger.Info($"File uploaded: {file.FileName}, Lab: {lab}, Type: {fileType}");
 
@@ -108,6 +109,8 @@ public class UploadController : Controller
         }
         catch (Exception ex)
         {
+            TempData["UploadSuccess"] = "false";
+
             _logger.Error($"An error occurred while uploading the file: {ex.Message}");
         }
 

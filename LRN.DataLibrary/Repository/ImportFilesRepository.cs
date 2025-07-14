@@ -5,7 +5,9 @@ using LRN.ExcelToSqlETL.Core.Constants;
 using LRN.ExcelToSqlETL.Core.DtoModels;
 using LRN.ExcelToSqlETL.Core.Models;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System.Data;
+using static LRN.ExcelToSqlETL.Core.Constants.CommonConst;
 
 namespace LRN.DataLibrary.Repository;
 
@@ -45,7 +47,7 @@ public class ImportFilesRepository : IImportFilesRepository
 
     public async Task UpdateImportFilesAsync(List<ImportFileDto> files)
     {
-        const string sql = @"UPDATE ImportedFiles SET ImportFileName = @ImportFileName, ExcelRowCount=@ExcelRowCount, ImportedRowCount=@ImportedRowCount, FileStatus=@FileStatus, ImportedOn=@ImportedOn, FileType=@FileType, ProcessedOn=@ProcessedOn, LabId=@LabId WHERE ImportedFileID = @ImportedFileId";
+        const string sql = @"UPDATE ImportedFiles SET ImportFileName = @ImportFileName, ExcelRowCount=@ExcelRowCount, ImportedRowCount=@ImportedRowCount, FileStatus=@FileStatus, ImportedOn=@ImportedOn, FileType=@FileType, ProcessedOn=GETDATE(), LabId=@LabId WHERE ImportedFileID = @ImportedFileId";
         using var connection = _context.CreateConnection();
         await connection.ExecuteAsync(sql, files);
     }
@@ -58,53 +60,121 @@ public class ImportFilesRepository : IImportFilesRepository
     public async Task ProcessImportFilesAsync(ImportFileDto file)
     {
         using var connection = _context.CreateConnection();
+
+        // Cast to SqlConnection to access OpenAsync
+        if (connection is SqlConnection sqlConnection)
+        {
+            await sqlConnection.OpenAsync();
+        }
+        else
+        {
+            connection.Open(); // Fallback for other providers
+        }
+
         using var transaction = connection.BeginTransaction();
+
         try
         {
             await connection.ExecuteAsync("sp_InsertMasterData", transaction: transaction, commandType: CommandType.StoredProcedure);
+
             if (file != null)
             {
-                if (file.FileType == (int)CommonConst.ImportFileType.LIS_Report)
-                {
+                var parameters = new DynamicParameters();
+                parameters.Add("@FileId", file.ImportedFileId, DbType.Int32);
 
-                }
-                else if (file.FileType == (int)CommonConst.ImportFileType.Custom_Collection)
+                switch (file.FileType)
                 {
+                    case (int)CommonConst.ImportFileType.LIS_Report:
+                        await connection.ExecuteAsync("SP_Process_LISMaster_ByFileId", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        break;
 
-                }
-                else if (file.FileType == (int)CommonConst.ImportFileType.Visit_Against_Accession)
-                {
+                    case (int)CommonConst.ImportFileType.Custom_Collection:
+                        await connection.ExecuteAsync("Sp_ProcessBillingMasterData", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        break;
 
-                }
-                else if (file.FileType == (int)CommonConst.ImportFileType.Transaction_Detail_Report)
-                {
+                    case (int)CommonConst.ImportFileType.Visit_Against_Accession:
+                        await connection.ExecuteAsync("Sp_Process_VAA_ByFileId", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        break;
 
-                }
-                else if (file.FileType == (int)CommonConst.ImportFileType.Denial_Tracking_Report)
-                {
+                    case (int)CommonConst.ImportFileType.Transaction_Detail_Report:
+                        await connection.ExecuteAsync("Sp_ProcessTransactionDetails", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        break;
 
-                }
-                else if (file.FileType == (int)CommonConst.ImportFileType.Prism_Billing_Sheet)
-                {
+                    case (int)CommonConst.ImportFileType.Denial_Tracking_Report:
+                        await connection.ExecuteAsync("Sp_ProcessDenialTrackingMaster", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        break;
 
-                }
-                else if (file.FileType == (int)CommonConst.ImportFileType.Panel_Group)
-                {
+                    case (int)CommonConst.ImportFileType.Prism_Billing_Sheet:
+                        await connection.ExecuteAsync("Sp_Process_BillingSheet_ByFileId", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        break;
 
+                    case (int)CommonConst.ImportFileType.Panel_Group:
+                        // Future implementation
+                        break;
                 }
-                
             }
-            // Additional stored procedure calls would go here as in EF version
+
             transaction.Commit();
         }
-        catch
+        catch (Exception ex)
         {
             transaction.Rollback();
-            throw;
+            throw ex;
         }
     }
 
 
+    public async Task ProcessImportFilesGroupAsync(List<ImportFileDto> files)
+    {
+        if (files == null || !files.Any())
+            throw new ArgumentException("File list is empty or null.");
+
+        using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
+        try
+        {
+            await _dbContext.Database.ExecuteSqlInterpolatedAsync($"EXEC sp_InsertMasterData");
+
+            var fileGroups = files
+                .Where(f => f.ImportedFileId != 0)
+                .GroupBy(f => (ImportFileType)f.FileType)
+                .ToDictionary(g => g.Key, g => string.Join(",", g.Select(f => f.ImportedFileId)));
+
+            fileGroups.TryGetValue(ImportFileType.LIS_Report, out string lisFileId);
+            fileGroups.TryGetValue(ImportFileType.Visit_Against_Accession, out string vaaFileId);
+            fileGroups.TryGetValue(ImportFileType.Custom_Collection, out string customCollectionFileId);
+            fileGroups.TryGetValue(ImportFileType.Prism_Billing_Sheet, out string billingSheetFileId);
+            fileGroups.TryGetValue(ImportFileType.Denial_Tracking_Report, out string denialFileId);
+            fileGroups.TryGetValue(ImportFileType.Transaction_Detail_Report, out string transFileId);
+
+            await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+                $"EXEC SP_Process_LISMaster_From_Staging {lisFileId}, {vaaFileId}, {customCollectionFileId}, {billingSheetFileId}");
+
+            await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+                $"EXEC Sp_ProcessBillingMasterData {customCollectionFileId}");
+
+            await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+                $"EXEC Sp_ProcessDenialTrackingMaster {denialFileId}");
+
+            await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+                $"EXEC Sp_ProcessTransactionDetails {transFileId}");
+
+            foreach (var file in files)
+            {
+                file.ProcessedOn = DateTime.Now;
+                file.FileStatus = (int)CommonConst.FileStatusEnum.ImportSuccess;
+            }
+
+            await UpdateImportFilesAsync(files);
+            await transaction.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            //.LogError(ex, "An error occurred while processing import files.");
+            throw new ApplicationException("An error occurred while processing import files.", ex);
+        }
+    }
 
     public async Task<List<ImportFileDto>> GetImportFilesAsync()
     {

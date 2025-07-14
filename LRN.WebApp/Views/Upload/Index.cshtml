@@ -48,15 +48,15 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model)
+                @foreach (var item in Model.OrderByDescending(c=>c.ImportedOn).ToList())
                 {
                     <tr>
                         <td>@item.ImportFileName</td>
                         <td>Prism</td>
                         <td>@item.FileTypeName</td>
                         <td>@item.ImportedOn</td>
-                         <td>@item.ImportedRowCount</td>
-                          <td>@item.ImportedOn</td>
+                        <td>@item.ExcelRowCount</td>
+                        <td>@item.ImportedRowCount</td>
                         <td class="@item.FileStatusName.ToLower()">@item.FileStatusName</td>
                     </tr>
                 }
@@ -64,8 +64,19 @@
         </table>
     </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+       @if (TempData["UploadSuccess"] != null)
+    {
+        <text>
+        Swal.fire({
+            icon: 'success',
+            title: 'Upload Complete',
+            text: 'File is upload and under In-Progress.',
+            confirmButtonText: 'OK'
+        });
+        </text>
+    }
     function validateForm() {
         const lab = document.getElementById("lab").value;
         const fileType = document.getElementById("fileType").value;

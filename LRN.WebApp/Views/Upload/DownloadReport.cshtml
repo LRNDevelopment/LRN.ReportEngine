@@ -1,0 +1,60 @@
+﻿@{
+    ViewBag.Title = "Download Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .download-container {
+        max-width: 400px;
+        margin: 50px auto;
+        padding: 25px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        font-family: Arial, sans-serif;
+    }
+
+        .download-container h2 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    label, select, button {
+        width: 100%;
+        font-size: 16px;
+    }
+
+    select, button {
+        padding: 10px;
+        margin-top: 5px;
+    }
+
+    button {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        button:hover {
+            background-color: #218838;
+        }
+</style>
+
+<div class="download-container">
+    <h2>Download Report</h2>
+
+    @using (Html.BeginForm("Download", "Report", FormMethod.Post))
+    {
+        <div class="form-group">
+            <label for="reportType">Select Report Type:</label>
+            @Html.DropDownList("reportType", new SelectList(ViewBag.ReportTypes as List<SelectListItem>, "Value", "Text"), "-- Select --", new { @class = "form-control" })
+        </div>
+        <button type="submit">Download Report</button>
+    }
+</div>

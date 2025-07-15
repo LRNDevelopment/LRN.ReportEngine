@@ -23,11 +23,12 @@ public class ExcelFileReader : IFileReader
     public async Task<List<ExcelReadResult>> ReadAsync(Stream stream, ExcelSheetMapping mapping, int ImportFileId)
     {
         _ImportFileId = ImportFileId;
-        return mapping.UseDynamicSchema
+        var result = mapping.UseDynamicSchema
             ? await ReadDynamicAsync(stream, mapping)
             : await ReadMappedAsync(stream, mapping);
 
         await _importRepo.InsertFileLog(ImportLog);
+        return result;
     }
 
     private async Task<List<ExcelReadResult>> ReadMappedAsync(Stream stream, ExcelSheetMapping mapping)

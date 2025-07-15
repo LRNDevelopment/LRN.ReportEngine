@@ -126,4 +126,28 @@ public class UploadController : Controller
 
         return File(bytes, "text/plain", $"ImportLogs_{fileId}.txt");
     }
+
+    public ActionResult DownloadReport()
+    {
+        ViewBag.ReportTypes = new List<SelectListItem>
+        {
+            new SelectListItem { Text = "LIS Master", Value = "1" },
+            new SelectListItem { Text = "Collection Master", Value = "2" },
+            new SelectListItem { Text = "Production Master", Value = "3" },
+            new SelectListItem { Text = "Production Line Level", Value = "4" }
+        };
+
+        return View();
+    }
+
+    [HttpPost]
+    public ActionResult Download(string reportType)
+    {
+        // Example: return file based on selected type
+        var content = $"This is the {reportType} report.";
+        var bytes = System.Text.Encoding.UTF8.GetBytes(content);
+        var fileName = $"{reportType}_report.txt";
+
+        return File(bytes, "text/plain", fileName);
+    }
 }

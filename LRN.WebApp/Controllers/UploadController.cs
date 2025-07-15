@@ -117,5 +117,13 @@ public class UploadController : Controller
         return RedirectToAction("Index");
     }
 
+    public async Task<FileResult> DownloadImportLogs(int fileId)
+    {
+        var logs = await _importRepo.GetFileLogsById(fileId);
 
+        var logText = string.Join(Environment.NewLine, logs);
+        var bytes = System.Text.Encoding.UTF8.GetBytes(logText);
+
+        return File(bytes, "text/plain", $"ImportLogs_{fileId}.txt");
+    }
 }

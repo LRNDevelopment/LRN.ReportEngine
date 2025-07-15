@@ -69,5 +69,13 @@ namespace LRN.ExcelToSqlETL.Core.Constants
             [Description("Panel_Group")]
             Panel_Group = 7
         }
+
+        public enum DownloadReportType
+        {
+            LIS_Master = 1,
+            Production_Master = 2,
+            Collection_Report = 3,
+            Production_LineLevel = 4
+        }
     }
 }

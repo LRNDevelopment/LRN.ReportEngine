@@ -20,6 +20,7 @@ namespace LRN.ETLWorkerService
         public static IHostBuilder CreateHostBuilder(string[] args)
         {
             return Host.CreateDefaultBuilder(args)
+                .UseWindowsService() // ✅ Required for running as a Windows Service
                 .ConfigureAppConfiguration((context, config) =>
                 {
                     config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
@@ -28,18 +29,18 @@ namespace LRN.ETLWorkerService
                 {
                     IConfiguration configuration = hostContext.Configuration;
 
-                    // Register services for the database context
+                    // EF Core DbContext
                     services.AddDbContext<LRNDbContext>(options =>
                         options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
-                    // Register AutoMapper and specify the assembly containing your profiles
+                    // AutoMapper
                     services.AddAutoMapper(typeof(Program).Assembly);
 
-                    // Register DapperContext (Singleton is fine here since it's a database connection context that doesn't depend on per-request lifetimes)
+                    // Singleton for Dapper context
                     services.AddSingleton<DapperContext>(sp =>
                         new DapperContext(configuration.GetConnectionString("DefaultConnection")));
 
-                    // Register scoped services (ExcelETL services depend on DB Context and Repo)
+                    // Scoped Services
                     services.AddScoped<ILoggerService, LogManagerService>();
                     services.AddScoped<IExcelMapperLoader, JsonExcelMapperLoader>();
                     services.AddScoped<IFileReader, ExcelFileReader>();
@@ -48,17 +49,16 @@ namespace LRN.ETLWorkerService
                     services.AddScoped<ExcelEtlProcessor>();
                     services.AddScoped<ExcelWriter>();
 
-                    // Add Repositories (Scoped since they depend on DB Context)
+                    // Repositories
                     services.AddScoped<IImportFilesRepository, ImportFilesRepository>();
                     services.AddScoped<IReportRepository, ReportRepository>();
 
+                    // Config shared constants
                     ConfigStaticSettings(configuration);
 
-                    // Register the hosted service (background worker)
+                    // Register background worker
                     services.AddHostedService<FileProcessingWorker>();
                 });
-
-
         }
 
         static void ConfigStaticSettings(IConfiguration config)

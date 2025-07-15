@@ -16,4 +16,6 @@ public interface IImportFilesRepository
     Task<ImportFileDto> GetImportFileById(int fileId);
 
     Task<List<FileLog>> InsertFileLog(List<FileLog> fileLogs);
+
+    Task<List<FileLog>> GetFileLogsById(int fileId);
 }

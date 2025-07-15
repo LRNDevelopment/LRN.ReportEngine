@@ -3,58 +3,73 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<style>
-    .download-container {
-        max-width: 400px;
-        margin: 50px auto;
-        padding: 25px;
-        background-color: #fff;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        font-family: Arial, sans-serif;
-    }
-
-        .download-container h2 {
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-    label, select, button {
-        width: 100%;
-        font-size: 16px;
-    }
-
-    select, button {
-        padding: 10px;
-        margin-top: 5px;
-    }
-
-    button {
-        background-color: #28a745;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-        button:hover {
-            background-color: #218838;
-        }
-</style>
-
 <div class="download-container">
+    <div id="loader"><div class="spinner"></div></div>
+
     <h2>Download Report</h2>
 
-    @using (Html.BeginForm("Download", "Report", FormMethod.Post))
+    @using (Html.BeginForm("Download", "Upload", FormMethod.Post, new { id = "reportForm" }))
     {
         <div class="form-group">
             <label for="reportType">Select Report Type:</label>
-            @Html.DropDownList("reportType", new SelectList(ViewBag.ReportTypes as List<SelectListItem>, "Value", "Text"), "-- Select --", new { @class = "form-control" })
+            @Html.DropDownList("reportType", new SelectList(ViewBag.ReportTypes as List<SelectListItem>, "Value", "Text"), "-- Select --", new { @class = "form-control", id = "reportType" })
         </div>
+
+        <div class="form-group">
+            <label for="fromDate">From Date:</label>
+            <input type="date" name="fromDate" id="fromDate" class="form-control" style="max-width: 378px;"/>
+        </div>
+
+        <div class="form-group">
+            <label for="toDate">To Date:</label>
+            <input type="date" name="toDate" id="toDate" class="form-control" style="max-width: 378px;"/>
+        </div>
+
+        <div class="validation-error" id="validationMessage"></div>
+
         <button type="submit">Download Report</button>
     }
 </div>
+
+<script>
+    document.getElementById("reportForm").addEventListener("submit", function (e) {
+        const reportType = document.getElementById("reportType").value;
+        const fromDate = document.getElementById("fromDate").value;
+        const toDate = document.getElementById("toDate").value;
+        const errorDiv = document.getElementById("validationMessage");
+
+        errorDiv.style.display = "none";
+        errorDiv.textContent = "";
+
+        if (!reportType) {
+            e.preventDefault();
+            errorDiv.textContent = "Please select a report type.";
+            errorDiv.style.display = "block";
+            return;
+        }
+
+        if ((fromDate && !toDate) || (!fromDate && toDate)) {
+            e.preventDefault();
+            errorDiv.textContent = "Please select both From and To dates, or leave both empty.";
+            errorDiv.style.display = "block";
+            return;
+        }
+
+        if (fromDate && toDate && new Date(toDate) < new Date(fromDate)) {
+            e.preventDefault();
+            errorDiv.textContent = "To Date cannot be earlier than From Date.";
+            errorDiv.style.display = "block";
+            return;
+        }
+
+        // Show loader
+        document.getElementById("loader").style.display = "flex";
+
+        // Fallback: hide loader after 10 seconds in case download failed silently
+        setTimeout(() => {
+            document.getElementById("loader").style.display = "none";
+        }, 18000);
+    });
+</script>
+
+

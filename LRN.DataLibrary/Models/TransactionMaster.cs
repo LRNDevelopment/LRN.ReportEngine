@@ -7,9 +7,7 @@ public partial class TransactionMaster
 {
     public int TransactionDetailId { get; set; }
 
-    public int LismasterId { get; set; }
-
-    public int LabIdentityKey { get; set; }
+    public int? LabIdentityKey { get; set; }
 
     public string? TransactionType { get; set; }
 

@@ -1,16 +1,12 @@
+using ClosedXML.Excel;
 using Common.Logging;
 using LRN.DataLibrary.Repository.Interfaces;
+using LRN.ExcelGenerator;
 using LRN.ExcelToSqlETL.Core.Constants;
 using LRN.ExcelToSqlETL.Core.DtoModels;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.ServiceProcess;
-using System.Threading.Tasks;
 
 [Authorize]
 public class UploadController : Controller
@@ -19,17 +15,23 @@ public class UploadController : Controller
     private readonly IConfiguration _config;
     private readonly IImportFilesRepository _importRepo;
     private readonly ILookUpRepository _lookupRepo;
+    private readonly IExcelWriter _excelWriter;
+    private readonly IReportRepository _reportRepository;
 
     public UploadController(
-       ILoggerService logger,
-       IConfiguration config,
-       IImportFilesRepository importRepo,
-       ILookUpRepository lookupRepo)
+        ILoggerService logger,
+        IConfiguration config,
+        IImportFilesRepository importRepo,
+        ILookUpRepository lookupRepo,
+        IExcelWriter excelWriter,
+        IReportRepository reportRepository)
     {
         _logger = logger;
         _config = config;
         _importRepo = importRepo;
         _lookupRepo = lookupRepo;
+        _excelWriter = excelWriter;
+        _reportRepository = reportRepository;
     }
 
     public async Task<IActionResult> Index()
@@ -37,26 +39,23 @@ public class UploadController : Controller
         var result = await _importRepo.GetImportFilesAsync();
         var files = new List<FileUpload>();
 
-        // Labs dropdown
         ViewBag.Labs = new List<SelectListItem>
         {
             new SelectListItem { Text = "Prism", Value = "3" }
         };
 
-        // FileTypes dropdown
-        var importfile = await _lookupRepo.GetImportFileTypesAsync(); // Make sure GetImportFileTypes() is async
-
-        ViewBag.FileTypes = importfile.Select(l => new SelectListItem
+        var importFileTypes = await _lookupRepo.GetImportFileTypesAsync();
+        ViewBag.FileTypes = importFileTypes.Select(l => new SelectListItem
         {
             Text = l.FileTypeName,
             Value = l.FileTypeId.ToString()
         }).ToList();
 
-        // Build FileUpload view model list
         foreach (var file in result)
         {
             files.Add(new FileUpload
             {
+                ImportedFileId = file.ImportedFileId,
                 FileType = file.FileType,
                 ProcessedOn = file.ProcessedOn,
                 ImportedOn = file.ImportedOn,
@@ -65,7 +64,8 @@ public class UploadController : Controller
                 FileStatus = file.FileStatus,
                 FileStatusName = file.FileStatusName,
                 FileTypeName = file.FileTypeName,
-                ImportFileName = file.ImportFileName
+                ImportFileName = file.ImportFileName,
+                ImportFilePath = file.ImportFilePath
             });
         }
 
@@ -90,7 +90,7 @@ public class UploadController : Controller
                     await file.CopyToAsync(stream);
                 }
 
-                ImportFileDto fileDto = new ImportFileDto
+                var fileDto = new ImportFileDto
                 {
                     ImportFileName = Path.GetFileName(file.FileName),
                     FileType = int.Parse(fileType),
@@ -104,14 +104,12 @@ public class UploadController : Controller
                 TempData["UploadSuccess"] = "true";
 
                 _logger.Info($"File uploaded: {file.FileName}, Lab: {lab}, Type: {fileType}");
-
             }
         }
         catch (Exception ex)
         {
             TempData["UploadSuccess"] = "false";
-
-            _logger.Error($"An error occurred while uploading the file: {ex.Message}");
+            _logger.Error($"An error occurred while uploading the file: {ex.Message}", ex);
         }
 
         return RedirectToAction("Index");
@@ -121,10 +119,24 @@ public class UploadController : Controller
     {
         var logs = await _importRepo.GetFileLogsById(fileId);
 
-        var logText = string.Join(Environment.NewLine, logs);
+        var formattedLogs = logs.Select(log =>
+            $"{log.LogType}  :  {log.LogMessage} : {log.RowNo} : {log.ColumnName} :: {log.CreatedOn:yyyy-MM-dd HH:mm:ss}");
+
+        var logText = string.Join(Environment.NewLine, formattedLogs);
         var bytes = System.Text.Encoding.UTF8.GetBytes(logText);
 
         return File(bytes, "text/plain", $"ImportLogs_{fileId}.txt");
+    }
+
+    public IActionResult DownloadImportedFile(string filePath, string fileName)
+    {
+        if (System.IO.File.Exists(filePath))
+        {
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            return File(fileBytes, "application/octet-stream", fileName);
+        }
+
+        return NotFound("File not found.");
     }
 
     public ActionResult DownloadReport()
@@ -132,22 +144,63 @@ public class UploadController : Controller
         ViewBag.ReportTypes = new List<SelectListItem>
         {
             new SelectListItem { Text = "LIS Master", Value = "1" },
-            new SelectListItem { Text = "Collection Master", Value = "2" },
-            new SelectListItem { Text = "Production Master", Value = "3" },
-            new SelectListItem { Text = "Production Line Level", Value = "4" }
+            new SelectListItem { Text = "Production Master", Value = "2" },
+            new SelectListItem { Text = "Collection Report", Value = "3" }
         };
 
         return View();
     }
 
     [HttpPost]
-    public ActionResult Download(string reportType)
+    [ValidateAntiForgeryToken]
+    public async Task<ActionResult> Download(int reportType, DateTime? fromDate, DateTime? toDate)
     {
-        // Example: return file based on selected type
-        var content = $"This is the {reportType} report.";
-        var bytes = System.Text.Encoding.UTF8.GetBytes(content);
-        var fileName = $"{reportType}_report.txt";
+        XLWorkbook wb = null;
+        string filename = string.Empty;
 
-        return File(bytes, "text/plain", fileName);
+
+        if (reportType == (int)CommonConst.DownloadReportType.LIS_Master)
+        {
+            var lisMaster = _reportRepository.GetLISMasterReport(fromDate, toDate);
+            filename = $"LIS_Master_{DateTime.Now:ddMMyyyy}.xlsx";
+            wb = await _excelWriter.GetReport(CommonConst.LISMaster_Template, null, lisMaster);
+        }
+        else if (reportType == (int)CommonConst.DownloadReportType.Production_Master)
+        {
+            var prodMaster = _reportRepository.GetProductionDataAsync(fromDate, toDate);
+            var lineLevel = _reportRepository.GetProdLineLevelAsync(fromDate, toDate);
+            filename = $"Prod_Master_{DateTime.Now:ddMMyyyy}.xlsx";
+
+            wb = await _excelWriter.GetReport(
+                CommonConst.ProdMaster_Template,
+                null,
+                prodMaster,
+                1,
+                false,
+                null,
+                true,
+                lineLevel
+            );
+        }
+        else if (reportType == (int)CommonConst.DownloadReportType.Collection_Report)
+        {
+            var collectionData = _reportRepository.GetCollectionDateByDateAsync(fromDate, toDate);
+            filename = $"Collection_{DateTime.Now:ddMMyyyy}.xlsx";
+            wb = await _excelWriter.GetReport(CommonConst.CollectionTemplate, null, collectionData);
+        }
+
+        if (wb == null)
+            return BadRequest("Invalid report type or empty workbook.");
+
+        using (var stream = new MemoryStream())
+        {
+            wb.SaveAs(stream); // will fail if wb is disposed
+            stream.Position = 0;
+
+            return File(stream.ToArray(),
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        filename);
+        }
+
     }
 }

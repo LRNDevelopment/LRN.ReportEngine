@@ -21,4 +21,5 @@ public class FileUpload
 
     public string FileTypeName { get; set; }
     public string FileStatusName { get; set; }
+    public string ImportFilePath { get; internal set; }
 }

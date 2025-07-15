@@ -39,6 +39,8 @@ public partial class LRNDbContext : DbContext
 
     public virtual DbSet<ImportFilType> ImportFilTypes { get; set; }
 
+    public virtual DbSet<ImportFileLog> ImportFileLogs { get; set; }
+
     public virtual DbSet<ImportedFile> ImportedFiles { get; set; }
 
     public virtual DbSet<InsurancePayerMaster> InsurancePayerMasters { get; set; }
@@ -75,7 +77,7 @@ public partial class LRNDbContext : DbContext
 
     public virtual DbSet<TransactionSummary> TransactionSummaries { get; set; }
 
-    public DbSet<ImportFileLog> ImportFileLogs { get; set; }
+    public virtual DbSet<Vaamaster> Vaamasters { get; set; }
 
     public virtual DbSet<VisitAgaistAccessionStaging> VisitAgaistAccessionStagings { get; set; }
 
@@ -86,6 +88,7 @@ public partial class LRNDbContext : DbContext
     public DbSet<ClaimDetailDto> ClaimDetailDto { get; set; } // Not a real table, just used for SP mapping
 
     public DbSet<CollectionData> CollectionData { get; set; } // Not a real table, just used for SP mapping
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("data source=Jameel;initial catalog=PrismLRN;trusted_connection=true;TrustServerCertificate=True;");
@@ -102,15 +105,9 @@ public partial class LRNDbContext : DbContext
 
         modelBuilder.Entity<BillingMaster>(entity =>
         {
-            entity.HasKey(e => e.BillingMasterId).HasName("PK__BillingM__4D6560C1F23F6975");
+            entity.HasKey(e => e.BillingMasterId).HasName("PK__BillingM__4D6560C1B3592054");
 
             entity.ToTable("BillingMaster");
-
-            modelBuilder.Entity<ImportFileLog>()
-               .Property(b => b.CreatedOn)
-               .HasDefaultValueSql("GETDATE()");
-
-            entity.HasIndex(e => new { e.VisitNumber, e.ChargeEntryDate, e.FirstBillDate, e.LismasterId, e.PrimaryPayerId, e.PayerTypeId, e.BillingProviderId, e.Modifier }, "IX_BillingMaster_VisitNumber");
 
             entity.HasIndex(e => new { e.VisitNumber, e.Cptcode, e.FirstBillDate, e.Units, e.Modifier, e.BilledAmount }, "UQ_BillingMaster_ACC").IsUnique();
 
@@ -175,19 +172,19 @@ public partial class LRNDbContext : DbContext
             entity.HasOne(d => d.BillingProvider).WithMany(p => p.BillingMasters)
                 .HasForeignKey(d => d.BillingProviderId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__BillingMa__Billi__2E11BAA1");
+                .HasConstraintName("FK__BillingMa__Billi__1F8E9120");
 
             entity.HasOne(d => d.Lismaster).WithMany(p => p.BillingMasters)
                 .HasForeignKey(d => d.LismasterId)
-                .HasConstraintName("FK__BillingMa__LISMa__32D66FBE");
+                .HasConstraintName("FK__BillingMa__LISMa__2453463D");
 
             entity.HasOne(d => d.PayerType).WithMany(p => p.BillingMasters)
                 .HasForeignKey(d => d.PayerTypeId)
-                .HasConstraintName("FK__BillingMa__Payer__379B24DB");
+                .HasConstraintName("FK__BillingMa__Payer__2917FB5A");
 
             entity.HasOne(d => d.PrimaryPayer).WithMany(p => p.BillingMasters)
                 .HasForeignKey(d => d.PrimaryPayerId)
-                .HasConstraintName("FK__BillingMa__Prima__3C5FD9F8");
+                .HasConstraintName("FK__BillingMa__Prima__2DDCB077");
         });
 
         modelBuilder.Entity<BillingProviderMaster>(entity =>
@@ -523,16 +520,37 @@ public partial class LRNDbContext : DbContext
             entity.Property(e => e.IsActive).HasDefaultValue(true);
         });
 
+        modelBuilder.Entity<ImportFileLog>(entity =>
+        {
+            entity.HasKey(e => e.LogId).HasName("PK__ImportFi__5E5499A80F16A4E0");
+
+            entity.Property(e => e.LogId).HasColumnName("LogID");
+            entity.Property(e => e.ColumnName)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedOn)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.LogMessage).HasMaxLength(500);
+            entity.Property(e => e.LogType)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+        });
+
         modelBuilder.Entity<ImportedFile>(entity =>
         {
             entity.HasKey(e => e.ImportedFileId).HasName("PK__Imported__0000074947B7CF78");
 
             entity.Property(e => e.ImportedFileId).HasColumnName("ImportedFileID");
             entity.Property(e => e.ImportFileName).HasMaxLength(500);
+            entity.Property(e => e.ImportFilePath)
+                .HasMaxLength(250)
+                .IsUnicode(false);
             entity.Property(e => e.ImportedOn)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
             entity.Property(e => e.LabId).HasDefaultValue(3);
+            entity.Property(e => e.LogFilePath).HasMaxLength(500);
             entity.Property(e => e.ProcessedOn).HasColumnType("datetime");
         });
 
@@ -575,17 +593,13 @@ public partial class LRNDbContext : DbContext
 
         modelBuilder.Entity<Lismaster>(entity =>
         {
-            entity.HasKey(e => e.LismasterId).HasName("PK__LISMaste__0E87FAE76AB07069");
+            entity.HasKey(e => e.LismasterId).HasName("PK__LISMaste__0E87FAE7A6A72745");
 
             entity.ToTable("LISMaster");
 
-            entity.HasIndex(e => new { e.LismasterId, e.PanelId, e.ReferringProviderId, e.LabId }, "IX_LISMaster_LISMasterId");
-
-            entity.HasIndex(e => e.VisitNumber, "IX_LISMaster_VisitNumber");
-
             entity.HasIndex(e => new { e.AccessionNo, e.LabId }, "UQ_LISMaster_ACC").IsUnique();
 
-            entity.HasIndex(e => e.AccessionNo, "UQ__LISMaste__B4B23BD77C30ACE2").IsUnique();
+            entity.HasIndex(e => e.AccessionNo, "UQ__LISMaste__B4B23BD707DC1100").IsUnique();
 
             entity.Property(e => e.LismasterId).HasColumnName("LISMasterId");
             entity.Property(e => e.AccessionNo).HasMaxLength(150);
@@ -670,39 +684,39 @@ public partial class LRNDbContext : DbContext
 
             entity.HasOne(d => d.BillingProvider).WithMany(p => p.Lismasters)
                 .HasForeignKey(d => d.BillingProviderId)
-                .HasConstraintName("FK__LISMaster__Billi__004AEFF1");
+                .HasConstraintName("FK__LISMaster__Billi__6FDF7DFE");
 
             entity.HasOne(d => d.Clinic).WithMany(p => p.Lismasters)
                 .HasForeignKey(d => d.ClinicId)
-                .HasConstraintName("FK__LISMaster__Clini__03275C9C");
+                .HasConstraintName("FK__LISMaster__Clini__74A4331B");
 
             entity.HasOne(d => d.Lab).WithMany(p => p.Lismasters)
                 .HasForeignKey(d => d.LabId)
-                .HasConstraintName("FK__LISMaster__LabId__07EC11B9");
+                .HasConstraintName("FK__LISMaster__LabId__7968E838");
 
             entity.HasOne(d => d.OperationalGroup).WithMany(p => p.Lismasters)
                 .HasForeignKey(d => d.OperationalGroupId)
-                .HasConstraintName("FK__LISMaster__Opera__0CB0C6D6");
+                .HasConstraintName("FK__LISMaster__Opera__0015E5C7");
 
             entity.HasOne(d => d.Panel).WithMany(p => p.Lismasters)
                 .HasForeignKey(d => d.PanelId)
-                .HasConstraintName("FK__LISMaster__Panel__11757BF3");
+                .HasConstraintName("FK__LISMaster__Panel__02F25272");
 
             entity.HasOne(d => d.PayerType).WithMany(p => p.Lismasters)
                 .HasForeignKey(d => d.PayerTypeId)
-                .HasConstraintName("FK__LISMaster__Payer__163A3110");
+                .HasConstraintName("FK__LISMaster__Payer__07B7078F");
 
             entity.HasOne(d => d.ReferringProvider).WithMany(p => p.Lismasters)
                 .HasForeignKey(d => d.ReferringProviderId)
-                .HasConstraintName("FK__LISMaster__Refer__1AFEE62D");
+                .HasConstraintName("FK__LISMaster__Refer__0C7BBCAC");
 
             entity.HasOne(d => d.SampleStatus).WithMany(p => p.Lismasters)
                 .HasForeignKey(d => d.SampleStatusId)
-                .HasConstraintName("FK__LISMaster__Sampl__1FC39B4A");
+                .HasConstraintName("FK__LISMaster__Sampl__114071C9");
 
             entity.HasOne(d => d.TestType).WithMany(p => p.Lismasters)
                 .HasForeignKey(d => d.TestTypeId)
-                .HasConstraintName("FK__LISMaster__TestT__24885067");
+                .HasConstraintName("FK__LISMaster__TestT__160526E6");
         });
 
         modelBuilder.Entity<Lisstaging>(entity =>
@@ -772,13 +786,9 @@ public partial class LRNDbContext : DbContext
 
         modelBuilder.Entity<PanelGroup>(entity =>
         {
-            entity.HasKey(e => e.PanelGroupId).HasName("PK__PanelGro__E6B1A9B94AE36347");
+            entity.HasKey(e => e.PanelGroupId).HasName("PK__PanelGro__E6B1A9B964A2E4EB");
 
             entity.ToTable("PanelGroup");
-
-            entity.HasIndex(e => e.OrderInfo, "IX_PanelGroup_OrderInfo");
-
-            entity.HasIndex(e => e.PanelGroupId, "IX_PanelGroup_PanelGroupId");
 
             entity.Property(e => e.CreatedOn)
                 .HasDefaultValueSql("(getdate())")
@@ -786,6 +796,9 @@ public partial class LRNDbContext : DbContext
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.OrderInfo)
                 .HasMaxLength(1000)
+                .IsUnicode(false);
+            entity.Property(e => e.PanelCategory)
+                .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.PanelName)
                 .HasMaxLength(250)
@@ -1032,10 +1045,6 @@ public partial class LRNDbContext : DbContext
                 .HasNoKey()
                 .ToTable("TransactionMaster");
 
-            entity.HasIndex(e => e.VisitNo, "IX_TransactionMaster_VisitNo");
-
-            entity.HasIndex(e => new { e.VisitNo, e.Cptcode }, "IX_TransactionMaster_VisitNo_CPTCode");
-
             entity.Property(e => e.AdjustmentAmount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.ChartNumber)
                 .HasMaxLength(50)
@@ -1051,7 +1060,6 @@ public partial class LRNDbContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
             entity.Property(e => e.InsurancePaidAmount).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.LismasterId).HasColumnName("LISMasterID");
             entity.Property(e => e.Modifiers)
                 .HasMaxLength(50)
                 .IsUnicode(false);
@@ -1120,6 +1128,21 @@ public partial class LRNDbContext : DbContext
             entity.Property(e => e.TransactionType)
                 .HasMaxLength(30)
                 .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<Vaamaster>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("VAAMaster");
+
+            entity.HasIndex(e => new { e.VisitNumber, e.AccessionNo, e.DateOfEntry, e.ServiceDate }, "UQ_VAAMaster").IsUnique();
+
+            entity.Property(e => e.AccessionNo).HasMaxLength(30);
+            entity.Property(e => e.CreatedOn)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.VisitNumber).HasMaxLength(30);
         });
 
         modelBuilder.Entity<VisitAgaistAccessionStaging>(entity =>

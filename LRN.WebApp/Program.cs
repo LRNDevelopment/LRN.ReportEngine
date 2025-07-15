@@ -1,8 +1,11 @@
 ﻿using AutoMapper;
 using Common.Logging;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using LRN.DataLibrary;
 using LRN.DataLibrary.Repository;
 using LRN.DataLibrary.Repository.Interfaces;
+using LRN.ExcelGenerator;
+using LRN.ExcelGenerator.Utils;
 using LRN.ExcelToSqlETL.Core.Constants;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +45,9 @@ builder.Services.AddScoped<IDbConnection>(sp =>
 builder.Services.AddScoped<ILoggerService, LogManagerService>();
 builder.Services.AddScoped<IImportFilesRepository, ImportFilesRepository>();
 builder.Services.AddScoped<ILookUpRepository, LookUpRepository>();
+builder.Services.AddScoped<IReportRepository, ReportRepository>();
+
+builder.Services.AddScoped<IExcelWriter, ExcelWriter>();
 
 // ✅ AutoMapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

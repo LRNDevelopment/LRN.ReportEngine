@@ -11,6 +11,8 @@ public partial class PanelGroup
 
     public string OrderInfo { get; set; } = null!;
 
+    public string PanelCategory { get; set; } = null!;
+
     public bool? IsActive { get; set; }
 
     public DateTime? CreatedOn { get; set; }

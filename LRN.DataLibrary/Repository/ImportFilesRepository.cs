@@ -226,4 +226,17 @@ public class ImportFilesRepository : IImportFilesRepository
         }
         return fileLogs;
     }
+
+    public async Task<List<FileLog>> GetFileLogsById(int fileId)
+    {
+        const string query = @"SELECT LogType, LogMessage, RowNo, ColumnName, CreatedOn 
+                           FROM ImportFileLogs 
+                           WHERE ImportFileId = @FileId 
+                           ORDER BY CreatedOn";
+
+        using var connection = _context.CreateConnection();
+        var results = await connection.QueryAsync<FileLog>(query, new { FileId = fileId });
+        return results.ToList();
+    }
+
 }

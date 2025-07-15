@@ -16,5 +16,7 @@
         public int RowNo { get; set; }
 
         public string ColumnName { get; set; }
+
+        public DateTime CreatedOn { get; set; }
     }
 }

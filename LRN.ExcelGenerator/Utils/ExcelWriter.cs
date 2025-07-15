@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace LRN.ExcelGenerator.Utils
 {
-    public class ExcelWriter
+    public class ExcelWriter : IExcelWriter
     {
         private readonly ILoggerService _logger;
         private readonly IConfiguration _config;
@@ -94,7 +94,57 @@ namespace LRN.ExcelGenerator.Utils
             workbook.SaveAs(outputPath);
         }
 
+        public async Task<XLWorkbook> GetReport<T>(
+         string templatePath,
+         string outputPath,
+         List<T> dataList,
+         int headerRow = 1,
+         bool hasInsight = false,
+         List<InsightData>? insightData = null,
+         bool hasLineLevel = false,
+         IEnumerable<object>? lineLevel = null)
+        {
+            if (!File.Exists(templatePath))
+                throw new FileNotFoundException("Template file not found.", templatePath);
 
+            // ❌ DO NOT use 'using' here
+            var workbook = new XLWorkbook(templatePath);
+
+            // Line-level data
+            if (hasLineLevel && lineLevel != null)
+            {
+                var lineLevelList = lineLevel.ToList();
+                if (lineLevelList.Any())
+                {
+                    var lineType = lineLevelList.First().GetType();
+                    var listType = typeof(List<>).MakeGenericType(lineType);
+                    var typedList = Activator.CreateInstance(listType)!;
+
+                    var addMethod = listType.GetMethod("Add")!;
+                    foreach (var item in lineLevelList)
+                    {
+                        addMethod.Invoke(typedList, new[] { item });
+                    }
+
+                    var method = typeof(ExcelWriter)
+                        .GetMethod(nameof(WriteDataToExcel))!
+                        .MakeGenericMethod(lineType);
+
+                    method.Invoke(this, new object[] { workbook, headerRow, typedList, "Prod Line Level Report" });
+                }
+            }
+
+            // Main report data
+            WriteDataToExcel(workbook, headerRow, dataList);
+
+            // Optional: Save to file if needed
+            if (!string.IsNullOrWhiteSpace(outputPath))
+            {
+                workbook.SaveAs(outputPath);
+            }
+
+            return workbook; // ✅ Workbook is safe to return and stream
+        }
 
         public void WriteDataToExcel<T>(XLWorkbook xlWorkbook, int headerRow, List<T> dataList, string? sheetName = null)
         {

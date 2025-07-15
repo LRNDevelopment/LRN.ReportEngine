@@ -45,19 +45,25 @@
                     <th>Excel Row Count</th>
                     <th>Imported Row Count</th>
                     <th>Status</th>
+                    <th>Logs</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var item in Model.OrderByDescending(c=>c.ImportedOn).ToList())
                 {
                     <tr>
-                        <td>@item.ImportFileName</td>
+                        <td><a href="@item.ImportFileName"> @item.ImportFileName</a></td>
                         <td>Prism</td>
                         <td>@item.FileTypeName</td>
                         <td>@item.ImportedOn</td>
                         <td>@item.ExcelRowCount</td>
                         <td>@item.ImportedRowCount</td>
                         <td class="@item.FileStatusName.ToLower()">@item.FileStatusName</td>
+                        <td>
+                            <a href="@Url.Action("DownloadImportLogs", "Upload", new { fileId = item.ImportedFileId })" title="Download Logs">
+                            <i class="fa fa-file-text-o" style="font-size:24px; color:#007bff;"></i>
+                        </a>
+                        </td>
                     </tr>
                 }
             </tbody>

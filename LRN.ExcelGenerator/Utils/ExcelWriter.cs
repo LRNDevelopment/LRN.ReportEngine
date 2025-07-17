@@ -192,11 +192,11 @@ namespace LRN.ExcelGenerator.Utils
                             break;
                         case DateTime dtValue:
                             cell.Value = dtValue;
-                            cell.Style.DateFormat.Format = "yyyy-mm-dd";
+                            cell.Style.DateFormat.Format = "mm/dd/yyyy";
                             break;
                         case DateOnly dtoValue:
                             cell.Value = new DateTime(dtoValue.Year, dtoValue.Month, dtoValue.Day);
-                            cell.Style.DateFormat.Format = "yyyy-mm-dd";
+                            cell.Style.DateFormat.Format = "mm/dd/yyyy";
                             break;
                         case decimal decimalValue:
                             cell.Value = decimalValue;

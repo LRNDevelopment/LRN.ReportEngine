@@ -20,7 +20,7 @@ namespace LRN.ExcelToSqlETL.Core.Models
         public string? PatientID { get; set; }
 
         [PropertyName(ColumnName = "PatientDOB")]
-        public DateOnly? PatientDOB { get; set; }
+        public DateTime? PatientDOB { get; set; }
 
         [PropertyName(ColumnName = "Payer")]
         public string? PrimaryPayerName { get; set; }
@@ -35,7 +35,7 @@ namespace LRN.ExcelToSqlETL.Core.Models
         public string? PrimaryGroupNo { get; set; }
 
         [PropertyName(ColumnName = "PrimaryEffectiveDate")]
-        public DateOnly? PrimaryEffectiveDate { get; set; }
+        public DateTime? PrimaryEffectiveDate { get; set; }
 
         [PropertyName(ColumnName = "RelationshipToInsurance")]
         public string? RelationshipToInsurance { get; set; }
@@ -50,22 +50,22 @@ namespace LRN.ExcelToSqlETL.Core.Models
         public string? SecondaryGroupNo { get; set; }
 
         [PropertyName(ColumnName = "SecondaryEffectiveDate")]
-        public DateOnly? SecondaryEffectiveDate { get; set; }
+        public DateTime? SecondaryEffectiveDate { get; set; }
 
         [PropertyName(ColumnName = "Collected")]
-        public DateOnly? SampleCollectedDate { get; set; }
+        public DateTime? SampleCollectedDate { get; set; }
 
         [PropertyName(ColumnName = "Received")]
-        public DateOnly? SampleReceivedDate { get; set; }
+        public DateTime? SampleReceivedDate { get; set; }
 
         [PropertyName(ColumnName = "Accessioned")]
-        public DateOnly? SampleAccessionedDate { get; set; }
+        public DateTime? SampleAccessionedDate { get; set; }
 
         [PropertyName(ColumnName = "Resulted")]
-        public DateOnly? SampleResultedDate { get; set; }
+        public DateTime? SampleResultedDate { get; set; }
 
         [PropertyName(ColumnName = "SampleRunDate")]
-        public DateOnly? SampleRunDate { get; set; }
+        public DateTime? SampleRunDate { get; set; }
 
         [PropertyName(ColumnName = "Status")]
         public string? SpecimenStatusName { get; set; }
@@ -143,10 +143,10 @@ namespace LRN.ExcelToSqlETL.Core.Models
         public string? BillingStatus { get; set; }
 
         [PropertyName(ColumnName = "AMD LBD")]
-        public DateOnly? FirstBilledDate { get; set; }
+        public DateTime? FirstBilledDate { get; set; }
 
         [PropertyName(ColumnName = "AMD DOE")]
-        public DateOnly? ChargeEntryDate { get; set; }
+        public DateTime? ChargeEntryDate { get; set; }
 
         [PropertyName(ColumnName = "Self Pay")]
         public string? SelfPay { get; set; }

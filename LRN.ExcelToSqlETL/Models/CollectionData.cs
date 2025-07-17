@@ -29,23 +29,23 @@ namespace LRN.ExcelToSqlETL.Core.Models
         [PropertyName(ColumnName = "PatientName")]
         public string? PatientName { get; set; }
         [PropertyName(ColumnName = "BeginDOS")]
-        public DateOnly? BeginDOS { get; set; }
+        public DateTime? BeginDOS { get; set; }
         [PropertyName(ColumnName = "Aging")]
         public int? Aging { get; set; }
         [PropertyName(ColumnName = "Aging Bucket")]
         public string? AgingBucket { get; set; }
         [PropertyName(ColumnName = "AMD DOE")]
-        public DateOnly? AMDDOE { get; set; }
+        public DateTime? AMDDOE { get; set; }
         [PropertyName(ColumnName = "First Bill Date")]
-        public DateOnly? FirstBillDate { get; set; }
+        public DateTime? FirstBillDate { get; set; }
         [PropertyName(ColumnName = "Charge Entry Date")]
-        public DateOnly? ChargeEntryDate { get; set; }
+        public DateTime? ChargeEntryDate { get; set; }
         [PropertyName(ColumnName = "Check Number")]
         public string? CheckNumber { get; set; }
         [PropertyName(ColumnName = "Check Date")]
-        public DateOnly? CheckDate { get; set; }
+        public DateTime? CheckDate { get; set; }
         [PropertyName(ColumnName = "Payment Posted Date")]
-        public DateOnly? PaymentPostedDate { get; set; }
+        public DateTime? PaymentPostedDate { get; set; }
         [PropertyName(ColumnName = "Billed / Not")]
         public string? BilledNotBilled { get; set; }
         [PropertyName(ColumnName = "POS")]

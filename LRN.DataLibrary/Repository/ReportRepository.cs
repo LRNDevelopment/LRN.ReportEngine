@@ -91,14 +91,24 @@ public class ReportRepository : IReportRepository
     {
         try
         {
-            var fromParam = new SqlParameter("@FromDate", (object?)startDate ?? DBNull.Value);
-            var toParam = new SqlParameter("@ToDate", (object?)endDate ?? DBNull.Value);
+            using (var connection = _context.CreateConnection())
+            {
+                // Ensure connection is open
+                if (connection.State != ConnectionState.Open)
+                    connection.Open();
 
-            var result = _dbContext.Set<ProdBillingData>()
-                .FromSqlRaw("EXEC [sp_GetProductionReportMaster] @FromDate, @ToDate", fromParam, toParam)
-                .ToList();
+                var parameters = new DynamicParameters();
+                parameters.Add("@FromDate", startDate, DbType.DateTime);
+                parameters.Add("@ToDate", endDate, DbType.DateTime);
 
-            return result;
+                var result = connection.Query<ProdBillingData>(
+                    "sp_GetProductionReportMaster",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                return result;
+            }
         }
         catch (Exception ex)
         {
@@ -111,14 +121,24 @@ public class ReportRepository : IReportRepository
     {
         try
         {
-            var fromParam = new SqlParameter("@FromDate", (object?)startDate ?? DBNull.Value);
-            var toParam = new SqlParameter("@ToDate", (object?)endDate ?? DBNull.Value);
+            using (var connection = _context.CreateConnection())
+            {
+                // Ensure connection is open
+                if (connection.State != ConnectionState.Open)
+                    connection.Open();
 
-            var result = _dbContext.Set<CollectionData>()
-                .FromSqlRaw("EXEC [sp_GetCollectionReport] @FromDate, @ToDate", fromParam, toParam)
-                .ToList();
+                var parameters = new DynamicParameters();
+                parameters.Add("@FromDate", startDate, DbType.DateTime);
+                parameters.Add("@ToDate", endDate, DbType.DateTime);
 
-            return result;
+                var result = connection.Query<CollectionData>(
+                    "sp_GetCollectionReport",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                return result;
+            }
         }
         catch (Exception ex)
         {
@@ -130,18 +150,25 @@ public class ReportRepository : IReportRepository
     {
         try
         {
-            var fromParam = new SqlParameter("@FromDate", (object?)startDate ?? DBNull.Value);
-            var toParam = new SqlParameter("@ToDate", (object?)endDate ?? DBNull.Value);
 
-            // Execute stored procedure - returns list of ClaimDetailDto with DateTime? properties
-            var efResults = _dbContext.Set<ClaimDetailDto>()
-                .FromSqlRaw("EXEC [sp_GetProductionLineLevelReport] @FromDate, @ToDate", fromParam, toParam)
-                .ToList();
+            using (var connection = _context.CreateConnection())
+            {
+                // Ensure connection is open
+                if (connection.State != ConnectionState.Open)
+                    connection.Open();
 
-            // Map DateTime? to DateOnly? using your mapper
-            var projectedResults = ClaimDetailMapper.ProjectToDateOnlyDto(efResults);
+                var parameters = new DynamicParameters();
+                parameters.Add("@FromDate", startDate, DbType.DateTime);
+                parameters.Add("@ToDate", endDate, DbType.DateTime);
 
-            return projectedResults;
+                var result = connection.Query<ClaimDetailDateOnlyDto>(
+                    "sp_GetProductionLineLevelReport",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                return result;
+            }
         }
         catch (Exception ex)
         {
@@ -170,7 +197,7 @@ public class ReportRepository : IReportRepository
             results.Add(new ClaimDetailDateOnlyDto
             {
                 // Assume BeginDOS is at ordinal 0
-                BeginDOS = reader.IsDBNull(5) ? null : DateOnly.FromDateTime(reader.GetDateTime(5))
+                //BeginDOS = reader.IsDBNull(5) ? null : DateOnly.FromDateTime(reader.GetDateTime(5))
                 //BeginDOS = reader.IsDBNull(5) ? null : DateOnly.FromDateTime(reader.GetDateTime(9))
                 //BeginDOS = reader.IsDBNull(5) ? null : DateOnly.FromDateTime(reader.GetDateTime(10))
                 //BeginDOS = reader.IsDBNull(5) ? null : DateOnly.FromDateTime(reader.GetDateTime(11))

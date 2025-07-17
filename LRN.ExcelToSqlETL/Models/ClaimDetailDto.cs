@@ -72,7 +72,7 @@ namespace LRN.ExcelToSqlETL.Core.Models
         public string? PatientID { get; set; }
 
         [PropertyName(ColumnName = "PatientDOB")]
-        public DateOnly? PatientDOB { get; set; }
+        public DateTime? PatientDOB { get; set; }
 
         [PropertyName(ColumnName = "PayerName")]
         public string? PayerName { get; set; }
@@ -84,16 +84,16 @@ namespace LRN.ExcelToSqlETL.Core.Models
         public string? BillingProvider { get; set; }
 
         [PropertyName(ColumnName = "BeginDOS")]
-        public DateOnly? BeginDOS { get; set; }
+        public DateTime? BeginDOS { get; set; }
 
         [PropertyName(ColumnName = "EndDOS")]
-        public DateOnly? EndDOS { get; set; }
+        public DateTime? EndDOS { get; set; }
 
         [PropertyName(ColumnName = "ChargeEntryDate")]
-        public DateOnly? ChargeEntryDate { get; set; }
+        public DateTime? ChargeEntryDate { get; set; }
 
         [PropertyName(ColumnName = "FirstBillDate")]
-        public DateOnly? FirstBillDate { get; set; }
+        public DateTime? FirstBillDate { get; set; }
 
         [PropertyName(ColumnName = "PanelName")]
         public string? PanelName { get; set; }
@@ -108,13 +108,13 @@ namespace LRN.ExcelToSqlETL.Core.Models
         public int? Units { get; set; }
 
         [PropertyName(ColumnName = "CheckDate")]
-        public DateOnly? CheckDate { get; set; }
+        public DateTime? CheckDate { get; set; }
 
         [PropertyName(ColumnName = "PaymentPostedDate")]
-        public DateOnly? PaymentPostedDate { get; set; }
+        public DateTime? PaymentPostedDate { get; set; }
 
         [PropertyName(ColumnName = "DenialPostedDate")]
-        public DateOnly? DenialPostedDate { get; set; }
+        public DateTime? DenialPostedDate { get; set; }
 
         [PropertyName(ColumnName = "CheckNumber")]
         public string? CheckNumber { get; set; }
@@ -192,21 +192,21 @@ namespace LRN.ExcelToSqlETL.Core.Models
                 CPTCode = item.CPTCode,
                 PatientName = item.PatientName,
                 PatientID = item.PatientID,
-                PatientDOB = item.PatientDOB.ToDateOnly(),
+                PatientDOB = item.PatientDOB,
                 PayerName = item.PayerName,
                 PayerType = item.PayerType,
                 BillingProvider = item.BillingProvider,
-                BeginDOS = item.BeginDOS.ToDateOnly(),
-                EndDOS = item.EndDOS.ToDateOnly(),
-                ChargeEntryDate = item.ChargeEntryDate.ToDateOnly(),
-                FirstBillDate = item.FirstBillDate.ToDateOnly(),
+                BeginDOS = item.BeginDOS,
+                EndDOS = item.EndDOS,
+                ChargeEntryDate = item.ChargeEntryDate,
+                FirstBillDate = item.FirstBillDate,
                 PanelName = item.PanelName,
                 OrderInfo = item.OrderInfo,
                 ICD10Code = item.ICD10Code,
                 Units = item.Units,
-                CheckDate = item.CheckDate.ToDateOnly(),
-                PaymentPostedDate = item.PaymentPostedDate.ToDateOnly(),
-                DenialPostedDate = item.DenialPostedDate.ToDateOnly(),
+                CheckDate = item.CheckDate,
+                PaymentPostedDate = item.PaymentPostedDate,
+                DenialPostedDate = item.DenialPostedDate,
                 CheckNumber = item.CheckNumber,
                 Modifier = item.Modifier,
                 DenialCode = item.DenialCode,

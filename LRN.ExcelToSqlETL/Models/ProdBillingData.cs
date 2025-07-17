@@ -31,17 +31,17 @@ namespace LRN.ExcelToSqlETL.Core.Models
         [PropertyName(ColumnName = "PatientName")]
         public string? PatientName { get; set; }
         [PropertyName(ColumnName = "BeginDOS")]
-        public DateOnly? BeginDOS { get; set; }
+        public DateTime? BeginDOS { get; set; }
         [PropertyName(ColumnName = "Aging")]
         public int? Aging { get; set; }
         [PropertyName(ColumnName = "Aging Bucket")]
         public string? AgingBucket { get; set; }
         [PropertyName(ColumnName = "AMD DOE")]
-        public DateOnly? AMDDOE { get; set; }
+        public DateTime? AMDDOE { get; set; }
         [PropertyName(ColumnName = "First Bill Date")]
-        public DateOnly? FirstBillDate { get; set; }
+        public DateTime? FirstBillDate { get; set; }
         [PropertyName(ColumnName = "Latest Post Date")]
-        public DateOnly? LatestPostDate { get; set; }
+        public DateTime? LatestPostDate { get; set; }
         [PropertyName(ColumnName = "Billed / Not")]
         public string? BilledNotBilled { get; set; }
         [PropertyName(ColumnName = "POS")]

@@ -17,26 +17,36 @@ public class ReportRepository : IReportRepository
     private readonly LRNDbContext _dbContext;
     private readonly ILogger<ImportFilesRepository> _logger;
     private readonly IMapper _mapper;
-
-    public ReportRepository(LRNDbContext dbContext, ILogger<ImportFilesRepository> logger, IMapper mapper)
+    private readonly DapperContext _context;
+    public ReportRepository(LRNDbContext dbContext, ILogger<ImportFilesRepository> logger, IMapper mapper, DapperContext context)
     {
         _dbContext = dbContext;
         _logger = logger;
         _mapper = mapper;
+        _context = context;
     }
-
     public List<LISMasterData> GetLISMasterReport(DateTime? startDate, DateTime? endDate)
     {
         try
         {
-            var fromParam = new SqlParameter("@StartDate", (object?)startDate ?? DBNull.Value);
-            var toParam = new SqlParameter("@EndDate", (object?)endDate ?? DBNull.Value);
+            using (var connection = _context.CreateConnection())
+            {
+                // Ensure connection is open
+                if (connection.State != ConnectionState.Open)
+                    connection.Open();
 
-            var result = _dbContext.Set<LISMasterData>()
-                .FromSqlRaw("EXEC [sp_GetLISMasterReportByDateRange] @StartDate, @EndDate", fromParam, toParam)
-                .ToList();
+                var parameters = new DynamicParameters();
+                parameters.Add("@StartDate", startDate, DbType.DateTime);
+                parameters.Add("@EndDate", endDate, DbType.DateTime);
 
-            return result;
+                var result = connection.Query<LISMasterData>(
+                    "sp_GetLISMasterReportByDateRange",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                return result;
+            }
         }
         catch (Exception)
         {

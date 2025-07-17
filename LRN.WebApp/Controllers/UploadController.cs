@@ -157,50 +157,56 @@ public class UploadController : Controller
     {
         XLWorkbook wb = null;
         string filename = string.Empty;
-
-
-        if (reportType == (int)CommonConst.DownloadReportType.LIS_Master)
+        try
         {
-            var lisMaster = _reportRepository.GetLISMasterReport(fromDate, toDate);
-            filename = $"LIS_Master_{DateTime.Now:ddMMyyyy}.xlsx";
-            wb = await _excelWriter.GetReport(CommonConst.LISMaster_Template, null, lisMaster);
+
+            if (reportType == (int)CommonConst.DownloadReportType.LIS_Master)
+            {
+                var lisMaster = _reportRepository.GetLISMasterReport(fromDate, toDate);
+                filename = $"LIS_Master_{DateTime.Now:ddMMyyyy}.xlsx";
+                wb = await _excelWriter.GetReport(CommonConst.LISMaster_Template, null, lisMaster);
+            }
+            else if (reportType == (int)CommonConst.DownloadReportType.Production_Master)
+            {
+                var prodMaster = _reportRepository.GetProductionDataAsync(fromDate, toDate);
+                var lineLevel = _reportRepository.GetProdLineLevelAsync(fromDate, toDate);
+                filename = $"Prod_Master_{DateTime.Now:ddMMyyyy}.xlsx";
+
+                wb = await _excelWriter.GetReport(
+                    CommonConst.ProdMaster_Template,
+                    null,
+                    prodMaster,
+                    1,
+                    false,
+                    null,
+                    true,
+                    lineLevel
+                );
+            }
+            else if (reportType == (int)CommonConst.DownloadReportType.Collection_Report)
+            {
+                var collectionData = _reportRepository.GetCollectionDateByDateAsync(fromDate, toDate);
+                filename = $"Collection_{DateTime.Now:ddMMyyyy}.xlsx";
+                wb = await _excelWriter.GetReport(CommonConst.CollectionTemplate, null, collectionData);
+            }
+
+            if (wb == null)
+                return BadRequest("Invalid report type or empty workbook.");
+
+            using (var stream = new MemoryStream())
+            {
+                wb.SaveAs(stream); // will fail if wb is disposed
+                stream.Position = 0;
+
+                return File(stream.ToArray(),
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            filename);
+            }
         }
-        else if (reportType == (int)CommonConst.DownloadReportType.Production_Master)
+        catch (Exception ex)
         {
-            var prodMaster = _reportRepository.GetProductionDataAsync(fromDate, toDate);
-            var lineLevel = _reportRepository.GetProdLineLevelAsync(fromDate, toDate);
-            filename = $"Prod_Master_{DateTime.Now:ddMMyyyy}.xlsx";
-
-            wb = await _excelWriter.GetReport(
-                CommonConst.ProdMaster_Template,
-                null,
-                prodMaster,
-                1,
-                false,
-                null,
-                true,
-                lineLevel
-            );
+            _logger.Error("Download failed", ex);
+            return StatusCode(500, "Internal server error");
         }
-        else if (reportType == (int)CommonConst.DownloadReportType.Collection_Report)
-        {
-            var collectionData = _reportRepository.GetCollectionDateByDateAsync(fromDate, toDate);
-            filename = $"Collection_{DateTime.Now:ddMMyyyy}.xlsx";
-            wb = await _excelWriter.GetReport(CommonConst.CollectionTemplate, null, collectionData);
-        }
-
-        if (wb == null)
-            return BadRequest("Invalid report type or empty workbook.");
-
-        using (var stream = new MemoryStream())
-        {
-            wb.SaveAs(stream); // will fail if wb is disposed
-            stream.Position = 0;
-
-            return File(stream.ToArray(),
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        filename);
-        }
-
     }
 }

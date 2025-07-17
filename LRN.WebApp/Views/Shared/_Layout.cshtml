@@ -4,23 +4,23 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - File Upload App</title>
-    <link rel="stylesheet" href="/css/site.css" />
+    <link href="~/css/site.css" rel="stylesheet" />
 </head>
 <body>
     <nav class="navbar">
         <div class="navbar-left">
             <span class="logo">
-                <img src="/image/lrn_logo.png" alt="LRN Logo" style="height:55px;width:100px;" />
+                <img src="~/image/lrn_logo.png" alt="LRN Logo" style="height:55px;width:100px;" />
             </span>
 
-            <a href="/Upload" class="nav-link">Upload</a>
-            <a href="/Upload/DownloadReport" class="nav-link">Reports</a> <!-- ✅ New Menu Link -->
-
+            <a href="@Url.Action("Index", "Upload")" class="nav-link">Upload</a>
+            <a href="@Url.Action("DownloadReport", "Upload")" class="nav-link">Reports</a>
         </div>
         <div class="navbar-right">
-            <a href="/Account/Logout" class="nav-link logout">Logout</a>
+            <a href="@Url.Action("Logout", "Account")" class="nav-link logout">Logout</a>
         </div>
     </nav>
+
     <div class="main-container">
         @RenderBody()
     </div>

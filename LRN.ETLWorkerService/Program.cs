@@ -23,7 +23,7 @@ namespace LRN.ETLWorkerService
                 .UseWindowsService() // ✅ Required for running as a Windows Service
                 .ConfigureAppConfiguration((context, config) =>
                 {
-                    config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                    config.AddJsonFile("appsettings.etl.json", optional: false, reloadOnChange: true);
                 })
                 .ConfigureServices((hostContext, services) =>
                 {

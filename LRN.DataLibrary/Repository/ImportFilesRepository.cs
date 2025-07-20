@@ -7,7 +7,9 @@ using LRN.ExcelToSqlETL.Core.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
+using System.Net.NetworkInformation;
 using static LRN.ExcelToSqlETL.Core.Constants.CommonConst;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace LRN.DataLibrary.Repository;
 
@@ -47,7 +49,7 @@ public class ImportFilesRepository : IImportFilesRepository
 
     public async Task UpdateImportFilesAsync(List<ImportFileDto> files)
     {
-        const string sql = @"UPDATE ImportedFiles SET ImportFileName = @ImportFileName, ExcelRowCount=@ExcelRowCount, ImportedRowCount=@ImportedRowCount, FileStatus=@FileStatus, ImportedOn=@ImportedOn, FileType=@FileType, ProcessedOn=GETDATE(), LabId=@LabId WHERE ImportedFileID = @ImportedFileId";
+        const string sql = @"UPDATE ImportedFiles SET  ExcelRowCount=@ExcelRowCount, ImportedRowCount=@ImportedRowCount, FileStatus=@FileStatus,  ProcessedOn=GETDATE()  WHERE ImportedFileID = @ImportedFileId";
         using var connection = _context.CreateConnection();
         await connection.ExecuteAsync(sql, files);
     }
@@ -197,6 +199,15 @@ public class ImportFilesRepository : IImportFilesRepository
         return results.ToList();
     }
 
+    public async Task<List<ReportDownloadSts>> GetReportDownloadStslst()
+    {
+        const string query = "SELECT [ReportID],[ReportName],[ReportType],[ReportServerPath],[ReportStatus],[CreatedOn]," +
+            "FileStatus FROM [dbo].[ReportDownloadSts] a join FileStatuses b on a.ReportStatus = b.FileStatusId";
+        using var connection = _context.CreateConnection();
+        var results = await connection.QueryAsync<ReportDownloadSts>(query);
+        return results.ToList();
+    }
+
     public async Task<ImportFileDto> GetImportFileById(int fileId)
     {
         const string query = @"
@@ -225,6 +236,15 @@ public class ImportFilesRepository : IImportFilesRepository
             await connection.ExecuteAsync(sql, log);
         }
         return fileLogs;
+    }
+
+    public async Task<ReportDownloadSts> InsertReportDownloadSts(ReportDownloadSts reportDownloadSts)
+    {
+        const string sql = @"INSERT INTO [dbo].[ReportDownloadSts]([ReportName],[ReportType],[ReportStatus],[CreatedOn])
+                                     VALUES (@ReportName,@ReportType,@ReportStatus,GETDATE());";
+        using var connection = _context.CreateConnection();
+        await connection.ExecuteAsync(sql, reportDownloadSts);
+        return reportDownloadSts;
     }
 
     public async Task<List<FileLog>> GetFileLogsById(int fileId)

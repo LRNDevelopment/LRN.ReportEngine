@@ -128,28 +128,73 @@ public class UploadController : Controller
         return File(bytes, "text/plain", $"ImportLogs_{fileId}.txt");
     }
 
-    public IActionResult DownloadImportedFile(string filePath, string fileName)
+    [HttpPost]
+    public IActionResult DownloadImportedFile(string filePath, string fileName, string createdOn)
     {
         if (System.IO.File.Exists(filePath))
         {
             var fileBytes = System.IO.File.ReadAllBytes(filePath);
-            return File(fileBytes, "application/octet-stream", fileName);
+            var timestamp = Convert.ToDateTime(createdOn).ToString("MM_dd_yyyy_HHmm");
+            var fullFileName = $"{fileName}_{timestamp}.xlsx"; // Ensure .xlsx extension
+
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fullFileName);
         }
 
         return NotFound("File not found.");
     }
 
-    public ActionResult DownloadReport()
+    [HttpGet]
+    public async Task<ActionResult> DownloadReport()
     {
-        ViewBag.ReportTypes = new List<SelectListItem>
+        ViewBag.ReportTypes = GetReportTypeList();
+
+        // Await directly without .Result
+        List<ReportDownloadSts> result = await _importRepo.GetReportDownloadStslst();
+
+        return View(result);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult> DownloadReport(string reportType)
+    {
+        ViewBag.ReportTypes = GetReportTypeList();
+
+        if (string.IsNullOrEmpty(reportType))
         {
-            new SelectListItem { Text = "LIS Master", Value = "1" },
-            new SelectListItem { Text = "Production Master", Value = "2" },
-            new SelectListItem { Text = "Collection Report", Value = "3" }
+            ModelState.AddModelError("", "Report type is required.");
+            List<ReportDownloadSts> existing = await _importRepo.GetReportDownloadStslst();
+            return View(existing);
+        }
+
+        var reportTypes = ViewBag.ReportTypes as List<SelectListItem>;
+        var selectedReport = reportTypes?.FirstOrDefault(c => c.Value == reportType);
+
+        var reportDownloadSts = new ReportDownloadSts
+        {
+            ReportStatus = (int)CommonConst.FileStatusEnum.ImportInProgresss,
+            CreatedOn = DateTime.Now,
+            ReportName = selectedReport?.Text ?? "Unknown",
+            ReportType = int.Parse(reportType)
         };
 
-        return View();
+        await _importRepo.InsertReportDownloadSts(reportDownloadSts);
+
+        List<ReportDownloadSts> result = await _importRepo.GetReportDownloadStslst();
+        return View(result);
     }
+
+    private List<SelectListItem> GetReportTypeList()
+    {
+        return new List<SelectListItem>
+    {
+        new SelectListItem { Text = "LIS Master", Value = "1" },
+        new SelectListItem { Text = "Production Master", Value = "2" },
+        new SelectListItem { Text = "Collection Report", Value = "3" },
+        new SelectListItem { Text = "Excutive Summary", Value = "4" },
+        new SelectListItem { Text = "Denial Report", Value = "5" }
+    };
+    }
+
 
     [HttpPost]
     [ValidateAntiForgeryToken]

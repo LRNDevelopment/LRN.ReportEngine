@@ -18,4 +18,8 @@ public interface IImportFilesRepository
     Task<List<FileLog>> InsertFileLog(List<FileLog> fileLogs);
 
     Task<List<FileLog>> GetFileLogsById(int fileId);
+
+    Task<List<ReportDownloadSts>> GetReportDownloadStslst();
+
+    Task<ReportDownloadSts> InsertReportDownloadSts(ReportDownloadSts reportDownloadSts);
 }

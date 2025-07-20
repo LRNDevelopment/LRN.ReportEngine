@@ -40,22 +40,38 @@ public class FileProcessingWorker : BackgroundService
                     try
                     {
                         await fileReader.ProcessImportFileAsync((int)file.ImportedFileId);
-                        _logger.LogInformation($"Processed file {file.ImportedFileId} successfully.");
+                        _logger.LogInformation("Processed file {FileId} successfully.", file.ImportedFileId);
                     }
                     catch (Exception ex)
                     {
                         file.FileStatus = (int)CommonConst.FileStatusEnum.ImportFailed;
                         await importRepo.UpdateFileAsync(file);
-                        _logger.LogError($"Failed to process file {file.ImportedFileId}: {ex.Message}");
+                        _logger.LogError(ex, "Failed to process file {FileId}: {Message}", file.ImportedFileId, ex.Message);
                     }
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(2), stoppingToken);
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken);
+                }
+                catch (TaskCanceledException)
+                {
+                    _logger.LogWarning("Worker delay was canceled (likely due to shutdown).");
+                    break; // Optional: gracefully break the loop
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                _logger.LogWarning("File processing task was canceled.");
+                break;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"An error occurred while processing files: {ex.Message}");
+                _logger.LogError(ex, "An unexpected error occurred while processing files.");
             }
         }
+
+        _logger.LogInformation("FileProcessingWorker is stopping.");
     }
+
 }

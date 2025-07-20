@@ -66,29 +66,36 @@ namespace LRN.ExcelETL.Service.Services
                             ImportLog.Add(new FileLog { ImportFileId = _fileId, LogType = "Error", LogMessage = $"Validation error in {fileName}: {error}" });
                             _logger.Error($"Validation error in {fileName}: {error}");
                         }
+                        fileDto.ExcelRowCount = 0;
+                        fileDto.ImportedRowCount = 0;
+                        fileDto.FileStatus = (int)FileStatusEnum.ImportFailed;
+
+                        await _importRepo.UpdateFileAsync(fileDto);
                         continue;
                     }
-
-                    if (result.Data.Columns.Contains("ImportedFileID"))
+                    else
                     {
-                        foreach (DataRow row in result.Data.Rows)
+                        if (result.Data.Columns.Contains("ImportedFileID"))
                         {
-                            row["ImportedFileID"] = fileDto.ImportedFileId;
+                            foreach (DataRow row in result.Data.Rows)
+                            {
+                                row["ImportedFileID"] = fileDto.ImportedFileId;
+                            }
                         }
+
+                        await _importer.ImportAsync(result.Data, mapping.TargetTable, _fileId);
+
+                        // Update file stats after import
+                        fileDto.ExcelRowCount = result.TotalRows;
+                        fileDto.ImportedRowCount = result.ImportedRows;
+                        fileDto.FileStatus = (int)FileStatusEnum.ImportInProgresss;
+
+                        await _importRepo.UpdateFileAsync(fileDto);
+
+                        await _importRepo.ProcessImportFilesAsync(fileDto);
+
+                        _logger.Info($"Imported {result.ImportedRows} rows to {mapping.TargetTable}.");
                     }
-
-                    await _importer.ImportAsync(result.Data, mapping.TargetTable, _fileId);
-
-                    // Update file stats after import
-                    fileDto.ExcelRowCount = result.TotalRows;
-                    fileDto.ImportedRowCount = result.ImportedRows;
-                    fileDto.FileStatus = (int)FileStatusEnum.ImportInProgresss;
-
-                    await _importRepo.UpdateFileAsync(fileDto);
-
-                    await _importRepo.ProcessImportFilesAsync(fileDto);
-
-                    _logger.Info($"Imported {result.ImportedRows} rows to {mapping.TargetTable}.");
                 }
             }
             catch (Exception ex)
@@ -168,9 +175,7 @@ namespace LRN.ExcelETL.Service.Services
 
                 await HandleFileProcessingAsync(file, file.ImportFileName, jsonPath);
 
-                file.FileStatus = (int)FileStatusEnum.ImportSuccess;
 
-                await _importRepo.UpdateFileAsync(file);
 
                 await _importRepo.InsertFileLog(ImportLog);
             }

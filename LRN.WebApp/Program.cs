@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Common.Logging;
+using DocumentFormat.OpenXml.InkML;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using LRN.DataLibrary;
 using LRN.DataLibrary.Repository;
@@ -55,7 +56,30 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 // ✅ Configure constants and file paths
 ConfigStaticSettings(configuration);
 
+// ✅ Build the app
 var app = builder.Build();
+
+// ✅ Check setting from appsettings.json
+var showDeveloperExceptionPage = configuration.GetValue<bool>("ShowDeveloperExceptionPage");
+
+if (showDeveloperExceptionPage)
+{
+    app.UseDeveloperExceptionPage(); // Show detailed error page even in production
+}
+else
+{
+    // Generic error handler
+    app.UseExceptionHandler(errorApp =>
+    {
+        errorApp.Run(async context =>
+        {
+            context.Response.StatusCode = 500;
+            context.Response.ContentType = "text/html";
+            await context.Response.WriteAsync("<h1>Something went wrong</h1>");
+            await context.Response.WriteAsync("<p>Please contact support.</p>");
+        });
+    });
+}
 
 // ✅ Middleware
 app.UseStaticFiles();

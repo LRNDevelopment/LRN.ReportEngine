@@ -13,5 +13,7 @@ namespace LRN.ExcelToSqlETL.Core.Models
         public int TotalRows { get; set; }
         public int ImportedRows { get; set; }
         public int ErrorRows { get; set; }
+
+        public bool IsFailedRead { get; set; }
     }
 }

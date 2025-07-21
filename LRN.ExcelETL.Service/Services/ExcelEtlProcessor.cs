@@ -23,6 +23,7 @@ namespace LRN.ExcelETL.Service.Services
         private readonly ILoggerService _logger;
         private readonly IConfiguration _config;
         private readonly IImportFilesRepository _importRepo;
+        private readonly IFileCSVReader _fileCSVReader;
         private static List<FileLog> ImportLog;
         private static int _fileId = 0;
 
@@ -33,7 +34,8 @@ namespace LRN.ExcelETL.Service.Services
             IDataImporter importer,
             ILoggerService logger,
             IConfiguration config,
-            IImportFilesRepository importRepo)
+            IImportFilesRepository importRepo,
+            IFileCSVReader fileCSVReader)
         {
             _mapper = mapper;
             _reader = reader;
@@ -43,6 +45,7 @@ namespace LRN.ExcelETL.Service.Services
             _config = config;
             _importRepo = importRepo;
             ImportLog = new List<FileLog>();
+            _fileCSVReader = fileCSVReader;
         }
 
         private async Task HandleFileProcessingAsync(ImportFileDto fileDto, string fileName, string jsonPath)
@@ -50,31 +53,40 @@ namespace LRN.ExcelETL.Service.Services
             try
             {
                 _logger.Info($"Processing file {fileName}...");
-
-
                 var mapping = _mapper.LoadMapping(jsonPath);
+
                 using var stream = File.OpenRead(fileDto.ImportFilePath);
-                var readResults = await _reader.ReadAsync(stream, mapping, _fileId);
 
-                foreach (var result in readResults)
+                List<ExcelReadResult> readResults;
+                if (Path.GetExtension(fileDto.ImportFilePath).ToLower() == ".csv")
                 {
-                    var validation = _validator.Validate(result.Data, mapping, _fileId).Result;
-                    if (!validation.IsValid)
-                    {
-                        foreach (var error in validation.Errors)
-                        {
-                            ImportLog.Add(new FileLog { ImportFileId = _fileId, LogType = "Error", LogMessage = $"Validation error in {fileName}: {error}" });
-                            _logger.Error($"Validation error in {fileName}: {error}");
-                        }
-                        fileDto.ExcelRowCount = 0;
-                        fileDto.ImportedRowCount = 0;
-                        fileDto.FileStatus = (int)FileStatusEnum.ImportFailed;
+                    readResults = await _fileCSVReader.ReadAsync(stream, mapping, _fileId);
+                }
+                else
+                {
+                    readResults = await _reader.ReadAsync(stream, mapping, _fileId);
+                }
 
-                        await _importRepo.UpdateFileAsync(fileDto);
-                        continue;
-                    }
-                    else
+                if (readResults != null && !readResults.Any(c => c.IsFailedRead))
+                {
+                    foreach (var result in readResults)
                     {
+                        var validation = await _validator.Validate(result.Data, mapping, _fileId);
+                        if (!validation.IsValid)
+                        {
+                            foreach (var error in validation.Errors)
+                            {
+                                ImportLog.Add(new FileLog { ImportFileId = _fileId, LogType = "Error", LogMessage = $"Validation error in {fileName}: {error}" });
+                                _logger.Error($"Validation error in {fileName}: {error}");
+                            }
+
+                            fileDto.ExcelRowCount = 0;
+                            fileDto.ImportedRowCount = 0;
+                            fileDto.FileStatus = (int)FileStatusEnum.ImportFailed;
+                            await _importRepo.UpdateFileAsync(fileDto);
+                            continue;
+                        }
+
                         if (result.Data.Columns.Contains("ImportedFileID"))
                         {
                             foreach (DataRow row in result.Data.Rows)
@@ -85,17 +97,21 @@ namespace LRN.ExcelETL.Service.Services
 
                         await _importer.ImportAsync(result.Data, mapping.TargetTable, _fileId);
 
-                        // Update file stats after import
                         fileDto.ExcelRowCount = result.TotalRows;
                         fileDto.ImportedRowCount = result.ImportedRows;
                         fileDto.FileStatus = (int)FileStatusEnum.ImportInProgresss;
 
                         await _importRepo.UpdateFileAsync(fileDto);
-
                         await _importRepo.ProcessImportFilesAsync(fileDto);
 
                         _logger.Info($"Imported {result.ImportedRows} rows to {mapping.TargetTable}.");
                     }
+                }
+                else
+                {
+                    _logger.Error($"Error processing file {fileName}");
+                    fileDto.FileStatus = (int)FileStatusEnum.ImportFailed;
+                    await _importRepo.UpdateFileAsync(fileDto);
                 }
             }
             catch (Exception ex)
@@ -106,6 +122,7 @@ namespace LRN.ExcelETL.Service.Services
             }
         }
 
+
         private async Task ProcessFilesAsync(List<ImportFileDto> files)
         {
             foreach (var file in files)
@@ -113,7 +130,7 @@ namespace LRN.ExcelETL.Service.Services
                 string fileName = Path.GetFileName(file.ImportFileName);
                 _logger.Info($"File Processing Start for: {fileName}");
 
-                var mappingDtl = _validator.FileMapping(JsonConvert.DeserializeObject<MappingConfigRoot>(File.ReadAllText(MappingJSONPath)), fileName);
+                var mappingDtl = _validator.FileMapping(JsonConvert.DeserializeObject<MappingConfigRoot>(File.ReadAllText(MappingJSONPath)), fileName, file.FileType.ToString());
                 var jsonPath = Path.Combine(JSONPath, mappingDtl.JsonMappingPath);
 
                 if (!File.Exists(jsonPath))

@@ -43,7 +43,7 @@ public class ExcelFileReader : IFileReader
             int errorRows = 0;
 
             var worksheets = GetWorksheets(workbook, mapping);
-
+            bool isFailed = false;
             foreach (var worksheet in worksheets)
             {
                 try
@@ -71,9 +71,11 @@ public class ExcelFileReader : IFileReader
                 {
                     _logger.Warn($"Skipping sheet '{worksheet.Name}' due to mismatch: {ex.Message}");
                     ImportLog.Add(new FileLog { ImportFileId = _ImportFileId, LogType = "Warning", LogMessage = $"Skipping sheet '{worksheet.Name}' due to mismatch: {ex.Message}" });
-                    continue;
+                    isFailed = true;
+                    break;
                 }
             }
+
 
             _logger.Info($"Finished reading mapped Excel. Total Rows: {totalRows}, Imported: {importedRows}, Errors: {errorRows}");
 
@@ -85,7 +87,8 @@ public class ExcelFileReader : IFileReader
                     Data = resultTable,
                     TotalRows = totalRows,
                     ImportedRows = importedRows,
-                    ErrorRows = errorRows
+                    ErrorRows = errorRows,
+                    IsFailedRead = isFailed
                 }
             };
         }

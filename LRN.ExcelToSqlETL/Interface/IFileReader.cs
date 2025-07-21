@@ -7,4 +7,9 @@ namespace LRN.ExcelToSqlETL.Core.Interface
     {
         Task<List<ExcelReadResult>> ReadAsync(Stream stream, ExcelSheetMapping mapping, int fileid);
     }
+
+    public interface IFileCSVReader
+    {
+        Task<List<ExcelReadResult>> ReadAsync(Stream stream, ExcelSheetMapping mapping, int fileid);
+    }
 }

@@ -116,7 +116,7 @@
                         <td>@item.ImportedOn</td>
                         <td>@item.ExcelRowCount</td>
                         <td>@item.ImportedRowCount</td>
-                        <td class="@item.FileStatusName.ToLower()">@item.FileStatusName</td>
+                        <td > <span class="@item.FileStatusName.ToLower()">@item.FileStatusName</span></td>
                         <td>
                             <a href="@Url.Action("DownloadImportLogs", "Upload", new { fileId = item.ImportedFileId })" title="Download Logs">
                                 <img src="~/image/log_download.png" height="25" width="25" />

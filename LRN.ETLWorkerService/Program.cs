@@ -45,6 +45,7 @@ namespace LRN.ETLWorkerService
                     services.AddScoped<IExcelMapperLoader, JsonExcelMapperLoader>();
                     services.AddScoped<IFileReader, ExcelFileReader>();
                     services.AddScoped<IDataValidator, MappingValidator>();
+                    services.AddScoped<IFileCSVReader, CSVFileReader>();
                     services.AddScoped<IDataImporter, SqlDataImporter>();
                     services.AddScoped<ExcelEtlProcessor>();
                     services.AddScoped<ExcelWriter>();

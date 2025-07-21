@@ -27,7 +27,10 @@
     }
 </style>
 <div id="loader"><div class="spinner"></div></div>
-<div class="container mt-4">
+<div class="container">
+        <div class="three">
+    <h4>Download Report</h4>
+    </div>
     @using (Html.BeginForm(actionName: "DownloadReport", controllerName: "Upload", method: FormMethod.Post, htmlAttributes: new { id = "reportForm", action = Url.Action("DownloadReport", "Upload") }))
     {
         @Html.AntiForgeryToken()

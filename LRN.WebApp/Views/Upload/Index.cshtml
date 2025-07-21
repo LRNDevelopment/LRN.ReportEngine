@@ -61,7 +61,10 @@
         }
 </style>
 
-<div class="container mt-4">
+<div class="container">
+    <div class="three">
+    <h4>Upload Report</h4>
+    </div>
     <div class="filter-bar">
         @using (Html.BeginForm("UploadFile", "Upload", FormMethod.Post, new { enctype = "multipart/form-data", id = "uploadForm", onsubmit = "return validateForm();" }))
         {

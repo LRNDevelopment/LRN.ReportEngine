@@ -12,7 +12,7 @@ namespace LRN.ExcelToSqlETL.Core.Interface
     {
         Task<ValidationResult> Validate(DataTable data, ExcelSheetMapping mapping, int fileId);
 
-        MappingEntry FileMapping(MappingConfigRoot masterConfig, string filename);
+        MappingEntry FileMapping(MappingConfigRoot masterConfig, string filename, string fileType);
     }
 
 }

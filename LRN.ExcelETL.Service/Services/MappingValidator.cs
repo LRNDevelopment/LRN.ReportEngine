@@ -77,12 +77,16 @@ namespace LRN.ExcelETL.Service.Services
             };
         }
 
-        public MappingEntry FileMapping(MappingConfigRoot masterConfig, string filename)
+        public MappingEntry FileMapping(MappingConfigRoot masterConfig, string filename, string fileType)
         {
-            var matchedMapping = masterConfig.Mappings.FirstOrDefault(m =>
-                filename.Contains(m.FileIdentifier, StringComparison.OrdinalIgnoreCase));
+            //var matchedMapping = masterConfig.Mappings.FirstOrDefault(m =>
+            //    filename.Contains(m.FileIdentifier, StringComparison.OrdinalIgnoreCase));
+
+            var matchedMapping = masterConfig.Mappings.FirstOrDefault(m => m.FileType.Trim() == fileType);
+
 
             if (matchedMapping == null)
+
                 throw new Exception("No mapping found for this file name.");
 
             return matchedMapping;

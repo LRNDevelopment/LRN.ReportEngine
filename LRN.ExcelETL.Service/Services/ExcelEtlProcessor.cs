@@ -113,7 +113,7 @@ namespace LRN.ExcelETL.Service.Services
                 string fileName = Path.GetFileName(file.ImportFileName);
                 _logger.Info($"File Processing Start for: {fileName}");
 
-                var mappingDtl = _validator.FileMapping(JsonConvert.DeserializeObject<MappingConfigRoot>(File.ReadAllText(MappingJSONPath)), fileName);
+                var mappingDtl = _validator.FileMapping(JsonConvert.DeserializeObject<MappingConfigRoot>(File.ReadAllText(MappingJSONPath)), fileName, file.FileType.ToString());
                 var jsonPath = Path.Combine(JSONPath, mappingDtl.JsonMappingPath);
 
                 if (!File.Exists(jsonPath))
@@ -163,7 +163,7 @@ namespace LRN.ExcelETL.Service.Services
                 file.FileStatus = (int)FileStatusEnum.ImportInProgresss;
                 await _importRepo.UpdateFileAsync(file);
 
-                var mappingDtl = _validator.FileMapping(masterConfig, file.ImportFileName);
+                var mappingDtl = _validator.FileMapping(masterConfig, file.ImportFileName, file.FileType.ToString());
                 var jsonPath = Path.Combine(JSONPath, mappingDtl.JsonMappingPath);
 
                 if (!File.Exists(jsonPath))

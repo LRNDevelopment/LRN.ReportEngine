@@ -1,24 +1,39 @@
 ﻿<!DOCTYPE html>
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
 <html>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LRN - Report App</title>
-    <link href="~/css/site.css" rel="stylesheet" />
     <link href="~/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/css/site.css" rel="stylesheet" />
+
 </head>
 <body>
     <nav class="navbar">
         <div class="navbar-left">
             <span class="logo">
-                <img src="~/image/lrn_logo.png" alt="LRN Logo" style="height:55px;width:100px;" />
+                <img src="~/image/lrn_logo.png" alt="LRN Logo" style="height:55px;width:100px;padding-left: 8px;" />
             </span>
 
-            <a href="@Url.Action("Index", "Upload")" class="nav-link">Upload</a>
-            <a href="@Url.Action("DownloadReport", "Upload")" class="nav-link">Reports</a>
+            <a href="@Url.Action("Index", "Upload")"
+               class="nav-link @(currentAction == "Index" && currentController == "Upload" ? "active" : "")">
+                Upload
+            </a>
+
+            <a href="@Url.Action("DownloadReport", "Upload")"
+               class="nav-link @(currentAction == "DownloadReport" && currentController == "Upload" ? "active" : "")">
+                Reports
+            </a>
         </div>
-        <div class="navbar-right">
-            <a href="@Url.Action("Logout", "Account")" class="nav-link logout">Logout</a>
+        <div class="navbar-right" style="padding-right: 15px;">
+            <a href="@Url.Action("Logout", "Account")"
+               class="nav-link logout @(currentAction == "Logout" && currentController == "Account" ? "active" : "")">
+                Logout
+            </a>
         </div>
     </nav>
 

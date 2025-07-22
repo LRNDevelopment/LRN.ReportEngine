@@ -1,7 +1,11 @@
 @model LoginViewModel
-<link href="~/css/site.css" rel="stylesheet" />
-<div class="container">
-    <form method="post" class="form-card" style="max-width:50%;margin:200px;margin-bottom:100px;">
+@{
+    ViewBag.Title = "Login";
+    Layout = null;
+}
+
+@* <div class="container">
+    <form method="post" class="form-card" style="max-width:50%;margin:150px 200px;margin-bottom:100px;">
         <h2>Login</h2>
         <input name="Username" placeholder="Username" class="input-field" />
         <input name="Password" type="password" placeholder="Password" class="input-field" />
@@ -9,3 +13,122 @@
         <p class="error">@ViewBag.Message</p>
     </form>
 </div>
+ *@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Login</title>
+    <link href="~/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/css/site.css" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+        }
+
+        .login-container {
+            display: flex;
+            height: 100vh;
+        }
+
+
+        .right-form {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            background-color: #f3f3f369;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 400px;
+        }
+
+            .login-box h2 {
+                margin-bottom: 30px;
+                text-align: center;
+            }
+
+        .login-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .left-image {
+            flex: 3;
+            /* background: url('/image/login-bg.jpg') no-repeat center center; */
+            background-color: #dddede;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+            .left-image h1 {
+                font-size: 3rem;
+                color: #0d6efd;
+            }
+
+        .right-form {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+            .right-form img {
+                width: 120px;
+                height: auto;
+                margin-bottom: 20px;
+            }
+
+        .login-box {
+            width: 100%;
+            max-width: 400px;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+            .login-box h2 {
+                margin-bottom: 20px;
+                text-align: center;
+            }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="left-image">
+            <h1>LRN Billing</h1>
+        </div>
+
+        <div class="right-form">
+            <img src="~/image/lrn_logo.png" alt="LRN Logo" />
+            <div class="login-box">
+                <h2>Login</h2>
+                @using (Html.BeginForm("Login", "Account", FormMethod.Post))
+                {
+                    <div class="mb-3">
+                        @Html.LabelFor(m => m.Username)
+                        @Html.TextBoxFor(m => m.Username, new { @class = "form-control", placeholder = "Enter username" })
+                    </div>
+                    <div class="mb-3">
+                        @Html.LabelFor(m => m.Password)
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Enter password" })
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                }
+            </div>
+        </div>
+    </div>
+</body>
+</html>

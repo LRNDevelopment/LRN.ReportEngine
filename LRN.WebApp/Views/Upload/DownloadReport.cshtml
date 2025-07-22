@@ -1,4 +1,5 @@
-﻿@model IEnumerable<LRN.ExcelToSqlETL.Core.DtoModels.ReportDownloadSts>;
+﻿@model IEnumerable<LRN.ExcelToSqlETL.Core.DtoModels.ReportDownloadSts>
+
 @{
     ViewBag.Title = "Report Page";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -18,26 +19,50 @@
         border-radius: 8px;
         box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    .center-txt
-    {
-        align-content:center;
-    }
+
     .pagination {
         justify-content: center;
     }
+
+    #loader {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.7);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .spinner {
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid #3498db;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+    }
+
 </style>
+
 <div id="loader"><div class="spinner"></div></div>
+
 <div class="container">
-        <div class="three">
-    <h4>Download Report</h4>
+    <div class="three">
+        <h4>Download Report</h4>
     </div>
-    @using (Html.BeginForm(actionName: "DownloadReport", controllerName: "Upload", method: FormMethod.Post, htmlAttributes: new { id = "reportForm", action = Url.Action("DownloadReport", "Upload") }))
+
+
+    @using (Html.BeginForm("DownloadReport", "Upload", FormMethod.Post, new { id = "reportForm" }))
     {
         @Html.AntiForgeryToken()
-        <div class="filter-bar row align-items-end">
+        <div class="filter-bar row align-items-end" style="margin: 2px 5px;">
             <div class="col-md-6">
                 <label for="reportType" class="form-label">Select Report Type</label>
-                @Html.DropDownList("reportType", new SelectList(ViewBag.ReportTypes as List<SelectListItem>, "Value", "Text"), "-- Select Report Type--", new { @class = "form-select", id = "reportType" })
+                @Html.DropDownList("reportType", new SelectList(ViewBag.ReportTypes as List<SelectListItem>, "Value", "Text"), "-- Select Report Type --", new { @class = "form-select", id = "reportType" })
             </div>
             <div class="col-md-2">
                 <button class="btn btn-primary w-100 mt-3" type="submit">Generate</button>
@@ -45,8 +70,6 @@
         </div>
     }
 
-
-    <!-- Table -->
     <div class="table-container">
         <table class="table table-striped table-hover">
             <thead class="table-dark">
@@ -56,17 +79,16 @@
                     <th>Status / Action</th>
                 </tr>
             </thead>
-            <tbody>
-             @foreach (var item in Model)
+            <tbody id="reportTableBody">
+                @foreach (var item in Model.OrderByDescending(c => c.CreatedOn))
                 {
                     <tr>
                         <td>@item.ReportName</td>
                         <td>@item.CreatedOn.ToString("dd MMM yyyy HH:mm")</td>
-                        <td>
-                            <center>
-                            @if (item.ReportStatus == 3)  // Assuming 3 = In Progress
+                        <td class="text-center">
+                            @if (item.ReportStatus == 3)
                             {
-                                <span  class="text-warning fw-bold">@item.FileStatus</span>
+                                <span class="text-warning fw-bold">@item.FileStatus</span>
                             }
                             else
                             {
@@ -75,99 +97,114 @@
                                     @Html.AntiForgeryToken()
                                     @Html.Hidden("filePath", item.ReportServerPath)
                                     @Html.Hidden("fileName", item.ReportName)
-                                    @Html.Hidden("createdOn", item.CreatedOn.ToString("o")) <!-- ISO format -->
+                                    @Html.Hidden("createdOn", item.CreatedOn.ToString("o"))
 
-                                    <button class="btn btn-sm btn-success" type="submit" style="width:85px;font-weight:600;">
+                                    <button class="btn  btn-success small-button" type="submit" style="width:110px;">
                                         Download
                                     </button>
                                 }
                             }
-                            </center>
                         </td>
                     </tr>
                 }
-                <!-- JS will render rows here -->
             </tbody>
         </table>
 
-        @* <!-- Pagination -->
-        <nav>
-            <ul class="pagination" id="paginationContainer">
-                <!-- JS renders pages -->
+        <!-- Pagination -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+                {
+                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("DownloadReport", new { page = i })">@i</a>
+                    </li>
+                }
             </ul>
-        </nav> *@
+        </nav>
     </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    const reports = []; // Add initial records here or load via AJAX
+    const reports = [];
     const pageSize = 10;
     let currentPage = 1;
 
-        document.getElementById("reportForm").addEventListener("submit", function (e) {
+    document.getElementById("reportForm").addEventListener("submit", function (e) {
+        e.preventDefault(); // Prevent the form from submitting immediately
+
         const reportType = document.getElementById("reportType").value;
-        if (!reportType)
-        { e.preventDefault();
-            return alert("Please select a report type");
+        if (!reportType) {
+            alert("Please select a report type");
+            return;
         }
 
-         document.getElementById("loader").style.display = "flex";
+        Swal.fire({
+            icon: 'success',
+            title: 'Generate Report',
+            text: 'Report generate request is triggered. Your report will be generated and listed below to download.',
+            confirmButtonText: 'OK'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show loader
+                document.getElementById("loader").style.display = "flex";
 
-        // Fallback: hide loader after 10 seconds in case download failed silently
-        setTimeout(() => {
-            document.getElementById("loader").style.display = "none";
-        }, 18000);
+                // Fallback: hide loader after 18 seconds
+                setTimeout(() => {
+                    document.getElementById("loader").style.display = "none";
+                }, 18000);
 
-        // const newReport = {
-        //     type: reportType,
-        //     date: new Date().toLocaleString(),
-        //     id: Date.now()
-        // };
-
-        // reports.unshift(newReport); // Add to top
-        // renderTable();
+                // Submit the form manually
+                document.getElementById("reportForm").submit();
+            }
+        });
     });
 
-    function renderTable() {
-        const tbody = document.getElementById("reportTableBody");
-        tbody.innerHTML = "";
 
-        const pagedReports = reports.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-        pagedReports.forEach(r => {
-            tbody.innerHTML += `
-                <tr>
-                    <td>${r.type}</td>
-                    <td>${r.date}</td>
+    // function renderTable() {
+    //     const tbody = document.getElementById("reportTableBody");
+    //     tbody.innerHTML = "";
 
-                </tr>
-            `;
-        });
+    //     const pagedReports = reports.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    //     for (let r of pagedReports) {
+    //         tbody.innerHTML += `
+    //             <tr>
+    //                 <td>${r.type}</td>
+    //                 <td>${r.date}</td>
+    //                 <td class="text-center">
+    //                     <span class="text-info fw-bold">Pending</span>
+    //                 </td>
+    //             </tr>`;
+    //     }
 
-        renderPagination();
-    }
+    //     renderPagination();
+    // }
 
-    function renderPagination() {
-        const totalPages = Math.ceil(reports.length / pageSize);
-        const container = document.getElementById("paginationContainer");
-        container.innerHTML = "";
+    // function renderPagination() {
+    //     const totalPages = Math.ceil(reports.length / pageSize);
+    //     const container = document.getElementById("paginationContainer");
+    //     container.innerHTML = "";
 
-        for (let i = 1; i <= totalPages; i++) {
-            container.innerHTML += `
-                <li class="page-item ${i === currentPage ? 'active' : ''}">
-                    <a class="page-link" href="#" onclick="gotoPage(${i})">${i}</a>
-                </li>`;
-        }
-    }
+    //     for (let i = 1; i <= totalPages; i++) {
+    //         container.innerHTML += `
+    //             <li class="page-item ${i === currentPage ? 'active' : ''}">
+    //                 <a class="page-link" href="#" onclick="gotoPage(${i})">${i}</a>
+    //             </li>`;
+    //     }
+    // }
 
-    function gotoPage(page) {
-        currentPage = page;
-        renderTable();
-    }
+    // function gotoPage(page) {
+    //     currentPage = page;
+    //     renderTable();
+    // }
 
-    // initial dummy data
-    for (let i = 1; i <= 23; i++) {
-        reports.push({ type: "Sample Report " + i, date: new Date().toLocaleDateString(), id: i });
-    }
+    // for (let i = 1; i <= 23; i++) {
+    //     reports.push({
+    //         type: "Sample Report " + i,
+    //         date: new Date().toLocaleString(),
+    //         id: i
+    //     });
+    // }
 
-    renderTable();
+    // renderTable();
 </script>

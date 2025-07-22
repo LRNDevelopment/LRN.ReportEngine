@@ -18,10 +18,10 @@
         align-items: flex-end;
     }
 
-    .form-inline-group > div {
-        flex: 1;
-        min-width: 200px;
-    }
+        .form-inline-group > div {
+            flex: 1;
+            min-width: 200px;
+        }
 
     .upload-button-row {
         display: flex;
@@ -29,10 +29,10 @@
         margin-top: 10px;
     }
 
-    .upload-button-row button {
-        width: auto;
-        padding: 8px 30px;
-    }
+        .upload-button-row button {
+            width: auto;
+            padding: 8px 30px;
+        }
 
     .table-container {
         background-color: #fff;
@@ -54,18 +54,19 @@
     .pagination {
         justify-content: center;
     }
-         .table-container th, .table-container td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
+
+    .table-container th, .table-container td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        text-align: left;
+    }
 </style>
 
 <div class="container">
     <div class="three">
-    <h4>Upload Report</h4>
+        <h4>Upload Report</h4>
     </div>
-    <div class="filter-bar">
+    <div class="filter-bar" style="margin: 3px 5px;">
         @using (Html.BeginForm("UploadFile", "Upload", FormMethod.Post, new { enctype = "multipart/form-data", id = "uploadForm", onsubmit = "return validateForm();" }))
         {
             @Html.AntiForgeryToken()
@@ -84,9 +85,17 @@
                     <div id="file-error" class="text-danger"></div>
                 </div>
             </div>
-
-            <div class="upload-button-row">
-                <button type="submit" class="btn btn-primary">Upload</button>
+            <div class="row">
+                <div class="col-md-9">
+                    <div class="alert alert-info">
+                        <strong>Note:</strong> Please ensure that all relevant files have been imported before generating the report to prevent data mismatches.
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="upload-button-row">
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </div>
+                </div>
             </div>
         }
     </div>
@@ -119,7 +128,7 @@
                         <td>@item.ImportedOn</td>
                         <td>@item.ExcelRowCount</td>
                         <td>@item.ImportedRowCount</td>
-                        <td > <span class="@item.FileStatusName.ToLower()">@item.FileStatusName</span></td>
+                        <td> <span class="@item.FileStatusName.ToLower()">@item.FileStatusName</span></td>
                         <td>
                             <a href="@Url.Action("DownloadImportLogs", "Upload", new { fileId = item.ImportedFileId })" title="Download Logs">
                                 <img src="~/image/log_download.png" height="25" width="25" />
@@ -136,14 +145,14 @@
 <script>
     @if (TempData["UploadSuccess"] != null)
     {
-        <text>
-            Swal.fire({
-                icon: 'success',
-                title: 'Upload Complete',
-                text: 'File is uploaded and under In-Progress.',
-                confirmButtonText: 'OK'
-            });
-        </text>
+                                                                <text>
+                                                                    Swal.fire({
+                                                                        icon: 'success',
+                                                                        title: 'Upload Complete',
+                                                                        text: 'File is uploaded and under In-Progress.',
+                                                                        confirmButtonText: 'OK'
+                                                                    });
+                                                                </text>
     }
 
     function validateForm() {

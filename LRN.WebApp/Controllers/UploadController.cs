@@ -144,14 +144,22 @@ public class UploadController : Controller
     }
 
     [HttpGet]
-    public async Task<ActionResult> DownloadReport()
+    public async Task<ActionResult> DownloadReport(int page = 1, int pageSize = 10)
     {
         ViewBag.ReportTypes = GetReportTypeList();
 
-        // Await directly without .Result
-        List<ReportDownloadSts> result = await _importRepo.GetReportDownloadStslst();
+        var allReports = await _importRepo.GetReportDownloadStslst();
+        int totalReports = allReports.Count;
+        var pagedReports = allReports
+            .OrderByDescending(r => r.CreatedOn)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
 
-        return View(result);
+        ViewBag.CurrentPage = page;
+        ViewBag.TotalPages = (int)Math.Ceiling((double)totalReports / pageSize);
+
+        return View(pagedReports);
     }
 
     [HttpPost]
@@ -179,8 +187,9 @@ public class UploadController : Controller
 
         await _importRepo.InsertReportDownloadSts(reportDownloadSts);
 
-        List<ReportDownloadSts> result = await _importRepo.GetReportDownloadStslst();
-        return View(result);
+
+        return RedirectToAction("DownloadReport", new { page = 1 });
+
     }
 
     private List<SelectListItem> GetReportTypeList()

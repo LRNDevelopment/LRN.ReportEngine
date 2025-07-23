@@ -92,12 +92,10 @@
                             }
                             else
                             {
-                                using (Html.BeginForm("DownloadImportedFile", "Upload", FormMethod.Post, new { @class = "d-inline" }))
+                                using (Html.BeginForm("DownloadReportFile", "Upload", FormMethod.Post, new { @class = "d-inline" }))
                                 {
                                     @Html.AntiForgeryToken()
-                                    @Html.Hidden("filePath", item.ReportServerPath)
-                                    @Html.Hidden("fileName", item.ReportName)
-                                    @Html.Hidden("createdOn", item.CreatedOn.ToString("o"))
+                                    @Html.Hidden("fileId", item.ReportID)
 
                                     <button class="btn  btn-success small-button" type="submit" style="width:110px;">
                                         Download

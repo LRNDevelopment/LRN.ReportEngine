@@ -259,4 +259,14 @@ public class ImportFilesRepository : IImportFilesRepository
         return results.ToList();
     }
 
+    public async Task<ReportDownloadSts> GetDownloadReportById(int fileId)
+    {
+        const string query = "select * from ReportDownloadSts Where ReportID = @FileId";  // Use parameterized query
+
+        using var connection = _context.CreateConnection();
+        // Use parameterized query to avoid SQL Injection
+        var result = await connection.QuerySingleOrDefaultAsync<ReportDownloadSts>(query, new { FileId = fileId });
+
+        return result;
+    }
 }

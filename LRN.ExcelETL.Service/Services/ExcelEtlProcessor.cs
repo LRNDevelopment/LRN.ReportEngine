@@ -1,15 +1,11 @@
 ﻿using Common.Logging;
 using LRN.DataLibrary.Repository.Interfaces;
-using LRN.ExcelToSqlETL.Core.Constants;
 using LRN.ExcelToSqlETL.Core.DtoModels;
 using LRN.ExcelToSqlETL.Core.Interface;
 using LRN.ExcelToSqlETL.Core.Models;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System.Data;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using static LRN.ExcelToSqlETL.Core.Constants.CommonConst;
 
 namespace LRN.ExcelETL.Service.Services
@@ -117,6 +113,7 @@ namespace LRN.ExcelETL.Service.Services
             catch (Exception ex)
             {
                 _logger.Error($"Error processing file {fileName}: {ex.Message}");
+                ImportLog.Add(new FileLog { ImportFileId = _fileId, LogType = "Error", LogMessage = $"Error processing file {fileName}: {ex.Message}" });
                 fileDto.FileStatus = (int)FileStatusEnum.ImportFailed;
                 await _importRepo.UpdateFileAsync(fileDto);
             }

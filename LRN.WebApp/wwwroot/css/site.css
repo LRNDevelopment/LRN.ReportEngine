@@ -315,7 +315,8 @@ button {
     color: #ffffff !important;
     border-bottom: 2px solid #2c0404a8;
     background-color: #e5e5e54d;
-    padding: 10px;
+    padding: 14px;
+    border-radius: 6px;
 }
 
 .logout {
@@ -334,6 +335,7 @@ button {
         text-decoration: none;
         color: white;
     }
+
 .small-button {
     padding: 4px 10px;
     font-size: 12px;

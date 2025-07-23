@@ -13,6 +13,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.13.0" />
 		<PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.6" />
 	</ItemGroup>
 	<ItemGroup>
@@ -27,6 +28,9 @@
 		<ProjectReference Include="..\LRN.CommonLogger\LRN.CommonLogger.csproj" />
 		<ProjectReference Include="..\LRN.DataLibrary\LRN.DataLibrary.csproj" />
 		<ProjectReference Include="..\LRN.ExcelGenerator\LRN.ExcelGenerator.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Services\" />
 	</ItemGroup>
 
 </Project>

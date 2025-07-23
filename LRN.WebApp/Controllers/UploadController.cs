@@ -118,30 +118,50 @@ public class UploadController : Controller
     public async Task<FileResult> DownloadImportLogs(int fileId)
     {
         var logs = await _importRepo.GetFileLogsById(fileId);
+        var file = _importRepo.GetImportFileById(fileId).Result;
 
+        var fileName = "ImportFileLog_" + Path.GetFileNameWithoutExtension(file.ImportFileName);
         var formattedLogs = logs.Select(log =>
             $"{log.LogType}  :  {log.LogMessage} : {log.RowNo} : {log.ColumnName} :: {log.CreatedOn:yyyy-MM-dd HH:mm:ss}");
 
         var logText = string.Join(Environment.NewLine, formattedLogs);
         var bytes = System.Text.Encoding.UTF8.GetBytes(logText);
 
-        return File(bytes, "text/plain", $"ImportLogs_{fileId}.txt");
+        return File(bytes, "text/plain", $"{fileName}.txt");
     }
 
-    [HttpPost]
-    public IActionResult DownloadImportedFile(string filePath, string fileName, string createdOn)
+    [HttpGet]
+    public IActionResult DownloadImportedFile(int fileId)
     {
-        if (System.IO.File.Exists(filePath))
+        var file = _importRepo.GetImportFileById(fileId).Result;
+        if (System.IO.File.Exists(file.ImportFilePath))
         {
-            var fileBytes = System.IO.File.ReadAllBytes(filePath);
-            var timestamp = Convert.ToDateTime(createdOn).ToString("MM_dd_yyyy_HHmm");
-            var fullFileName = $"{fileName}_{timestamp}.xlsx"; // Ensure .xlsx extension
+            var fileBytes = System.IO.File.ReadAllBytes(file.ImportFilePath);
+            var fullFileName = $"{file.ImportFileName}.xlsx";
 
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fullFileName);
         }
 
         return NotFound("File not found.");
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult DownloadReportFile(int fileId)
+    {
+        var file = _importRepo.GetDownloadReportById(fileId).Result;
+        if (System.IO.File.Exists(file.ReportServerPath))
+        {
+            string filename = file.ReportName + "_" + file.CreatedOn.ToString("MMddyyyy_HHmm");
+            var fileBytes = System.IO.File.ReadAllBytes(file.ReportServerPath);
+            var fullFileName = $"{filename}.xlsx";
+
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fullFileName);
+        }
+
+        return NotFound("File not found.");
+    }
+
 
     [HttpGet]
     public async Task<ActionResult> DownloadReport(int page = 1, int pageSize = 10)

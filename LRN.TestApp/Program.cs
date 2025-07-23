@@ -38,6 +38,7 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IExcelMapperLoader, JsonExcelMapperLoader>();
         services.AddSingleton<IFileReader, ExcelFileReader>();
         services.AddSingleton<IDataValidator, MappingValidator>();
+        services.AddScoped<IFileCSVReader, CSVFileReader>();
         services.AddSingleton<IDataImporter, SqlDataImporter>();
 
         // ✅ ETL Runners
@@ -54,13 +55,13 @@ var host = Host.CreateDefaultBuilder(args)
     .Build();
 
 
- //✅ Entry Point – you can switch to ETL if needed
-var excelWriter = host.Services.GetRequiredService<ExcelWriter>();
-await excelWriter.RunAsync();
+//✅ Entry Point – you can switch to ETL if needed
+//var excelWriter = host.Services.GetRequiredService<ExcelWriter>();
+//await excelWriter.RunAsync();
 
-////////// Run the ETL processor
-//var app = host.Services.GetRequiredService<ExcelEtlProcessor>();
-//await app.RunAsync();
+//////// Run the ETL processor
+var app = host.Services.GetRequiredService<ExcelEtlProcessor>();
+await app.RunAsync();
 
 
 

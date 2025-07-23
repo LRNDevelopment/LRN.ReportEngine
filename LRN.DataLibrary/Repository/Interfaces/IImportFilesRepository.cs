@@ -22,4 +22,6 @@ public interface IImportFilesRepository
     Task<List<ReportDownloadSts>> GetReportDownloadStslst();
 
     Task<ReportDownloadSts> InsertReportDownloadSts(ReportDownloadSts reportDownloadSts);
+
+    Task<ReportDownloadSts> GetDownloadReportById(int fileId);
 }

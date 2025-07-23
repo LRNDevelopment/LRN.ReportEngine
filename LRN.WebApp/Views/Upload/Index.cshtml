@@ -118,11 +118,13 @@
                 @foreach (var item in Model.OrderByDescending(c => c.ImportedOn))
                 {
                     <tr>
-                        <td>
-                            <a href="@Url.Action("DownloadImportedFile", "Upload", new { filePath = item.ImportFilePath, fileName = item.ImportFileName })" title="Download File">
+                    <td>
+                            <a href="@Url.Action("DownloadImportedFile", "Upload", new { 
+                                fileId = item.ImportedFileId
+                            })" title="Download File">
                                 @item.ImportFileName
                             </a>
-                        </td>
+                    </td>
                         <td>Prism</td>
                         <td>@item.FileTypeName</td>
                         <td>@item.ImportedOn</td>
@@ -145,14 +147,14 @@
 <script>
     @if (TempData["UploadSuccess"] != null)
     {
-                                                                <text>
-                                                                    Swal.fire({
-                                                                        icon: 'success',
-                                                                        title: 'Upload Complete',
-                                                                        text: 'File is uploaded and under In-Progress.',
-                                                                        confirmButtonText: 'OK'
-                                                                    });
-                                                                </text>
+                                                                        <text>
+                                                                            Swal.fire({
+                                                                                icon: 'success',
+                                                                                title: 'Upload Complete',
+                                                                                text: 'File is uploaded and under In-Progress.',
+                                                                                confirmButtonText: 'OK'
+                                                                            });
+                                                                        </text>
     }
 
     function validateForm() {

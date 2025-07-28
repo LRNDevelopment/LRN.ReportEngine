@@ -30,7 +30,16 @@
 		<ProjectReference Include="..\LRN.ExcelGenerator\LRN.ExcelGenerator.csproj" />
 	</ItemGroup>
 	<ItemGroup>
+	  <Folder Include="wwwroot\ImportTemplate\" />
 	  <Folder Include="Services\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Include="wwwroot\ImportTemplate\Custom_Collection.xlsx" />
+	  <None Include="wwwroot\ImportTemplate\DenialTrackingDetail.xlsx" />
+	  <None Include="wwwroot\ImportTemplate\LIS.xlsx" />
+	  <None Include="wwwroot\ImportTemplate\Prism Billing.xlsx" />
+	  <None Include="wwwroot\ImportTemplate\Prism Submitted Visit to Accession Report.xlsx" />
+	  <None Include="wwwroot\ImportTemplate\TransactionDetail.xlsx" />
 	</ItemGroup>
 
 </Project>

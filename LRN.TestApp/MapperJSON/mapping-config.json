@@ -2,7 +2,7 @@
   "Mappings": [
     {
       "FileIdentifier": "LIS",
-      "JsonMappingPath": "LISFile.json",
+      "JsonMappingPath": "COVE_LIS.json",
       "FileType": 1
     },
     {
@@ -35,5 +35,6 @@
       "JsonMappingPath": "DenialTrackingDetail.json",
       "FileType": 5
     }
+
   ]
 }

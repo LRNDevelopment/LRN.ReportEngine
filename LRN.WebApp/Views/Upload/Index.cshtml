@@ -2,6 +2,8 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
 
 <style>
     .filter-bar {
@@ -59,6 +61,19 @@
         padding: 10px;
         border: 1px solid #ddd;
         text-align: left;
+    }   .excel-icon-link {
+        text-decoration: none;
+        margin-left: 10px;
+    }
+
+    .excel-icon-link i {
+        font-size: 24px;
+        color: green;
+        transition: transform 0.2s;
+    }
+
+    .excel-icon-link i:hover {
+        transform: scale(1.1);
     }
 </style>
 
@@ -86,12 +101,19 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-9">
+                <div class="col-md-8">
                     <div class="alert alert-info">
                         <strong>Note:</strong> Please ensure that all relevant files have been imported before generating the report to prevent data mismatches.
                     </div>
                 </div>
-                <div class="col-md-3">
+                 <div class="col-md-2">
+                    <div class="upload-button-row" style="padding-top:10px;">
+                        <a href="#" onclick="downloadTemplate()" title="Download Template">
+                            <i class="fas fa-file-excel" style="font-size: 24px; color: green;"></i>&nbsp;&nbsp; Download Template
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-2">
                     <div class="upload-button-row">
                         <button type="submit" class="btn btn-primary">Upload</button>
                     </div>
@@ -127,7 +149,7 @@
                     </td>
                         <td>Prism</td>
                         <td>@item.FileTypeName</td>
-                        <td>@item.ImportedOn</td>
+                        <td>@item.ImportedOn?.ToString("dd-MMM-yyyy hh:mm tt")</td>
                         <td>@item.ExcelRowCount</td>
                         <td>@item.ImportedRowCount</td>
                         <td> <span class="@item.FileStatusName.ToLower()">@item.FileStatusName</span></td>
@@ -147,14 +169,32 @@
 <script>
     @if (TempData["UploadSuccess"] != null)
     {
-                                                                        <text>
-                                                                            Swal.fire({
-                                                                                icon: 'success',
-                                                                                title: 'Upload Complete',
-                                                                                text: 'File is uploaded and under In-Progress.',
-                                                                                confirmButtonText: 'OK'
-                                                                            });
-                                                                        </text>
+       <text>
+           Swal.fire({
+               icon: 'success',
+               title: 'Upload Complete',
+               text: 'File is uploaded and under In-Progress.',
+               confirmButtonText: 'OK'
+           });
+       </text>
+    }
+    
+        function downloadTemplate() {
+        const fileType = document.getElementById("fileType").value;
+
+        if (!fileType) {
+            document.getElementById("fileType-error").innerText = "Please select a file type.";
+            return;
+        }
+
+        document.getElementById("fileType-error").innerText = "";
+
+        // Construct and open the download URL
+        const downloadUrl = `/Upload/DownloadTemplate?fileType=${encodeURIComponent(fileType)}`;
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.target = '_blank';
+        a.click();
     }
 
     function validateForm() {

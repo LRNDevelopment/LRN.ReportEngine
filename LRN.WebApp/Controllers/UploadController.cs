@@ -1,5 +1,6 @@
 using ClosedXML.Excel;
 using Common.Logging;
+using DocumentFormat.OpenXml.Spreadsheet;
 using LRN.DataLibrary.Repository.Interfaces;
 using LRN.ExcelGenerator;
 using LRN.ExcelToSqlETL.Core.Constants;
@@ -7,6 +8,8 @@ using LRN.ExcelToSqlETL.Core.DtoModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Data;
+using System.Net;
 
 [Authorize]
 public class UploadController : Controller
@@ -17,6 +20,7 @@ public class UploadController : Controller
     private readonly ILookUpRepository _lookupRepo;
     private readonly IExcelWriter _excelWriter;
     private readonly IReportRepository _reportRepository;
+    private readonly IWebHostEnvironment _environment;
 
     public UploadController(
         ILoggerService logger,
@@ -24,7 +28,8 @@ public class UploadController : Controller
         IImportFilesRepository importRepo,
         ILookUpRepository lookupRepo,
         IExcelWriter excelWriter,
-        IReportRepository reportRepository)
+        IReportRepository reportRepository,
+        IWebHostEnvironment environment)
     {
         _logger = logger;
         _config = config;
@@ -32,6 +37,7 @@ public class UploadController : Controller
         _lookupRepo = lookupRepo;
         _excelWriter = excelWriter;
         _reportRepository = reportRepository;
+        _environment = environment;
     }
 
     public async Task<IActionResult> Index()
@@ -283,4 +289,68 @@ public class UploadController : Controller
             return StatusCode(500, "Internal server error");
         }
     }
+
+    [HttpGet]
+    public IActionResult DownloadTemplate(string fileType)
+    {
+        if (string.IsNullOrWhiteSpace(fileType))
+        {
+            return BadRequest("File type is required.");
+        }
+
+        // Parse fileType string to int
+        if (!int.TryParse(fileType, out int fileTypeId))
+        {
+            return BadRequest("Invalid file type.");
+        }
+
+        string fileName = null;
+
+        switch (fileTypeId)
+        {
+            case (int)CommonConst.ImportFileType.LIS_Report:
+                fileName = "LIS.xlsx";
+                break;
+
+            case (int)CommonConst.ImportFileType.Custom_Collection:
+                fileName = "Custom_Collection.xlsx";
+                break;
+
+            case (int)CommonConst.ImportFileType.Visit_Against_Accession:
+                fileName = "Prism Submitted Visit to Accession Report.xlsx";
+                break;
+
+            case (int)CommonConst.ImportFileType.Transaction_Detail_Report:
+                fileName = "TransactionDetail.xlsx";
+                break;
+
+            case (int)CommonConst.ImportFileType.Denial_Tracking_Report:
+                fileName = "DenialTrackingDetail.xlsx";
+                break;
+
+            case (int)CommonConst.ImportFileType.Prism_Billing_Sheet:
+                fileName = "Prism Billing.xlsx";
+                break;
+
+            case (int)CommonConst.ImportFileType.Panel_Group:
+                return NotFound("No template available for this file type.");
+        }
+
+        if (string.IsNullOrEmpty(fileName))
+        {
+            return NotFound("Unsupported file type.");
+        }
+
+        var templatesFolder = Path.Combine(_environment.WebRootPath, "ImportTemplate");
+        var fullPath = Path.Combine(templatesFolder, fileName);
+
+        if (!System.IO.File.Exists(fullPath))
+        {
+            return NotFound("Template not found for the selected file type.");
+        }
+
+        var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        return PhysicalFile(fullPath, contentType, fileName);
+    }
+
 }

@@ -1,0 +1,265 @@
+{
+  "SheetName": "",
+  "TargetTable": "dbo.LISStaging",
+  "Columns": [
+
+    {
+      "ExcelColumn": "RecordId",
+      "SqlColumn": "RecordId",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "AccessionNo",
+      "SqlColumn": "AccessionNo",
+      "DataType": "string",
+      "Required": true
+    },
+    {
+      "ExcelColumn": "Requistion_Type",
+      "SqlColumn": "RequistionType",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "FacilityState",
+      "SqlColumn": "FacilityState",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Relationship_To_Insured",
+      "SqlColumn": "RelationshipToInsured",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PhysicianName",
+      "SqlColumn": "PhysicianName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Received_Date",
+      "SqlColumn": "ReceivedDate",
+      "DataType": "date",
+      "Required": true
+    },
+    {
+      "ExcelColumn": "FacilityCity",
+      "SqlColumn": "FacilityCity",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "FacilityZipcode",
+      "SqlColumn": "FacilityZipcode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Time",
+      "SqlColumn": "Time",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "FacilityAddress",
+      "SqlColumn": "FacilityAddress",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PolicyId",
+      "SqlColumn": "PolicyId",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "GroupId",
+      "SqlColumn": "GroupId",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Panel",
+      "SqlColumn": "Panel",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ReferenceId",
+      "SqlColumn": "ReferenceId",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Validated_Date",
+      "SqlColumn": "Validated_Date",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Policy_Holder_DOB",
+      "SqlColumn": "PolicyHolderDOB",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Address",
+      "SqlColumn": "Address",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Medications",
+      "SqlColumn": "Medications",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "FacilityName",
+      "SqlColumn": "FacilityName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ICDCodes",
+      "SqlColumn": "ICDCodes",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Email",
+      "SqlColumn": "Email",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "City",
+      "SqlColumn": "City",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Gender",
+      "SqlColumn": "Gender",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DateOfCollection",
+      "SqlColumn": "DateOfCollection",
+      "DataType": "date",
+      "Required": true
+    },
+    {
+      "ExcelColumn": "SocialSecurityNumber",
+      "SqlColumn": "SocialSecurityNumber",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "NPI",
+      "SqlColumn": "NPI",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "State",
+      "SqlColumn": "State",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOB",
+      "SqlColumn": "DOB",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DateofService",
+      "SqlColumn": "DateofService",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "TransferTo",
+      "SqlColumn": "TransferTo",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PatientEthnicity",
+      "SqlColumn": "PatientEthnicity",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "SaleRepName",
+      "SqlColumn": "SaleRepName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "FirstName",
+      "SqlColumn": "FirstName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Status",
+      "SqlColumn": "Status",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PrimaryInsuranceProvider",
+      "SqlColumn": "PrimaryInsuranceProvider",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ZipCode",
+      "SqlColumn": "ZipCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Race",
+      "SqlColumn": "Race",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "LastName",
+      "SqlColumn": "LastName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "LabCode",
+      "SqlColumn": "LabCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Insurance_Type",
+      "SqlColumn": "Insurance_Type",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ProviderName",
+      "SqlColumn": "ProviderName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

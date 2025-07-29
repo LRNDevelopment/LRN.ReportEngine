@@ -154,12 +154,6 @@
       "Required": true
     },
     {
-      "ExcelColumn": "SocialSecurityNumber",
-      "SqlColumn": "SocialSecurityNumber",
-      "DataType": "string",
-      "Required": false
-    },
-    {
       "ExcelColumn": "NPI",
       "SqlColumn": "NPI",
       "DataType": "date",

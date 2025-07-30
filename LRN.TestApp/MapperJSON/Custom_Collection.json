@@ -4,19 +4,19 @@
   "Columns": [
     {
       "ExcelColumn": "Carrier",
-      "SqlColumn": "PayerName",
+      "SqlColumn": "Carrier",
       "DataType": "string",
       "Required": false
     },
     {
       "ExcelColumn": "FinancialClass",
-      "SqlColumn": "PayerType",
+      "SqlColumn": "FinancialClass",
       "DataType": "string",
       "Required": false
     },
     {
       "ExcelColumn": "Provider",
-      "SqlColumn": "BillingProvider",
+      "SqlColumn": "Provider",
       "DataType": "string",
       "Required": false
     },
@@ -28,14 +28,14 @@
     },
     {
       "ExcelColumn": "Facility",
-      "SqlColumn": "PerformingLab",
+      "SqlColumn": "Facility",
       "DataType": "string",
       "Required": false
     },
     {
       "ExcelColumn": "ChartNum",
-      "SqlColumn": "PatientID",
-      "DataType": "int",
+      "SqlColumn": "ChartNum",
+      "DataType": "string",
       "Required": false
     },
     {
@@ -47,7 +47,7 @@
     {
       "ExcelColumn": "DOB",
       "SqlColumn": "DOB",
-      "DataType": "datetime",
+      "DataType": "date",
       "Required": false
     },
     {
@@ -58,14 +58,14 @@
     },
     {
       "ExcelColumn": "SubscriberID",
-      "SqlColumn": "MemberID",
+      "SqlColumn": "SubscriberID",
       "DataType": "string",
       "Required": false
     },
     {
       "ExcelColumn": "VisitNum",
-      "SqlColumn": "VisitNumber",
-      "DataType": "int",
+      "SqlColumn": "VisitNum",
+      "DataType": "string",
       "Required": false
     },
     {
@@ -76,49 +76,49 @@
     },
     {
       "ExcelColumn": "Accession",
-      "SqlColumn": "AccessionNo",
+      "SqlColumn": "Accession",
       "DataType": "string",
       "Required": false
     },
     {
       "ExcelColumn": "BeginDOS",
       "SqlColumn": "BeginDOS",
-      "DataType": "datetime",
+      "DataType": "date",
       "Required": false
     },
     {
       "ExcelColumn": "EndDOS",
       "SqlColumn": "EndDOS",
-      "DataType": "datetime",
+      "DataType": "date",
       "Required": false
     },
     {
       "ExcelColumn": "DOE",
-      "SqlColumn": "ChargeEntryDate",
-      "DataType": "datetime",
+      "SqlColumn": "DOE",
+      "DataType": "date",
       "Required": false
     },
     {
       "ExcelColumn": "LastBillDate",
       "SqlColumn": "LastBillDate",
-      "DataType": "datetime",
+      "DataType": "date",
       "Required": false
     },
     {
       "ExcelColumn": "BillOccurance",
-      "SqlColumn": "BillingFrequency",
+      "SqlColumn": "BillOccurance",
       "DataType": "string",
       "Required": false
     },
     {
       "ExcelColumn": "EntryUser",
-      "SqlColumn": "ChargeEnteredBy",
+      "SqlColumn": "EntryUser",
       "DataType": "string",
       "Required": false
     },
     {
       "ExcelColumn": "Procedure",
-      "SqlColumn": "BilledCPTCode",
+      "SqlColumn": "Procedure",
       "DataType": "string",
       "Required": false
     },
@@ -142,49 +142,49 @@
     },
     {
       "ExcelColumn": "PrimaryDiagnosis",
-      "SqlColumn": "ICD10Code",
+      "SqlColumn": "PrimaryDiagnosis",
       "DataType": "string",
       "Required": false
     },
     {
       "ExcelColumn": "TotalCharge",
-      "SqlColumn": "BilledAmount",
+      "SqlColumn": "TotalCharge",
       "DataType": "decimal",
       "Required": false
     },
     {
       "ExcelColumn": "TotalAllowed",
-      "SqlColumn": "AllowedAmount",
+      "SqlColumn": "TotalAllowed",
       "DataType": "decimal",
       "Required": false
     },
     {
       "ExcelColumn": "CarrierPayment",
-      "SqlColumn": "InsurancePayments",
+      "SqlColumn": "CarrierPayment",
       "DataType": "decimal",
       "Required": false
     },
     {
       "ExcelColumn": "CarrierWO",
-      "SqlColumn": "InsuranceAdjustments",
+      "SqlColumn": "CarrierWO",
       "DataType": "decimal",
       "Required": false
     },
     {
       "ExcelColumn": "PatientPayment",
-      "SqlColumn": "PatientPayments",
+      "SqlColumn": "PatientPayment",
       "DataType": "decimal",
       "Required": false
     },
     {
       "ExcelColumn": "PatientWO",
-      "SqlColumn": "PatientAdjustments",
+      "SqlColumn": "PatientWO",
       "DataType": "decimal",
       "Required": false
     },
     {
       "ExcelColumn": "CarrierBalance",
-      "SqlColumn": "InsuranceBalance",
+      "SqlColumn": "CarrierBalance",
       "DataType": "decimal",
       "Required": false
     },
@@ -204,6 +204,12 @@
       "ExcelColumn": "ImportedFileID",
       "SqlColumn": "ImportedFileID",
       "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Remarks",
+      "SqlColumn": "Remarks",
+      "DataType": "string",
       "Required": false
     }
   ]

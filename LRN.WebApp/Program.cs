@@ -9,6 +9,7 @@ using LRN.ExcelGenerator;
 using LRN.ExcelGenerator.Utils;
 using LRN.ExcelToSqlETL.Core.Constants;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using System.Configuration;
 using System.Data;
@@ -49,6 +50,11 @@ builder.Services.AddScoped<ILookUpRepository, LookUpRepository>();
 builder.Services.AddScoped<IReportRepository, ReportRepository>();
 
 builder.Services.AddScoped<IExcelWriter, ExcelWriter>();
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 72428800; // 50 MB
+});
 
 // ✅ AutoMapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

@@ -12,6 +12,7 @@ using System.Data;
 using System.Net;
 
 [Authorize]
+[RequestSizeLimit(72428800)]
 public class UploadController : Controller
 {
     private readonly ILoggerService _logger;

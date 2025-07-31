@@ -48,7 +48,7 @@ public class UploadController : Controller
 
         ViewBag.Labs = new List<SelectListItem>
         {
-            new SelectListItem { Text = "Prism", Value = "3" }
+            new SelectListItem { Text = "Cove", Value = "4" }
         };
 
         var importFileTypes = await _lookupRepo.GetImportFileTypesAsync();

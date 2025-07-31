@@ -1,7 +1,13 @@
 {
-  "SheetName": "",
+  "SheetName": "Sheet1",
   "TargetTable": "dbo.DenialTrackingStaging",
   "Columns": [
+    {
+      "ExcelColumn": "Facility",
+      "SqlColumn": "Facility",
+      "DataType": "string",
+      "Required": false
+    },
     {
       "ExcelColumn": "Provider",
       "SqlColumn": "Provider",
@@ -88,7 +94,7 @@
     },
     {
       "ExcelColumn": "User",
-      "SqlColumn": "DenialUser",
+      "SqlColumn": "User",
       "DataType": "string",
       "Required": false
     },
@@ -99,7 +105,7 @@
       "Required": false
     },
     {
-      "ExcelColumn": "Last Action",
+      "ExcelColumn": "Last Action ",
       "SqlColumn": "LastAction",
       "DataType": "string",
       "Required": false

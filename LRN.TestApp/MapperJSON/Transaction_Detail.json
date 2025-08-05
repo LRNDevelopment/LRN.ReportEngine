@@ -4,7 +4,7 @@
   "Columns": [
     {
       "ExcelColumn": "Office Key",
-      "SqlColumn": "OfficeKey",
+      "SqlColumn": "LabIdentityKey",
       "DataType": "string",
       "Required": false
     },
@@ -34,7 +34,7 @@
     },
     {
       "ExcelColumn": "Visit #",
-      "SqlColumn": "VisitNumber",
+      "SqlColumn": "VisitNo",
       "DataType": "string",
       "Required": false
     },
@@ -63,21 +63,75 @@
       "Required": false
     },
     {
+      "ExcelColumn": "Transaction Code Desc",
+      "SqlColumn": "TransactionCodeDesc",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Modifiers",
+      "SqlColumn": "Modifiers",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Visit - Primary Carrier",
+      "SqlColumn": "VisitPrimaryCarrier",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Visit - Secondary Carrier",
+      "SqlColumn": "VisitSecondaryCarrier",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Transaction Carrier",
+      "SqlColumn": "TransactionCarrier",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Primary Dx (ICD-9)",
+      "SqlColumn": "PrimaryDxICD9",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Primary Dx (ICD-10)",
+      "SqlColumn": "PrimaryDxICD10",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Payment Method",
+      "SqlColumn": "PaymentMethod",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Check Number",
+      "SqlColumn": "CheckNumber",
+      "DataType": "string",
+      "Required": false
+    },
+    {
       "ExcelColumn": "Date of Service",
-      "SqlColumn": "DateOfService",
-      "DataType": "date",
+      "SqlColumn": "DateofService",
+      "DataType": "datetime",
       "Required": false
     },
     {
       "ExcelColumn": "Date of Entry",
-      "SqlColumn": "DateOfEntry",
-      "DataType": "date",
+      "SqlColumn": "DateofEntry",
+      "DataType": "datetime",
       "Required": false
     },
     {
       "ExcelColumn": "Date of Deposit",
-      "SqlColumn": "DateOfDeposit",
-      "DataType": "date",
+      "SqlColumn": "DateofDeposit",
+      "DataType": "datetime",
       "Required": false
     },
     {
@@ -94,31 +148,31 @@
     },
     {
       "ExcelColumn": "Charges",
-      "SqlColumn": "Charges",
+      "SqlColumn": "TotalBilledAmount",
       "DataType": "decimal",
       "Required": false
     },
     {
       "ExcelColumn": "Patient Payments",
-      "SqlColumn": "PatientPayments",
+      "SqlColumn": "PatientPaidAmount",
       "DataType": "decimal",
       "Required": false
     },
     {
       "ExcelColumn": "Insurance Payments",
-      "SqlColumn": "InsurancePayments",
+      "SqlColumn": "InsurancePaidAmount",
       "DataType": "decimal",
       "Required": false
     },
     {
       "ExcelColumn": "Total Payments",
-      "SqlColumn": "TotalPayments",
+      "SqlColumn": "TotalPaidAmount",
       "DataType": "decimal",
       "Required": false
     },
     {
       "ExcelColumn": "Adjustments",
-      "SqlColumn": "Adjustments",
+      "SqlColumn": "AdjustmentAmount",
       "DataType": "decimal",
       "Required": false
     },

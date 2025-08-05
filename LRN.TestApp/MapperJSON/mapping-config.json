@@ -2,7 +2,7 @@
   "Mappings": [
     {
       "FileIdentifier": "LIS",
-      "JsonMappingPath": "COVE_LIS.json",
+      "JsonMappingPath": "LISFile.json",
       "FileType": 1
     },
     {
@@ -34,7 +34,11 @@
       "FileIdentifier": "Denial",
       "JsonMappingPath": "DenialTrackingDetail.json",
       "FileType": 5
+    },
+    {
+      "FileIdentifier": "Payment",
+      "JsonMappingPath": "AccPaymentReport.json",
+      "FileType": 8
     }
-
   ]
 }

@@ -51,9 +51,9 @@ builder.Services.AddScoped<IReportRepository, ReportRepository>();
 
 builder.Services.AddScoped<IExcelWriter, ExcelWriter>();
 
-builder.Services.Configure<FormOptions>(options =>
+builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    options.MultipartBodyLengthLimit = 72428800; // 50 MB
+    serverOptions.Limits.MaxRequestBodySize = 104857600; // 100 MB (change as needed)
 });
 
 // ✅ AutoMapper

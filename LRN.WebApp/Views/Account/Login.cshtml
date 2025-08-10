@@ -118,6 +118,10 @@
                 @using (Html.BeginForm("Login", "Account", FormMethod.Post))
                 {
                     <div class="mb-3">
+                        <label for="SelectedLab" class="form-label">Lab</label>
+                        @Html.DropDownList("SelectedLab", new SelectList(ViewBag.Labs as List<SelectListItem>, "Value", "Text"), "-- Select Lab --", new { @class = "form-select", id = "SelectedLab" })
+                    </div>
+                    <div class="mb-3">
                         @Html.LabelFor(m => m.Username)
                         @Html.TextBoxFor(m => m.Username, new { @class = "form-control", placeholder = "Enter username" })
                     </div>

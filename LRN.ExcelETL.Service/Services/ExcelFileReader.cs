@@ -328,7 +328,7 @@ public class ExcelFileReader : IFileReader
         throw new Exception($"Header row not found in the top {scanLimit} rows.");
     }
 
-    public static object GetCellValue(string? cellValue, string expectedType)
+    public static object GetCellValue(string? cellValue, string expectedType, int rowNum = -1, string columnName = null)
     {
         try
         {
@@ -351,7 +351,7 @@ public class ExcelFileReader : IFileReader
                         ? doubleResult : DBNull.Value,
 
                 "datetime" or "date" =>
-                    TryParseFlexibleDate(value, out var dateResult)
+                    TryParseFlexibleDate(value, out var dateResult, rowNum, columnName)
                         ? dateResult : DBNull.Value,
 
                 "bool" or "boolean" =>
@@ -363,38 +363,27 @@ public class ExcelFileReader : IFileReader
         }
         catch (Exception ex)
         {
-            ImportLog.Add(new FileLog { ImportFileId = _ImportFileId, LogType = "Error", LogMessage = $"Erro on importing {ex.ToString()}." });
-
+            ImportLog.Add(new FileLog { ImportFileId = _ImportFileId, LogType = "Error", LogMessage = $"Error on importing row {rowNum}, column '{columnName}': {ex}" });
             throw;
         }
-
     }
 
     private static readonly string[] SupportedFormats = new[]
     {
-        // Date-only
-        "M/d/yyyy", "MM/dd/yyyy", "d/M/yyyy", "dd/MM/yyyy",
-        "M/d/yy", "MM/dd/yy", "d/M/yy", "dd/MM/yy",
-        "yyyy-MM-dd", "yyyy/MM/dd", "dd-MM-yyyy", "d-M-yyyy",
+    "MM/dd/yyyy", "MM/dd/yy",
+    "MM/dd/yyyy h:mm tt", "MM/dd/yyyy h:mm:ss tt",
+    "MM/dd/yyyy HH:mm:ss",
+    "yyyy-MM-dd", "yyyy-MM-ddTHH:mm:ss", "yyyy-MM-ddTHH:mm:ssZ",
+    "yyyy-MM-ddTHH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ"
+};
 
-        // With 12-hour time
-        "M/d/yyyy h:mm tt", "MM/dd/yyyy h:mm tt",
-        "M/d/yyyy h:mm:ss tt", "MM/dd/yyyy h:mm:ss tt",
-        "d/M/yyyy h:mm:ss tt", "dd/MM/yyyy h:mm:ss tt",
-
-        // With 24-hour time
-        "yyyy-MM-dd HH:mm:ss", "yyyy/MM/dd HH:mm:ss",
-
-        // ISO 8601
-        "yyyy-MM-ddTHH:mm:ss", "yyyy-MM-ddTHH:mm:ssZ",
-        "yyyy-MM-ddTHH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ"
-    };
-
-    public static bool TryParseFlexibleDate(string input, out DateTime date)
+    public static bool TryParseFlexibleDate(string input, out DateTime date, int rowNum = -1, string columnName = null)
     {
         input = input.Trim();
 
-        // Excel serial number handling (e.g., "45623")
+        var usCulture = new CultureInfo("en-US"); // MM/dd/yyyy
+        var ukCulture = new CultureInfo("en-GB"); // dd/MM/yyyy
+
         if (double.TryParse(input, NumberStyles.Any, CultureInfo.InvariantCulture, out var serialValue)
             && serialValue > 0 && serialValue < 60000)
         {
@@ -402,29 +391,48 @@ public class ExcelFileReader : IFileReader
             return true;
         }
 
-        // Try parsing exact supported formats
-        if (DateTime.TryParseExact(
-            input,
-            SupportedFormats,
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
-            out date))
+        if (DateTime.TryParseExact(input, SupportedFormats, usCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out date)
+            || DateTime.TryParse(input, usCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out date))
         {
             return true;
         }
 
-        // Try fallback parsing (handles extra cases like ISO with time zone offsets)
-        if (DateTimeOffset.TryParse(
-            input,
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.AssumeUniversal,
-            out var dto))
+        if (DateTimeOffset.TryParse(input, usCulture, DateTimeStyles.AssumeUniversal, out var dtoUs))
         {
-            date = dto.UtcDateTime;
+            date = dtoUs.UtcDateTime;
+            return true;
+        }
+
+        var ukFormats = new[]
+        {
+        "dd/MM/yyyy", "d/M/yyyy", "dd/MM/yy", "d/M/yy",
+        "dd/MM/yyyy h:mm tt", "dd/MM/yyyy h:mm:ss tt",
+        "dd/MM/yyyy HH:mm:ss"
+    };
+
+        if (DateTime.TryParseExact(input, ukFormats, ukCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out date)
+            || DateTime.TryParse(input, ukCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out date))
+        {
+            return true;
+        }
+
+        if (DateTimeOffset.TryParse(input, ukCulture, DateTimeStyles.AssumeUniversal, out var dtoUk))
+        {
+            date = dtoUk.UtcDateTime;
             return true;
         }
 
         date = default;
+        if (rowNum != -1 && !string.IsNullOrWhiteSpace(columnName))
+        {
+            ImportLog.Add(new FileLog
+            {
+                ImportFileId = _ImportFileId,
+                LogType = "Error",
+                LogMessage = $"Date conversion failed at Row {rowNum}, Column '{columnName}' for value '{input}'"
+            });
+        }
+
         return false;
     }
 

@@ -35,7 +35,7 @@ public class FileProcessingWorker : BackgroundService
                     .Where(c => c.FileStatusId == (int)CommonConst.FileStatusEnum.ImportQueued)
                     .ToList();
 
-                foreach (var file in queuedFiles)
+                 foreach (var file in queuedFiles)
                 {
                     try
                     {

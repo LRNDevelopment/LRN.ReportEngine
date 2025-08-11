@@ -87,10 +87,10 @@
             @Html.AntiForgeryToken()
 
             <div class="form-inline-group">
-                <div>
+           @*      <div style="display:none;">
                     @Html.DropDownList("lab", (List<SelectListItem>)ViewBag.Labs, "Select Lab", new { @class = "form-control", id = "lab", name = "lab" })
                     <div id="lab-error" class="text-danger"></div>
-                </div>
+                </div> *@
                 <div>
                     @Html.DropDownList("fileType", (List<SelectListItem>)ViewBag.FileTypes, "Select File Type", new { @class = "form-control", id = "fileType", name = "fileType" })
                     <div id="fileType-error" class="text-danger"></div>
@@ -127,7 +127,7 @@
             <thead>
                 <tr>
                     <th>File Name</th>
-                    <th>Lab</th>
+                    @* <th>Lab</th> *@
                     <th>File Type</th>
                     <th>Uploaded On</th>
                     <th>Excel Row Count</th>
@@ -147,7 +147,7 @@
                                 @item.ImportFileName
                             </a>
                     </td>
-                        <td>Prism</td>
+                        @* <td>Prism</td> *@
                         <td>@item.FileTypeName</td>
                         <td>@item.ImportedOn?.ToString("dd-MMM-yyyy hh:mm tt")</td>
                         <td>@item.ExcelRowCount</td>
@@ -178,41 +178,40 @@
            });
        </text>
     }
-    
-        function downloadTemplate() {
+      function downloadTemplate() {
         const fileType = document.getElementById("fileType").value;
+        const errorEl = document.getElementById("fileType-error");
 
         if (!fileType) {
-            document.getElementById("fileType-error").innerText = "Please select a file type.";
-            return;
+          if (errorEl) errorEl.innerText = "Please select a file type.";
+          return;
         }
+        if (errorEl) errorEl.innerText = "";
 
-        document.getElementById("fileType-error").innerText = "";
+        // Use Url.Action so the path is correct in Production too
+        const baseUrl = '@Url.Action("DownloadTemplate", "Upload")'; // e.g. /MyApp/Upload/DownloadTemplate
+        const downloadUrl = baseUrl + '?fileType=' + encodeURIComponent(fileType);
 
-        // Construct and open the download URL
-        const downloadUrl = `/Upload/DownloadTemplate?fileType=${encodeURIComponent(fileType)}`;
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.target = '_blank';
-        a.click();
-    }
+        // More reliable than clicking a detached <a>
+        window.location.href = downloadUrl;
+      }
 
     function validateForm() {
-        const lab = document.getElementById("lab").value;
+        // const lab = document.getElementById("lab").value;
         const fileType = document.getElementById("fileType").value;
         const fileInput = document.getElementById("file");
         const file = fileInput.value;
 
-        document.getElementById("lab-error").innerText = "";
+        // document.getElementById("lab-error").innerText = "";
         document.getElementById("fileType-error").innerText = "";
         document.getElementById("file-error").innerText = "";
 
         let isValid = true;
 
-        if (!lab) {
-            showError("lab", "Please select a lab");
-            isValid = false;
-        }
+        // if (!lab) {
+        //     showError("lab", "Please select a lab");
+        //     isValid = false;
+        // }
 
         if (!fileType) {
             showError("fileType", "Please select a file type");

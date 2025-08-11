@@ -1,21 +1,19 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Threading.Tasks;
-using System.Collections.Generic;
+using System.Security.Claims;
 
-[AllowAnonymous]
 public class AccountController : Controller
 {
     [HttpGet]
     public IActionResult Login()
     {
-        var model = new LoginViewModel();
-        GetAvailableLabs();
-        return View(model);
+        ViewBag.Labs = GetAvailableLabs()
+            .Select(l => new SelectListItem { Value = l.Id.ToString(), Text = l.Name })
+            .ToList();
+
+        return View(new LoginViewModel());
     }
 
     [HttpPost]
@@ -23,17 +21,33 @@ public class AccountController : Controller
     {
         if (!ModelState.IsValid)
         {
-            GetAvailableLabs();
+            ViewBag.Labs = GetAvailableLabs()
+                .Select(l => new SelectListItem { Value = l.Id.ToString(), Text = l.Name })
+                .ToList();
             return View(model);
         }
 
         // TODO: replace with your real auth
-        if (model.Username == "admin" && model.Password == "admin" && !string.IsNullOrWhiteSpace(model.SelectedLab))
+        if (model.Username == "admin" && model.Password == "admin")
         {
+            // look up the selected lab by Id to get name + conn key
+            var labs = GetAvailableLabs();
+            var lab = labs.FirstOrDefault(x => x.Id == model.SelectedLabId);
+            if (lab == null)
+            {
+                ModelState.AddModelError(nameof(model.SelectedLabId), "Invalid lab.");
+                ViewBag.Labs = labs.Select(l => new SelectListItem { Value = l.Id.ToString(), Text = l.Name }).ToList();
+                return View(model);
+            }
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, model.Username),
-                new Claim("Lab", model.SelectedLab) // <-- store selected lab
+
+                // store all three as separate claims
+                new Claim("LabId", lab.Id.ToString()),
+                new Claim("LabName", lab.Name),
+                new Claim("Lab", lab.ConnectionKey) // <— this is the one your Dapper/EF picks up
             };
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -43,27 +57,23 @@ public class AccountController : Controller
             return RedirectToAction("Index", "Upload");
         }
 
+        ViewBag.Labs = GetAvailableLabs()
+            .Select(l => new SelectListItem { Value = l.Id.ToString(), Text = l.Name })
+            .ToList();
+
         ViewBag.Message = "Invalid credentials";
-        GetAvailableLabs();
         return View(model);
     }
 
-    [Authorize]
+    private List<LabOption> GetAvailableLabs() => new()
+    {
+        new LabOption { Id = 3, Name = "Prism", ConnectionKey = "PrismConnection" },
+        new LabOption { Id = 4, Name = "Cove",  ConnectionKey = "CoveConnection"  }
+    };
+
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction(nameof(Login));
-    }
-    public void GetAvailableLabs()
-    {
-        // This method should return a list of labs available for selection.
-        // For demonstration purposes, we will return a static list.
-        // In a real application, this could be fetched from a database or configuration.
-        // Example labs
-        ViewBag.Labs = new List<SelectListItem>
-        {
-            new SelectListItem { Text = "Prism", Value = "1" },
-            new SelectListItem { Text = "Cove", Value = "2" },
-        };
     }
 }

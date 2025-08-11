@@ -67,7 +67,10 @@ namespace LRN.ExcelToSqlETL.Core.Constants
             Prism_Billing_Sheet = 6,
 
             [Description("Panel_Group")]
-            Panel_Group = 7
+            Panel_Group = 7,
+
+            [Description("Accession Payment Report")]
+            Accession_Payment_Report = 8
         }
 
         public enum DownloadReportType

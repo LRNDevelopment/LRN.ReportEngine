@@ -5,13 +5,13 @@ namespace LRN.DataLibrary;
 
 public class DapperContext
 {
-    private readonly string _connectionString;
+    private readonly IConnectionStringProvider _provider;
 
-    public DapperContext(string connectionString)
+    public DapperContext(IConnectionStringProvider provider)
     {
-        _connectionString = connectionString;
+        _provider = provider;
     }
 
     public IDbConnection CreateConnection()
-        => new SqlConnection(_connectionString);
+        => new SqlConnection(_provider.GetConnectionString());
 }

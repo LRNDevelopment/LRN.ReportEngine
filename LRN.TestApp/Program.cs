@@ -29,9 +29,9 @@ var host = Host.CreateDefaultBuilder(args)
         // ✅ AutoMapper
         services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-        // ✅ Dapper Context
-        services.AddSingleton<DapperContext>(sp =>
-            new DapperContext(configuration.GetConnectionString("DefaultConnection")!));
+        //// ✅ Dapper Context
+        //services.AddSingleton<DapperContext>(sp =>
+        //    new DapperContext(configuration.GetConnectionString("DefaultConnection")!));
 
         // ✅ Core & Utility Services
         services.AddSingleton<ILoggerService, LogManagerService>();

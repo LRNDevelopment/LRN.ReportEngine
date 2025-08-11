@@ -16,12 +16,10 @@ namespace LRN.DataLibrary.Repository;
 public class ImportFilesRepository : IImportFilesRepository
 {
     private readonly DapperContext _context;
-    private readonly LRNDbContext _dbContext;
 
-    public ImportFilesRepository(DapperContext context, LRNDbContext dbContext)
+    public ImportFilesRepository(DapperContext context)
     {
         _context = context;
-        _dbContext = dbContext;
     }
 
     public async Task<List<ImportFileDto>> InsertImportFilesDataAsync(List<ImportFileDto> files)
@@ -110,6 +108,10 @@ public class ImportFilesRepository : IImportFilesRepository
                         await connection.ExecuteAsync("Sp_Process_BillingSheet_ByFileId", parameters, transaction, commandType: CommandType.StoredProcedure);
                         break;
 
+                    case (int)CommonConst.ImportFileType.Accession_Payment_Report:
+                        await connection.ExecuteAsync("Sp_ProcessAccessionPaymentReport", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        break;
+
                     case (int)CommonConst.ImportFileType.Panel_Group:
                         // Future implementation
                         break;
@@ -126,57 +128,57 @@ public class ImportFilesRepository : IImportFilesRepository
     }
 
 
-    public async Task ProcessImportFilesGroupAsync(List<ImportFileDto> files)
-    {
-        if (files == null || !files.Any())
-            throw new ArgumentException("File list is empty or null.");
+    //public async Task ProcessImportFilesGroupAsync(List<ImportFileDto> files)
+    //{
+    //    if (files == null || !files.Any())
+    //        throw new ArgumentException("File list is empty or null.");
 
-        using var transaction = await _dbContext.Database.BeginTransactionAsync();
+    //    using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
-        try
-        {
-            await _dbContext.Database.ExecuteSqlInterpolatedAsync($"EXEC sp_InsertMasterData");
+    //    try
+    //    {
+    //        await _dbContext.Database.ExecuteSqlInterpolatedAsync($"EXEC sp_InsertMasterData");
 
-            var fileGroups = files
-                .Where(f => f.ImportedFileId != 0)
-                .GroupBy(f => (ImportFileType)f.FileType)
-                .ToDictionary(g => g.Key, g => string.Join(",", g.Select(f => f.ImportedFileId)));
+    //        var fileGroups = files
+    //            .Where(f => f.ImportedFileId != 0)
+    //            .GroupBy(f => (ImportFileType)f.FileType)
+    //            .ToDictionary(g => g.Key, g => string.Join(",", g.Select(f => f.ImportedFileId)));
 
-            fileGroups.TryGetValue(ImportFileType.LIS_Report, out string lisFileId);
-            fileGroups.TryGetValue(ImportFileType.Visit_Against_Accession, out string vaaFileId);
-            fileGroups.TryGetValue(ImportFileType.Custom_Collection, out string customCollectionFileId);
-            fileGroups.TryGetValue(ImportFileType.Prism_Billing_Sheet, out string billingSheetFileId);
-            fileGroups.TryGetValue(ImportFileType.Denial_Tracking_Report, out string denialFileId);
-            fileGroups.TryGetValue(ImportFileType.Transaction_Detail_Report, out string transFileId);
+    //        fileGroups.TryGetValue(ImportFileType.LIS_Report, out string lisFileId);
+    //        fileGroups.TryGetValue(ImportFileType.Visit_Against_Accession, out string vaaFileId);
+    //        fileGroups.TryGetValue(ImportFileType.Custom_Collection, out string customCollectionFileId);
+    //        fileGroups.TryGetValue(ImportFileType.Prism_Billing_Sheet, out string billingSheetFileId);
+    //        fileGroups.TryGetValue(ImportFileType.Denial_Tracking_Report, out string denialFileId);
+    //        fileGroups.TryGetValue(ImportFileType.Transaction_Detail_Report, out string transFileId);
 
-            await _dbContext.Database.ExecuteSqlInterpolatedAsync(
-                $"EXEC SP_Process_LISMaster_From_Staging {lisFileId}, {vaaFileId}, {customCollectionFileId}, {billingSheetFileId}");
+    //        await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+    //            $"EXEC SP_Process_LISMaster_From_Staging {lisFileId}, {vaaFileId}, {customCollectionFileId}, {billingSheetFileId}");
 
-            await _dbContext.Database.ExecuteSqlInterpolatedAsync(
-                $"EXEC Sp_ProcessBillingMasterData {customCollectionFileId}");
+    //        await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+    //            $"EXEC Sp_ProcessBillingMasterData {customCollectionFileId}");
 
-            await _dbContext.Database.ExecuteSqlInterpolatedAsync(
-                $"EXEC Sp_ProcessDenialTrackingMaster {denialFileId}");
+    //        await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+    //            $"EXEC Sp_ProcessDenialTrackingMaster {denialFileId}");
 
-            await _dbContext.Database.ExecuteSqlInterpolatedAsync(
-                $"EXEC Sp_ProcessTransactionDetails {transFileId}");
+    //        await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+    //            $"EXEC Sp_ProcessTransactionDetails {transFileId}");
 
-            foreach (var file in files)
-            {
-                file.ProcessedOn = DateTime.Now;
-                file.FileStatus = (int)CommonConst.FileStatusEnum.ImportSuccess;
-            }
+    //        foreach (var file in files)
+    //        {
+    //            file.ProcessedOn = DateTime.Now;
+    //            file.FileStatus = (int)CommonConst.FileStatusEnum.ImportSuccess;
+    //        }
 
-            await UpdateImportFilesAsync(files);
-            await transaction.CommitAsync();
-        }
-        catch (Exception ex)
-        {
-            await transaction.RollbackAsync();
-            //.LogError(ex, "An error occurred while processing import files.");
-            throw new ApplicationException("An error occurred while processing import files.", ex);
-        }
-    }
+    //        await UpdateImportFilesAsync(files);
+    //        await transaction.CommitAsync();
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        await transaction.RollbackAsync();
+    //        //.LogError(ex, "An error occurred while processing import files.");
+    //        throw new ApplicationException("An error occurred while processing import files.", ex);
+    //    }
+    //}
 
     public async Task<List<ImportFileDto>> GetImportFilesAsync()
     {

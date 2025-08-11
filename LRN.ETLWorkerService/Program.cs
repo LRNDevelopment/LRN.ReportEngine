@@ -6,41 +6,34 @@ using LRN.ExcelETL.Service.Services;
 using LRN.ExcelGenerator.Utils;
 using LRN.ExcelToSqlETL.Core.Constants;
 using LRN.ExcelToSqlETL.Core.Interface;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System.Data;
 
 namespace LRN.ETLWorkerService
 {
     public class Program
     {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
+        public static void Main(string[] args) => CreateHostBuilder(args).Build().Run();
 
-        public static IHostBuilder CreateHostBuilder(string[] args)
-        {
-            return Host.CreateDefaultBuilder(args)
-                .UseWindowsService() // ✅ Required for running as a Windows Service
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .UseWindowsService()
                 .ConfigureAppConfiguration((context, config) =>
                 {
                     config.AddJsonFile("appsettings.etl.json", optional: false, reloadOnChange: true);
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
-                    IConfiguration configuration = hostContext.Configuration;
+                    var configuration = hostContext.Configuration;
 
-                    // EF Core DbContext
-                    services.AddDbContext<LRNDbContext>(options =>
-                        options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+                    // Dapper-only
+                    services.AddSingleton<IConnectionStringProvider, LabConnectionStringProvider>();
+                    services.AddScoped<DapperContext>();
+                    services.AddScoped<IDbConnection>(sp =>
+                        sp.GetRequiredService<DapperContext>().CreateConnection());
 
-                    // AutoMapper
+                    // App services
                     services.AddAutoMapper(typeof(Program).Assembly);
-
-                    // Singleton for Dapper context
-                    services.AddSingleton<DapperContext>(sp =>
-                        new DapperContext(configuration.GetConnectionString("DefaultConnection")));
-
-                    // Scoped Services
                     services.AddScoped<ILoggerService, LogManagerService>();
                     services.AddScoped<IExcelMapperLoader, JsonExcelMapperLoader>();
                     services.AddScoped<IFileReader, ExcelFileReader>();
@@ -48,19 +41,19 @@ namespace LRN.ETLWorkerService
                     services.AddScoped<IFileCSVReader, CSVFileReader>();
                     services.AddScoped<IDataImporter, SqlDataImporter>();
                     services.AddScoped<ExcelEtlProcessor>();
-                    services.AddScoped<ExcelWriter>();
+                    //services.AddScoped<ExcelWriter>();
 
-                    // Repositories
+                    // Repos (Dapper)
                     services.AddScoped<IImportFilesRepository, ImportFilesRepository>();
-                    services.AddScoped<IReportRepository, ReportRepository>();
+                    //services.AddScoped<IReportRepository, ReportRepository>();
+                    services.AddScoped<ILookUpRepository, LookUpRepository>();
 
-                    // Config shared constants
+                    // Constants
                     ConfigStaticSettings(configuration);
 
-                    // Register background worker
+                    // Worker
                     services.AddHostedService<FileProcessingWorker>();
                 });
-        }
 
         static void ConfigStaticSettings(IConfiguration config)
         {
@@ -69,10 +62,10 @@ namespace LRN.ETLWorkerService
             CommonConst.MappingJSONPath = config["FilePaths:MappingJSONPath"];
             CommonConst.LISMaster_Template = config["TemplatePath:LISMaster"];
             CommonConst.ProdMaster_Template = config["TemplatePath:ProdMaster"];
-            CommonConst.DefaultConnection = config["ConnectionStrings:DefaultConnection"];
+            CommonConst.DefaultConnection = config.GetConnectionString("DefaultConnection");
             CommonConst.DownloadFilePath = config["FilePaths:DownloadFilePath"];
             CommonConst.CollectionTemplate = config["TemplatePath:CollectionTemplate"];
-            CommonConst.ImportFilePath = config["TemplatePath:ImportFilePath"];
+            CommonConst.ImportFilePath = config["FilePaths:ImportFilePath"];
         }
     }
 }

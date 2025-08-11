@@ -13,8 +13,9 @@
 
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-left">
+    <nav class="navbar" style="display:flex;align-items:center;position:relative;">
+        <!-- Left Section -->
+        <div class="navbar-left" style="display:flex;align-items:center;">
             <span class="logo">
                 <img src="~/image/lrn_logo.png" alt="LRN Logo" style="height:55px;width:100px;padding-left: 8px;" />
             </span>
@@ -29,7 +30,22 @@
                 Reports
             </a>
         </div>
-        <div class="navbar-right" style="padding-right: 15px;">
+
+        <!-- Center Section -->
+        <div style="
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #fff;
+        font-weight: 600;
+        font-size: 35px;
+        white-space: nowrap;
+    ">
+            @ViewBag.LabName
+        </div>
+
+        <!-- Right Section -->
+        <div class="navbar-right" style="margin-left:auto;padding-right:15px;">
             <a href="@Url.Action("Logout", "Account")"
                class="nav-link logout @(currentAction == "Logout" && currentController == "Account" ? "active" : "")">
                 Logout

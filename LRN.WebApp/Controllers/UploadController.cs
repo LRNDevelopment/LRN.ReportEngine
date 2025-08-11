@@ -19,8 +19,8 @@ public class UploadController : Controller
     private readonly IConfiguration _config;
     private readonly IImportFilesRepository _importRepo;
     private readonly ILookUpRepository _lookupRepo;
-    private readonly IExcelWriter _excelWriter;
-    private readonly IReportRepository _reportRepository;
+    //private readonly IExcelWriter _excelWriter;
+    //private readonly IReportRepository _reportRepository;
     private readonly IWebHostEnvironment _environment;
 
     public UploadController(
@@ -28,16 +28,16 @@ public class UploadController : Controller
         IConfiguration config,
         IImportFilesRepository importRepo,
         ILookUpRepository lookupRepo,
-        IExcelWriter excelWriter,
-        IReportRepository reportRepository,
+        //IExcelWriter excelWriter,
+        //IReportRepository reportRepository,
         IWebHostEnvironment environment)
     {
         _logger = logger;
         _config = config;
         _importRepo = importRepo;
         _lookupRepo = lookupRepo;
-        _excelWriter = excelWriter;
-        _reportRepository = reportRepository;
+        //_excelWriter = excelWriter;
+        //_reportRepository = reportRepository;
         _environment = environment;
     }
 
@@ -45,6 +45,7 @@ public class UploadController : Controller
     {
         var result = await _importRepo.GetImportFilesAsync();
         var files = new List<FileUpload>();
+        ViewBag.LabName = User.FindFirst("LabName")?.Value ?? "";
 
         ViewBag.Labs = new List<SelectListItem>
         {
@@ -81,10 +82,12 @@ public class UploadController : Controller
 
     [RequestSizeLimit(104857600)] // 100 MB
     [RequestFormLimits(MultipartBodyLengthLimit = 104857600)]
-    public async Task<IActionResult> UploadFile(IFormFile file, string lab, string fileType)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadFile(IFormFile file, string fileType)
     {
         try
         {
+            ViewBag.LabName = User.FindFirst("LabName")?.Value ?? "";
             if (file != null && file.Length > 0)
             {
                 var uploadsFolder = Path.Combine(CommonConst.ImportFilePath);
@@ -98,7 +101,13 @@ public class UploadController : Controller
                 {
                     await file.CopyToAsync(stream);
                 }
+                int? labId = null;
+                var labIdClaim = User.FindFirst("LabId")?.Value;
 
+                if (int.TryParse(labIdClaim, out var parsedLabId))
+                {
+                    labId = parsedLabId;
+                }
                 var fileDto = new ImportFileDto
                 {
                     ImportFileName = Path.GetFileName(file.FileName),
@@ -106,13 +115,13 @@ public class UploadController : Controller
                     FileStatus = (int)CommonConst.FileStatusEnum.ImportQueued,
                     ImportFilePath = filePath,
                     ImportedOn = DateTime.Now,
-                    LabId = int.Parse(lab)
+                    LabId = (int)(labId)
                 };
 
                 await _importRepo.AddImportFileAync(fileDto);
                 TempData["UploadSuccess"] = "true";
 
-                _logger.Info($"File uploaded: {file.FileName}, Lab: {lab}, Type: {fileType}");
+                _logger.Info($"File uploaded: {file.FileName}, Lab: {labIdClaim}, Type: {fileType}");
             }
         }
         catch (Exception ex)
@@ -176,7 +185,7 @@ public class UploadController : Controller
     public async Task<ActionResult> DownloadReport(int page = 1, int pageSize = 10)
     {
         ViewBag.ReportTypes = GetReportTypeList();
-
+        ViewBag.LabName = User.FindFirst("LabName")?.Value ?? "";
         var allReports = await _importRepo.GetReportDownloadStslst();
         int totalReports = allReports.Count;
         var pagedReports = allReports
@@ -243,35 +252,35 @@ public class UploadController : Controller
         try
         {
 
-            if (reportType == (int)CommonConst.DownloadReportType.LIS_Master)
-            {
-                var lisMaster = _reportRepository.GetLISMasterReport(fromDate, toDate);
-                filename = $"LIS_Master_{DateTime.Now:ddMMyyyy}.xlsx";
-                wb = await _excelWriter.GetReport(CommonConst.LISMaster_Template, null, lisMaster);
-            }
-            else if (reportType == (int)CommonConst.DownloadReportType.Production_Master)
-            {
-                var prodMaster = _reportRepository.GetProductionDataAsync(fromDate, toDate);
-                var lineLevel = _reportRepository.GetProdLineLevelAsync(fromDate, toDate);
-                filename = $"Prod_Master_{DateTime.Now:ddMMyyyy}.xlsx";
+            //if (reportType == (int)CommonConst.DownloadReportType.LIS_Master)
+            //{
+            //    var lisMaster = _reportRepository.GetLISMasterReport(fromDate, toDate);
+            //    filename = $"LIS_Master_{DateTime.Now:ddMMyyyy}.xlsx";
+            //    wb = await _excelWriter.GetReport(CommonConst.LISMaster_Template, null, lisMaster);
+            //}
+            //else if (reportType == (int)CommonConst.DownloadReportType.Production_Master)
+            //{
+            //    var prodMaster = _reportRepository.GetProductionDataAsync(fromDate, toDate);
+            //    var lineLevel = _reportRepository.GetProdLineLevelAsync(fromDate, toDate);
+            //    filename = $"Prod_Master_{DateTime.Now:ddMMyyyy}.xlsx";
 
-                wb = await _excelWriter.GetReport(
-                    CommonConst.ProdMaster_Template,
-                    null,
-                    prodMaster,
-                    1,
-                    false,
-                    null,
-                    true,
-                    lineLevel
-                );
-            }
-            else if (reportType == (int)CommonConst.DownloadReportType.Collection_Report)
-            {
-                var collectionData = _reportRepository.GetCollectionDateByDateAsync(fromDate, toDate);
-                filename = $"Collection_{DateTime.Now:ddMMyyyy}.xlsx";
-                wb = await _excelWriter.GetReport(CommonConst.CollectionTemplate, null, collectionData);
-            }
+            //    wb = await _excelWriter.GetReport(
+            //        CommonConst.ProdMaster_Template,
+            //        null,
+            //        prodMaster,
+            //        1,
+            //        false,
+            //        null,
+            //        true,
+            //        lineLevel
+            //    );
+            //}
+            //else if (reportType == (int)CommonConst.DownloadReportType.Collection_Report)
+            //{
+            //    var collectionData = _reportRepository.GetCollectionDateByDateAsync(fromDate, toDate);
+            //    filename = $"Collection_{DateTime.Now:ddMMyyyy}.xlsx";
+            //    wb = await _excelWriter.GetReport(CommonConst.CollectionTemplate, null, collectionData);
+            //}
 
             if (wb == null)
                 return BadRequest("Invalid report type or empty workbook.");
@@ -308,11 +317,14 @@ public class UploadController : Controller
         }
 
         string fileName = null;
-
+        string labname = User.FindFirst("LabName")?.Value ?? "DefaultLab"; // Get lab name from claims
         switch (fileTypeId)
         {
             case (int)CommonConst.ImportFileType.LIS_Report:
-                fileName = "LIS.xlsx";
+                if (labname == "Prism")
+                    fileName = "LIS.xlsx";
+                else if (labname == "Cove")
+                    fileName = "Cove_LIMS.xlsx";
                 break;
 
             case (int)CommonConst.ImportFileType.Custom_Collection:
@@ -334,7 +346,9 @@ public class UploadController : Controller
             case (int)CommonConst.ImportFileType.Prism_Billing_Sheet:
                 fileName = "Prism Billing.xlsx";
                 break;
-
+            case (int)CommonConst.ImportFileType.Accession_Payment_Report:
+                fileName = "AccessionPaymentReports_Template.xlsx";
+                break;
             case (int)CommonConst.ImportFileType.Panel_Group:
                 return NotFound("No template available for this file type.");
         }

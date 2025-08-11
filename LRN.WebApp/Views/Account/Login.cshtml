@@ -22,6 +22,11 @@
     <title>Login</title>
     <link href="~/css/bootstrap.min.css" rel="stylesheet" />
     <link href="~/css/site.css" rel="stylesheet" />
+    @section Scripts {
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+        <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    }
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
         body, html {
@@ -115,22 +120,32 @@
             <img src="~/image/lrn_logo.png" alt="LRN Logo" />
             <div class="login-box">
                 <h2>Login</h2>
-                @using (Html.BeginForm("Login", "Account", FormMethod.Post))
-                {
-                    <div class="mb-3">
-                        <label for="SelectedLab" class="form-label">Lab</label>
-                        @Html.DropDownList("SelectedLab", new SelectList(ViewBag.Labs as List<SelectListItem>, "Value", "Text"), "-- Select Lab --", new { @class = "form-select", id = "SelectedLab" })
-                    </div>
-                    <div class="mb-3">
-                        @Html.LabelFor(m => m.Username)
-                        @Html.TextBoxFor(m => m.Username, new { @class = "form-control", placeholder = "Enter username" })
-                    </div>
-                    <div class="mb-3">
-                        @Html.LabelFor(m => m.Password)
-                        @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Enter password" })
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Login</button>
-                }
+            @using (Html.BeginForm("Login", "Account", FormMethod.Post, new { @id = "loginForm" }))
+            {
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.Username)
+                    @Html.TextBoxFor(m => m.Username, new { @class = "form-control", placeholder = "Enter username" })
+                    @Html.ValidationMessageFor(m => m.Username, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.Password)
+                    @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Enter password" })
+                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="mb-3">
+                    <label for="SelectedLab" class="form-label">Lab</label>
+                    @Html.DropDownListFor(m => m.SelectedLabId, 
+                        new SelectList(ViewBag.Labs as List<SelectListItem>, "Value", "Text"), 
+                        "-- Select Lab --", 
+                        new { @class = "form-select", id = "SelectedLab" })
+                    @Html.ValidationMessageFor(m => m.SelectedLabId, "", new { @class = "text-danger" })
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+            }
+
             </div>
         </div>
     </div>

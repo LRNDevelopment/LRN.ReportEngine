@@ -4,15 +4,19 @@ using System.Web.Mvc;
 
 public class LoginViewModel
 {
-    [Required]
+    [Required(ErrorMessage = "Username is required")]
     public string Username { get; set; }
 
-    [Required]
-    [DataType(DataType.Password)]
+    [Required(ErrorMessage = "Password is required")]
     public string Password { get; set; }
 
-    [Required]
-    public string SelectedLab { get; set; }
+    [Required(ErrorMessage = "Please select a lab")]
+    public int SelectedLabId { get; set; }
+}
 
-    public List<SelectListItem> Labs { get; set; } = new();
+public class LabOption
+{
+    public int Id { get; set; }               // e.g., 1
+    public string Name { get; set; }          // e.g., "Prism"
+    public string ConnectionKey { get; set; } // e.g., "PrismConnection"
 }

@@ -70,7 +70,13 @@ namespace LRN.ExcelToSqlETL.Core.Constants
             Panel_Group = 7,
 
             [Description("Accession Payment Report")]
-            Accession_Payment_Report = 8
+            Accession_Payment_Report = 8,
+            
+            [Description("Diagnose Order LIS")]
+            Order_LIS = 9,
+           
+            [Description("Diagnose Sample LIS")]
+            Diagnos_SampleLIS = 10
         }
 
         public enum DownloadReportType

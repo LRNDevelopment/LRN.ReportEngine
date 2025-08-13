@@ -1,0 +1,285 @@
+{
+  "SheetName": "",
+  "TargetTable": "dbo.DiagnoseLISStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "Order ID",
+      "SqlColumn": "OrderID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Reference ID",
+      "SqlColumn": "ReferenceID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Sample ID",
+      "SqlColumn": "SampleID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Payment Method",
+      "SqlColumn": "PaymentMethod",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "Barcode",
+      "SqlColumn": "Barcode",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "Specimen",
+      "SqlColumn": "Specimen",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "Container",
+      "SqlColumn": "Container",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Collector",
+      "SqlColumn": "Collectors",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Order Status",
+      "SqlColumn": " OrderStatus",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Billing Status",
+      "SqlColumn": "BillingStatus",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Sample Status",
+      "SqlColumn": "SpecimenStatus",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Shipment Tracking",
+      "SqlColumn": "ShipmentTracking",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Date Submitted",
+      "SqlColumn": "DateSubmitted",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Time Submitted",
+      "SqlColumn": "TimeSubmitted",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Date Collected",
+      "SqlColumn": "DateCollected",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Time Collected",
+      "SqlColumn": "TimeCollected",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Date Received",
+      "SqlColumn": "DateReceived",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Time Received",
+      "SqlColumn": "TimeReceived",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Date Reported",
+      "SqlColumn": "DateReported",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Time Reported",
+      "SqlColumn": "TimeReported",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Facility ID",
+      "SqlColumn": "FacilityID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Facility",
+      "SqlColumn": "Facility",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Performing Laboratory",
+      "SqlColumn": "PerformingLaboratory",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Tests",
+      "SqlColumn": "Tests",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Results",
+      "SqlColumn": "Results",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient First Name",
+      "SqlColumn": "PatientFirstName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient Last Name",
+      "SqlColumn": "PatientLastName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient Date of Birth",
+      "SqlColumn": "PatientDateofBirth",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient Sex",
+      "SqlColumn": "PatientSex",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient Address 1",
+      "SqlColumn": "PatientAddress1",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient Address 2",
+      "SqlColumn": "PatientAddress2",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient City",
+      "SqlColumn": "PatientCity",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient State",
+      "SqlColumn": "PatientState",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient ZipCode",
+      "SqlColumn": "PatientZipCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Provider ID",
+      "SqlColumn": "ProviderID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Provider",
+      "SqlColumn": "ProviderName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Provider NPI",
+      "SqlColumn": "ProviderNPI",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Primary Insurance",
+      "SqlColumn": "PrimaryInsurance",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Primary Insurance ID #",
+      "SqlColumn": "PrimaryInsuranceID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Secondary Insurance",
+      "SqlColumn": "SecondaryInsurance",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Secondary Insurance ID #",
+      "SqlColumn": "SecondaryInsuranceID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ICD-10 Codes",
+      "SqlColumn": "ICD10Codes",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Order Notes",
+      "SqlColumn": "OrderNotes",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Sample Notes",
+      "SqlColumn": "SampleNotes",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Sample Rejection Reason",
+      "SqlColumn": "SampleRejectionReason",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

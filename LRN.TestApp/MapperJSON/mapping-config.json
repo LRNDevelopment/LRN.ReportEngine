@@ -39,6 +39,16 @@
       "FileIdentifier": "Payment",
       "JsonMappingPath": "AccPaymentReport.json",
       "FileType": 8
+    },
+    {
+      "FileIdentifier": "Diagnose Order LIS",
+      "JsonMappingPath": "Order_LIS.json",
+      "FileType": 9
+    },
+    {
+      "FileIdentifier": "Diagnose Sample LIS",
+      "JsonMappingPath": "Diagnos_SampleLIS.json",
+      "FileType": 10
     }
   ]
 }

@@ -26,27 +26,26 @@
       "DataType": "string",
       "Required": false
     },
-
     {
       "ExcelColumn": "Barcode",
       "SqlColumn": "Barcode",
       "DataType": "string",
       "Required": false
     },
-
     {
       "ExcelColumn": "Specimen",
       "SqlColumn": "Specimen",
       "DataType": "string",
       "Required": false
     },
-
     {
       "ExcelColumn": "Container",
       "SqlColumn": "Container",
       "DataType": "string",
       "Required": false
     },
+
+    /* If your sheet header is "Collectors", change ExcelColumn below to "Collectors" */
     {
       "ExcelColumn": "Collector",
       "SqlColumn": "Collectors",
@@ -55,19 +54,19 @@
     },
     {
       "ExcelColumn": "Order Status",
-      "SqlColumn": " OrderStatus",
-      "DataType": "string",
-      "Required": false
-    },
-    {
-      "ExcelColumn": "Billing Status",
-      "SqlColumn": "BillingStatus",
+      "SqlColumn": "OrderStatus",
       "DataType": "string",
       "Required": false
     },
     {
       "ExcelColumn": "Sample Status",
       "SqlColumn": "SpecimenStatus",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Billing Status",
+      "SqlColumn": "BillingStatus",
       "DataType": "string",
       "Required": false
     },
@@ -80,7 +79,7 @@
     {
       "ExcelColumn": "Date Submitted",
       "SqlColumn": "DateSubmitted",
-      "DataType": "datetime",
+      "DataType": "date",
       "Required": false
     },
     {
@@ -92,7 +91,7 @@
     {
       "ExcelColumn": "Date Collected",
       "SqlColumn": "DateCollected",
-      "DataType": "datetime",
+      "DataType": "date",
       "Required": false
     },
     {
@@ -104,7 +103,7 @@
     {
       "ExcelColumn": "Date Received",
       "SqlColumn": "DateReceived",
-      "DataType": "datetime",
+      "DataType": "date",
       "Required": false
     },
     {
@@ -116,7 +115,7 @@
     {
       "ExcelColumn": "Date Reported",
       "SqlColumn": "DateReported",
-      "DataType": "datetime",
+      "DataType": "date",
       "Required": false
     },
     {
@@ -170,7 +169,7 @@
     {
       "ExcelColumn": "Patient Date of Birth",
       "SqlColumn": "PatientDateofBirth",
-      "DataType": "datetime",
+      "DataType": "date",
       "Required": false
     },
     {

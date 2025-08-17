@@ -111,9 +111,16 @@ public class ImportFilesRepository : IImportFilesRepository
                     case (int)CommonConst.ImportFileType.Accession_Payment_Report:
                         await connection.ExecuteAsync("Sp_ProcessAccessionPaymentReport", parameters, transaction, commandType: CommandType.StoredProcedure);
                         break;
+                    case (int)CommonConst.ImportFileType.Order_LIS:
+                        await connection.ExecuteAsync("Sp_Process_LISOrderStaging", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        break;
+
+                    case (int)CommonConst.ImportFileType.Diagnos_SampleLIS:
+                        await connection.ExecuteAsync("Sp_Process_LISOrderStaging", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        break;
 
                     case (int)CommonConst.ImportFileType.Panel_Group:
-                        // Future implementation
+                        await connection.ExecuteAsync("Sp_Process_PanelMasterStaging", parameters, transaction, commandType: CommandType.StoredProcedure);
                         break;
                 }
             }

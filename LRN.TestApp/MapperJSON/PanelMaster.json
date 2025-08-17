@@ -1,0 +1,30 @@
+{
+  "SheetName": "",
+  "TargetTable": "dbo.PanelMasterStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "Panel Name",
+      "SqlColumn": "PanelName",
+      "DataType": "string",
+      "Required": true
+    },
+    {
+      "ExcelColumn": "Order Info",
+      "SqlColumn": "OrderInfo",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Panel Group",
+      "SqlColumn": "PanelCategory",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

@@ -22,7 +22,7 @@
     },
     {
       "FileIdentifier": "Panel",
-      "JsonMappingPath": "PanelGroup.json",
+      "JsonMappingPath": "PanelMaster.json",
       "FileType": 7
     },
     {

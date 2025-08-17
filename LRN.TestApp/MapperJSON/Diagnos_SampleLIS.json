@@ -44,8 +44,6 @@
       "DataType": "string",
       "Required": false
     },
-
-    /* If your sheet header is "Collectors", change ExcelColumn below to "Collectors" */
     {
       "ExcelColumn": "Collector",
       "SqlColumn": "Collectors",

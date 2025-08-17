@@ -350,7 +350,14 @@ public class UploadController : Controller
                 fileName = "AccessionPaymentReports_Template.xlsx";
                 break;
             case (int)CommonConst.ImportFileType.Panel_Group:
-                return NotFound("No template available for this file type.");
+                fileName = "PanelMaster.xlsx";
+                break;
+            case (int)CommonConst.ImportFileType.Diagnos_SampleLIS:
+                fileName = "LIS_Sample_Report.xlsx";
+                break;
+            case (int)CommonConst.ImportFileType.Order_LIS:
+                fileName = "LIS_Order_Report.xlsx";
+                break;
         }
 
         if (string.IsNullOrEmpty(fileName))

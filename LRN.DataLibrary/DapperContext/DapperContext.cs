@@ -1,7 +1,6 @@
-﻿using System.Data;
+﻿using LRN.DataLibrary;
 using Microsoft.Data.SqlClient;
-
-namespace LRN.DataLibrary;
+using System.Data;
 
 public class DapperContext
 {
@@ -13,5 +12,8 @@ public class DapperContext
     }
 
     public IDbConnection CreateConnection()
-        => new SqlConnection(_provider.GetConnectionString());
+    {
+        var cs = _provider.GetConnectionString();
+        return new SqlConnection(cs);
+    }
 }

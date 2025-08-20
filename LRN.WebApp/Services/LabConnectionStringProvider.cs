@@ -1,8 +1,4 @@
 ﻿using LRN.DataLibrary;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-
-namespace LRN.WebApp.Infrastructure;
 
 public class LabConnectionStringProvider : IConnectionStringProvider
 {
@@ -17,7 +13,10 @@ public class LabConnectionStringProvider : IConnectionStringProvider
 
     public string GetConnectionString()
     {
-        var lab = _http.HttpContext?.User?.FindFirst("Lab")?.Value ?? "DefaultConnection";
-        return _config.GetConnectionString(lab) ?? _config.GetConnectionString("DefaultConnection");
+        var connKey = _http.HttpContext?.User?.FindFirst("Lab")?.Value
+                      ?? "DefaultConnection";
+
+        return _config.GetConnectionString(connKey)
+               ?? _config.GetConnectionString("DefaultConnection");
     }
 }

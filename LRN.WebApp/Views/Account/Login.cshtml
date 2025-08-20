@@ -136,11 +136,9 @@
 
                 <div class="mb-3">
                     <label for="SelectedLab" class="form-label">Lab</label>
-                    @Html.DropDownListFor(m => m.SelectedLabId, 
-                        new SelectList(ViewBag.Labs as List<SelectListItem>, "Value", "Text"), 
-                        "-- Select Lab --", 
-                        new { @class = "form-select", id = "SelectedLab" })
-                    @Html.ValidationMessageFor(m => m.SelectedLabId, "", new { @class = "text-danger" })
+                        @Html.DropDownListFor(m => m.SelectedLabId,
+                        new SelectList((ViewBag.Labs as List<SelectListItem>) ?? new List<SelectListItem>(), "Value", "Text"),
+                                        "-- Select Lab --", new { @class = "form-select" })
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100">Login</button>

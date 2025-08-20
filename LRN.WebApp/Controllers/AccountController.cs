@@ -1,11 +1,23 @@
+using Dapper;
+using ImportAuthMvcApp.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Data.SqlClient;
+using Org.BouncyCastle.Crypto.Generators;
 using System.Security.Claims;
+using System.Web.WebPages.Html;
+
 
 public class AccountController : Controller
 {
+    private readonly IConfiguration _config;
+
+    public AccountController(IConfiguration config)
+    {
+        _config = config;
+    }
+
     [HttpGet]
     public IActionResult Login()
     {
@@ -27,48 +39,49 @@ public class AccountController : Controller
             return View(model);
         }
 
-        // TODO: replace with your real auth
-        if (model.Username == "admin" && model.Password == "admin")
+        // 1. Check credentials in MASTER DB
+        using var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
+        var user = await conn.QueryFirstOrDefaultAsync<UserAccount>(
+            "SELECT * FROM Users WHERE Username=@Username",
+            new { model.Username });
+
+        if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
         {
-            // look up the selected lab by Id to get name + conn key
-            var labs = GetAvailableLabs();
-            var lab = labs.FirstOrDefault(x => x.Id == model.SelectedLabId);
-            if (lab == null)
-            {
-                ModelState.AddModelError(nameof(model.SelectedLabId), "Invalid lab.");
-                ViewBag.Labs = labs.Select(l => new SelectListItem { Value = l.Id.ToString(), Text = l.Name }).ToList();
-                return View(model);
-            }
-
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, model.Username),
-
-                // store all three as separate claims
-                new Claim("LabId", lab.Id.ToString()),
-                new Claim("LabName", lab.Name),
-                new Claim("Lab", lab.ConnectionKey) // <— this is the one your Dapper/EF picks up
-            };
-
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new ClaimsPrincipal(identity);
-
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
-            return RedirectToAction("Index", "Upload");
+            ModelState.AddModelError("", "Invalid login.");
+            return View(model);
         }
 
-        ViewBag.Labs = GetAvailableLabs()
-            .Select(l => new SelectListItem { Value = l.Id.ToString(), Text = l.Name })
-            .ToList();
+        // 2. Lookup Lab
+        var lab = GetAvailableLabs().FirstOrDefault(x => x.Id == model.SelectedLabId);
+        if (lab == null)
+        {
+            ModelState.AddModelError(nameof(model.SelectedLabId), "Invalid lab.");
+            ViewBag.Labs = GetAvailableLabs().Select(l => new SelectListItem { Value = l.Id.ToString(), Text = l.Name }).ToList();
+            return View(model);
+        }
 
-        ViewBag.Message = "Invalid credentials";
-        return View(model);
+
+        // 3. Build claims (cookie stores lab info)
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, user.Username),
+            new Claim(ClaimTypes.Role, user.UserRole),
+            new Claim("LabId", lab.Id.ToString()),
+            new Claim("LabName", lab.Name),
+            new Claim("Lab", lab.ConnectionKey) // << used for DB switching
+        };
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
+
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+        return RedirectToAction("Index", "Upload");
     }
 
     private List<LabOption> GetAvailableLabs() => new()
     {
         new LabOption { Id = 3, Name = "Prism", ConnectionKey = "PrismConnection" },
-        new LabOption { Id = 4, Name = "Cove",  ConnectionKey = "CoveConnection"  }
+        new LabOption { Id = 4, Name = "Cove",  ConnectionKey = "CoveConnection" }
     };
 
     public async Task<IActionResult> Logout()

@@ -1,14 +1,13 @@
-﻿using AutoMapper;
-using Common.Logging;
+﻿using Common.Logging;
 using LRN.DataLibrary;
 using LRN.DataLibrary.Repository;
 using LRN.DataLibrary.Repository.Interfaces;
-using LRN.ExcelGenerator;
-using LRN.ExcelGenerator.Utils;
 using LRN.ExcelToSqlETL.Core.Constants;
-using LRN.WebApp.Infrastructure;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using System.Data;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -16,12 +15,41 @@ var configuration = builder.Configuration;
 // MVC
 builder.Services.AddControllersWithViews();
 
-// Auth (cookie)
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(o => o.LoginPath = "/Account/Login");
-
 // Needed to read Lab claim
 builder.Services.AddHttpContextAccessor();
+
+// ✅ Unified Authentication (Cookie + JWT)
+builder.Services.AddAuthentication(options =>
+{
+    // Default for MVC
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+})
+.AddCookie(o =>
+{
+    o.LoginPath = "/Account/Login";       // redirect to login for MVC
+    o.AccessDeniedPath = "/Account/Denied";
+})
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+{
+    var secretKey = configuration["Jwt:SecretKey"];
+    if (string.IsNullOrEmpty(secretKey))
+    {
+        throw new InvalidOperationException("Jwt:SecretKey is missing from configuration.");
+    }
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        ValidIssuer = configuration["Jwt:Issuer"],
+        ValidAudience = configuration["Jwt:Audience"]
+    };
+});
 
 // ---------- Dapper-only wiring ----------
 builder.Services.AddScoped<IConnectionStringProvider, LabConnectionStringProvider>();

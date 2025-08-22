@@ -6,8 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Org.BouncyCastle.Crypto.Generators;
 using System.Security.Claims;
-using System.Web.WebPages.Html;
-
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 public class AccountController : Controller
 {
@@ -22,11 +21,12 @@ public class AccountController : Controller
     public IActionResult Login()
     {
         ViewBag.Labs = GetAvailableLabs()
-            .Select(l => new SelectListItem { Value = l.Id.ToString(), Text = l.Name })
-            .ToList();
+        .Select(l => new SelectListItem { Value = l.Id.ToString(), Text = l.Name })
+        .ToList();
 
         return View(new LoginViewModel());
     }
+
 
     [HttpPost]
     public async Task<IActionResult> Login(LoginViewModel model)
@@ -34,8 +34,8 @@ public class AccountController : Controller
         if (!ModelState.IsValid)
         {
             ViewBag.Labs = GetAvailableLabs()
-                .Select(l => new SelectListItem { Value = l.Id.ToString(), Text = l.Name })
-                .ToList();
+      .Select(l => new SelectListItem { Value = l.Id.ToString(), Text = l.Name })
+      .ToList();
             return View(model);
         }
 
@@ -45,7 +45,7 @@ public class AccountController : Controller
             "SELECT * FROM Users WHERE Username=@Username",
             new { model.Username });
 
-        if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
+        if (user == null || model.Password != user.PasswordHash)
         {
             ModelState.AddModelError("", "Invalid login.");
             return View(model);

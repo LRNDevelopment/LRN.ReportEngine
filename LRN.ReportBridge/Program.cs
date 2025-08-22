@@ -36,8 +36,8 @@ namespace ExcelETLWinApp
                     IConfiguration configuration = context.Configuration;
 
                     // Register DbContext
-                    services.AddDbContext<LRNDbContext>(options =>
-                        options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+                    //services.AddDbContext<LRNDbContext>(options =>
+                    //    options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
                     // Register application services
                     services.AddSingleton<ILoggerService, LogManagerService>();
@@ -48,7 +48,7 @@ namespace ExcelETLWinApp
                     services.AddSingleton<ExcelEtlProcessor>();
 
                     // Register repository with scoped lifetime
-                    services.AddScoped<IImportFilesRepository, ImportFilesRepository>();
+                    //services.AddScoped<IImportFilesRepository, ImportFilesRepository>();
                     services.AddAutoMapper(typeof(MappingProfile));
 
                     // Add logging

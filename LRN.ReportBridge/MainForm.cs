@@ -1,5 +1,7 @@
+using BCrypt.Net;
 using Common.Logging;
 using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Math;
 using LRN.DataLibrary.Repository.Interfaces;
 using LRN.ExcelToSqlETL.Core.DtoModels;
 using LRN.ExcelToSqlETL.Core.Interface;
@@ -200,6 +202,18 @@ namespace ExcelETLWinApp
         private void btnProcessMultiple_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void Enrypt_Click(object sender, EventArgs e)
+        {
+            string hash = BCrypt.Net.BCrypt.HashPassword(txtPassword.Text);
+            txtPasswordHash.Text = hash;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            string hash = BCrypt.Net.BCrypt.EnhancedHashPassword(txtPasswordHash.Text);
+            txtPassword.Text = hash;
         }
     }
 }

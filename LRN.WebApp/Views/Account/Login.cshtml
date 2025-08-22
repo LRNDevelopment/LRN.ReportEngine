@@ -3,6 +3,7 @@
     ViewBag.Title = "Login";
     Layout = null;
 }
+@using Microsoft.AspNetCore.Mvc.Rendering
 
 @* <div class="container">
     <form method="post" class="form-card" style="max-width:50%;margin:150px 200px;margin-bottom:100px;">
@@ -134,11 +135,12 @@
                     @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
                 </div>
 
-                <div class="mb-3">
-                    <label for="SelectedLab" class="form-label">Lab</label>
-                        @Html.DropDownListFor(m => m.SelectedLabId,
-                        new SelectList((ViewBag.Labs as List<SelectListItem>) ?? new List<SelectListItem>(), "Value", "Text"),
-                                        "-- Select Lab --", new { @class = "form-select" })
+                    <div class="mb-3">
+                        @Html.DropDownListFor(
+                        m => m.SelectedLabId,
+                                        (IEnumerable<SelectListItem>)ViewBag.Labs,
+                                        "-- Select Lab --",
+                                        new { @class = "form-select" })
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100">Login</button>

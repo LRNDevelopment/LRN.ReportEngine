@@ -1,6 +1,6 @@
-
 using System.ComponentModel.DataAnnotations;
-using System.Web.Mvc;
+// REMOVE this:
+// using System.Web.Mvc;
 
 public class LoginViewModel
 {
@@ -13,10 +13,9 @@ public class LoginViewModel
     [Required(ErrorMessage = "Please select a lab")]
     public int SelectedLabId { get; set; }
 }
-
 public class LabOption
 {
-    public int Id { get; set; }               // e.g., 1
-    public string Name { get; set; }          // e.g., "Prism"
-    public string ConnectionKey { get; set; } // e.g., "PrismConnection"
+    public int Id { get; set; }
+    public string Name { get; set; }            // <-- ensure this exists
+    public string ConnectionKey { get; set; }
 }

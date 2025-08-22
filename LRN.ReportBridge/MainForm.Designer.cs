@@ -38,18 +38,18 @@ namespace ExcelETLWinApp
             btnDownload = new Button();
             tabETL = new TabPage();
             btnRunETL = new Button();
-            tabPage1 = new TabPage();
-            btnProcessMultiple = new Button();
-            txtFilesURL = new TextBox();
-            txtFilesPath = new TextBox();
-            label3 = new Label();
+            tabPage2 = new TabPage();
+            txtPassword = new TextBox();
+            txtPasswordHash = new TextBox();
             label1 = new Label();
             label2 = new Label();
+            Enrypt = new Button();
+            button1 = new Button();
             tabControl.SuspendLayout();
             tabUpload.SuspendLayout();
             tabDownload.SuspendLayout();
             tabETL.SuspendLayout();
-            tabPage1.SuspendLayout();
+            tabPage2.SuspendLayout();
             SuspendLayout();
             // 
             // tabControl
@@ -57,7 +57,8 @@ namespace ExcelETLWinApp
             tabControl.Controls.Add(tabUpload);
             tabControl.Controls.Add(tabDownload);
             tabControl.Controls.Add(tabETL);
-            tabControl.Controls.Add(tabPage1);
+            tabControl.Controls.Add(tabPage2);
+            tabControl.Font = new Font("Segoe UI", 9F);
             tabControl.Location = new Point(12, 12);
             tabControl.Name = "tabControl";
             tabControl.SelectedIndex = 0;
@@ -158,72 +159,73 @@ namespace ExcelETLWinApp
             btnRunETL.Text = "Run ETL Process";
             btnRunETL.Click += btnRunETL_Click;
             // 
-            // tabPage1
+            // tabPage2
             // 
-            tabPage1.Controls.Add(btnProcessMultiple);
-            tabPage1.Controls.Add(txtFilesURL);
-            tabPage1.Controls.Add(txtFilesPath);
-            tabPage1.Controls.Add(label3);
-            tabPage1.Controls.Add(label1);
-            tabPage1.Controls.Add(label2);
-            tabPage1.Location = new Point(4, 29);
-            tabPage1.Name = "tabPage1";
-            tabPage1.Padding = new Padding(3);
-            tabPage1.Size = new Size(512, 267);
-            tabPage1.TabIndex = 3;
-            tabPage1.Text = "Group Upload";
-            tabPage1.UseVisualStyleBackColor = true;
+            tabPage2.Controls.Add(button1);
+            tabPage2.Controls.Add(Enrypt);
+            tabPage2.Controls.Add(label2);
+            tabPage2.Controls.Add(label1);
+            tabPage2.Controls.Add(txtPasswordHash);
+            tabPage2.Controls.Add(txtPassword);
+            tabPage2.Location = new Point(4, 29);
+            tabPage2.Name = "tabPage2";
+            tabPage2.Padding = new Padding(3);
+            tabPage2.Size = new Size(512, 267);
+            tabPage2.TabIndex = 4;
+            tabPage2.Text = "Password Hash";
+            tabPage2.UseVisualStyleBackColor = true;
             // 
-            // btnProcessMultiple
+            // txtPassword
             // 
-            btnProcessMultiple.Location = new Point(117, 171);
-            btnProcessMultiple.Name = "btnProcessMultiple";
-            btnProcessMultiple.Size = new Size(88, 28);
-            btnProcessMultiple.TabIndex = 6;
-            btnProcessMultiple.Text = "Upload";
-            btnProcessMultiple.UseVisualStyleBackColor = true;
-            btnProcessMultiple.Click += btnProcessMultiple_Click;
+            txtPassword.Location = new Point(153, 30);
+            txtPassword.Name = "txtPassword";
+            txtPassword.Size = new Size(204, 27);
+            txtPassword.TabIndex = 0;
             // 
-            // txtFilesURL
+            // txtPasswordHash
             // 
-            txtFilesURL.Location = new Point(117, 121);
-            txtFilesURL.Name = "txtFilesURL";
-            txtFilesURL.Size = new Size(351, 27);
-            txtFilesURL.TabIndex = 5;
-            // 
-            // txtFilesPath
-            // 
-            txtFilesPath.Location = new Point(117, 23);
-            txtFilesPath.Name = "txtFilesPath";
-            txtFilesPath.Size = new Size(351, 27);
-            txtFilesPath.TabIndex = 4;
-            // 
-            // label3
-            // 
-            label3.AutoSize = true;
-            label3.Location = new Point(20, 68);
-            label3.Name = "label3";
-            label3.Size = new Size(25, 20);
-            label3.TabIndex = 3;
-            label3.Text = "Or";
+            txtPasswordHash.Location = new Point(153, 88);
+            txtPasswordHash.Name = "txtPasswordHash";
+            txtPasswordHash.Size = new Size(204, 27);
+            txtPasswordHash.TabIndex = 1;
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(22, 121);
+            label1.Location = new Point(6, 37);
             label1.Name = "label1";
-            label1.Size = new Size(68, 20);
-            label1.TabIndex = 1;
-            label1.Text = "Files URL";
+            label1.Size = new Size(126, 20);
+            label1.TabIndex = 2;
+            label1.Text = "Decrypt Password";
             // 
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(20, 23);
+            label2.Location = new Point(16, 95);
             label2.Name = "label2";
-            label2.Size = new Size(70, 20);
-            label2.TabIndex = 2;
-            label2.Text = "Files Path";
+            label2.Size = new Size(116, 20);
+            label2.TabIndex = 3;
+            label2.Text = "Enrypt Password";
+            // 
+            // Enrypt
+            // 
+            Enrypt.Location = new Point(153, 168);
+            Enrypt.Name = "Enrypt";
+            Enrypt.Size = new Size(138, 35);
+            Enrypt.TabIndex = 4;
+            Enrypt.Text = "Enrypt";
+            Enrypt.UseVisualStyleBackColor = true;
+            Enrypt.Click += Enrypt_Click;
+            // 
+            // button1
+            // 
+            button1.Location = new Point(314, 172);
+            button1.Name = "button1";
+            button1.Size = new Size(134, 31);
+            button1.TabIndex = 5;
+            button1.Text = "Decrypt";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click;
             // 
             // MainForm
             // 
@@ -236,16 +238,16 @@ namespace ExcelETLWinApp
             tabUpload.PerformLayout();
             tabDownload.ResumeLayout(false);
             tabETL.ResumeLayout(false);
-            tabPage1.ResumeLayout(false);
-            tabPage1.PerformLayout();
+            tabPage2.ResumeLayout(false);
+            tabPage2.PerformLayout();
             ResumeLayout(false);
         }
-        private TabPage tabPage1;
-        private Button btnProcessMultiple;
-        private TextBox txtFilesURL;
-        private TextBox txtFilesPath;
-        private Label label3;
-        private Label label1;
+        private TabPage tabPage2;
         private Label label2;
+        private Label label1;
+        private TextBox txtPasswordHash;
+        private TextBox txtPassword;
+        private Button button1;
+        private Button Enrypt;
     }
 }

@@ -1,20 +1,22 @@
+using BCrypt.Net;
 using Dapper;
 using ImportAuthMvcApp.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
 using Org.BouncyCastle.Crypto.Generators;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 public class AccountController : Controller
 {
     private readonly IConfiguration _config;
-
-    public AccountController(IConfiguration config)
+    private readonly AesGcmService _pswDecrypt;
+    public AccountController(IConfiguration config, AesGcmService pswDecrypt)
     {
         _config = config;
+        _pswDecrypt = pswDecrypt;
     }
 
     [HttpGet]
@@ -45,7 +47,7 @@ public class AccountController : Controller
             "SELECT * FROM Users WHERE Username=@Username",
             new { model.Username });
 
-        if (user == null || model.Password != user.PasswordHash)
+        if (user == null || model.Password != _pswDecrypt.Decrypt(user.PasswordHash))
         {
             ModelState.AddModelError("", "Invalid login.");
             return View(model);

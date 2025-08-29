@@ -63,7 +63,7 @@ builder.Services.AddScoped<IImportFilesRepository, ImportFilesRepository>();
 builder.Services.AddScoped<ILookUpRepository, LookUpRepository>();
 //builder.Services.AddScoped<IReportRepository, ReportRepository>();
 //builder.Services.AddScoped<IExcelWriter, ExcelWriter>();
-
+builder.Services.AddSingleton<AesGcmService>();
 // AutoMapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 

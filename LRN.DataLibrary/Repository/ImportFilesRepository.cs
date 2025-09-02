@@ -75,7 +75,8 @@ public class ImportFilesRepository : IImportFilesRepository
 
         try
         {
-            await connection.ExecuteAsync("sp_InsertMasterData", transaction: transaction, commandType: CommandType.StoredProcedure);
+            int commandTimeout = 300;
+            await connection.ExecuteAsync("sp_InsertMasterData", transaction: transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
 
             if (file != null)
             {
@@ -85,42 +86,42 @@ public class ImportFilesRepository : IImportFilesRepository
                 switch (file.FileType)
                 {
                     case (int)CommonConst.ImportFileType.LIS_Report:
-                        await connection.ExecuteAsync("SP_Process_LISMaster_ByFileId", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        await connection.ExecuteAsync("SP_Process_LISMaster_ByFileId", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
                         break;
 
                     case (int)CommonConst.ImportFileType.Custom_Collection:
-                        await connection.ExecuteAsync("Sp_ProcessBillingMasterData", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        await connection.ExecuteAsync("Sp_ProcessBillingMasterData", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
                         break;
 
                     case (int)CommonConst.ImportFileType.Visit_Against_Accession:
-                        await connection.ExecuteAsync("Sp_Process_VAA_ByFileId", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        await connection.ExecuteAsync("Sp_Process_VAA_ByFileId", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
                         break;
 
                     case (int)CommonConst.ImportFileType.Transaction_Detail_Report:
-                        await connection.ExecuteAsync("Sp_ProcessTransactionDetails", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        await connection.ExecuteAsync("Sp_ProcessTransactionDetails", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
                         break;
 
                     case (int)CommonConst.ImportFileType.Denial_Tracking_Report:
-                        await connection.ExecuteAsync("Sp_ProcessDenialTrackingMaster", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        await connection.ExecuteAsync("Sp_ProcessDenialTrackingMaster", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
                         break;
 
                     case (int)CommonConst.ImportFileType.Prism_Billing_Sheet:
-                        await connection.ExecuteAsync("Sp_Process_BillingSheet_ByFileId", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        await connection.ExecuteAsync("Sp_Process_BillingSheet_ByFileId", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
                         break;
 
                     case (int)CommonConst.ImportFileType.Accession_Payment_Report:
-                        await connection.ExecuteAsync("Sp_ProcessAccessionPaymentReport", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        await connection.ExecuteAsync("Sp_ProcessAccessionPaymentReport", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
                         break;
                     case (int)CommonConst.ImportFileType.Order_LIS:
-                        await connection.ExecuteAsync("Sp_Process_LISOrderStaging", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        await connection.ExecuteAsync("Sp_Process_LISOrderStaging", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
                         break;
 
                     case (int)CommonConst.ImportFileType.Diagnos_SampleLIS:
-                        await connection.ExecuteAsync("Sp_Process_LISOrderStaging", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        await connection.ExecuteAsync("Sp_Process_LISSample_Report", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
                         break;
 
                     case (int)CommonConst.ImportFileType.Panel_Group:
-                        await connection.ExecuteAsync("Sp_Process_PanelMasterStaging", parameters, transaction, commandType: CommandType.StoredProcedure);
+                        await connection.ExecuteAsync("Sp_Process_PanelMasterStaging", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
                         break;
                 }
             }

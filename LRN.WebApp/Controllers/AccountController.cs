@@ -83,7 +83,8 @@ public class AccountController : Controller
     private List<LabOption> GetAvailableLabs() => new()
     {
         new LabOption { Id = 3, Name = "Prism", ConnectionKey = "PrismConnection" },
-        new LabOption { Id = 4, Name = "Cove",  ConnectionKey = "CoveConnection" }
+        new LabOption { Id = 4, Name = "Cove",  ConnectionKey = "CoveConnection" },
+        new LabOption { Id = 5, Name = "Covalent",  ConnectionKey = "CovalentConn" },
     };
 
     public async Task<IActionResult> Logout()

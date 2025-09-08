@@ -1,6 +1,7 @@
 using BCrypt.Net;
 using Dapper;
 using ImportAuthMvcApp.Models;
+using LRN.DataLibrary.Repository.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -13,10 +14,12 @@ public class AccountController : Controller
 {
     private readonly IConfiguration _config;
     private readonly AesGcmService _pswDecrypt;
-    public AccountController(IConfiguration config, AesGcmService pswDecrypt)
+    private readonly IImportFilesRepository _importRepo;
+    public AccountController(IConfiguration config, AesGcmService pswDecrypt, IImportFilesRepository importrepo)
     {
         _config = config;
         _pswDecrypt = pswDecrypt;
+        _importRepo = importrepo;
     }
 
     [HttpGet]
@@ -31,6 +34,7 @@ public class AccountController : Controller
 
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model)
     {
         if (!ModelState.IsValid)
@@ -49,6 +53,7 @@ public class AccountController : Controller
 
         if (user == null || model.Password != _pswDecrypt.Decrypt(user.PasswordHash))
         {
+            ViewBag.Labs = GetAvailableLabs().Select(l => new SelectListItem { Value = l.Id.ToString(), Text = l.Name }).ToList();
             ModelState.AddModelError("", "Invalid login.");
             return View(model);
         }
@@ -62,7 +67,12 @@ public class AccountController : Controller
             return View(model);
         }
 
-
+        if (lab.Id != user.LabId)
+        {
+            ViewBag.Labs = GetAvailableLabs().Select(l => new SelectListItem { Value = l.Id.ToString(), Text = l.Name }).ToList();
+            ModelState.AddModelError(nameof(model.SelectedLabId), "Invalid lab.");
+            return View(model);
+        }
         // 3. Build claims (cookie stores lab info)
         var claims = new List<Claim>
         {
@@ -80,12 +90,16 @@ public class AccountController : Controller
         return RedirectToAction("Index", "Upload");
     }
 
-    private List<LabOption> GetAvailableLabs() => new()
+    private List<LabOption> GetAvailableLabs()
     {
-        new LabOption { Id = 3, Name = "Prism", ConnectionKey = "PrismConnection" },
-        new LabOption { Id = 4, Name = "Cove",  ConnectionKey = "CoveConnection" },
-        new LabOption { Id = 5, Name = "Covalent",  ConnectionKey = "CovalentConn" },
-    };
+        var lab = new List<LabOption>();
+        var result = _importRepo.GetLabMaster();
+        foreach (var item in result.Result)
+        {
+            lab.Add(new LabOption { Id = item.LabId, Name = item.LabName, ConnectionKey = item.ConnectionKey });
+        }
+        return lab;
+    }
 
     public async Task<IActionResult> Logout()
     {

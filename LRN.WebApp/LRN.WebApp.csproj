@@ -1,47 +1,57 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<!-- optional but helpful while debugging publish issues -->
+		<PublishTrimmed>false</PublishTrimmed>
+		<PublishSingleFile>false</PublishSingleFile>
+		<SelfContained>false</SelfContained>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="14.0.0" />
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-		<PackageReference Include="Microsoft.AspNet.Mvc" Version="5.3.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.16" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.7">
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.18" />
+
+		<!-- Pin the *entire* IdentityModel family to the same 7.6.7 patch -->
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.6.7" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.6.7" />
+		<PackageReference Include="Microsoft.IdentityModel.Protocols" Version="7.6.7" />
+		<PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="7.6.7" />
+		<PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.6.7" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.8">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.13.0" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.6.7" />
 		<PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.6" />
 	</ItemGroup>
+
+	<!-- You probably want to publish appsettings; “Never” often breaks prod config -->
 	<ItemGroup>
 		<None Update="appsettings.json">
-			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 		</None>
 		<None Update="appsettings.Development.json">
 			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
 		</None>
 	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\LRN.CommonLogger\LRN.CommonLogger.csproj" />
 		<ProjectReference Include="..\LRN.DataLibrary\LRN.DataLibrary.csproj" />
 		<ProjectReference Include="..\LRN.ExcelGenerator\LRN.ExcelGenerator.csproj" />
 	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="wwwroot\ImportTemplate\" />
-	</ItemGroup>
-	<ItemGroup>
-	  <None Include="wwwroot\ImportTemplate\Custom_Collection.xlsx" />
-	  <None Include="wwwroot\ImportTemplate\DenialTrackingDetail.xlsx" />
-	  <None Include="wwwroot\ImportTemplate\LIS.xlsx" />
-	  <None Include="wwwroot\ImportTemplate\Prism Billing.xlsx" />
-	  <None Include="wwwroot\ImportTemplate\Prism Submitted Visit to Accession Report.xlsx" />
-	  <None Include="wwwroot\ImportTemplate\TransactionDetail.xlsx" />
-	</ItemGroup>
 
+	<ItemGroup>
+		<Folder Include="wwwroot\ImportTemplate\" />
+		<None Include="wwwroot\ImportTemplate\Custom_Collection.xlsx" />
+		<None Include="wwwroot\ImportTemplate\DenialTrackingDetail.xlsx" />
+		<None Include="wwwroot\ImportTemplate\LIS.xlsx" />
+		<None Include="wwwroot\ImportTemplate\Prism Billing.xlsx" />
+		<None Include="wwwroot\ImportTemplate\Prism Submitted Visit to Accession Report.xlsx" />
+		<None Include="wwwroot\ImportTemplate\TransactionDetail.xlsx" />
+	</ItemGroup>
 </Project>

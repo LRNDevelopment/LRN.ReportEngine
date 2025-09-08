@@ -49,6 +49,11 @@
       "FileIdentifier": "Diagnose Sample LIS",
       "JsonMappingPath": "Diagnos_SampleLIS.json",
       "FileType": 10
+    },
+    {
+      "FileIdentifier": "Client Billing Sheet",
+      "JsonMappingPath": "ClientBillingSheet.json",
+      "FileType": 11
     }
   ]
 }

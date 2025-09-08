@@ -8,6 +8,7 @@ using LRN.ExcelToSqlETL.Core.DtoModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Org.BouncyCastle.Math;
 using System.Data;
 using System.Net;
 
@@ -357,6 +358,9 @@ public class UploadController : Controller
                 break;
             case (int)CommonConst.ImportFileType.Order_LIS:
                 fileName = "LIS_Order_Report.xlsx";
+                break;
+            case (int)CommonConst.ImportFileType.Client_Billing_Sheet:
+                fileName = "Prism - Client Bill Sheet.xlsx";
                 break;
         }
 

@@ -76,7 +76,10 @@ namespace LRN.ExcelToSqlETL.Core.Constants
             Order_LIS = 9,
 
             [Description("Diagnose Sample LIS")]
-            Diagnos_SampleLIS = 10
+            Diagnos_SampleLIS = 10,
+
+            [Description("Client Billing Sheet")]
+            Client_Billing_Sheet = 11
 
         }
 

@@ -123,6 +123,11 @@ public class ImportFilesRepository : IImportFilesRepository
                     case (int)CommonConst.ImportFileType.Panel_Group:
                         await connection.ExecuteAsync("Sp_Process_PanelMasterStaging", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
                         break;
+
+                    case (int)CommonConst.ImportFileType.Client_Billing_Sheet:
+                        await connection.ExecuteAsync("Sp_Process_ClientBillingSheet", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
+                        break;
+
                 }
             }
 
@@ -279,4 +284,14 @@ public class ImportFilesRepository : IImportFilesRepository
 
         return result;
     }
+
+    public async Task<List<LabMaster>> GetLabMaster()
+    {
+        const string query = "SELECT LabId, LabName, ConnectionKey FROM Labs WHERE IsActive = 1";
+        using var connection = _context.CreateConnection();
+
+        var result = await connection.QueryAsync<LabMaster>(query);
+        return result.ToList();
+    }
+
 }

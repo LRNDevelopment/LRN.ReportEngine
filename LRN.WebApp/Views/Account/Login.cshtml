@@ -121,30 +121,38 @@
             <img src="~/image/lrn_logo.png" alt="LRN Logo" />
             <div class="login-box">
                 <h2>Login</h2>
-            @using (Html.BeginForm("Login", "Account", FormMethod.Post, new { @id = "loginForm" }))
-            {
-                <div class="mb-3">
-                    @Html.LabelFor(m => m.Username)
-                    @Html.TextBoxFor(m => m.Username, new { @class = "form-control", placeholder = "Enter username" })
-                    @Html.ValidationMessageFor(m => m.Username, "", new { @class = "text-danger" })
-                </div>
+                @using (Html.BeginForm("Login", "Account", FormMethod.Post, new { id = "loginForm" }))
+                {
+                    @Html.AntiForgeryToken()
 
-                <div class="mb-3">
-                    @Html.LabelFor(m => m.Password)
-                    @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Enter password" })
-                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
-                </div>
+                    <!-- Model-level errors (like "Invalid login.") -->
+                    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
 
                     <div class="mb-3">
+                        @Html.LabelFor(m => m.Username)
+                        @Html.TextBoxFor(m => m.Username, new { @class = "form-control", placeholder = "Enter username" })
+                        @Html.ValidationMessageFor(m => m.Username, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(m => m.Password)
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Enter password" })
+                        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(m => m.SelectedLabId, "Lab")
                         @Html.DropDownListFor(
                         m => m.SelectedLabId,
                                         (IEnumerable<SelectListItem>)ViewBag.Labs,
                                         "-- Select Lab --",
                                         new { @class = "form-select" })
+                    @Html.ValidationMessageFor(m => m.SelectedLabId, "", new { @class = "text-danger" })
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100">Login</button>
-            }
+                                }
+
 
             </div>
         </div>

@@ -1,84 +1,84 @@
 USE [CoveLRN]
 GO
-/****** Object:  StoredProcedure [dbo].[SP_UpdateLIS_Statuses]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[SP_UpdateLIS_Statuses]******/
 DROP PROCEDURE [dbo].[SP_UpdateLIS_Statuses]
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_ProcessTransactionDetails_BAK]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[Sp_ProcessTransactionDetails_BAK]******/
 DROP PROCEDURE [dbo].[Sp_ProcessTransactionDetails_BAK]
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_ProcessTransactionDetails]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[Sp_ProcessTransactionDetails]******/
 DROP PROCEDURE [dbo].[Sp_ProcessTransactionDetails]
 GO
-/****** Object:  StoredProcedure [dbo].[SP_ProcessLISvsBilling]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[SP_ProcessLISvsBilling]******/
 DROP PROCEDURE [dbo].[SP_ProcessLISvsBilling]
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_ProcessDenialTrackingMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[Sp_ProcessDenialTrackingMaster]******/
 DROP PROCEDURE [dbo].[Sp_ProcessDenialTrackingMaster]
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_ProcessBillingMasterData]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[Sp_ProcessBillingMasterData]******/
 DROP PROCEDURE [dbo].[Sp_ProcessBillingMasterData]
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_ProcessAccessionPaymentReport]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[Sp_ProcessAccessionPaymentReport]******/
 DROP PROCEDURE [dbo].[Sp_ProcessAccessionPaymentReport]
 GO
-/****** Object:  StoredProcedure [dbo].[SP_Process_LISMaster_From_Staging]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[SP_Process_LISMaster_From_Staging]******/
 DROP PROCEDURE [dbo].[SP_Process_LISMaster_From_Staging]
 GO
-/****** Object:  StoredProcedure [dbo].[SP_Process_LISMaster_ByFileId]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[SP_Process_LISMaster_ByFileId]******/
 DROP PROCEDURE [dbo].[SP_Process_LISMaster_ByFileId]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_Process_FinalCalimStatus_bak_old]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_Process_FinalCalimStatus_bak_old]******/
 DROP PROCEDURE [dbo].[sp_Process_FinalCalimStatus_bak_old]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_Process_FinalCalimStatus_bak]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_Process_FinalCalimStatus_bak]******/
 DROP PROCEDURE [dbo].[sp_Process_FinalCalimStatus_bak]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_Process_FinalCalimStatus]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_Process_FinalCalimStatus]******/
 DROP PROCEDURE [dbo].[sp_Process_FinalCalimStatus]
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_Process_BillingSheet_ByFileId]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[Sp_Process_BillingSheet_ByFileId]******/
 DROP PROCEDURE [dbo].[Sp_Process_BillingSheet_ByFileId]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_LIS_PanelUpdate]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_LIS_PanelUpdate]******/
 DROP PROCEDURE [dbo].[sp_LIS_PanelUpdate]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_InsertMasterData]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_InsertMasterData]******/
 DROP PROCEDURE [dbo].[sp_InsertMasterData]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_InsertClaimDenialCode]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_InsertClaimDenialCode]******/
 DROP PROCEDURE [dbo].[sp_InsertClaimDenialCode]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetProductionReportMaster_bak]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetProductionReportMaster_bak]******/
 DROP PROCEDURE [dbo].[sp_GetProductionReportMaster_bak]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetProductionReportMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetProductionReportMaster]******/
 DROP PROCEDURE [dbo].[sp_GetProductionReportMaster]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetProductionLineLevelReport]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetProductionLineLevelReport]******/
 DROP PROCEDURE [dbo].[sp_GetProductionLineLevelReport]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetLISMasterReportByDateRange]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetLISMasterReportByDateRange]******/
 DROP PROCEDURE [dbo].[sp_GetLISMasterReportByDateRange]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetCollectionReport]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetCollectionReport]******/
 DROP PROCEDURE [dbo].[sp_GetCollectionReport]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetCollectionLineLevelReport]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetCollectionLineLevelReport]******/
 DROP PROCEDURE [dbo].[sp_GetCollectionLineLevelReport]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_ClaimLevelStatusUpdate]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_ClaimLevelStatusUpdate]******/
 DROP PROCEDURE [dbo].[sp_ClaimLevelStatusUpdate]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_ClaimBillingDetails]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_ClaimBillingDetails]******/
 DROP PROCEDURE [dbo].[sp_ClaimBillingDetails]
 GO
-/****** Object:  StoredProcedure [dbo].[GetProductionReport_ClaimEx]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[GetProductionReport_ClaimEx]******/
 DROP PROCEDURE [dbo].[GetProductionReport_ClaimEx]
 GO
-/****** Object:  StoredProcedure [dbo].[EvaluateClaims]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[EvaluateClaims]******/
 DROP PROCEDURE [dbo].[EvaluateClaims]
 GO
-/****** Object:  StoredProcedure [dbo].[BillingMasterProcess_Proc]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  StoredProcedure [dbo].[BillingMasterProcess_Proc]******/
 DROP PROCEDURE [dbo].[BillingMasterProcess_Proc]
 GO
 ALTER TABLE [dbo].[BillingMaster] DROP CONSTRAINT [FK__BillingMa__Prima__7405149D]
@@ -311,300 +311,300 @@ ALTER TABLE [dbo].[BillingMaster] DROP CONSTRAINT [DF__BillingMa__Creat__4CEB477
 GO
 ALTER TABLE [dbo].[AccPaymentReportStaging] DROP CONSTRAINT [DF__AccPaymen__Impor__006AEB82]
 GO
-/****** Object:  Index [IX_VisitAgaistAccessionStaging_AccessionNo]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_VisitAgaistAccessionStaging_AccessionNo]******/
 DROP INDEX [IX_VisitAgaistAccessionStaging_AccessionNo] ON [dbo].[VisitAgaistAccessionStaging]
 GO
-/****** Object:  Index [IX_Users_Username]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_Users_Username]******/
 DROP INDEX [IX_Users_Username] ON [dbo].[Users]
 GO
-/****** Object:  Index [IX_TestTypeMaster_Name]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_TestTypeMaster_Name]******/
 DROP INDEX [IX_TestTypeMaster_Name] ON [dbo].[TestTypeMaster]
 GO
-/****** Object:  Index [IX_SpecimenStatus_Name]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_SpecimenStatus_Name]******/
 DROP INDEX [IX_SpecimenStatus_Name] ON [dbo].[SpecimenStatus]
 GO
-/****** Object:  Index [IX_ReferringProviderMaster_ReferingProviderId]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_ReferringProviderMaster_ReferingProviderId]******/
 DROP INDEX [IX_ReferringProviderMaster_ReferingProviderId] ON [dbo].[ReferringProviderMaster]
 GO
-/****** Object:  Index [IX_ReferringProviderMaster_Name]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_ReferringProviderMaster_Name]******/
 DROP INDEX [IX_ReferringProviderMaster_Name] ON [dbo].[ReferringProviderMaster]
 GO
-/****** Object:  Index [IX_PrismBillingStaging_SpecimenID]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_PrismBillingStaging_SpecimenID]******/
 DROP INDEX [IX_PrismBillingStaging_SpecimenID] ON [dbo].[PrismBillingStaging]
 GO
-/****** Object:  Index [IX_PayerTypeMaster_PayerTypeId]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_PayerTypeMaster_PayerTypeId]******/
 DROP INDEX [IX_PayerTypeMaster_PayerTypeId] ON [dbo].[PayerTypeMaster]
 GO
-/****** Object:  Index [IX_PayerTypeMaster_PayerType]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_PayerTypeMaster_PayerType]******/
 DROP INDEX [IX_PayerTypeMaster_PayerType] ON [dbo].[PayerTypeMaster]
 GO
-/****** Object:  Index [IX_PayerTypeMaster_Name]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_PayerTypeMaster_Name]******/
 DROP INDEX [IX_PayerTypeMaster_Name] ON [dbo].[PayerTypeMaster]
 GO
-/****** Object:  Index [IX_OperationsGroupMaster_Name]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_OperationsGroupMaster_Name]******/
 DROP INDEX [IX_OperationsGroupMaster_Name] ON [dbo].[OperationsGroupMaster]
 GO
-/****** Object:  Index [IX_LISMaster_StatusCode]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_LISMaster_StatusCode]******/
 DROP INDEX [IX_LISMaster_StatusCode] ON [dbo].[LISMaster]
 GO
-/****** Object:  Index [IX_LISMaster_ResultedDate]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_LISMaster_ResultedDate]******/
 DROP INDEX [IX_LISMaster_ResultedDate] ON [dbo].[LISMaster]
 GO
-/****** Object:  Index [IX_LISMaster_PatientName]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_LISMaster_PatientName]******/
 DROP INDEX [IX_LISMaster_PatientName] ON [dbo].[LISMaster]
 GO
-/****** Object:  Index [IX_LISMaster_InsuranceType]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_LISMaster_InsuranceType]******/
 DROP INDEX [IX_LISMaster_InsuranceType] ON [dbo].[LISMaster]
 GO
-/****** Object:  Index [IX_LISMaster_AccessionNo]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_LISMaster_AccessionNo]******/
 DROP INDEX [IX_LISMaster_AccessionNo] ON [dbo].[LISMaster]
 GO
-/****** Object:  Index [IX_LabMaster_Name]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_LabMaster_Name]******/
 DROP INDEX [IX_LabMaster_Name] ON [dbo].[LabMaster]
 GO
-/****** Object:  Index [IX_InsurancePayerMaster_PayerName]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_InsurancePayerMaster_PayerName]******/
 DROP INDEX [IX_InsurancePayerMaster_PayerName] ON [dbo].[InsurancePayerMaster]
 GO
-/****** Object:  Index [IX_InsurancePayerMaster_InsurancePayerId]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_InsurancePayerMaster_InsurancePayerId]******/
 DROP INDEX [IX_InsurancePayerMaster_InsurancePayerId] ON [dbo].[InsurancePayerMaster]
 GO
-/****** Object:  Index [IX_DenialTrackingMaster_VisitNumber]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_DenialTrackingMaster_VisitNumber]******/
 DROP INDEX [IX_DenialTrackingMaster_VisitNumber] ON [dbo].[DenialTrackingMaster]
 GO
-/****** Object:  Index [IX_ClinicMaster_Name]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_ClinicMaster_Name]******/
 DROP INDEX [IX_ClinicMaster_Name] ON [dbo].[ClinicMaster]
 GO
-/****** Object:  Index [IX_BillingProviderMaster_Name]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_BillingProviderMaster_Name]******/
 DROP INDEX [IX_BillingProviderMaster_Name] ON [dbo].[BillingProviderMaster]
 GO
-/****** Object:  Index [IX_BillingProviderMaster_BillingProviderID]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_BillingProviderMaster_BillingProviderID]******/
 DROP INDEX [IX_BillingProviderMaster_BillingProviderID] ON [dbo].[BillingProviderMaster]
 GO
-/****** Object:  Index [IX_BillingProviderMaster_BillingProvider]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Index [IX_BillingProviderMaster_BillingProvider]******/
 DROP INDEX [IX_BillingProviderMaster_BillingProvider] ON [dbo].[BillingProviderMaster]
 GO
-/****** Object:  Table [dbo].[VisitAgaistAccessionStaging]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[VisitAgaistAccessionStaging]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[VisitAgaistAccessionStaging]') AND type in (N'U'))
 DROP TABLE [dbo].[VisitAgaistAccessionStaging]
 GO
-/****** Object:  Table [dbo].[VAAMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[VAAMaster]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[VAAMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[VAAMaster]
 GO
-/****** Object:  Table [dbo].[Users]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[Users]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Users]') AND type in (N'U'))
 DROP TABLE [dbo].[Users]
 GO
-/****** Object:  Table [dbo].[UserRole]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[UserRole]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[UserRole]') AND type in (N'U'))
 DROP TABLE [dbo].[UserRole]
 GO
-/****** Object:  Table [dbo].[TransactionSummary]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[TransactionSummary]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TransactionSummary]') AND type in (N'U'))
 DROP TABLE [dbo].[TransactionSummary]
 GO
-/****** Object:  Table [dbo].[TransactionMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[TransactionMaster]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TransactionMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[TransactionMaster]
 GO
-/****** Object:  Table [dbo].[TransactionDetailStaging]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[TransactionDetailStaging]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TransactionDetailStaging]') AND type in (N'U'))
 DROP TABLE [dbo].[TransactionDetailStaging]
 GO
-/****** Object:  Table [dbo].[TestTypeMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[TestTypeMaster]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TestTypeMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[TestTypeMaster]
 GO
-/****** Object:  Table [dbo].[States]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[States]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[States]') AND type in (N'U'))
 DROP TABLE [dbo].[States]
 GO
-/****** Object:  Table [dbo].[SpecimenStatus]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[SpecimenStatus]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SpecimenStatus]') AND type in (N'U'))
 DROP TABLE [dbo].[SpecimenStatus]
 GO
-/****** Object:  Table [dbo].[SampleFinalStatus]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[SampleFinalStatus]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SampleFinalStatus]') AND type in (N'U'))
 DROP TABLE [dbo].[SampleFinalStatus]
 GO
-/****** Object:  Table [dbo].[SalesPerson]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[SalesPerson]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SalesPerson]') AND type in (N'U'))
 DROP TABLE [dbo].[SalesPerson]
 GO
-/****** Object:  Table [dbo].[RequisitionTypes]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[RequisitionTypes]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[RequisitionTypes]') AND type in (N'U'))
 DROP TABLE [dbo].[RequisitionTypes]
 GO
-/****** Object:  Table [dbo].[ReportDownloadSts]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ReportDownloadSts]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ReportDownloadSts]') AND type in (N'U'))
 DROP TABLE [dbo].[ReportDownloadSts]
 GO
-/****** Object:  Table [dbo].[ReferringProviderMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ReferringProviderMaster]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ReferringProviderMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[ReferringProviderMaster]
 GO
-/****** Object:  Table [dbo].[Races]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[Races]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Races]') AND type in (N'U'))
 DROP TABLE [dbo].[Races]
 GO
-/****** Object:  Table [dbo].[ProdStatusRuleEngine]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ProdStatusRuleEngine]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ProdStatusRuleEngine]') AND type in (N'U'))
 DROP TABLE [dbo].[ProdStatusRuleEngine]
 GO
-/****** Object:  Table [dbo].[PrismBillingStaging]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[PrismBillingStaging]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PrismBillingStaging]') AND type in (N'U'))
 DROP TABLE [dbo].[PrismBillingStaging]
 GO
-/****** Object:  Table [dbo].[PayerTypeMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[PayerTypeMaster]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PayerTypeMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[PayerTypeMaster]
 GO
-/****** Object:  Table [dbo].[Panels]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[Panels]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Panels]') AND type in (N'U'))
 DROP TABLE [dbo].[Panels]
 GO
-/****** Object:  Table [dbo].[PanelGroup]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[PanelGroup]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PanelGroup]') AND type in (N'U'))
 DROP TABLE [dbo].[PanelGroup]
 GO
-/****** Object:  Table [dbo].[OperationsGroupMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[OperationsGroupMaster]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[OperationsGroupMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[OperationsGroupMaster]
 GO
-/****** Object:  Table [dbo].[Medications]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[Medications]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Medications]') AND type in (N'U'))
 DROP TABLE [dbo].[Medications]
 GO
-/****** Object:  Table [dbo].[LISStaging]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[LISStaging]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[LISStaging]') AND type in (N'U'))
 DROP TABLE [dbo].[LISStaging]
 GO
-/****** Object:  Table [dbo].[LISMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[LISMaster]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[LISMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[LISMaster]
 GO
-/****** Object:  Table [dbo].[LabMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[LabMaster]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[LabMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[LabMaster]
 GO
-/****** Object:  Table [dbo].[InsuranceRelationships]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[InsuranceRelationships]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[InsuranceRelationships]') AND type in (N'U'))
 DROP TABLE [dbo].[InsuranceRelationships]
 GO
-/****** Object:  Table [dbo].[InsurancePayerMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[InsurancePayerMaster]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[InsurancePayerMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[InsurancePayerMaster]
 GO
-/****** Object:  Table [dbo].[ImportFilTypes]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ImportFilTypes]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ImportFilTypes]') AND type in (N'U'))
 DROP TABLE [dbo].[ImportFilTypes]
 GO
-/****** Object:  Table [dbo].[ImportFileLogs]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ImportFileLogs]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ImportFileLogs]') AND type in (N'U'))
 DROP TABLE [dbo].[ImportFileLogs]
 GO
-/****** Object:  Table [dbo].[ImportedFiles]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ImportedFiles]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ImportedFiles]') AND type in (N'U'))
 DROP TABLE [dbo].[ImportedFiles]
 GO
-/****** Object:  Table [dbo].[ICDCodeMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ICDCodeMaster]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ICDCodeMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[ICDCodeMaster]
 GO
-/****** Object:  Table [dbo].[Genders]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[Genders]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Genders]') AND type in (N'U'))
 DROP TABLE [dbo].[Genders]
 GO
-/****** Object:  Table [dbo].[FileStatuses]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[FileStatuses]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[FileStatuses]') AND type in (N'U'))
 DROP TABLE [dbo].[FileStatuses]
 GO
-/****** Object:  Table [dbo].[DownloadReportTypes]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[DownloadReportTypes]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DownloadReportTypes]') AND type in (N'U'))
 DROP TABLE [dbo].[DownloadReportTypes]
 GO
-/****** Object:  Table [dbo].[DenialTrackingStaging]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[DenialTrackingStaging]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DenialTrackingStaging]') AND type in (N'U'))
 DROP TABLE [dbo].[DenialTrackingStaging]
 GO
-/****** Object:  Table [dbo].[DenialTrackingMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[DenialTrackingMaster]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DenialTrackingMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[DenialTrackingMaster]
 GO
-/****** Object:  Table [dbo].[CustomCollectionStaging]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[CustomCollectionStaging]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CustomCollectionStaging]') AND type in (N'U'))
 DROP TABLE [dbo].[CustomCollectionStaging]
 GO
-/****** Object:  Table [dbo].[CPTCodeMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[CPTCodeMaster]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CPTCodeMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[CPTCodeMaster]
 GO
-/****** Object:  Table [dbo].[ClinicMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ClinicMaster]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ClinicMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[ClinicMaster]
 GO
-/****** Object:  Table [dbo].[ClaimsProdStatus]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ClaimsProdStatus]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ClaimsProdStatus]') AND type in (N'U'))
 DROP TABLE [dbo].[ClaimsProdStatus]
 GO
-/****** Object:  Table [dbo].[ClaimsLevelStatus]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ClaimsLevelStatus]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ClaimsLevelStatus]') AND type in (N'U'))
 DROP TABLE [dbo].[ClaimsLevelStatus]
 GO
-/****** Object:  Table [dbo].[ClaimBillingDetails]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ClaimBillingDetails]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ClaimBillingDetails]') AND type in (N'U'))
 DROP TABLE [dbo].[ClaimBillingDetails]
 GO
-/****** Object:  Table [dbo].[Cities]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[Cities]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Cities]') AND type in (N'U'))
 DROP TABLE [dbo].[Cities]
 GO
-/****** Object:  Table [dbo].[BillingProviderMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[BillingProviderMaster]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[BillingProviderMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[BillingProviderMaster]
 GO
-/****** Object:  Table [dbo].[AccPaymentReportStaging]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[AccPaymentReportStaging]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AccPaymentReportStaging]') AND type in (N'U'))
 DROP TABLE [dbo].[AccPaymentReportStaging]
 GO
-/****** Object:  UserDefinedFunction [dbo].[fn_GetClaimStatusByVisitAndCPT]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  UserDefinedFunction [dbo].[fn_GetClaimStatusByVisitAndCPT]******/
 DROP FUNCTION [dbo].[fn_GetClaimStatusByVisitAndCPT]
 GO
-/****** Object:  Table [dbo].[BillingMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[BillingMaster]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[BillingMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[BillingMaster]
 GO
-/****** Object:  Table [dbo].[ClaimDenialCodes]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ClaimDenialCodes]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ClaimDenialCodes]') AND type in (N'U'))
 DROP TABLE [dbo].[ClaimDenialCodes]
 GO
-/****** Object:  UserDefinedFunction [dbo].[GetDenailCodeByVisitNumber]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  UserDefinedFunction [dbo].[GetDenailCodeByVisitNumber]******/
 DROP FUNCTION [dbo].[GetDenailCodeByVisitNumber]
 GO
-/****** Object:  UserDefinedFunction [dbo].[GETCPTCodeCombined]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  UserDefinedFunction [dbo].[GETCPTCodeCombined]******/
 DROP FUNCTION [dbo].[GETCPTCodeCombined]
 GO
-/****** Object:  UserDefinedFunction [dbo].[fn_NormalizePanelCode]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  UserDefinedFunction [dbo].[fn_NormalizePanelCode]******/
 DROP FUNCTION [dbo].[fn_NormalizePanelCode]
 GO
-/****** Object:  UserDefinedFunction [dbo].[fn_GetLineItemStatus_BAK]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  UserDefinedFunction [dbo].[fn_GetLineItemStatus_BAK]******/
 DROP FUNCTION [dbo].[fn_GetLineItemStatus_BAK]
 GO
-/****** Object:  UserDefinedFunction [dbo].[fn_GetLineItemStatus]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  UserDefinedFunction [dbo].[fn_GetLineItemStatus]******/
 DROP FUNCTION [dbo].[fn_GetLineItemStatus]
 GO
-/****** Object:  UserDefinedFunction [dbo].[fn_GetClaimStatus]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  UserDefinedFunction [dbo].[fn_GetClaimStatus]******/
 DROP FUNCTION [dbo].[fn_GetClaimStatus]
 GO
-/****** Object:  UserDefinedFunction [dbo].[BuildCondition]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  UserDefinedFunction [dbo].[BuildCondition]******/
 DROP FUNCTION [dbo].[BuildCondition]
 GO
 USE [master]
 GO
-/****** Object:  Database [CoveLRN]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Database [CoveLRN]******/
 DROP DATABASE [CoveLRN]
 GO
-/****** Object:  Database [CoveLRN]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Database [CoveLRN]******/
 CREATE DATABASE [CoveLRN]
  CONTAINMENT = NONE
  ON  PRIMARY 
@@ -686,7 +686,7 @@ ALTER DATABASE [CoveLRN] SET QUERY_STORE (OPERATION_MODE = READ_WRITE, CLEANUP_P
 GO
 USE [CoveLRN]
 GO
-/****** Object:  UserDefinedFunction [dbo].[BuildCondition]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  UserDefinedFunction [dbo].[BuildCondition]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -723,7 +723,7 @@ BEGIN
     RETURN @Condition
 END
 GO
-/****** Object:  UserDefinedFunction [dbo].[fn_GetClaimStatus]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  UserDefinedFunction [dbo].[fn_GetClaimStatus]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -763,7 +763,7 @@ BEGIN
     RETURN @Status;
 END;
 GO
-/****** Object:  UserDefinedFunction [dbo].[fn_GetLineItemStatus]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  UserDefinedFunction [dbo].[fn_GetLineItemStatus]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -864,7 +864,7 @@ BEGIN
     RETURN @Status;
 END;
 GO
-/****** Object:  UserDefinedFunction [dbo].[fn_GetLineItemStatus_BAK]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  UserDefinedFunction [dbo].[fn_GetLineItemStatus_BAK]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -965,7 +965,7 @@ BEGIN
     RETURN @Status;
 END;
 GO
-/****** Object:  UserDefinedFunction [dbo].[fn_NormalizePanelCode]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  UserDefinedFunction [dbo].[fn_NormalizePanelCode]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1032,7 +1032,7 @@ BEGIN
     RETURN NULLIF(@result, N'');
 END
 GO
-/****** Object:  UserDefinedFunction [dbo].[GETCPTCodeCombined]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  UserDefinedFunction [dbo].[GETCPTCodeCombined]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1054,7 +1054,7 @@ BEGIN
     RETURN @Result
 END
 GO
-/****** Object:  UserDefinedFunction [dbo].[GetDenailCodeByVisitNumber]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  UserDefinedFunction [dbo].[GetDenailCodeByVisitNumber]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1088,7 +1088,7 @@ BEGIN
     RETURN @Result;  -- returns NULL if nothing remains
 END
 GO
-/****** Object:  Table [dbo].[ClaimDenialCodes]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ClaimDenialCodes]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1099,7 +1099,7 @@ CREATE TABLE [dbo].[ClaimDenialCodes](
 	[DenialCode] [nvarchar](30) NOT NULL
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[BillingMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[BillingMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1163,7 +1163,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  UserDefinedFunction [dbo].[fn_GetClaimStatusByVisitAndCPT]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  UserDefinedFunction [dbo].[fn_GetClaimStatusByVisitAndCPT]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1303,7 +1303,7 @@ END AS ClaimSubStatus FROM BillingMaster a
 		  AND ISNULL(a.Modifier,9999) = ISNULL(@Modifier,9999)
 );
 GO
-/****** Object:  Table [dbo].[AccPaymentReportStaging]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[AccPaymentReportStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1333,7 +1333,7 @@ CREATE TABLE [dbo].[AccPaymentReportStaging](
 	[ImportedOn] [datetime] NULL
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[BillingProviderMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[BillingProviderMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1353,7 +1353,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Cities]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[Cities]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1371,7 +1371,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ClaimBillingDetails]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ClaimBillingDetails]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1398,7 +1398,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ClaimsLevelStatus]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ClaimsLevelStatus]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1426,7 +1426,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ClaimsProdStatus]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ClaimsProdStatus]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1449,7 +1449,7 @@ CREATE TABLE [dbo].[ClaimsProdStatus](
 	[CreatedOn] [datetime] NULL
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ClinicMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ClinicMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1469,7 +1469,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[CPTCodeMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[CPTCodeMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1487,7 +1487,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[CustomCollectionStaging]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[CustomCollectionStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1537,7 +1537,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[DenialTrackingMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[DenialTrackingMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1571,7 +1571,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[DenialTrackingStaging]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[DenialTrackingStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1603,7 +1603,7 @@ CREATE TABLE [dbo].[DenialTrackingStaging](
 	[ImportedFileID] [int] NULL
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[DownloadReportTypes]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[DownloadReportTypes]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1623,7 +1623,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[FileStatuses]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[FileStatuses]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1641,7 +1641,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Genders]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[Genders]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1659,7 +1659,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ICDCodeMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ICDCodeMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1681,7 +1681,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ImportedFiles]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ImportedFiles]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1704,7 +1704,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ImportFileLogs]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ImportFileLogs]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1723,7 +1723,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ImportFilTypes]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ImportFilTypes]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1743,7 +1743,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[InsurancePayerMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[InsurancePayerMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1763,7 +1763,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[InsuranceRelationships]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[InsuranceRelationships]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1781,7 +1781,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[LabMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[LabMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1801,7 +1801,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[LISMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[LISMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1890,7 +1890,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[LISStaging]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[LISStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1947,7 +1947,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Medications]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[Medications]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1965,7 +1965,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[OperationsGroupMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[OperationsGroupMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1985,7 +1985,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[PanelGroup]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[PanelGroup]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2003,7 +2003,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Panels]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[Panels]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2021,7 +2021,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[PayerTypeMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[PayerTypeMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2041,7 +2041,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[PrismBillingStaging]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[PrismBillingStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2060,7 +2060,7 @@ CREATE TABLE [dbo].[PrismBillingStaging](
 	[ImportedFileID] [int] NULL
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ProdStatusRuleEngine]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ProdStatusRuleEngine]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2101,7 +2101,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Races]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[Races]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2119,7 +2119,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ReferringProviderMaster]    Script Date: 8/29/2025 2:14:12 PM ******/
+/****** Object:  Table [dbo].[ReferringProviderMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON

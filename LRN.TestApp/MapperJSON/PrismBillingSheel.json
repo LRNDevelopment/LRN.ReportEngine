@@ -1,5 +1,5 @@
 {
-  "SheetName": "To Bill,Medicare On Hold,MO Medicaid on Hold,Missing Info,PGX,Billed,Paid,Zero Pay Done",
+  "SheetName": "To Bill,Medicare On Hold,MO Medicaid on Hold,Missing Info,PGX,Billed,Paid,Zero Pay Done,New to Bill,Eden To Bill",
   "UseSheetName": true,
   "TargetTable": "dbo.PrismBillingStaging",
   "Columns": [

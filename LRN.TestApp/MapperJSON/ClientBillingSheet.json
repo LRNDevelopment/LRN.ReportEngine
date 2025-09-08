@@ -1,0 +1,25 @@
+{
+  "SheetName": "Billed to Phi (Prism Ran),Phi Paid (Prism Ran),Billed to Phi (Phi Ran),Phi Paid (Phi Ran)",
+  "UseSheetName": true,
+  "TargetTable": "dbo.ClientBillingSheet",
+  "Columns": [
+    {
+      "ExcelColumn": "Accession",
+      "SqlColumn": "AccessionNo",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Performing Facility",
+      "SqlColumn": "PerformingFacility",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

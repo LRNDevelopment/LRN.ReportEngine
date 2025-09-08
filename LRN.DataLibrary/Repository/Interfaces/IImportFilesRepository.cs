@@ -1,4 +1,5 @@
-﻿using LRN.ExcelToSqlETL.Core.DtoModels;
+﻿using LRN.DataLibrary.Models;
+using LRN.ExcelToSqlETL.Core.DtoModels;
 using LRN.ExcelToSqlETL.Core.Models;
 
 namespace LRN.DataLibrary.Repository.Interfaces;
@@ -24,4 +25,6 @@ public interface IImportFilesRepository
     Task<ReportDownloadSts> InsertReportDownloadSts(ReportDownloadSts reportDownloadSts);
 
     Task<ReportDownloadSts> GetDownloadReportById(int fileId);
+
+    Task<List<LabMaster>> GetLabMaster();
 }

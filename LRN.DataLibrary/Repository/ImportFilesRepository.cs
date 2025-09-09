@@ -75,7 +75,7 @@ public class ImportFilesRepository : IImportFilesRepository
 
         try
         {
-            int commandTimeout = 300;
+            int commandTimeout = 1500;
             await connection.ExecuteAsync("sp_InsertMasterData", transaction: transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
 
             if (file != null)

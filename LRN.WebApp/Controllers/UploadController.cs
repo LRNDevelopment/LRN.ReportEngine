@@ -81,8 +81,8 @@ public class UploadController : Controller
         return View(files);
     }
 
-    [RequestSizeLimit(104857600)] // 100 MB
-    [RequestFormLimits(MultipartBodyLengthLimit = 104857600)]
+    [RequestSizeLimit(524288000)] // 100 MB
+    [RequestFormLimits(MultipartBodyLengthLimit = 524288000)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UploadFile(IFormFile file, string fileType)
     {

@@ -310,6 +310,8 @@ public class ExcelFileReader : IFileReader
 
     private int FindHeaderRow(IXLWorksheet worksheet, ExcelSheetMapping mapping, int scanLimit = 20)
     {
+        List<string> allFoundHeaders = new List<string>();
+
         for (int i = 1; i <= scanLimit; i++)
         {
             var row = worksheet.Row(i);
@@ -317,13 +319,39 @@ public class ExcelFileReader : IFileReader
                                         .Where(v => !string.IsNullOrWhiteSpace(v))
                                         .ToList();
 
+            // Collect all headers found across all rows
+            allFoundHeaders.AddRange(cellValues);
+
             int matches = mapping.Columns
                 .Count(col => cellValues.Contains(col.ExcelColumn, StringComparer.OrdinalIgnoreCase));
 
             if (matches >= mapping.Columns.Count * 0.7)
                 return i;
         }
-        ImportLog.Add(new FileLog { ImportFileId = _ImportFileId, LogType = "Error", LogMessage = $"Header row not found in the top {scanLimit} rows." });
+
+        // Identify missing fields by comparing expected columns with all found headers
+        var missingFields = mapping.Columns
+            .Where(col => !allFoundHeaders.Contains(col.ExcelColumn, StringComparer.OrdinalIgnoreCase))
+            .Select(col => col.ExcelColumn)
+            .ToList();
+
+        var foundFields = mapping.Columns
+            .Where(col => allFoundHeaders.Contains(col.ExcelColumn, StringComparer.OrdinalIgnoreCase))
+            .Select(col => col.ExcelColumn)
+            .ToList();
+
+        var errorMessage = $" Wrong Template uploaded - Template Headings not found in the top {scanLimit} rows. " +
+                          $"\n Missing Fields: [ {string.Join(", ", missingFields)}. " +
+                          $"]\n Available fields: {string.Join(", ", foundFields)}";
+
+        ImportLog.Add(new FileLog
+        {
+            ImportFileId = _ImportFileId,
+            LogType = "Error",
+            LogMessage = errorMessage
+        });
+
+        //throw new Exception(errorMessage);
 
         throw new Exception($"Header row not found in the top {scanLimit} rows.");
     }

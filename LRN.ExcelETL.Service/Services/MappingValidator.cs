@@ -79,16 +79,43 @@ namespace LRN.ExcelETL.Service.Services
 
         public MappingEntry FileMapping(MappingConfigRoot masterConfig, string filename, string fileType)
         {
-            var matchedMapping = masterConfig.Mappings.FirstOrDefault(m => m.FileType.Trim() == fileType);
 
-            if (matchedMapping == null)
-                matchedMapping = masterConfig.Mappings.FirstOrDefault(m =>
-              filename.Contains(m.FileIdentifier, StringComparison.OrdinalIgnoreCase));
 
-            if (matchedMapping == null)
-                throw new Exception("No mapping found for this file name.");
+            // First priority: fileType matches
+            var fileTypeMappings = masterConfig.Mappings
+                .Where(m => m.FileType.Trim().Equals(fileType, StringComparison.OrdinalIgnoreCase))
+                .ToList();
 
-            return matchedMapping;
+            if (fileTypeMappings.Count == 0)
+            {
+                var errorMessage = $"No mapping found for file type: {fileType}. File: {filename}";
+                throw new Exception(errorMessage);
+            }
+
+            // Second priority: filename pattern within fileType matches
+            var exactMatch = fileTypeMappings.FirstOrDefault(m =>
+                filename.Contains(m.FileIdentifier, StringComparison.OrdinalIgnoreCase));
+
+            if (exactMatch != null)
+            {
+                return exactMatch;
+            }
+
+            // If only one mapping exists for this fileType, use it (even without filename match)
+            if (fileTypeMappings.Count == 1)
+            {
+                var singleMapping = fileTypeMappings.First();
+                return singleMapping;
+            }
+
+            // Multiple mappings for same fileType - ambiguous case
+            var ambiguousIdentifiers = string.Join(", ", fileTypeMappings.Select(m => m.FileIdentifier));
+            var errorMsg = $"Ambiguous mapping for file type '{fileType}'. " +
+                          $"Multiple mappings found: {ambiguousIdentifiers}. " +
+                          $"Filename '{filename}' doesn't contain any expected identifier.";
+
+            throw new Exception(errorMsg);
         }
     }
 }
+

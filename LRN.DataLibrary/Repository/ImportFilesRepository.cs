@@ -6,7 +6,9 @@ using LRN.ExcelToSqlETL.Core.DtoModels;
 using LRN.ExcelToSqlETL.Core.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic.FileIO;
 using System.Data;
+using System.Linq;
 using System.Net.NetworkInformation;
 using static LRN.ExcelToSqlETL.Core.Constants.CommonConst;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
@@ -57,6 +59,37 @@ public class ImportFilesRepository : IImportFilesRepository
         await UpdateImportFilesAsync(new List<ImportFileDto> { file });
     }
 
+    // map file type -> staging table
+    private static readonly IReadOnlyDictionary<int, string> StagingByType = new Dictionary<int, string>
+    {
+        [(int)CommonConst.ImportFileType.LIS_Report] = "dbo.LISStaging",
+        [(int)CommonConst.ImportFileType.Custom_Collection] = "dbo.CustomCollectionStaging",
+        [(int)CommonConst.ImportFileType.Visit_Against_Accession] = "dbo.VisitAgaistAccessionStaging",
+        [(int)CommonConst.ImportFileType.Transaction_Detail_Report] = "dbo.TransactionDetailStaging",
+        [(int)CommonConst.ImportFileType.Denial_Tracking_Report] = "dbo.DenialTrackingStaging",
+        [(int)CommonConst.ImportFileType.Prism_Billing_Sheet] = "dbo.PrismBillingStaging",
+        [(int)CommonConst.ImportFileType.Accession_Payment_Report] = "dbo.AccPaymentReportStaging",
+        [(int)CommonConst.ImportFileType.Order_LIS] = "dbo.DiagnoseLISStaging",
+        [(int)CommonConst.ImportFileType.Diagnos_SampleLIS] = "dbo.DiagnoseLISStaging",
+        [(int)CommonConst.ImportFileType.Panel_Group] = "dbo.PanelMasterStaging",
+        [(int)CommonConst.ImportFileType.Client_Billing_Sheet] = "dbo.ClientBillingSheet"
+    };
+
+    // map file type -> processing stored proc
+    private static readonly IReadOnlyDictionary<int, string> ProcByType = new Dictionary<int, string>
+    {
+        [(int)CommonConst.ImportFileType.LIS_Report] = "SP_Process_LISMaster_ByFileId",
+        [(int)CommonConst.ImportFileType.Custom_Collection] = "Sp_ProcessBillingMasterData",
+        [(int)CommonConst.ImportFileType.Visit_Against_Accession] = "Sp_Process_VAA_ByFileId",
+        [(int)CommonConst.ImportFileType.Transaction_Detail_Report] = "Sp_ProcessTransactionDetails",
+        [(int)CommonConst.ImportFileType.Denial_Tracking_Report] = "Sp_ProcessDenialTrackingMaster",
+        [(int)CommonConst.ImportFileType.Prism_Billing_Sheet] = "Sp_Process_BillingSheet_ByFileId",
+        [(int)CommonConst.ImportFileType.Accession_Payment_Report] = "Sp_ProcessAccessionPaymentReport",
+        [(int)CommonConst.ImportFileType.Order_LIS] = "Sp_Process_LISOrderStaging",
+        [(int)CommonConst.ImportFileType.Diagnos_SampleLIS] = "Sp_Process_LISSample_Report",
+        [(int)CommonConst.ImportFileType.Panel_Group] = "Sp_Process_PanelMasterStaging",
+        [(int)CommonConst.ImportFileType.Client_Billing_Sheet] = "Sp_Process_ClientBillingSheet"
+    };
     public async Task ProcessImportFilesAsync(ImportFileDto file)
     {
         using var connection = _context.CreateConnection();
@@ -75,59 +108,48 @@ public class ImportFilesRepository : IImportFilesRepository
 
         try
         {
-            int commandTimeout = 1500;
+            int commandTimeout = 2500;
             await connection.ExecuteAsync("sp_InsertMasterData", transaction: transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
 
             if (file != null)
             {
-                var parameters = new DynamicParameters();
-                parameters.Add("@FileId", file.ImportedFileId, DbType.Int32);
+                ////// 1) get ALL related import file ids safely (await, no .Result)
+                ////var ids = (await GetImportFilesByFileType(file.FileType, (int)file.ImportedFileId))
+                ////          ?.Distinct().ToList() ?? new List<int>();
 
-                switch (file.FileType)
+                ////// 2) purge staging inside the SAME transaction, parameterized, batched
+                ////if (ids.Count > 0 && StagingByType.TryGetValue(file.FileType, out var table))
+                ////{
+                ////    const int batchSize = 1000; // under 2100-param limit headroom
+                ////    var sql = $"DELETE t FROM {table} AS t WHERE t.ImportedFileID IN @Ids";
+
+                ////    foreach (var chunk in ids.Chunk(batchSize))
+                ////    {
+                ////        var delCmd = new CommandDefinition(
+                ////            sql,
+                ////            new { Ids = chunk },
+                ////            transaction: transaction,
+                ////            commandTimeout: commandTimeout,          // consider 0 = infinite if you expect long runs
+                ////            commandType: CommandType.Text);
+
+                ////        await connection.ExecuteAsync(delCmd);
+                ////    }
+                ////}
+
+                // 3) run the processing proc, still inside the SAME transaction & explicit timeout
+                if (ProcByType.TryGetValue(file.FileType, out var proc))
                 {
-                    case (int)CommonConst.ImportFileType.LIS_Report:
-                        await connection.ExecuteAsync("SP_Process_LISMaster_ByFileId", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
-                        break;
+                    var p = new DynamicParameters();
+                    p.Add("@FileId", file.ImportedFileId, DbType.Int32);
 
-                    case (int)CommonConst.ImportFileType.Custom_Collection:
-                        await connection.ExecuteAsync("Sp_ProcessBillingMasterData", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
-                        break;
+                    var procCmd = new CommandDefinition(
+                        proc,
+                        parameters: p,
+                        transaction: transaction,
+                        commandTimeout: commandTimeout,             // or 0 for infinite
+                        commandType: CommandType.StoredProcedure);
 
-                    case (int)CommonConst.ImportFileType.Visit_Against_Accession:
-                        await connection.ExecuteAsync("Sp_Process_VAA_ByFileId", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
-                        break;
-
-                    case (int)CommonConst.ImportFileType.Transaction_Detail_Report:
-                        await connection.ExecuteAsync("Sp_ProcessTransactionDetails", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
-                        break;
-
-                    case (int)CommonConst.ImportFileType.Denial_Tracking_Report:
-                        await connection.ExecuteAsync("Sp_ProcessDenialTrackingMaster", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
-                        break;
-
-                    case (int)CommonConst.ImportFileType.Prism_Billing_Sheet:
-                        await connection.ExecuteAsync("Sp_Process_BillingSheet_ByFileId", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
-                        break;
-
-                    case (int)CommonConst.ImportFileType.Accession_Payment_Report:
-                        await connection.ExecuteAsync("Sp_ProcessAccessionPaymentReport", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
-                        break;
-                    case (int)CommonConst.ImportFileType.Order_LIS:
-                        await connection.ExecuteAsync("Sp_Process_LISOrderStaging", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
-                        break;
-
-                    case (int)CommonConst.ImportFileType.Diagnos_SampleLIS:
-                        await connection.ExecuteAsync("Sp_Process_LISSample_Report", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
-                        break;
-
-                    case (int)CommonConst.ImportFileType.Panel_Group:
-                        await connection.ExecuteAsync("Sp_Process_PanelMasterStaging", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
-                        break;
-
-                    case (int)CommonConst.ImportFileType.Client_Billing_Sheet:
-                        await connection.ExecuteAsync("Sp_Process_ClientBillingSheet", parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
-                        break;
-
+                    await connection.ExecuteAsync(procCmd);
                 }
             }
 
@@ -196,11 +218,10 @@ public class ImportFilesRepository : IImportFilesRepository
     public async Task<List<ImportFileDto>> GetImportFilesAsync()
     {
         const string query = @"SELECT ImportedFileID AS ImportedFileId, ImportFileName, FileTypeName, c.FileStatus AS FileStatusName,
-               ExcelRowCount, ImportedRowCount, ImportedOn, ProcessedOn, a.LabId, l.LabName,ImportFilePath,c.FileStatusId 
+               ExcelRowCount, ImportedRowCount, ImportedOn, ProcessedOn, a.LabId, ImportFilePath,c.FileStatusId 
         FROM ImportedFiles a
         JOIN ImportFilTypes b ON a.FileType = b.FileTypeId
-        JOIN FileStatuses c ON a.FileStatus = c.FileStatusId
-        JOIN LabMaster l on a.LabId = l.LabID";
+        JOIN FileStatuses c ON a.FileStatus = c.FileStatusId";
         using var connection = _context.CreateConnection();
         var results = await connection.QueryAsync<ImportFileDto>(query);
         return results.ToList();
@@ -211,6 +232,18 @@ public class ImportFilesRepository : IImportFilesRepository
         const string query = "Select FileTypeId, FileTypeName from ImportFilTypes";
         using var connection = _context.CreateConnection();
         var results = await connection.QueryAsync<ImportFileTypesDto>(query);
+        return results.ToList();
+    }
+
+    public async Task<List<int>> GetImportFilesByFileType(int fileType, int fileId)
+    {
+        const string sql = @"
+        SELECT ImportedFileID
+        FROM dbo.ImportedFiles
+        WHERE FileType = @fileType AND ImportedFileID = @fileId;";
+
+        using var connection = _context.CreateConnection();
+        var results = await connection.QueryAsync<int>(sql, new { fileType, fileId });
         return results.ToList();
     }
 

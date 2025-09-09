@@ -97,6 +97,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseHttpsRedirection();
+app.UseHsts();
+
 app.MapControllerRoute("default", "{controller=Upload}/{action=Index}/{id?}");
 
 app.Run();

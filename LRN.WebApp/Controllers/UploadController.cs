@@ -8,9 +8,11 @@ using LRN.ExcelToSqlETL.Core.DtoModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.StaticFiles;
 using Org.BouncyCastle.Math;
 using System.Data;
 using System.Net;
+using System.Text.RegularExpressions;
 
 [Authorize]
 [RequestSizeLimit(72428800)]
@@ -81,7 +83,7 @@ public class UploadController : Controller
         return View(files);
     }
 
-    [RequestSizeLimit(524288000)] // 100 MB
+    [RequestSizeLimit(524288000)] // 500 MB
     [RequestFormLimits(MultipartBodyLengthLimit = 524288000)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UploadFile(IFormFile file, string fileType)
@@ -150,37 +152,84 @@ public class UploadController : Controller
     }
 
     [HttpGet]
-    public IActionResult DownloadImportedFile(int fileId)
+    public async Task<IActionResult> DownloadImportedFile(int fileId)
     {
-        var file = _importRepo.GetImportFileById(fileId).Result;
-        if (System.IO.File.Exists(file.ImportFilePath))
-        {
-            var fileBytes = System.IO.File.ReadAllBytes(file.ImportFilePath);
-            var fullFileName = $"{file.ImportFileName}.xlsx";
+        var file = await _importRepo.GetImportFileById(fileId);
+        if (file == null || string.IsNullOrWhiteSpace(file.ImportFilePath) || !System.IO.File.Exists(file.ImportFilePath))
+            return NotFound("File not found.");
 
-            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fullFileName);
-        }
+        // Stream instead of reading entire file into memory
+        var stream = System.IO.File.OpenRead(file.ImportFilePath);
 
-        return NotFound("File not found.");
+        // 1) Make a safe filename
+        var rawName = (file.ImportFileName ?? Path.GetFileNameWithoutExtension(file.ImportFilePath)).Trim();
+        var ext = Path.GetExtension(file.ImportFilePath); // trust the real file’s extension
+        if (string.IsNullOrWhiteSpace(ext)) ext = ".xlsx";
+
+        // remove any trailing extension already present (case-insensitive)
+        if (rawName.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+            rawName = rawName.Substring(0, rawName.Length - ext.Length);
+
+        // remove illegal filename chars and extra spaces
+        var safeBase = Regex.Replace(rawName, @"[^\w\-. ]+", "").Trim();
+        if (string.IsNullOrWhiteSpace(safeBase)) safeBase = "download";
+
+        var downloadName = safeBase + ext;
+
+        // 2) Correct content type
+        var provider = new FileExtensionContentTypeProvider();
+        if (!provider.TryGetContentType(downloadName, out var contentType))
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+        // 3) Robust Content-Disposition (RFC 5987) to avoid odd filename behavior
+        Response.Headers["Content-Disposition"] =
+            "attachment; filename=\"" + downloadName.Replace("\"", "") + "\"; filename*=UTF-8''" +
+            Uri.EscapeDataString(downloadName);
+
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+
+        return File(stream, contentType);
     }
-
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult DownloadReportFile(int fileId)
+    public async Task<IActionResult> DownloadReportFile(int fileId)
     {
-        var file = _importRepo.GetDownloadReportById(fileId).Result;
-        if (System.IO.File.Exists(file.ReportServerPath))
-        {
-            string filename = file.ReportName + "_" + file.CreatedOn.ToString("MMddyyyy_HHmm");
-            var fileBytes = System.IO.File.ReadAllBytes(file.ReportServerPath);
-            var fullFileName = $"{filename}.xlsx";
+        var file = await _importRepo.GetDownloadReportById(fileId);
+        if (file == null || string.IsNullOrWhiteSpace(file.ReportServerPath) || !System.IO.File.Exists(file.ReportServerPath))
+            return NotFound("File not found.");
 
-            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fullFileName);
-        }
+        // Open stream instead of loading full file
+        var stream = System.IO.File.OpenRead(file.ReportServerPath);
 
-        return NotFound("File not found.");
+        // 1) Build safe filename
+        var baseName = $"{file.ReportName}_{file.CreatedOn:MMddyyyy_HHmm}";
+        var ext = Path.GetExtension(file.ReportServerPath);
+        if (string.IsNullOrWhiteSpace(ext)) ext = ".xlsx";
+
+        // Strip duplicate extension if already present
+        if (baseName.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+            baseName = baseName.Substring(0, baseName.Length - ext.Length);
+
+        // Remove illegal characters
+        var safeBase = Regex.Replace(baseName, @"[^\w\-. ]+", "").Trim();
+        if (string.IsNullOrWhiteSpace(safeBase)) safeBase = "report";
+
+        var downloadName = safeBase + ext;
+
+        // 2) Resolve correct MIME type
+        var provider = new FileExtensionContentTypeProvider();
+        if (!provider.TryGetContentType(downloadName, out var contentType))
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+        // 3) Force secure Content-Disposition
+        Response.Headers["Content-Disposition"] =
+            "attachment; filename=\"" + downloadName.Replace("\"", "") + "\"; filename*=UTF-8''" +
+            Uri.EscapeDataString(downloadName);
+
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+
+        return File(stream, contentType);
     }
-
 
     [HttpGet]
     public async Task<ActionResult> DownloadReport(int page = 1, int pageSize = 10)

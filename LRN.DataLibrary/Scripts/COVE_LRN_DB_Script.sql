@@ -311,78 +311,6 @@ ALTER TABLE [dbo].[BillingMaster] DROP CONSTRAINT [DF__BillingMa__Creat__4CEB477
 GO
 ALTER TABLE [dbo].[AccPaymentReportStaging] DROP CONSTRAINT [DF__AccPaymen__Impor__006AEB82]
 GO
-/****** Object:  Index [IX_VisitAgaistAccessionStaging_AccessionNo]******/
-DROP INDEX [IX_VisitAgaistAccessionStaging_AccessionNo] ON [dbo].[VisitAgaistAccessionStaging]
-GO
-/****** Object:  Index [IX_Users_Username]******/
-DROP INDEX [IX_Users_Username] ON [dbo].[Users]
-GO
-/****** Object:  Index [IX_TestTypeMaster_Name]******/
-DROP INDEX [IX_TestTypeMaster_Name] ON [dbo].[TestTypeMaster]
-GO
-/****** Object:  Index [IX_SpecimenStatus_Name]******/
-DROP INDEX [IX_SpecimenStatus_Name] ON [dbo].[SpecimenStatus]
-GO
-/****** Object:  Index [IX_ReferringProviderMaster_ReferingProviderId]******/
-DROP INDEX [IX_ReferringProviderMaster_ReferingProviderId] ON [dbo].[ReferringProviderMaster]
-GO
-/****** Object:  Index [IX_ReferringProviderMaster_Name]******/
-DROP INDEX [IX_ReferringProviderMaster_Name] ON [dbo].[ReferringProviderMaster]
-GO
-/****** Object:  Index [IX_PrismBillingStaging_SpecimenID]******/
-DROP INDEX [IX_PrismBillingStaging_SpecimenID] ON [dbo].[PrismBillingStaging]
-GO
-/****** Object:  Index [IX_PayerTypeMaster_PayerTypeId]******/
-DROP INDEX [IX_PayerTypeMaster_PayerTypeId] ON [dbo].[PayerTypeMaster]
-GO
-/****** Object:  Index [IX_PayerTypeMaster_PayerType]******/
-DROP INDEX [IX_PayerTypeMaster_PayerType] ON [dbo].[PayerTypeMaster]
-GO
-/****** Object:  Index [IX_PayerTypeMaster_Name]******/
-DROP INDEX [IX_PayerTypeMaster_Name] ON [dbo].[PayerTypeMaster]
-GO
-/****** Object:  Index [IX_OperationsGroupMaster_Name]******/
-DROP INDEX [IX_OperationsGroupMaster_Name] ON [dbo].[OperationsGroupMaster]
-GO
-/****** Object:  Index [IX_LISMaster_StatusCode]******/
-DROP INDEX [IX_LISMaster_StatusCode] ON [dbo].[LISMaster]
-GO
-/****** Object:  Index [IX_LISMaster_ResultedDate]******/
-DROP INDEX [IX_LISMaster_ResultedDate] ON [dbo].[LISMaster]
-GO
-/****** Object:  Index [IX_LISMaster_PatientName]******/
-DROP INDEX [IX_LISMaster_PatientName] ON [dbo].[LISMaster]
-GO
-/****** Object:  Index [IX_LISMaster_InsuranceType]******/
-DROP INDEX [IX_LISMaster_InsuranceType] ON [dbo].[LISMaster]
-GO
-/****** Object:  Index [IX_LISMaster_AccessionNo]******/
-DROP INDEX [IX_LISMaster_AccessionNo] ON [dbo].[LISMaster]
-GO
-/****** Object:  Index [IX_LabMaster_Name]******/
-DROP INDEX [IX_LabMaster_Name] ON [dbo].[LabMaster]
-GO
-/****** Object:  Index [IX_InsurancePayerMaster_PayerName]******/
-DROP INDEX [IX_InsurancePayerMaster_PayerName] ON [dbo].[InsurancePayerMaster]
-GO
-/****** Object:  Index [IX_InsurancePayerMaster_InsurancePayerId]******/
-DROP INDEX [IX_InsurancePayerMaster_InsurancePayerId] ON [dbo].[InsurancePayerMaster]
-GO
-/****** Object:  Index [IX_DenialTrackingMaster_VisitNumber]******/
-DROP INDEX [IX_DenialTrackingMaster_VisitNumber] ON [dbo].[DenialTrackingMaster]
-GO
-/****** Object:  Index [IX_ClinicMaster_Name]******/
-DROP INDEX [IX_ClinicMaster_Name] ON [dbo].[ClinicMaster]
-GO
-/****** Object:  Index [IX_BillingProviderMaster_Name]******/
-DROP INDEX [IX_BillingProviderMaster_Name] ON [dbo].[BillingProviderMaster]
-GO
-/****** Object:  Index [IX_BillingProviderMaster_BillingProviderID]******/
-DROP INDEX [IX_BillingProviderMaster_BillingProviderID] ON [dbo].[BillingProviderMaster]
-GO
-/****** Object:  Index [IX_BillingProviderMaster_BillingProvider]******/
-DROP INDEX [IX_BillingProviderMaster_BillingProvider] ON [dbo].[BillingProviderMaster]
-GO
 /****** Object:  Table [dbo].[VisitAgaistAccessionStaging]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[VisitAgaistAccessionStaging]') AND type in (N'U'))
 DROP TABLE [dbo].[VisitAgaistAccessionStaging]
@@ -581,6 +509,9 @@ GO
 /****** Object:  UserDefinedFunction [dbo].[GetDenailCodeByVisitNumber]******/
 DROP FUNCTION [dbo].[GetDenailCodeByVisitNumber]
 GO
+/****** Object:  UserDefinedFunction [dbo].[GetDenailCodeByVisitCPT]******/
+DROP FUNCTION [dbo].[GetDenailCodeByVisitCPT]
+GO
 /****** Object:  UserDefinedFunction [dbo].[GETCPTCodeCombined]******/
 DROP FUNCTION [dbo].[GETCPTCodeCombined]
 GO
@@ -598,93 +529,6 @@ DROP FUNCTION [dbo].[fn_GetClaimStatus]
 GO
 /****** Object:  UserDefinedFunction [dbo].[BuildCondition]******/
 DROP FUNCTION [dbo].[BuildCondition]
-GO
-USE [master]
-GO
-/****** Object:  Database [CoveLRN]******/
-DROP DATABASE [CoveLRN]
-GO
-/****** Object:  Database [CoveLRN]******/
-CREATE DATABASE [CoveLRN]
- CONTAINMENT = NONE
- ON  PRIMARY 
-( NAME = N'PrismLRN', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS\MSSQL\DATA\CoveLRN.mdf' , SIZE = 1449984KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
- LOG ON 
-( NAME = N'PrismLRN_log', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS\MSSQL\DATA\CoveLRN_log.ldf' , SIZE = 18030592KB , MAXSIZE = 2048GB , FILEGROWTH = 65536KB )
- WITH CATALOG_COLLATION = DATABASE_DEFAULT, LEDGER = OFF
-GO
-ALTER DATABASE [CoveLRN] SET COMPATIBILITY_LEVEL = 160
-GO
-IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
-begin
-EXEC [CoveLRN].[dbo].[sp_fulltext_database] @action = 'enable'
-end
-GO
-ALTER DATABASE [CoveLRN] SET ANSI_NULL_DEFAULT OFF 
-GO
-ALTER DATABASE [CoveLRN] SET ANSI_NULLS OFF 
-GO
-ALTER DATABASE [CoveLRN] SET ANSI_PADDING OFF 
-GO
-ALTER DATABASE [CoveLRN] SET ANSI_WARNINGS OFF 
-GO
-ALTER DATABASE [CoveLRN] SET ARITHABORT OFF 
-GO
-ALTER DATABASE [CoveLRN] SET AUTO_CLOSE OFF 
-GO
-ALTER DATABASE [CoveLRN] SET AUTO_SHRINK OFF 
-GO
-ALTER DATABASE [CoveLRN] SET AUTO_UPDATE_STATISTICS ON 
-GO
-ALTER DATABASE [CoveLRN] SET CURSOR_CLOSE_ON_COMMIT OFF 
-GO
-ALTER DATABASE [CoveLRN] SET CURSOR_DEFAULT  GLOBAL 
-GO
-ALTER DATABASE [CoveLRN] SET CONCAT_NULL_YIELDS_NULL OFF 
-GO
-ALTER DATABASE [CoveLRN] SET NUMERIC_ROUNDABORT OFF 
-GO
-ALTER DATABASE [CoveLRN] SET QUOTED_IDENTIFIER OFF 
-GO
-ALTER DATABASE [CoveLRN] SET RECURSIVE_TRIGGERS OFF 
-GO
-ALTER DATABASE [CoveLRN] SET  DISABLE_BROKER 
-GO
-ALTER DATABASE [CoveLRN] SET AUTO_UPDATE_STATISTICS_ASYNC OFF 
-GO
-ALTER DATABASE [CoveLRN] SET DATE_CORRELATION_OPTIMIZATION OFF 
-GO
-ALTER DATABASE [CoveLRN] SET TRUSTWORTHY OFF 
-GO
-ALTER DATABASE [CoveLRN] SET ALLOW_SNAPSHOT_ISOLATION OFF 
-GO
-ALTER DATABASE [CoveLRN] SET PARAMETERIZATION SIMPLE 
-GO
-ALTER DATABASE [CoveLRN] SET READ_COMMITTED_SNAPSHOT OFF 
-GO
-ALTER DATABASE [CoveLRN] SET HONOR_BROKER_PRIORITY OFF 
-GO
-ALTER DATABASE [CoveLRN] SET RECOVERY FULL 
-GO
-ALTER DATABASE [CoveLRN] SET  MULTI_USER 
-GO
-ALTER DATABASE [CoveLRN] SET PAGE_VERIFY CHECKSUM  
-GO
-ALTER DATABASE [CoveLRN] SET DB_CHAINING OFF 
-GO
-ALTER DATABASE [CoveLRN] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF ) 
-GO
-ALTER DATABASE [CoveLRN] SET TARGET_RECOVERY_TIME = 60 SECONDS 
-GO
-ALTER DATABASE [CoveLRN] SET DELAYED_DURABILITY = DISABLED 
-GO
-ALTER DATABASE [CoveLRN] SET ACCELERATED_DATABASE_RECOVERY = OFF  
-GO
-ALTER DATABASE [CoveLRN] SET QUERY_STORE = ON
-GO
-ALTER DATABASE [CoveLRN] SET QUERY_STORE (OPERATION_MODE = READ_WRITE, CLEANUP_POLICY = (STALE_QUERY_THRESHOLD_DAYS = 30), DATA_FLUSH_INTERVAL_SECONDS = 900, INTERVAL_LENGTH_MINUTES = 60, MAX_STORAGE_SIZE_MB = 1000, QUERY_CAPTURE_MODE = AUTO, SIZE_BASED_CLEANUP_MODE = AUTO, MAX_PLANS_PER_QUERY = 200, WAIT_STATS_CAPTURE_MODE = ON)
-GO
-USE [CoveLRN]
 GO
 /****** Object:  UserDefinedFunction [dbo].[BuildCondition]******/
 SET ANSI_NULLS ON
@@ -1054,12 +898,46 @@ BEGIN
     RETURN @Result
 END
 GO
+/****** Object:  UserDefinedFunction [dbo].[GetDenailCodeByVisitCPT]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE FUNCTION [dbo].[GetDenailCodeByVisitCPT] (@visitno VARCHAR(100),@cptCode VARCHAR(30))
+RETURNS NVARCHAR(MAX)
+AS
+BEGIN
+    DECLARE @Result NVARCHAR(MAX);
+
+    ;WITH Tokenized AS (
+        SELECT DISTINCT
+            TRIM(s.value) AS Code
+        FROM DenialTrackingMaster d
+        CROSS APPLY STRING_SPLIT(d.PaymentReasonCode, ';') AS s
+        WHERE d.VisitNumber = @visitno AND d.CPTCodes = @cptCode
+          AND d.PaymentReasonCode IS NOT NULL
+          AND TRIM(s.value) <> ''
+    ),
+    Filtered AS (
+        SELECT DISTINCT Code
+        FROM Tokenized
+        WHERE Code NOT IN (
+            'CO45','CO253','CO1','CO2','CO3',
+            'PR1','PR2','PR3','PR45','PR253'
+        )
+    )
+    SELECT @Result = STRING_AGG(Code, ';') WITHIN GROUP (ORDER BY Code)
+    FROM Filtered;
+
+    RETURN @Result;  -- returns NULL if nothing remains
+END
+GO
 /****** Object:  UserDefinedFunction [dbo].[GetDenailCodeByVisitNumber]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE FUNCTION [dbo].[GetDenailCodeByVisitNumber] (@visitno VARCHAR(100))
+CREATE   FUNCTION [dbo].[GetDenailCodeByVisitNumber] (@visitno VARCHAR(100))
 RETURNS NVARCHAR(MAX)
 AS
 BEGIN
@@ -2139,7 +2017,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ReportDownloadSts]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  Table [dbo].[ReportDownloadSts]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2153,7 +2031,7 @@ CREATE TABLE [dbo].[ReportDownloadSts](
 	[CreatedOn] [datetime] NULL
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[RequisitionTypes]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  Table [dbo].[RequisitionTypes]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2171,7 +2049,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[SalesPerson]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  Table [dbo].[SalesPerson]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2195,7 +2073,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[SampleFinalStatus]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  Table [dbo].[SampleFinalStatus]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2211,7 +2089,7 @@ CREATE TABLE [dbo].[SampleFinalStatus](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[SpecimenStatus]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  Table [dbo].[SpecimenStatus]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2231,7 +2109,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[States]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  Table [dbo].[States]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2249,7 +2127,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[TestTypeMaster]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  Table [dbo].[TestTypeMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2269,7 +2147,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[TransactionDetailStaging]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  Table [dbo].[TransactionDetailStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2313,7 +2191,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[TransactionMaster]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  Table [dbo].[TransactionMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2348,7 +2226,7 @@ CREATE TABLE [dbo].[TransactionMaster](
 	[UpdatedOn] [datetime] NULL
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[TransactionSummary]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  Table [dbo].[TransactionSummary]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2369,7 +2247,7 @@ CREATE TABLE [dbo].[TransactionSummary](
 	[CreatedOn] [datetime] NULL
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[UserRole]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  Table [dbo].[UserRole]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2389,7 +2267,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Users]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  Table [dbo].[Users]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2412,7 +2290,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[VAAMaster]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  Table [dbo].[VAAMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2432,7 +2310,7 @@ CREATE TABLE [dbo].[VAAMaster](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[VisitAgaistAccessionStaging]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  Table [dbo].[VisitAgaistAccessionStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2452,188 +2330,6 @@ PRIMARY KEY CLUSTERED
 	[VAAId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_BillingProviderMaster_BillingProvider]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_BillingProviderMaster_BillingProvider] ON [dbo].[BillingProviderMaster]
-(
-	[BillingProvider] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-/****** Object:  Index [IX_BillingProviderMaster_BillingProviderID]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_BillingProviderMaster_BillingProviderID] ON [dbo].[BillingProviderMaster]
-(
-	[BillingProviderID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_BillingProviderMaster_Name]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_BillingProviderMaster_Name] ON [dbo].[BillingProviderMaster]
-(
-	[BillingProvider] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_ClinicMaster_Name]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_ClinicMaster_Name] ON [dbo].[ClinicMaster]
-(
-	[ClinicName] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_DenialTrackingMaster_VisitNumber]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_DenialTrackingMaster_VisitNumber] ON [dbo].[DenialTrackingMaster]
-(
-	[VisitNumber] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-/****** Object:  Index [IX_InsurancePayerMaster_InsurancePayerId]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_InsurancePayerMaster_InsurancePayerId] ON [dbo].[InsurancePayerMaster]
-(
-	[InsurancePayerId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_InsurancePayerMaster_PayerName]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_InsurancePayerMaster_PayerName] ON [dbo].[InsurancePayerMaster]
-(
-	[PayerName] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_LabMaster_Name]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_LabMaster_Name] ON [dbo].[LabMaster]
-(
-	[LabName] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_LISMaster_AccessionNo]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_LISMaster_AccessionNo] ON [dbo].[LISMaster]
-(
-	[AccessionNo] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_LISMaster_InsuranceType]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_LISMaster_InsuranceType] ON [dbo].[LISMaster]
-(
-	[InsuranceType] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_LISMaster_PatientName]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_LISMaster_PatientName] ON [dbo].[LISMaster]
-(
-	[PatientName] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-/****** Object:  Index [IX_LISMaster_ResultedDate]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_LISMaster_ResultedDate] ON [dbo].[LISMaster]
-(
-	[SampleResultedDate] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_LISMaster_StatusCode]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_LISMaster_StatusCode] ON [dbo].[LISMaster]
-(
-	[StatusCode] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_OperationsGroupMaster_Name]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_OperationsGroupMaster_Name] ON [dbo].[OperationsGroupMaster]
-(
-	[OperationsGroup] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_PayerTypeMaster_Name]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_PayerTypeMaster_Name] ON [dbo].[PayerTypeMaster]
-(
-	[PayerType] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_PayerTypeMaster_PayerType]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_PayerTypeMaster_PayerType] ON [dbo].[PayerTypeMaster]
-(
-	[PayerType] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-/****** Object:  Index [IX_PayerTypeMaster_PayerTypeId]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_PayerTypeMaster_PayerTypeId] ON [dbo].[PayerTypeMaster]
-(
-	[PayerTypeId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_PrismBillingStaging_SpecimenID]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_PrismBillingStaging_SpecimenID] ON [dbo].[PrismBillingStaging]
-(
-	[SpecimenID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_ReferringProviderMaster_Name]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_ReferringProviderMaster_Name] ON [dbo].[ReferringProviderMaster]
-(
-	[ReferringProviderName] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-/****** Object:  Index [IX_ReferringProviderMaster_ReferingProviderId]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_ReferringProviderMaster_ReferingProviderId] ON [dbo].[ReferringProviderMaster]
-(
-	[ReferingProviderId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_SpecimenStatus_Name]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_SpecimenStatus_Name] ON [dbo].[SpecimenStatus]
-(
-	[SpecimenStatusName] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_TestTypeMaster_Name]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_TestTypeMaster_Name] ON [dbo].[TestTypeMaster]
-(
-	[TestTypeName] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_Users_Username]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_Users_Username] ON [dbo].[Users]
-(
-	[Username] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-SET ANSI_PADDING ON
-GO
-/****** Object:  Index [IX_VisitAgaistAccessionStaging_AccessionNo]    Script Date: 8/29/2025 2:14:13 PM ******/
-CREATE NONCLUSTERED INDEX [IX_VisitAgaistAccessionStaging_AccessionNo] ON [dbo].[VisitAgaistAccessionStaging]
-(
-	[AccessionNo] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 ALTER TABLE [dbo].[AccPaymentReportStaging] ADD  DEFAULT (getdate()) FOR [ImportedOn]
 GO
@@ -2905,7 +2601,7 @@ GO
 ALTER TABLE [dbo].[BillingMaster]  WITH NOCHECK ADD FOREIGN KEY([PrimaryPayerID])
 REFERENCES [dbo].[InsurancePayerMaster] ([InsurancePayerId])
 GO
-/****** Object:  StoredProcedure [dbo].[BillingMasterProcess_Proc]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[BillingMasterProcess_Proc]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -3004,7 +2700,7 @@ BEGIN
 
     SELECT
         ISNULL(LIS.LISMasterId,LISD.LISMasterId) LISMasterId,
-        ISNULL(LIS.AccessionNo,LISD.AccessionNo) AccessionNo,
+        ISNULL(ISNULL(LIS.AccessionNo,LISD.AccessionNo),CC.AccessionPart) AccessionNo,
         CC.VisitNum VisitNumber,
         CC.CPTCode,
         CC.LastBillDate AS FirstBillDate,
@@ -3065,7 +2761,7 @@ BEGIN
         CC.ICD10Code,
 		CC.UNITS,CC.Modifier,CC.PanelName,
 		CC.Career,
-		CC.PatientName,CC.ReferringProvider,LISD.LISMasterId;
+		CC.PatientName,CC.ReferringProvider,LISD.LISMasterId,CC.AccessionPart;
 
     -- Step 3: Deduplicate
     WITH RankedBilling AS (
@@ -3216,7 +2912,10 @@ BEGIN
 		UPDATE BM SET BM.CheckDate = PPI.CheckDate ,BM.PaymentPostedDate = PPI.LastPostedDate,bm.CheckNumber = PPI.CheckNumber,BM.ChartNumber = PPI.ChartNumber
 		FROM BillingMaster BM JOIN #TransMaster_ChckDtl PPI ON BM.VisitNumber = PPI.VisitNo AND BM.CPTCode = PPI.CPTCode --where InsurancePayment > 0
 
-	
+		UPDATE bm SET bm.PanelName = l.PanelCode FROM BillingMaster bm
+		join LISMaster l on bm.LISMasterId = l.LISMasterId
+		where bm.PanelName is null
+
 		EXEC sp_ClaimLevelStatusUpdate;
 		EXEC SP_ProcessLISvsBilling;
 		EXEC sp_Process_FinalCalimStatus;
@@ -3232,7 +2931,7 @@ BEGIN
     END CATCH;
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[EvaluateClaims]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[EvaluateClaims]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -3359,7 +3058,7 @@ BEGIN
     DROP TABLE #EvaluationResults;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[GetProductionReport_ClaimEx]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[GetProductionReport_ClaimEx]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -3554,7 +3253,7 @@ BEGIN
     DROP TABLE IF EXISTS #BillingMasterTemp, #TransactionMaster, #DenialCode;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_ClaimBillingDetails]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_ClaimBillingDetails]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -3597,7 +3296,7 @@ BEGIN
    
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[sp_ClaimLevelStatusUpdate]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_ClaimLevelStatusUpdate]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -3695,7 +3394,7 @@ WHEN BilledAmount > 0 AND InsurancePayment > 0 AND PatientPaidAmount = 0 AND Ins
 -----------------Rule Id : 12
 WHEN BilledAmount > 0 AND InsurancePayment > 0 AND PatientPaidAmount = 0 AND InsuranceAdjustment > 0 AND InsuranceBalance = 0 AND PatientBalance > 0 AND PatientAdjustment > 0 THEN 'Fully Paid'
 -----------------Rule Id : 13
-WHEN BilledAmount > 0 AND InsurancePayment = 0 AND PatientPaidAmount = 0 AND InsuranceAdjustment = 0 AND InsuranceBalance = BilledAmount AND PatientBalance = 0 AND PatientAdjustment = 0 THEN 'No Response'
+WHEN BilledAmount > 0 AND InsurancePayment = 0 AND PatientPaidAmount = 0 AND InsuranceAdjustment = 0 AND InsuranceBalance = BilledAmount AND PatientBalance = 0 AND PatientAdjustment = 0 AND CPTCode NOT LIKE '%99999%' THEN 'No Response'
 -----------------Rule Id : 14
 WHEN BilledAmount > 0 AND InsurancePayment = 0 AND PatientPaidAmount = 0 AND InsuranceAdjustment = 0 AND InsuranceBalance = BilledAmount AND PatientBalance = 0 AND PatientAdjustment = 0 AND DenailCode IS NULL AND CPTCode LIKE '%99999%' AND FirstBillDate IS NULL THEN 'No Response - Client'
 -----------------Rule Id : 15
@@ -3778,7 +3477,7 @@ ELSE 'Un Categorized' END ClaimStatus,
     END CATCH
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetCollectionLineLevelReport]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetCollectionLineLevelReport]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -3788,29 +3487,40 @@ CREATE PROC [dbo].[sp_GetCollectionLineLevelReport]
     @ToDate Date = NULL
 AS
 BEGIN
+
+DROP TABLE IF EXISTS #DenialCodeMaster;
+SELECT 
+    VisitNumber,CPTCodes,DBO.[GetDenailCodeByVisitCPT](VisitNumber,CPTCodes) AS PaymentReasonCodes,MAX(PaymentDate) AS MostRecentDenialPostingDate
+	INTO #DenialCodeMaster
+FROM DenialTrackingMaster
+WHERE PaymentReasonCode IS NOT NULL
+GROUP BY VisitNumber,CPTCodes ORDER BY VisitNumber
+
+CREATE NONCLUSTERED INDEX IX_VisitNumber ON #DenialCodeMaster (VisitNumber,CPTCodes);
+
     SELECT DISTINCT 
         ISNULL(UPPER(b.AccessionNo),'Missing LIS Info') AccessionNo,
         b.VisitNumber,
         b.CPTCode,
         b.PatientName,
-		CONVERT(VARCHAR, PatientDOB, 101)  PatientDOB, 
+		CAST(CheckDate AS DATE) AS  PatientDOB, 
         PayerName,
         PayerType,
         BillingProvider,
-		CONVERT(VARCHAR, BeginDOS, 101)   BeginDOS,
-		CONVERT(VARCHAR, EndDOS, 101)    EndDOS,
-		CONVERT(VARCHAR, b.ChargeEntryDate, 101)	   ChargeEntryDate,
-		CONVERT(VARCHAR, FirstBillDate, 101)        FirstBillDate,
+		CAST(BeginDOS AS DATE) AS   BeginDOS,
+		CAST(EndDOS AS DATE) AS  EndDOS,
+		CAST(b.ChargeEntryDate AS DATE) AS	   ChargeEntryDate,
+		CAST(FirstBillDate AS DATE) AS     FirstBillDate,
         ISNULL(l.PanelName,'Missing LIS Info') PanelName,
-		ISNULL(l.PanelCode,'Missing LIS Info') PanelCategory,
+		ISNULL(b.PanelName,'Missing Panel Category') PanelCategory,
         b.ICD10Code,
         b.Units,
-		CONVERT(VARCHAR, CheckDate, 101)	     CheckDate,
-		CONVERT(VARCHAR, PaymentPostedDate, 101)	   PaymentPostedDate,
-		CONVERT(VARCHAR, dt.PaymentDate, 101)	    DenialPostedDate,
+		CAST(CheckDate AS DATE) AS     CheckDate,
+		CAST(PaymentPostedDate AS DATE) AS   PaymentPostedDate,
+		CAST(dt.MostRecentDenialPostingDate AS DATE) AS    DenialPostedDate,
         b.CheckNumber,
         b.Modifier,
-        PaymentReasonCode as DenialCode,
+        PaymentReasonCodes as DenialCode,
         ISNULL(BilledAmount,0.0) TotalCharge,
         ISNULL(AllowedAmount,0.0) AS TotalAllowed,
         ISNULL(InsurancePayment,0.0) AS CarrierPayment,
@@ -3835,8 +3545,7 @@ BEGIN
     LEFT JOIN InsurancePayerMaster i ON b.PrimaryPayerID = i.InsurancePayerId
     LEFT JOIN PayerTypeMaster p ON b.PayerTypeId = p.PayerTypeId
     LEFT JOIN BillingProviderMaster bp ON b.BillingProviderID = bp.BillingProviderID
-    LEFT JOIN DenialTrackingMaster dt ON b.VisitNumber = dt.VisitNumber AND b.CPTCode = dt.CPTCodes
-	
+	LEFT JOIN #DenialCodeMaster dt on b.VisitNumber = dt.VisitNumber AND b.CPTCode = dt.CPTCodes
 	LEFT JOIN LabMaster LAB ON l.LabId = LAB.LabID
     LEFT JOIN ClinicMaster CM ON l.ClinicId = CM.ClinicId
     LEFT JOIN OperationsGroupMaster OG ON l.OperationalGroupId = OG.OperationGroupID 
@@ -3850,7 +3559,7 @@ BEGIN
     ORDER BY AccessionNo
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetCollectionReport]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetCollectionReport]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -3965,7 +3674,7 @@ BEGIN
 			TT.RequisitionTypeName,
 			CM.ClinicName,
             ISNULL(LIS.ReferringProviderId,0) ReferringProviderId,
-            LIS.PanelCode  PanelCategory,
+            BM.PanelName  PanelCategory,
 			LIS.PanelName,
             ROW_NUMBER() OVER (PARTITION BY BM.VisitNumber ORDER BY BM.FirstBillDate DESC) AS rn
         FROM #BillingMasterTemp BM
@@ -3979,7 +3688,7 @@ BEGIN
        ISNULL(md.AccessionNo,'Missing LIS Data') AccessionNo,
         ISNULL(md.PanelName,'Missing LIS Data') PanelName,
         ISNULL(IPM.PayerName,'Missing Payer Info') AS Carrier,
-		ISNULL(md.PanelCategory,'Missing LIS Data') PanelCategory,
+		ISNULL(md.PanelCategory,'Missing Panel Category') PanelCategory,
         FC.PayerType AS FinancialClass,
 		BP.BillingProvider BillingProvider,
         RF.ReferringProviderName ReferringProviderName,
@@ -4074,7 +3783,7 @@ BEGIN
     DROP TABLE IF EXISTS #BillingMasterTemp;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetLISMasterReportByDateRange]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetLISMasterReportByDateRange]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -4165,7 +3874,7 @@ BEGIN
 		;
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetProductionLineLevelReport]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetProductionLineLevelReport]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -4175,30 +3884,41 @@ CREATE PROC [dbo].[sp_GetProductionLineLevelReport]
     @ToDate Date = NULL
 AS
 BEGIN
+
+DROP TABLE IF EXISTS #DenialCodeMaster;
+SELECT 
+    VisitNumber,CPTCodes,DBO.[GetDenailCodeByVisitCPT](VisitNumber,CPTCodes) AS PaymentReasonCodes,MAX(PaymentDate) AS MostRecentDenialPostingDate
+	INTO #DenialCodeMaster
+FROM DenialTrackingMaster
+WHERE PaymentReasonCode IS NOT NULL
+GROUP BY VisitNumber,CPTCodes ORDER BY VisitNumber
+
+CREATE NONCLUSTERED INDEX IX_VisitNumber ON #DenialCodeMaster (VisitNumber,CPTCodes);
+
     SELECT DISTINCT 
         ISNULL(UPPER(b.AccessionNo),'Missing LIS Info') AccessionNo,
         b.VisitNumber,
         b.CPTCode,
         b.PatientName,
 		RT.RequisitionTypeName,
-		CONVERT(VARCHAR, PatientDOB, 101)  PatientDOB, 
+		CAST(PatientDOB AS DATE) AS  PatientDOB, 
         PayerName,
         PayerType,
         BillingProvider,
-		CONVERT(VARCHAR, BeginDOS, 101)   BeginDOS,
-		CONVERT(VARCHAR, EndDOS, 101)    EndDOS,
-		CONVERT(VARCHAR, b.ChargeEntryDate, 101)	   ChargeEntryDate,
-		CONVERT(VARCHAR, FirstBillDate, 101)        FirstBillDate,
-        ISNULL(l.PanelName,'Missing LIS Info') PanelName,
-		ISNULL(l.PanelCode,'Missing LIS Info') PanelCategory,
+		CAST(BeginDOS AS DATE) AS   BeginDOS,
+		CAST(EndDOS AS DATE) AS   EndDOS,
+		CAST(b.ChargeEntryDate AS DATE) AS    ChargeEntryDate,
+		CAST(FirstBillDate AS DATE) AS      FirstBillDate,
+        ISNULL(l.PanelName,'No Payer Info') PanelName,
+		ISNULL(b.PanelName,'No Panel Info') PanelCategory,
         b.ICD10Code,
         b.Units,
-		CONVERT(VARCHAR, CheckDate, 101)	     CheckDate,
-		CONVERT(VARCHAR, PaymentPostedDate, 101)	   PaymentPostedDate,
-		CONVERT(VARCHAR, dt.PaymentDate, 101)	    DenialPostedDate,
+		CAST(CheckDate AS DATE) AS      CheckDate,
+		CAST(PaymentPostedDate AS DATE) AS    PaymentPostedDate,
+		CAST(dt.MostRecentDenialPostingDate AS DATE) AS     DenialPostedDate,
         b.CheckNumber,
         b.Modifier,
-        PaymentReasonCode as DenialCode,
+        PaymentReasonCodes as DenialCode,
         b.BilledAmount,
         b.AllowedAmount,
         b.InsurancePayment,
@@ -4221,7 +3941,7 @@ BEGIN
     LEFT JOIN InsurancePayerMaster i ON b.PrimaryPayerID = i.InsurancePayerId
     LEFT JOIN PayerTypeMaster p ON b.PayerTypeId = p.PayerTypeId
     LEFT JOIN BillingProviderMaster bp ON b.BillingProviderID = bp.BillingProviderID
-    LEFT JOIN DenialTrackingMaster dt ON b.VisitNumber = dt.VisitNumber AND b.CPTCode = dt.CPTCodes
+	LEFT JOIN #DenialCodeMaster dt on b.VisitNumber = dt.VisitNumber AND b.CPTCode = dt.CPTCodes
 	LEFT JOIN RequisitionTypes RT on l.RequistionTypeId = RT.RequisitionTypeId
 	LEFT JOIN LabMaster LAB ON l.LabId = LAB.LabID
     LEFT JOIN ClinicMaster CM ON l.ClinicId = CM.ClinicId
@@ -4236,7 +3956,7 @@ BEGIN
     ORDER BY AccessionNo
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetProductionReportMaster]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetProductionReportMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -4341,7 +4061,7 @@ BEGIN
             ISNULL(BM.ReferringProviderId, 0) AS ReferringProviderId,
             LIS.PanelName PanelName,
             ISNULL(LIS.LabId, 0) AS LabId,
-            ISNULL(LIS.PanelCode, 0) AS PanelCategory,
+            ISNULL(BM.PanelName, 0) AS PanelCategory,
             ROW_NUMBER() OVER (PARTITION BY BM.VisitNumber ORDER BY BM.FirstBillDate DESC) AS rn
         FROM #BillingMasterTemp BM
         LEFT JOIN LISMaster LIS WITH (NOLOCK) ON BM.AccessionNo = LIS.AccessionNo
@@ -4351,9 +4071,9 @@ BEGIN
     SELECT DISTINCT
         md.VisitNumber,
         ISNULL(md.AccessionNo,'Missing LIS Data') AS AccessionNo,
-        ISNULL(md.PanelName,'Missing LIS Data') AS PanelName,
-		 ISNULL(md.PanelCategory,'Missing LIS Data') AS PanelCategory,
-        ISNULL(IPM.PayerName,'Missing Payer Info') AS Carrier,
+        ISNULL(md.PanelName,'No Panel Info') AS PanelName,
+		 ISNULL(md.PanelCategory,'No Panel Info') AS PanelCategory,
+        ISNULL(IPM.PayerName,'No Payer Info') AS Carrier,
         FC.PayerType AS FinancialClass,
         BP.BillingProvider,
         RF.ReferringProviderName,
@@ -4390,6 +4110,7 @@ BEGIN
         ISNULL(BA.InsuranceBalance, 0.0) AS CarrierBalance,
         ISNULL(BA.PatientBalance, 0.0) AS PatientBalance,
         ISNULL(BA.TotalBalance, 0.0) AS TotalBalance,
+		(ISNULL(BA.InsuranceAdjustment, 0.0) + ISNULL(BA.PatientAdjustment, 0.0)) TotalAdjustment,
         (BA.InsurancePayment + BA.PatientPaidAmount) AS FullyPaid,
         CASE WHEN CPS.FinalStatus = 'Fully Paid' THEN 'Fully Paid Count' ELSE NULL END AS FullyPaidCount,
         CASE WHEN DATEDIFF(DAY, md.SampleCollectedDate, GETDATE()) <= 30 THEN '30 Days Count' ELSE NULL END AS T30DaysCount,
@@ -4431,7 +4152,7 @@ BEGIN
     DROP TABLE IF EXISTS #BillingMasterTemp, #TransactionMaster, #DenialCode;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetProductionReportMaster_bak]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetProductionReportMaster_bak]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -4617,7 +4338,7 @@ BEGIN
     DROP TABLE IF EXISTS #DenialCode;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_InsertClaimDenialCode]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_InsertClaimDenialCode]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -4654,7 +4375,7 @@ AS BEGIN
 
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_InsertMasterData]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_InsertMasterData]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -4665,7 +4386,7 @@ as begin
 
 INSERT INTO [dbo].[ClinicMaster]([ClinicName],[ClinicStatus])
 SELECT DISTINCT UPPER(LTRIM(RTRIM(FacilityName))),1 FROM LISStaging 
-WHERE LTRIM(RTRIM(FacilityName)) NOT IN (SELECT DISTINCT FacilityName FROM [ClinicMaster]) AND FacilityName	 IS NOT NULL
+WHERE UPPER(LTRIM(RTRIM(FacilityName))) NOT IN (SELECT DISTINCT ClinicName FROM [ClinicMaster]) AND FacilityName	 IS NOT NULL
 
 PRINT '[ClinicMaster] Inserted Completed'
 
@@ -4835,7 +4556,7 @@ PRINT '[ReferringProviderMaster] Inserted Completed'
 
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_LIS_PanelUpdate]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_LIS_PanelUpdate]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -4978,7 +4699,7 @@ BEGIN
     WHERE TRIM(UPPER(PanelCode)) = 'TOX';
 END
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_Process_BillingSheet_ByFileId]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[Sp_Process_BillingSheet_ByFileId]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -5048,7 +4769,7 @@ BEGIN
     END CATCH
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[sp_Process_FinalCalimStatus]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_Process_FinalCalimStatus]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -5210,7 +4931,7 @@ FROM StatusFlags;
     END CATCH
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[sp_Process_FinalCalimStatus_bak]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_Process_FinalCalimStatus_bak]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -5445,7 +5166,7 @@ ELSE '' END) FinalStatus
     END CATCH
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_Process_FinalCalimStatus_bak_old]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_Process_FinalCalimStatus_bak_old]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -5590,11 +5311,12 @@ BEGIN
     END CATCH
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[SP_Process_LISMaster_ByFileId]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[SP_Process_LISMaster_ByFileId]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -5837,7 +5559,7 @@ SELECT DISTINCT [RecordId]
     END CATCH
 END
 GO
-/****** Object:  StoredProcedure [dbo].[SP_Process_LISMaster_From_Staging]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[SP_Process_LISMaster_From_Staging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -6098,7 +5820,7 @@ SET
     END CATCH
 END
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_ProcessAccessionPaymentReport]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[Sp_ProcessAccessionPaymentReport]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -6129,7 +5851,7 @@ END;
 
 
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_ProcessBillingMasterData]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[Sp_ProcessBillingMasterData]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -6164,7 +5886,7 @@ BEGIN
     END CATCH;
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_ProcessDenialTrackingMaster]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[Sp_ProcessDenialTrackingMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -6252,7 +5974,7 @@ BEGIN
     END CATCH
 END
 GO
-/****** Object:  StoredProcedure [dbo].[SP_ProcessLISvsBilling]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[SP_ProcessLISvsBilling]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -6382,7 +6104,7 @@ SET NewStatus =
     END CATCH
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_ProcessTransactionDetails]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[Sp_ProcessTransactionDetails]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -6622,7 +6344,7 @@ BEGIN
     END CATCH
 END
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_ProcessTransactionDetails_BAK]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[Sp_ProcessTransactionDetails_BAK]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -6903,7 +6625,7 @@ BEGIN
     END CATCH
 END
 GO
-/****** Object:  StoredProcedure [dbo].[SP_UpdateLIS_Statuses]    Script Date: 8/29/2025 2:14:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[SP_UpdateLIS_Statuses]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -6947,8 +6669,4 @@ SET
     DaystoResult  = DATEDIFF(DAY, SampleReceivedDate, SampleResultedDate),
     DaystoBill    = DATEDIFF(DAY, SampleResultedDate, FirstBilledDate);
 	END
-GO
-USE [master]
-GO
-ALTER DATABASE [CoveLRN] SET  READ_WRITE 
 GO

@@ -15,7 +15,7 @@ public class LookUpRepository : ILookUpRepository
 
     public async Task<List<ImportFileTypesDto>> GetImportFileTypesAsync()
     {
-        const string query = "SELECT FileTypeId, FileTypeName, LabId, IsActive FROM ImportFilTypes";
+        const string query = "Select FileTypeId,(CAST(SeqNo AS VARCHAR)+' . ' + FileTypeName) FileTypeName from ImportFilTypes ORDER BY SeqNo";
         using var connection = _context.CreateConnection();
         var results = await connection.QueryAsync<ImportFileTypesDto>(query);
         return results.ToList();

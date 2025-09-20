@@ -50,11 +50,6 @@ public class UploadController : Controller
         var files = new List<FileUpload>();
         ViewBag.LabName = User.FindFirst("LabName")?.Value ?? "";
 
-        ViewBag.Labs = new List<SelectListItem>
-        {
-            new SelectListItem { Text = "Cove", Value = "4" }
-        };
-
         var importFileTypes = await _lookupRepo.GetImportFileTypesAsync();
         ViewBag.FileTypes = importFileTypes.Select(l => new SelectListItem
         {
@@ -247,6 +242,9 @@ public class UploadController : Controller
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = (int)Math.Ceiling((double)totalReports / pageSize);
 
+        ////// preserve TempData so it survives redirect and is available in JS
+        ////TempData.Keep("SwalMessage");
+        ////TempData.Keep("SwalIcon");
         return View(pagedReports);
     }
 
@@ -254,31 +252,47 @@ public class UploadController : Controller
     public async Task<ActionResult> DownloadReport(string reportType)
     {
         ViewBag.ReportTypes = GetReportTypeList();
+        List<ReportDownloadSts> existing = await _importRepo.GetReportDownloadStslst();
 
         if (string.IsNullOrEmpty(reportType))
         {
-            ModelState.AddModelError("", "Report type is required.");
-            List<ReportDownloadSts> existing = await _importRepo.GetReportDownloadStslst();
-            return View(existing);
+            TempData["SwalMessage"] = "Please select a report type before proceeding.";
+            TempData["SwalIcon"] = "error";
+            return RedirectToAction("DownloadReport", new { page = 1 });
         }
 
         var reportTypes = ViewBag.ReportTypes as List<SelectListItem>;
         var selectedReport = reportTypes?.FirstOrDefault(c => c.Value == reportType);
 
-        var reportDownloadSts = new ReportDownloadSts
+        // Check if a report of this type is already in progress
+        bool reportAlreadyInProgress = existing.Any(c =>
+            c.ReportType == int.Parse(reportType) &&
+            (c.ReportStatus == (int)CommonConst.FileStatusEnum.ImportQueued || c.ReportStatus == (int)CommonConst.FileStatusEnum.ImportInProgresss));
+
+        if (!reportAlreadyInProgress)
         {
-            ReportStatus = (int)CommonConst.FileStatusEnum.ImportInProgresss,
-            CreatedOn = DateTime.Now,
-            ReportName = selectedReport?.Text ?? "Unknown",
-            ReportType = int.Parse(reportType)
-        };
+            var reportDownloadSts = new ReportDownloadSts
+            {
+                ReportStatus = (int)CommonConst.FileStatusEnum.ImportQueued,
+                CreatedOn = DateTime.Now,
+                ReportName = selectedReport?.Text ?? "Unknown Report",
+                ReportType = int.Parse(reportType)
+            };
 
-        await _importRepo.InsertReportDownloadSts(reportDownloadSts);
+            await _importRepo.InsertReportDownloadSts(reportDownloadSts);
 
-
-        return RedirectToAction("DownloadReport", new { page = 1 });
-
+            TempData["SwalMessage"] = $"{reportDownloadSts.ReportName} report request has been queued successfully.";
+            TempData["SwalIcon"] = "success";
+            return RedirectToAction("DownloadReport", new { page = 1 });
+        }
+        else
+        {
+            TempData["SwalMessage"] = $"A {selectedReport?.Text} is already inprogress. Please wait until it is completed before requesting again.";
+            TempData["SwalIcon"] = "warning";
+            return RedirectToAction("DownloadReport", new { page = 1 });
+        }
     }
+
 
     private List<SelectListItem> GetReportTypeList()
     {

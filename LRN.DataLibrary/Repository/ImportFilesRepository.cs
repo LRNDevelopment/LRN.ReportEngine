@@ -229,7 +229,7 @@ public class ImportFilesRepository : IImportFilesRepository
 
     public async Task<List<ImportFileTypesDto>> GetImportFilesTypesAsync()
     {
-        const string query = "Select FileTypeId, FileTypeName from ImportFilTypes";
+        const string query = "Select FileTypeId,(CAST(SeqNo AS VARCHAR)+' . ' + FileTypeName) FileTypeName from ImportFilTypes ORDER BY SeqNo";
         using var connection = _context.CreateConnection();
         var results = await connection.QueryAsync<ImportFileTypesDto>(query);
         return results.ToList();

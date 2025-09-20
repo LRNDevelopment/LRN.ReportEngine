@@ -3,6 +3,7 @@
 @{
     ViewBag.Title = "Report Page";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    string rptMsg = ViewBag.ReportMessage;
 }
 
 <style>
@@ -90,6 +91,10 @@
                             {
                                 <span class="text-warning fw-bold">@item.FileStatus</span>
                             }
+                            else if (item.ReportStatus == 4)
+                            {
+                                <span class="queued fw-bold">@item.FileStatus</span>
+                            }
                             else
                             {
                                 using (Html.BeginForm("DownloadReportFile", "Upload", FormMethod.Post, new { @class = "d-inline" }))
@@ -124,85 +129,31 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    const reports = [];
-    const pageSize = 10;
-    let currentPage = 1;
+    // Inject server-side message into JS
+    var swalMsg = '@(TempData["SwalMessage"] ?? "")';
+     var swalIcon = '@(TempData["SwalIcon"] ?? "")';
 
+     if (swalMsg && swalMsg.trim() !== "") {
+         Swal.fire({
+             icon: swalIcon || 'info',
+             title: swalIcon === 'success' ? 'Success' :
+                    swalIcon === 'warning' ? 'Notice' : 'Error',
+             text: swalMsg,
+             confirmButtonText: 'OK'
+         });
+     }
+
+    // Validate dropdown before allowing submit
     document.getElementById("reportForm").addEventListener("submit", function (e) {
-        e.preventDefault(); // Prevent the form from submitting immediately
-
         const reportType = document.getElementById("reportType").value;
         if (!reportType) {
-            alert("Please select a report type");
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Missing Report Type',
+                text: 'Please select a report type before generating.'
+            });
             return;
         }
-
-        Swal.fire({
-            icon: 'success',
-            title: 'Generate Report',
-            text: 'Report generate request is triggered. Your report will be generated and listed below to download.',
-            confirmButtonText: 'OK'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Show loader
-                document.getElementById("loader").style.display = "flex";
-
-                // Fallback: hide loader after 18 seconds
-                setTimeout(() => {
-                    document.getElementById("loader").style.display = "none";
-                }, 18000);
-
-                // Submit the form manually
-                document.getElementById("reportForm").submit();
-            }
-        });
     });
-
-
-    // function renderTable() {
-    //     const tbody = document.getElementById("reportTableBody");
-    //     tbody.innerHTML = "";
-
-    //     const pagedReports = reports.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-    //     for (let r of pagedReports) {
-    //         tbody.innerHTML += `
-    //             <tr>
-    //                 <td>${r.type}</td>
-    //                 <td>${r.date}</td>
-    //                 <td class="text-center">
-    //                     <span class="text-info fw-bold">Pending</span>
-    //                 </td>
-    //             </tr>`;
-    //     }
-
-    //     renderPagination();
-    // }
-
-    // function renderPagination() {
-    //     const totalPages = Math.ceil(reports.length / pageSize);
-    //     const container = document.getElementById("paginationContainer");
-    //     container.innerHTML = "";
-
-    //     for (let i = 1; i <= totalPages; i++) {
-    //         container.innerHTML += `
-    //             <li class="page-item ${i === currentPage ? 'active' : ''}">
-    //                 <a class="page-link" href="#" onclick="gotoPage(${i})">${i}</a>
-    //             </li>`;
-    //     }
-    // }
-
-    // function gotoPage(page) {
-    //     currentPage = page;
-    //     renderTable();
-    // }
-
-    // for (let i = 1; i <= 23; i++) {
-    //     reports.push({
-    //         type: "Sample Report " + i,
-    //         date: new Date().toLocaleString(),
-    //         id: i
-    //     });
-    // }
-
-    // renderTable();
 </script>

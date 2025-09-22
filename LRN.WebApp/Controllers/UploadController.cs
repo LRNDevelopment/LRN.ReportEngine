@@ -248,6 +248,19 @@ public class UploadController : Controller
         return View(pagedReports);
     }
 
+    public async Task<FileResult> DownloadReportLog(int fileId)
+    {
+        var file = _importRepo.GetDownloadReportById(fileId).Result;
+
+        var fileName = "Report_Log_" + Path.GetFileNameWithoutExtension(file.ReportName);
+        var formattedLogs = file.LogString;
+
+        var logText = string.Join(Environment.NewLine, formattedLogs);
+        var bytes = System.Text.Encoding.UTF8.GetBytes(logText);
+
+        return File(bytes, "text/plain", $"{fileName}.txt");
+    }
+
     [HttpPost]
     public async Task<ActionResult> DownloadReport(string reportType)
     {

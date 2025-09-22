@@ -95,6 +95,13 @@
                             {
                                 <span class="queued fw-bold">@item.FileStatus</span>
                             }
+                            else if (item.ReportStatus == 2)
+                            {
+                                <span class="error fw-bold">Failed</span>
+                                <a href="@Url.Action("DownloadReportLog", "Upload", new { fileId = item.ReportID })" title="Download Logs">
+                                    <img src="~/image/log_download.png" height="25" width="25" />
+                                </a>
+                            }
                             else
                             {
                                 using (Html.BeginForm("DownloadReportFile", "Upload", FormMethod.Post, new { @class = "d-inline" }))
@@ -107,6 +114,7 @@
                                     </button>
                                 }
                             }
+
                         </td>
                     </tr>
                 }

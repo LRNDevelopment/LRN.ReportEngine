@@ -21,5 +21,7 @@ namespace LRN.ExcelToSqlETL.Core.DtoModels
         public DateTime CreatedOn { get; set; }
 
         public string FileStatus { get; set; }
+
+        public string LogString { get; set; }
     }
 }

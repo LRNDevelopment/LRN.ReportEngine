@@ -44,6 +44,7 @@ namespace LRN.ExcelToSqlETL.Core.Constants
 
             [Description("Import Warning")]
             ImportWarning = 6
+
         }
 
         public enum ImportFileType

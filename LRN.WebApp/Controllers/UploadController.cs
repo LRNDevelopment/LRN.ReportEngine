@@ -44,7 +44,7 @@ public class UploadController : Controller
         _environment = environment;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
     {
         var result = await _importRepo.GetImportFilesAsync();
         var files = new List<FileUpload>();
@@ -74,8 +74,15 @@ public class UploadController : Controller
                 ImportFilePath = file.ImportFilePath
             });
         }
-
-        return View(files);
+        int totalReports = files.Count;
+        ViewBag.CurrentPage = page;
+        ViewBag.TotalPages = (int)Math.Ceiling((double)totalReports / pageSize);
+        var pagedReports = files
+            .OrderByDescending(r => r.ImportedOn)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+        return View(pagedReports);
     }
 
     [RequestSizeLimit(524288000)] // 500 MB

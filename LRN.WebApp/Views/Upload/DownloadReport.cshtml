@@ -123,15 +123,113 @@
 
         <!-- Pagination -->
         <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center">
-                @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
-                {
-                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
-                        <a class="page-link" href="@Url.Action("DownloadReport", new { page = i })">@i</a>
-                    </li>
-                }
-            </ul>
+            <div class="d-flex justify-content-end align-items-center">
+                <ul class="pagination mb-0">
+                    @if (ViewBag.TotalPages > 1)
+                    {
+                        int currentPage = ViewBag.CurrentPage;
+                        int totalPages = ViewBag.TotalPages;
+                        int jumpSize = 10;
+
+                        // First page link
+                        if (currentPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("DownloadReport", new { page = 1 })">First</a>
+                            </li>
+                        }
+
+                        // Previous page
+                        if (currentPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("DownloadReport", new { page = currentPage - 1 })">&laquo;</a>
+                            </li>
+                        }
+
+                        // Show first few pages
+                        for (int i = 1; i <= Math.Min(3, totalPages); i++)
+                        {
+                            if (i == currentPage)
+                            {
+                                <li class="page-item active"><span class="page-link">@i</span></li>
+                            }
+                            else
+                            {
+                                <li class="page-item"><a class="page-link" href="@Url.Action("DownloadReport", new { page = i })">@i</a></li>
+                            }
+                        }
+
+                        // Ellipsis back jump
+                        if (currentPage > 4)
+                        {
+                            int target = Math.Max(1, currentPage - jumpSize);
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("DownloadReport", new { page = target })">…</a>
+                            </li>
+                        }
+
+                        // Current, Previous, Next group
+                        for (int i = Math.Max(4, currentPage - 1); i <= Math.Min(totalPages - 3, currentPage + 1); i++)
+                        {
+                            if (i == currentPage)
+                            {
+                                <li class="page-item active"><span class="page-link">@i</span></li>
+                            }
+                            else
+                            {
+                                <li class="page-item"><a class="page-link" href="@Url.Action("DownloadReport", new { page = i })">@i</a></li>
+                            }
+                        }
+
+                        // Ellipsis forward jump
+                        if (currentPage < totalPages - 3)
+                        {
+                            int target = Math.Min(totalPages, currentPage + jumpSize);
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("DownloadReport", new { page = target })">…</a>
+                            </li>
+                        }
+
+                        // Last few pages
+                        for (int i = Math.Max(totalPages - 2, 4); i <= totalPages; i++)
+                        {
+                            if (i == currentPage)
+                            {
+                                <li class="page-item active"><span class="page-link">@i</span></li>
+                            }
+                            else
+                            {
+                                <li class="page-item"><a class="page-link" href="@Url.Action("DownloadReport", new { page = i })">@i</a></li>
+                            }
+                        }
+
+                        // Next page
+                        if (currentPage < totalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("DownloadReport", new { page = currentPage + 1 })">&raquo;</a>
+                            </li>
+                        }
+
+                        // Last page link
+                        if (currentPage < totalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("DownloadReport", new { page = totalPages })">Last</a>
+                            </li>
+                        }
+                    }
+                </ul>
+
+                <!-- Jump to page -->
+            @*     <form method="get" action="@Url.Action("DownloadReport")" class="d-flex ms-2" style="width:150px;">
+                    <input type="number" class="form-control form-control-sm" name="page" min="1" max="@ViewBag.TotalPages" placeholder="Page #" />
+                    <button type="submit" class="btn btn-sm btn-primary ms-1">Go</button>
+                </form> *@
+            </div>
         </nav>
+
     </div>
 </div>
 

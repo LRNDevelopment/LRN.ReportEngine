@@ -3,6 +3,9 @@ GO
 /****** Object:  StoredProcedure [dbo].[SP_UpdateLIS_Statuses]******/
 DROP PROCEDURE [dbo].[SP_UpdateLIS_Statuses]
 GO
+/****** Object:  StoredProcedure [dbo].[sp_RebuildNewIndexes]******/
+DROP PROCEDURE [dbo].[sp_RebuildNewIndexes]
+GO
 /****** Object:  StoredProcedure [dbo].[SP_ProcessVAAvsLIS]******/
 DROP PROCEDURE [dbo].[SP_ProcessVAAvsLIS]
 GO
@@ -90,8 +93,418 @@ GO
 /****** Object:  StoredProcedure [dbo].[BillingMasterProcess_Proc]******/
 DROP PROCEDURE [dbo].[BillingMasterProcess_Proc]
 GO
+ALTER TABLE [dbo].[BillingMaster] DROP CONSTRAINT [CK_BillingMaster_NonNegativeAmounts]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__19D5B7CA]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__18E19391]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__17ED6F58]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__16F94B1F]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__160526E6]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__151102AD]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__141CDE74]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__1328BA3B]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__12349602]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__114071C9]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__104C4D90]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__0F582957]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__0E64051E]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__0D6FE0E5]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__0C7BBCAC]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__0B879873]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__0A93743A]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__099F5001]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__08AB2BC8]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__07B7078F]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__06C2E356]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__05CEBF1D]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__04DA9AE4]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__03E676AB]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__02F25272]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__7F21C18E]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__7E2D9D55]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__01FE2E39]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__010A0A00]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__0015E5C7]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7D39791C]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7C4554E3]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7B5130AA]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7A5D0C71]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7968E838]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__7874C3FF]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__77809FC6]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__768C7B8D]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__75985754]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__74A4331B]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__73B00EE2]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__72BBEAA9]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__71C7C670]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__70D3A237]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__6FDF7DFE]
+GO
+ALTER TABLE [dbo].[BillingMaster] DROP CONSTRAINT [FK_BillingMaster_PrimaryPayer]
+GO
+ALTER TABLE [dbo].[BillingMaster] DROP CONSTRAINT [FK_BillingMaster_PayerType]
+GO
+ALTER TABLE [dbo].[BillingMaster] DROP CONSTRAINT [FK_BillingMaster_LISMaster]
+GO
+ALTER TABLE [dbo].[BillingMaster] DROP CONSTRAINT [FK_BillingMaster_BillingProvider]
+GO
+ALTER TABLE [dbo].[VisitAgaistAccessionStaging] DROP CONSTRAINT [DF__VisitAgai__Impor__1CBC4616]
+GO
+ALTER TABLE [dbo].[VAAMaster] DROP CONSTRAINT [DF__VAAMaster__Creat__37661AB1]
+GO
+ALTER TABLE [dbo].[TransactionSummary] DROP CONSTRAINT [DF__Transacti__Creat__7775B2CE]
+GO
+ALTER TABLE [dbo].[TransactionSummary] DROP CONSTRAINT [DF__Transacti__Insur__76818E95]
+GO
+ALTER TABLE [dbo].[TransactionSummary] DROP CONSTRAINT [DF__Transacti__Total__758D6A5C]
+GO
+ALTER TABLE [dbo].[TransactionSummary] DROP CONSTRAINT [DF__Transacti__Patie__74994623]
+GO
+ALTER TABLE [dbo].[TransactionSummary] DROP CONSTRAINT [DF__Transacti__Adjus__73A521EA]
+GO
+ALTER TABLE [dbo].[TransactionSummary] DROP CONSTRAINT [DF__Transacti__Total__72B0FDB1]
+GO
+ALTER TABLE [dbo].[TransactionSummary] DROP CONSTRAINT [DF__Transacti__Units__71BCD978]
+GO
+ALTER TABLE [dbo].[TransactionMaster] DROP CONSTRAINT [DF__Transacti__Creat__5AE46118]
+GO
+ALTER TABLE [dbo].[TransactionDetailStaging] DROP CONSTRAINT [DF__Transacti__Impor__17F790F9]
+GO
+ALTER TABLE [dbo].[TestTypeMaster] DROP CONSTRAINT [DF__TestTypeM__Creat__151B244E]
+GO
+ALTER TABLE [dbo].[TestTypeMaster] DROP CONSTRAINT [DF__TestTypeM__IsAct__32AB8735]
+GO
+ALTER TABLE [dbo].[SpecimenStatus] DROP CONSTRAINT [DF__SpecimenS__Creat__114A936A]
+GO
+ALTER TABLE [dbo].[SpecimenStatus] DROP CONSTRAINT [DF__SpecimenS__IsAct__31B762FC]
+GO
+ALTER TABLE [dbo].[SalesPerson] DROP CONSTRAINT [DF__SalesPers__Creat__0B91BA14]
+GO
+ALTER TABLE [dbo].[ReferringProviderMaster] DROP CONSTRAINT [DF__Referring__Creat__07C12930]
+GO
+ALTER TABLE [dbo].[ReferringProviderMaster] DROP CONSTRAINT [DF__Referring__IsAct__30C33EC3]
+GO
+ALTER TABLE [dbo].[PrismBillingStaging] DROP CONSTRAINT [DF__PrismBill__Impor__01142BA1]
+GO
+ALTER TABLE [dbo].[PayerTypeMaster] DROP CONSTRAINT [DF__PayerType__Creat__7F2BE32F]
+GO
+ALTER TABLE [dbo].[PayerTypeMaster] DROP CONSTRAINT [DF__PayerType__IsAct__2FCF1A8A]
+GO
+ALTER TABLE [dbo].[PanelMasterStaging] DROP CONSTRAINT [DF__PanelMast__Impor__11957784]
+GO
+ALTER TABLE [dbo].[PanelGroup] DROP CONSTRAINT [DF__PanelGrou__Creat__6932806F]
+GO
+ALTER TABLE [dbo].[PanelGroup] DROP CONSTRAINT [DF__PanelGrou__IsAct__683E5C36]
+GO
+ALTER TABLE [dbo].[OperationsGroupMaster] DROP CONSTRAINT [DF__Operation__Creat__787EE5A0]
+GO
+ALTER TABLE [dbo].[OperationsGroupMaster] DROP CONSTRAINT [DF__Operation__IsAct__2DE6D218]
+GO
+ALTER TABLE [dbo].[LISStaging] DROP CONSTRAINT [DF__LISStagin__Impor__74AE54BC]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [DF__LISMaster__Creat__6EEB59C5]
+GO
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [DF__LISMaster__Creat__6DF7358C]
+GO
+ALTER TABLE [dbo].[LabMaster] DROP CONSTRAINT [DF__LabMaster__Creat__6C190EBB]
+GO
+ALTER TABLE [dbo].[LabMaster] DROP CONSTRAINT [DF__LabMaster__IsAct__2CF2ADDF]
+GO
+ALTER TABLE [dbo].[InsurancePayerMaster] DROP CONSTRAINT [DF__Insurance__Creat__68487DD7]
+GO
+ALTER TABLE [dbo].[InsurancePayerMaster] DROP CONSTRAINT [DF__Insurance__IsAct__2BFE89A6]
+GO
+ALTER TABLE [dbo].[ImportFilTypes] DROP CONSTRAINT [DF__ImportFil__IsAct__2B0A656D]
+GO
+ALTER TABLE [dbo].[ImportFileLogs] DROP CONSTRAINT [DF__ImportFil__Creat__42D7CD5D]
+GO
+ALTER TABLE [dbo].[ImportedFiles] DROP CONSTRAINT [DF__ImportedF__LabId__561FABFB]
+GO
+ALTER TABLE [dbo].[ImportedFiles] DROP CONSTRAINT [DF__ImportedF__Impor__619B8048]
+GO
+ALTER TABLE [dbo].[ICDCodeMaster] DROP CONSTRAINT [DF__ICDCodeMa__Creat__5EBF139D]
+GO
+ALTER TABLE [dbo].[ICDCodeMaster] DROP CONSTRAINT [DF__ICDCodeMa__IsAct__2A164134]
+GO
+ALTER TABLE [dbo].[DownloadReportTypes] DROP CONSTRAINT [DF__DownloadR__IsAct__29221CFB]
+GO
+ALTER TABLE [dbo].[DiagnoseLISStaging] DROP CONSTRAINT [DF__DiagnoseL__Impor__10A1534B]
+GO
+ALTER TABLE [dbo].[DenialTrackingStaging] DROP CONSTRAINT [DF__DenialTra__Impor__5812160E]
+GO
+ALTER TABLE [dbo].[DenialTrackingMaster] DROP CONSTRAINT [DF__DenialTra__Updat__4316F928]
+GO
+ALTER TABLE [dbo].[DenialTrackingMaster] DROP CONSTRAINT [DF__DenialTra__Creat__4222D4EF]
+GO
+ALTER TABLE [dbo].[CustomCollectionStaging] DROP CONSTRAINT [DF__CustomCol__Impot__5629CD9C]
+GO
+ALTER TABLE [dbo].[CPTCodeMaster] DROP CONSTRAINT [DF__CPTCodeMa__Creat__534D60F1]
+GO
+ALTER TABLE [dbo].[CPTCodeMaster] DROP CONSTRAINT [DF__CPTCodeMa__IsAct__282DF8C2]
+GO
+ALTER TABLE [dbo].[ClinicMaster] DROP CONSTRAINT [DF__ClinicMas__Creat__5070F446]
+GO
+ALTER TABLE [dbo].[ClinicMaster] DROP CONSTRAINT [DF__ClinicMas__Clini__2739D489]
+GO
+ALTER TABLE [dbo].[ClientBillingSheet] DROP CONSTRAINT [DF__ClientBil__Impor__0955373E]
+GO
+ALTER TABLE [dbo].[ClaimsProdStatus] DROP CONSTRAINT [DF__ClaimsPro__Creat__4CA06362]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] DROP CONSTRAINT [DF__ClaimsLev__Creat__58E70A0D]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] DROP CONSTRAINT [DF__ClaimsLev__Total__57F2E5D4]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] DROP CONSTRAINT [DF__ClaimsLev__Patie__56FEC19B]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] DROP CONSTRAINT [DF__ClaimsLev__Insur__560A9D62]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] DROP CONSTRAINT [DF__ClaimsLev__Patie__55167929]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] DROP CONSTRAINT [DF__ClaimsLev__Patie__542254F0]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] DROP CONSTRAINT [DF__ClaimsLev__Insur__532E30B7]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] DROP CONSTRAINT [DF__ClaimsLev__Insur__523A0C7E]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] DROP CONSTRAINT [DF__ClaimsLev__Allow__5145E845]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] DROP CONSTRAINT [DF__ClaimsLev__Bille__5051C40C]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] DROP CONSTRAINT [DF__ClaimBill__Creat__4AB81AF0]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] DROP CONSTRAINT [DF__ClaimBill__Total__2645B050]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] DROP CONSTRAINT [DF__ClaimBill__Patie__25518C17]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] DROP CONSTRAINT [DF__ClaimBill__Insur__245D67DE]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] DROP CONSTRAINT [DF__ClaimBill__Patie__236943A5]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] DROP CONSTRAINT [DF__ClaimBill__Patie__22751F6C]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] DROP CONSTRAINT [DF__ClaimBill__Insur__2180FB33]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] DROP CONSTRAINT [DF__ClaimBill__Insur__208CD6FA]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] DROP CONSTRAINT [DF__ClaimBill__Allow__1F98B2C1]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] DROP CONSTRAINT [DF__ClaimBill__Bille__1EA48E88]
+GO
+ALTER TABLE [dbo].[BillingProviderMaster] DROP CONSTRAINT [DF__BillingPr__Creat__47DBAE45]
+GO
+ALTER TABLE [dbo].[BillingProviderMaster] DROP CONSTRAINT [DF__BillingPr__IsAct__1DB06A4F]
+GO
+ALTER TABLE [dbo].[BillingMaster] DROP CONSTRAINT [DF_BillingMaster_UpdatedOn]
+GO
+ALTER TABLE [dbo].[BillingMaster] DROP CONSTRAINT [DF_BillingMaster_CreatedOn]
+GO
+/****** Object:  Table [dbo].[VisitAgaistAccessionStaging]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[VisitAgaistAccessionStaging]') AND type in (N'U'))
+DROP TABLE [dbo].[VisitAgaistAccessionStaging]
+GO
+/****** Object:  Table [dbo].[VAAMaster]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[VAAMaster]') AND type in (N'U'))
+DROP TABLE [dbo].[VAAMaster]
+GO
+/****** Object:  Table [dbo].[TransactionSummary]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TransactionSummary]') AND type in (N'U'))
+DROP TABLE [dbo].[TransactionSummary]
+GO
+/****** Object:  Table [dbo].[TransactionMaster]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TransactionMaster]') AND type in (N'U'))
+DROP TABLE [dbo].[TransactionMaster]
+GO
+/****** Object:  Table [dbo].[TransactionDetailStaging]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TransactionDetailStaging]') AND type in (N'U'))
+DROP TABLE [dbo].[TransactionDetailStaging]
+GO
+/****** Object:  Table [dbo].[TestTypeMaster]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TestTypeMaster]') AND type in (N'U'))
+DROP TABLE [dbo].[TestTypeMaster]
+GO
+/****** Object:  Table [dbo].[SpecimenStatus]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SpecimenStatus]') AND type in (N'U'))
+DROP TABLE [dbo].[SpecimenStatus]
+GO
+/****** Object:  Table [dbo].[SampleFinalStatus]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SampleFinalStatus]') AND type in (N'U'))
+DROP TABLE [dbo].[SampleFinalStatus]
+GO
+/****** Object:  Table [dbo].[SalesPerson]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SalesPerson]') AND type in (N'U'))
+DROP TABLE [dbo].[SalesPerson]
+GO
+/****** Object:  Table [dbo].[ReportDownloadSts]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ReportDownloadSts]') AND type in (N'U'))
+DROP TABLE [dbo].[ReportDownloadSts]
+GO
+/****** Object:  Table [dbo].[ReferringProviderMaster]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ReferringProviderMaster]') AND type in (N'U'))
+DROP TABLE [dbo].[ReferringProviderMaster]
+GO
+/****** Object:  Table [dbo].[ProdStatusRuleEngine]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ProdStatusRuleEngine]') AND type in (N'U'))
+DROP TABLE [dbo].[ProdStatusRuleEngine]
+GO
+/****** Object:  Table [dbo].[PrismBillingStaging]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PrismBillingStaging]') AND type in (N'U'))
+DROP TABLE [dbo].[PrismBillingStaging]
+GO
+/****** Object:  Table [dbo].[PayerTypeMaster]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PayerTypeMaster]') AND type in (N'U'))
+DROP TABLE [dbo].[PayerTypeMaster]
+GO
+/****** Object:  Table [dbo].[PanelMasterStaging]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PanelMasterStaging]') AND type in (N'U'))
+DROP TABLE [dbo].[PanelMasterStaging]
+GO
+/****** Object:  Table [dbo].[PanelGroup]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PanelGroup]') AND type in (N'U'))
+DROP TABLE [dbo].[PanelGroup]
+GO
+/****** Object:  Table [dbo].[OperationsGroupMaster]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[OperationsGroupMaster]') AND type in (N'U'))
+DROP TABLE [dbo].[OperationsGroupMaster]
+GO
+/****** Object:  Table [dbo].[LISStaging]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[LISStaging]') AND type in (N'U'))
+DROP TABLE [dbo].[LISStaging]
+GO
+/****** Object:  Table [dbo].[LISMaster]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[LISMaster]') AND type in (N'U'))
+DROP TABLE [dbo].[LISMaster]
+GO
+/****** Object:  Table [dbo].[LabMaster]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[LabMaster]') AND type in (N'U'))
+DROP TABLE [dbo].[LabMaster]
+GO
+/****** Object:  Table [dbo].[InsurancePayerMaster]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[InsurancePayerMaster]') AND type in (N'U'))
+DROP TABLE [dbo].[InsurancePayerMaster]
+GO
+/****** Object:  Table [dbo].[ImportFilTypes]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ImportFilTypes]') AND type in (N'U'))
+DROP TABLE [dbo].[ImportFilTypes]
+GO
+/****** Object:  Table [dbo].[ImportFileLogs]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ImportFileLogs]') AND type in (N'U'))
+DROP TABLE [dbo].[ImportFileLogs]
+GO
+/****** Object:  Table [dbo].[ImportedFiles]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ImportedFiles]') AND type in (N'U'))
+DROP TABLE [dbo].[ImportedFiles]
+GO
+/****** Object:  Table [dbo].[ICDCodeMaster]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ICDCodeMaster]') AND type in (N'U'))
+DROP TABLE [dbo].[ICDCodeMaster]
+GO
+/****** Object:  Table [dbo].[FileStatuses]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[FileStatuses]') AND type in (N'U'))
+DROP TABLE [dbo].[FileStatuses]
+GO
+/****** Object:  Table [dbo].[DownloadReportTypes]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DownloadReportTypes]') AND type in (N'U'))
+DROP TABLE [dbo].[DownloadReportTypes]
+GO
+/****** Object:  Table [dbo].[DiagnoseLISStaging]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DiagnoseLISStaging]') AND type in (N'U'))
+DROP TABLE [dbo].[DiagnoseLISStaging]
+GO
+/****** Object:  Table [dbo].[DenialTrackingStaging]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DenialTrackingStaging]') AND type in (N'U'))
+DROP TABLE [dbo].[DenialTrackingStaging]
+GO
+/****** Object:  Table [dbo].[CustomCollectionStaging]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CustomCollectionStaging]') AND type in (N'U'))
+DROP TABLE [dbo].[CustomCollectionStaging]
+GO
+/****** Object:  Table [dbo].[CPTCodeMaster]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CPTCodeMaster]') AND type in (N'U'))
+DROP TABLE [dbo].[CPTCodeMaster]
+GO
+/****** Object:  Table [dbo].[ClinicMaster]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ClinicMaster]') AND type in (N'U'))
+DROP TABLE [dbo].[ClinicMaster]
+GO
+/****** Object:  Table [dbo].[ClientBillingSheet]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ClientBillingSheet]') AND type in (N'U'))
+DROP TABLE [dbo].[ClientBillingSheet]
+GO
+/****** Object:  Table [dbo].[ClaimsProdStatus]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ClaimsProdStatus]') AND type in (N'U'))
+DROP TABLE [dbo].[ClaimsProdStatus]
+GO
+/****** Object:  Table [dbo].[ClaimsLevelStatus]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ClaimsLevelStatus]') AND type in (N'U'))
+DROP TABLE [dbo].[ClaimsLevelStatus]
+GO
+/****** Object:  Table [dbo].[ClaimDenialCodes]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ClaimDenialCodes]') AND type in (N'U'))
+DROP TABLE [dbo].[ClaimDenialCodes]
+GO
+/****** Object:  Table [dbo].[ClaimBillingDetails]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ClaimBillingDetails]') AND type in (N'U'))
+DROP TABLE [dbo].[ClaimBillingDetails]
+GO
+/****** Object:  Table [dbo].[BillingProviderMaster]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[BillingProviderMaster]') AND type in (N'U'))
+DROP TABLE [dbo].[BillingProviderMaster]
+GO
 /****** Object:  UserDefinedFunction [dbo].[fn_GetClaimStatusByVisitAndCPT]******/
 DROP FUNCTION [dbo].[fn_GetClaimStatusByVisitAndCPT]
+GO
+/****** Object:  Table [dbo].[DenialTrackingMaster]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DenialTrackingMaster]') AND type in (N'U'))
+DROP TABLE [dbo].[DenialTrackingMaster]
+GO
+/****** Object:  Table [dbo].[BillingMaster]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[BillingMaster]') AND type in (N'U'))
+DROP TABLE [dbo].[BillingMaster]
 GO
 /****** Object:  UserDefinedFunction [dbo].[GetDenailCodeByVisitNumber]******/
 DROP FUNCTION [dbo].[GetDenailCodeByVisitNumber]
@@ -538,7 +951,10 @@ BEGIN
             ORDER BY PaymentDate DESC
         ) AS rn
     FROM DenialTrackingMaster
-    WHERE PaymentReasonCode IS NOT NULL
+    WHERE PaymentReasonCode IS NOT NULL AND PaymentReasonCode NOT IN (
+            'CO45','CO253','CO1','CO2','CO3',
+            'PR1','PR2','PR3','PR45','PR253'
+        )
 ),  Tokenized AS (
         SELECT DISTINCT
             TRIM(s.value) AS Code
@@ -585,7 +1001,10 @@ BEGIN
             ORDER BY PaymentDate DESC
         ) AS rn
     FROM DenialTrackingMaster
-    WHERE PaymentReasonCode IS NOT NULL
+    WHERE PaymentReasonCode IS NOT NULL  AND PaymentReasonCode NOT IN (
+            'CO45','CO253','CO1','CO2','CO3',
+            'PR1','PR2','PR3','PR45','PR253'
+        )
 ), Tokenized AS (
         SELECT DISTINCT
             TRIM(s.value) AS Code
@@ -608,6 +1027,97 @@ BEGIN
 
     RETURN @Result;  -- returns NULL if nothing remains
 END
+GO
+/****** Object:  Table [dbo].[BillingMaster]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[BillingMaster](
+	[BillingMasterID] [bigint] IDENTITY(1,1) NOT NULL,
+	[LISMasterId] [bigint] NULL,
+	[AccessionNo] [varchar](50) NULL,
+	[VisitNumber] [nvarchar](250) NULL,
+	[PrimaryPayerID] [int] NULL,
+	[SecondaryPayerId] [int] NULL,
+	[PayerTypeId] [int] NULL,
+	[BillingProviderID] [int] NOT NULL,
+	[ClientAccNum] [nvarchar](250) NULL,
+	[MemberID] [varchar](25) NULL,
+	[BeginDOS] [date] NULL,
+	[EndDOS] [date] NULL,
+	[ChargeEntryDate] [date] NULL,
+	[FirstBillDate] [date] NULL,
+	[BillingFrequency] [nvarchar](250) NULL,
+	[ChargeEnteredBy] [nvarchar](250) NULL,
+	[CPTCode] [varchar](25) NULL,
+	[POS] [nvarchar](250) NULL,
+	[TOS] [nvarchar](250) NULL,
+	[Modifier] [varchar](50) NULL,
+	[ICD10Code] [nvarchar](250) NULL,
+	[Units] [int] NULL,
+	[CheckDate] [date] NULL,
+	[PaymentPostedDate] [date] NULL,
+	[BilledAmount] [decimal](10, 2) NULL,
+	[AllowedAmount] [decimal](10, 2) NULL,
+	[InsurancePayment] [decimal](10, 2) NULL,
+	[InsuranceAdjustment] [decimal](10, 2) NULL,
+	[PatientPaidAmount] [decimal](10, 2) NULL,
+	[PatientAdjustment] [decimal](10, 2) NULL,
+	[InsuranceBalance] [decimal](10, 2) NULL,
+	[PatientBalance] [decimal](10, 2) NULL,
+	[TotalBalance] [decimal](10, 2) NULL,
+	[FinalClaimStatus] [varchar](50) NULL,
+	[CheckNumber] [varchar](150) NULL,
+	[ChartNumber] [varchar](25) NULL,
+	[CreatedOn] [datetime] NOT NULL,
+	[UpdatedOn] [datetime] NOT NULL,
+	[ClaimSubStatus] [varchar](50) NULL,
+	[PatientName] [nvarchar](255) NULL,
+	[ReferringProviderId] [int] NULL,
+	[FacilityId] [int] NULL,
+	[PatientDOB] [date] NULL,
+	[ResponsibleParty] [nvarchar](250) NULL,
+	[ImportFileId] [int] NOT NULL,
+ CONSTRAINT [PK_BillingMaster] PRIMARY KEY CLUSTERED 
+(
+	[BillingMasterID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[DenialTrackingMaster]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[DenialTrackingMaster](
+	[DenailTrackID] [int] IDENTITY(1,1) NOT NULL,
+	[LISMasterID] [int] NULL,
+	[VisitNumber] [varchar](50) NULL,
+	[CPTCodes] [varchar](25) NULL,
+	[TransactionCarrierCode] [varchar](50) NULL,
+	[PaymentDate] [date] NULL,
+	[PaymentReasonCode] [varchar](50) NULL,
+	[DateOfService] [date] NULL,
+	[ChargeAmount] [decimal](18, 2) NULL,
+	[TotalBalance] [decimal](18, 2) NULL,
+	[TotalAdjustment] [decimal](18, 2) NULL,
+	[ReasonAmount] [decimal](18, 2) NULL,
+	[DenailUser] [varchar](50) NULL,
+	[LastAction] [varchar](50) NULL,
+	[NextAction] [varchar](50) NULL,
+	[LastActionDate] [date] NULL,
+	[NextActionDate] [date] NULL,
+	[Note] [varchar](250) NULL,
+	[DenialCategoryCode] [varchar](50) NULL,
+	[DenialCategoryDEscription] [varchar](250) NULL,
+	[CreateOn] [datetime] NULL,
+	[UpdatedOn] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[DenailTrackID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
 GO
 /****** Object:  UserDefinedFunction [dbo].[fn_GetClaimStatusByVisitAndCPT]******/
 SET ANSI_NULLS ON
@@ -754,6 +1264,1328 @@ AND (
 		   AND ISNULL(a.Modifier,9999) = ISNULL(@Modifier,9999)
 );
 GO
+/****** Object:  Table [dbo].[BillingProviderMaster]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[BillingProviderMaster](
+	[BillingProviderID] [int] IDENTITY(1,1) NOT NULL,
+	[BillingProvider] [nvarchar](500) NOT NULL,
+	[IsActive] [bit] NOT NULL,
+	[CreatedOn] [datetime] NULL,
+	[BillingProvider_Trim]  AS (Trim([BillingProvider])) PERSISTED,
+PRIMARY KEY CLUSTERED 
+(
+	[BillingProviderID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[BillingProvider] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ClaimBillingDetails]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ClaimBillingDetails](
+	[BillingDetailID] [int] IDENTITY(1,1) NOT NULL,
+	[AccessionNo] [varchar](25) NOT NULL,
+	[VisitNumber] [varchar](25) NOT NULL,
+	[CPTCode] [varchar](25) NOT NULL,
+	[FirstBillDate] [date] NULL,
+	[BilledAmount] [decimal](18, 2) NULL,
+	[AllowedAmount] [decimal](18, 2) NULL,
+	[InsurancePaidAmount] [decimal](18, 2) NULL,
+	[InsuranceAdjustmentAmount] [decimal](18, 2) NULL,
+	[PatientPaidAmount] [decimal](18, 2) NULL,
+	[PatientAdjustmentAmount] [decimal](18, 2) NULL,
+	[InsuranceBalance] [decimal](18, 2) NULL,
+	[PatientBalance] [decimal](18, 2) NULL,
+	[TotalBalance] [decimal](18, 2) NULL,
+	[CreatedOn] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[BillingDetailID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ClaimDenialCodes]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ClaimDenialCodes](
+	[VisitNumber] [int] NOT NULL,
+	[CPTCode] [nvarchar](20) NOT NULL,
+	[DenialCode] [nvarchar](30) NOT NULL
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ClaimsLevelStatus]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ClaimsLevelStatus](
+	[VisitNumber] [int] NOT NULL,
+	[CPTCodes] [nvarchar](500) NOT NULL,
+	[BilledAmount] [decimal](18, 2) NULL,
+	[AllowedAmount] [decimal](18, 2) NULL,
+	[InsurancePayment] [decimal](18, 2) NULL,
+	[InsuranceAdjustment] [decimal](18, 2) NULL,
+	[PatientPaidAmount] [decimal](18, 2) NULL,
+	[PatientAdjustment] [decimal](18, 2) NULL,
+	[InsuranceBalance] [decimal](18, 2) NULL,
+	[PatientBalance] [decimal](18, 2) NULL,
+	[TotalBalance] [decimal](18, 2) NULL,
+	[DenailCode] [nvarchar](500) NULL,
+	[FinalStatus] [nvarchar](50) NOT NULL,
+	[ClaimSubStatus] [nvarchar](50) NULL,
+	[FirstBillDate] [date] NULL,
+	[CreatedOn] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[VisitNumber] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ClaimsProdStatus]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ClaimsProdStatus](
+	[VisitNumber] [int] NOT NULL,
+	[CPTCode] [varchar](20) NOT NULL,
+	[BilledAmount] [float] NULL,
+	[AllowedAmount] [float] NULL,
+	[InsurancePayment] [float] NULL,
+	[InsuranceAdjustment] [float] NULL,
+	[PatientPaidAmount] [float] NULL,
+	[PatientAdjustment] [float] NULL,
+	[InsuranceBalance] [float] NULL,
+	[PatientBalance] [float] NULL,
+	[TotalBalance] [float] NULL,
+	[DenialCode] [nvarchar](50) NULL,
+	[FinalStatus] [nvarchar](50) NULL,
+	[ClaimSubStatus] [nvarchar](500) NULL,
+	[CreatedOn] [datetime] NULL
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ClientBillingSheet]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ClientBillingSheet](
+	[CBSId] [int] IDENTITY(1,1) NOT NULL,
+	[AccessionNo] [nvarchar](50) NOT NULL,
+	[PerformingFacility] [nvarchar](150) NULL,
+	[SheetName] [nvarchar](150) NULL,
+	[ImportedFileID] [int] NULL,
+	[ImportedOn] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[CBSId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ClinicMaster]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ClinicMaster](
+	[ClinicId] [int] IDENTITY(1,1) NOT NULL,
+	[ClinicName] [nvarchar](500) NOT NULL,
+	[ClinicStatus] [bit] NOT NULL,
+	[CreatedOn] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ClinicId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[ClinicName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[CPTCodeMaster]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[CPTCodeMaster](
+	[CPTCodeID] [int] IDENTITY(1,1) NOT NULL,
+	[CPTCode] [varchar](20) NOT NULL,
+	[CodeDescription] [nvarchar](500) NULL,
+	[OriginalCode] [nvarchar](500) NULL,
+	[IsActive] [bit] NOT NULL,
+	[CreatedOn] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[CPTCodeID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[CustomCollectionStaging]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[CustomCollectionStaging](
+	[CCWId] [bigint] IDENTITY(1,1) NOT NULL,
+	[PayerName] [nvarchar](500) NULL,
+	[PayerType] [nvarchar](500) NULL,
+	[BillingProvider] [nvarchar](500) NULL,
+	[ReferringProvider] [nvarchar](500) NULL,
+	[PerformingLab] [nvarchar](500) NULL,
+	[PatientID] [int] NULL,
+	[PatientName] [nvarchar](500) NULL,
+	[DOB] [date] NULL,
+	[ResponsibleParty] [nvarchar](500) NULL,
+	[MemberID] [nvarchar](500) NULL,
+	[VisitNumber] [int] NULL,
+	[ClientAccNum] [nvarchar](500) NULL,
+	[AccessionNo] [nvarchar](500) NULL,
+	[BeginDOS] [date] NULL,
+	[EndDOS] [date] NULL,
+	[ChargeEntryDate] [date] NULL,
+	[LastBillDate] [date] NULL,
+	[BillingFrequency] [nvarchar](500) NULL,
+	[ChargeEnteredBy] [nvarchar](500) NULL,
+	[BilledCPTCode] [nvarchar](500) NULL,
+	[POS] [nvarchar](500) NULL,
+	[TOS] [nvarchar](500) NULL,
+	[Modifier] [nvarchar](500) NULL,
+	[ICD10Code] [nvarchar](500) NULL,
+	[BilledAmount] [decimal](10, 2) NULL,
+	[AllowedAmount] [decimal](10, 2) NULL,
+	[InsurancePayments] [decimal](10, 2) NULL,
+	[InsuranceAdjustments] [decimal](10, 2) NULL,
+	[PatientPayments] [decimal](10, 2) NULL,
+	[PatientAdjustments] [decimal](10, 2) NULL,
+	[InsuranceBalance] [decimal](10, 2) NULL,
+	[PatientBalance] [decimal](10, 2) NULL,
+	[TotalBalance] [decimal](10, 2) NULL,
+	[ImpotedOn] [datetime] NULL,
+	[ImportedFileID] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[CCWId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[DenialTrackingStaging]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[DenialTrackingStaging](
+	[Provider] [nvarchar](500) NULL,
+	[TransactionCarrierCode] [nvarchar](500) NULL,
+	[FinancialClass] [nvarchar](500) NULL,
+	[PaymentDate] [date] NULL,
+	[PaymentReasonCode] [nvarchar](500) NULL,
+	[PaymentReasonDescription] [nvarchar](500) NULL,
+	[ChargeCode] [nvarchar](500) NULL,
+	[PatientName] [nvarchar](500) NULL,
+	[ServiceDate] [date] NULL,
+	[VisitNumber] [nvarchar](500) NULL,
+	[Charge] [decimal](18, 2) NULL,
+	[TotalBalance] [decimal](18, 2) NULL,
+	[TotalAdjustment] [decimal](18, 2) NULL,
+	[ReasonAmount] [decimal](18, 2) NULL,
+	[DenialUser] [nvarchar](500) NULL,
+	[LastActionDate] [date] NULL,
+	[LastAction] [nvarchar](500) NULL,
+	[NextActionDate] [date] NULL,
+	[NextAction] [nvarchar](500) NULL,
+	[Note] [nvarchar](500) NULL,
+	[DenialCategoryCode] [nvarchar](500) NULL,
+	[DenialCategoryDescription] [nvarchar](500) NULL,
+	[ImportedOn] [datetime] NULL,
+	[ImportedFileID] [int] NULL
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[DiagnoseLISStaging]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[DiagnoseLISStaging](
+	[DiagnoseLISID] [int] IDENTITY(1,1) NOT NULL,
+	[OrderID] [nvarchar](max) NULL,
+	[ReferenceID] [nvarchar](max) NULL,
+	[SampleID] [nvarchar](max) NULL,
+	[PaymentMethod] [nvarchar](max) NULL,
+	[Barcode] [nvarchar](max) NULL,
+	[Specimen] [nvarchar](max) NULL,
+	[Container] [nvarchar](max) NULL,
+	[Collectors] [nvarchar](max) NULL,
+	[OrderStatus] [nvarchar](max) NULL,
+	[BillingStatus] [nvarchar](max) NULL,
+	[SpecimenStatus] [nvarchar](max) NULL,
+	[ShipmentTracking] [nvarchar](max) NULL,
+	[DateSubmitted] [date] NULL,
+	[TimeSubmitted] [nvarchar](max) NULL,
+	[DateCollected] [date] NULL,
+	[TimeCollected] [nvarchar](max) NULL,
+	[DateReceived] [date] NULL,
+	[TimeReceived] [nvarchar](max) NULL,
+	[DateReported] [date] NULL,
+	[TimeReported] [nvarchar](max) NULL,
+	[FacilityID] [nvarchar](max) NULL,
+	[Facility] [nvarchar](255) NULL,
+	[PerformingLaboratory] [nvarchar](255) NULL,
+	[Tests] [nvarchar](max) NULL,
+	[Results] [nvarchar](max) NULL,
+	[PatientID] [nvarchar](max) NULL,
+	[PatientFirstName] [nvarchar](max) NULL,
+	[PatientLastName] [nvarchar](max) NULL,
+	[PatientDateofBirth] [date] NULL,
+	[PatientSex] [nvarchar](max) NULL,
+	[PatientAddress1] [nvarchar](max) NULL,
+	[PatientAddress2] [nvarchar](max) NULL,
+	[PatientCity] [nvarchar](max) NULL,
+	[PatientState] [nvarchar](max) NULL,
+	[PatientZipCode] [nvarchar](max) NULL,
+	[SalesRep] [nvarchar](max) NULL,
+	[ProviderID] [nvarchar](max) NULL,
+	[ProviderName] [nvarchar](255) NULL,
+	[ProviderNPI] [nvarchar](max) NULL,
+	[PrimaryInsurance] [nvarchar](max) NULL,
+	[PrimaryInsuranceID] [nvarchar](max) NULL,
+	[SecondaryInsurance] [nvarchar](max) NULL,
+	[SecondaryInsuranceID] [nvarchar](max) NULL,
+	[ICD10Codes] [nvarchar](max) NULL,
+	[OrderNotes] [nvarchar](max) NULL,
+	[SampleNotes] [nvarchar](max) NULL,
+	[SampleRejectionReason] [nvarchar](max) NULL,
+	[ImportedFileID] [int] NULL,
+	[ImportedOn] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[DiagnoseLISID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[DownloadReportTypes]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[DownloadReportTypes](
+	[ReportTypeId] [int] NOT NULL,
+	[ReportName] [varchar](50) NOT NULL,
+	[IsActive] [bit] NULL,
+	[LabId] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ReportTypeId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[ReportName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[FileStatuses]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[FileStatuses](
+	[FileStatusId] [int] NOT NULL,
+	[FileStatus] [varchar](30) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[FileStatusId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[FileStatus] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ICDCodeMaster]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ICDCodeMaster](
+	[ICDCodeID] [int] IDENTITY(1,1) NOT NULL,
+	[ICD10Code] [nvarchar](500) NOT NULL,
+	[CodeDescription] [nvarchar](500) NULL,
+	[OriginalCode] [nvarchar](500) NULL,
+	[IsActive] [bit] NOT NULL,
+	[CreatedOn] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ICDCodeID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[ICD10Code] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ImportedFiles]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ImportedFiles](
+	[ImportedFileID] [int] IDENTITY(1,1) NOT NULL,
+	[ImportFileName] [nvarchar](500) NOT NULL,
+	[ExcelRowCount] [int] NULL,
+	[ImportedRowCount] [int] NULL,
+	[FileStatus] [int] NULL,
+	[FileType] [int] NULL,
+	[ImportedOn] [datetime] NULL,
+	[ProcessedOn] [datetime] NULL,
+	[LabId] [int] NOT NULL,
+	[ImportFilePath] [varchar](250) NULL,
+	[LogFilePath] [nvarchar](500) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ImportedFileID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ImportFileLogs]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ImportFileLogs](
+	[LogID] [int] IDENTITY(1,1) NOT NULL,
+	[ImportFileId] [int] NOT NULL,
+	[LogType] [varchar](30) NOT NULL,
+	[LogMessage] [nvarchar](max) NOT NULL,
+	[RowNo] [int] NULL,
+	[ColumnName] [varchar](30) NULL,
+	[CreatedOn] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[LogID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ImportFilTypes]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ImportFilTypes](
+	[FileTypeId] [int] NOT NULL,
+	[FileTypeName] [varchar](50) NULL,
+	[LabId] [int] NOT NULL,
+	[IsActive] [bit] NULL,
+	[SeqNo] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[FileTypeId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[FileTypeName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[InsurancePayerMaster]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[InsurancePayerMaster](
+	[InsurancePayerId] [int] IDENTITY(1,1) NOT NULL,
+	[PayerName] [nvarchar](500) NOT NULL,
+	[IsActive] [bit] NOT NULL,
+	[CreatedOn] [datetime] NULL,
+	[PayerName_Trim]  AS (Trim([PayerName])) PERSISTED,
+PRIMARY KEY CLUSTERED 
+(
+	[InsurancePayerId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[PayerName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[LabMaster]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[LabMaster](
+	[LabID] [int] IDENTITY(1,1) NOT NULL,
+	[LabName] [nvarchar](500) NOT NULL,
+	[IsActive] [bit] NOT NULL,
+	[CreatedOn] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[LabID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[LabName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[LISMaster]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[LISMaster](
+	[LISMasterId] [bigint] IDENTITY(1,1) NOT NULL,
+	[AccessionNo] [nvarchar](150) NOT NULL,
+	[LabId] [int] NULL,
+	[BillingProviderID] [int] NULL,
+	[PatientName] [nvarchar](250) NULL,
+	[PatientID] [nvarchar](250) NULL,
+	[PatientDOB] [nvarchar](250) NULL,
+	[ResponsibleParty] [nvarchar](250) NULL,
+	[PrimaryPayerName] [varchar](250) NULL,
+	[PrimaryMemberId] [varchar](250) NULL,
+	[PrimaryGroupNo] [varchar](250) NULL,
+	[PrimaryEffectiveDate] [date] NULL,
+	[RelationshipToInsurance] [nvarchar](250) NULL,
+	[SecondaryPayerId] [int] NULL,
+	[SecondaryMemberID] [varchar](250) NULL,
+	[SecondaryGroupNo] [varchar](250) NULL,
+	[SecondaryEffectiveDate] [date] NULL,
+	[SampleCollectedDate] [date] NULL,
+	[SampleReceivedDate] [date] NULL,
+	[SampleAccessionedDate] [date] NULL,
+	[SampleResultedDate] [date] NULL,
+	[SampleRunDate] [date] NULL,
+	[SampleStatusId] [int] NULL,
+	[BilledTo] [varchar](250) NULL,
+	[ReferringProviderId] [int] NULL,
+	[ClinicId] [int] NULL,
+	[SalesPersonId] [int] NULL,
+	[OperationalGroupId] [int] NULL,
+	[ICD10Code] [nvarchar](250) NULL,
+	[TestCode] [nvarchar](250) NULL,
+	[TestTypeId] [int] NULL,
+	[Sendouts] [nvarchar](250) NULL,
+	[TurnAround] [int] NULL,
+	[OutStanding] [int] NULL,
+	[OrderInfo] [nvarchar](max) NULL,
+	[PanelId] [int] NULL,
+	[PanelCode] [nvarchar](250) NULL,
+	[PanelName] [nvarchar](250) NULL,
+	[ResultedStatus] [varchar](100) NULL,
+	[DaystoReceive] [int] NULL,
+	[DaystoResult] [int] NULL,
+	[DaystoBill] [int] NULL,
+	[ClientStatus] [nvarchar](250) NULL,
+	[PayerTypeId] [int] NULL,
+	[SpecimenType] [varchar](200) NULL,
+	[BillingSubStatus] [varchar](50) NULL,
+	[BillingStatus] [varchar](50) NULL,
+	[FirstBilledDate] [date] NULL,
+	[ChargeEntryDate] [date] NULL,
+	[VisitNumber] [varchar](100) NULL,
+	[SelfPay] [varchar](100) NULL,
+	[AccountPay] [varchar](100) NULL,
+	[ContractPay] [varchar](100) NULL,
+	[Analtyics] [varchar](100) NULL,
+	[ScrubSettings] [varchar](500) NULL,
+	[Actions] [varchar](200) NULL,
+	[CreatedOn] [datetime] NULL,
+	[CreatedBy] [varchar](20) NULL,
+	[OrderID] [int] NULL,
+	[ReferenceID] [int] NULL,
+	[SampleID] [nvarchar](50) NULL,
+	[Barcode] [nvarchar](50) NULL,
+	[Container] [nvarchar](150) NULL,
+	[Collectors] [nvarchar](150) NULL,
+	[OrderStatus] [nvarchar](150) NULL,
+	[ShipmentTrackingNo] [nvarchar](150) NULL,
+	[TimeSubmitted] [nvarchar](150) NULL,
+	[TimeCollected] [nvarchar](150) NULL,
+	[TimeReceived] [nvarchar](150) NULL,
+	[TimeReported] [nvarchar](150) NULL,
+	[FacilityId] [int] NULL,
+	[Tests] [nvarchar](max) NULL,
+	[Results] [nvarchar](max) NULL,
+	[PatientFirstName] [nvarchar](250) NULL,
+	[PatientLastName] [nvarchar](250) NULL,
+	[PatientSex] [nvarchar](50) NULL,
+	[PatientAddress1] [nvarchar](250) NULL,
+	[PatientAddress2] [nvarchar](250) NULL,
+	[PatientCity] [nvarchar](50) NULL,
+	[PatientState] [nvarchar](25) NULL,
+	[PatientZipCode] [nvarchar](50) NULL,
+	[ProviderNPI] [nvarchar](50) NULL,
+	[OrderNotes] [nvarchar](250) NULL,
+	[SampleNotes] [nvarchar](250) NULL,
+	[SampleRejectionReason] [nvarchar](500) NULL,
+	[LISFile] [nvarchar](30) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[LISMasterId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[AccessionNo] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+ CONSTRAINT [UQ_LISMaster_ACC] UNIQUE NONCLUSTERED 
+(
+	[AccessionNo] ASC,
+	[LabId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[LISStaging]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[LISStaging](
+	[LISStagingId] [bigint] IDENTITY(1,1) NOT NULL,
+	[CollectedDate] [date] NULL,
+	[ReceivedDate] [date] NULL,
+	[AccessionedDate] [date] NULL,
+	[ResultedDate] [date] NULL,
+	[Outstanding] [nvarchar](50) NULL,
+	[Turnaround] [nvarchar](50) NULL,
+	[SpecimenStatus] [nvarchar](500) NULL,
+	[AccessionNo] [nvarchar](500) NOT NULL,
+	[PerformingLab] [nvarchar](500) NULL,
+	[PatientName] [nvarchar](500) NULL,
+	[PayerName] [nvarchar](500) NULL,
+	[MemberID] [nvarchar](500) NULL,
+	[RelToInsured] [nvarchar](500) NULL,
+	[SelfPay] [nvarchar](500) NULL,
+	[AccountPay] [nvarchar](500) NULL,
+	[ContractPay] [nvarchar](500) NULL,
+	[ClinicName] [nvarchar](500) NULL,
+	[OperationsGroup] [nvarchar](500) NULL,
+	[SalesRep] [nvarchar](500) NULL,
+	[Reference] [nvarchar](500) NULL,
+	[Analtyics] [nvarchar](500) NULL,
+	[TestType] [nvarchar](500) NULL,
+	[ScrubSettings] [nvarchar](500) NULL,
+	[Actions] [nvarchar](500) NULL,
+	[OrderInfo] [nvarchar](max) NULL,
+	[ImportedOn] [datetime] NULL,
+	[ImportedFileID] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[LISStagingId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[OperationsGroupMaster]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[OperationsGroupMaster](
+	[OperationGroupID] [int] IDENTITY(1,1) NOT NULL,
+	[OperationsGroup] [nvarchar](500) NOT NULL,
+	[IsActive] [bit] NOT NULL,
+	[CreatedOn] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[OperationGroupID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[OperationsGroup] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[PanelGroup]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[PanelGroup](
+	[PanelGroupId] [int] IDENTITY(1,1) NOT NULL,
+	[PanelName] [varchar](250) NOT NULL,
+	[OrderInfo] [varchar](1000) NOT NULL,
+	[PanelCategory] [nvarchar](250) NULL,
+	[IsActive] [bit] NULL,
+	[CreatedOn] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[PanelGroupId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[PanelMasterStaging]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[PanelMasterStaging](
+	[PanelMasterID] [int] IDENTITY(1,1) NOT NULL,
+	[PanelName] [nvarchar](250) NULL,
+	[OrderInfo] [nvarchar](max) NULL,
+	[PanelCategory] [nvarchar](250) NULL,
+	[ImportedFileID] [int] NULL,
+	[ImportedOn] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[PanelMasterID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[PayerTypeMaster]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[PayerTypeMaster](
+	[PayerTypeId] [int] IDENTITY(1,1) NOT NULL,
+	[PayerType] [nvarchar](500) NOT NULL,
+	[IsActive] [bit] NOT NULL,
+	[CreatedOn] [datetime] NULL,
+	[PayerType_Trim]  AS (Trim([PayerType])) PERSISTED,
+PRIMARY KEY CLUSTERED 
+(
+	[PayerTypeId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[PayerType] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[PrismBillingStaging]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[PrismBillingStaging](
+	[SpecimenID] [varchar](250) NULL,
+	[Customer] [nvarchar](1500) NULL,
+	[Notes] [nvarchar](2500) NULL,
+	[Payments] [varchar](250) NULL,
+	[LAB] [varchar](250) NULL,
+	[TestInfo] [nvarchar](2500) NULL,
+	[MEDS] [nvarchar](2500) NULL,
+	[Paid] [decimal](8, 2) NULL,
+	[SheetName] [varchar](250) NULL,
+	[ImportedOn] [datetime] NULL,
+	[ImportedFileID] [int] NULL
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ProdStatusRuleEngine]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ProdStatusRuleEngine](
+	[RuleID] [int] IDENTITY(1,1) NOT NULL,
+	[Resulted_Date_Condition] [nvarchar](50) NULL,
+	[Billed_Date_Condition] [nvarchar](50) NULL,
+	[TotalCharge_Condition] [nvarchar](50) NULL,
+	[TotalAllowed_Condition] [nvarchar](50) NULL,
+	[CarrierPayment_Condition] [nvarchar](50) NULL,
+	[CarrierWO_Condition] [nvarchar](50) NULL,
+	[PatientPayment_Condition] [nvarchar](50) NULL,
+	[PatientWO_Condition] [nvarchar](50) NULL,
+	[CarrierBalance_Condition] [nvarchar](50) NULL,
+	[PatientBalance_Condition] [nvarchar](50) NULL,
+	[TotalBalance_Condition] [nvarchar](50) NULL,
+	[Denial_Code_Condition] [nvarchar](50) NULL,
+	[Final_Output_Status] [nvarchar](100) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[RuleID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+ CONSTRAINT [UQ_RuleEngine_Conditions] UNIQUE NONCLUSTERED 
+(
+	[Resulted_Date_Condition] ASC,
+	[Billed_Date_Condition] ASC,
+	[TotalCharge_Condition] ASC,
+	[TotalAllowed_Condition] ASC,
+	[CarrierPayment_Condition] ASC,
+	[CarrierWO_Condition] ASC,
+	[PatientPayment_Condition] ASC,
+	[PatientWO_Condition] ASC,
+	[CarrierBalance_Condition] ASC,
+	[PatientBalance_Condition] ASC,
+	[TotalBalance_Condition] ASC,
+	[Denial_Code_Condition] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ReferringProviderMaster]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ReferringProviderMaster](
+	[ReferingProviderId] [int] IDENTITY(1,1) NOT NULL,
+	[ReferringProviderName] [nvarchar](500) NOT NULL,
+	[IsActive] [bit] NOT NULL,
+	[CreatedOn] [datetime] NULL,
+	[ReferringProviderName_Trim]  AS (Trim([ReferringProviderName])) PERSISTED,
+PRIMARY KEY CLUSTERED 
+(
+	[ReferingProviderId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[ReferringProviderName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ReportDownloadSts]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ReportDownloadSts](
+	[ReportID] [int] IDENTITY(1,1) NOT NULL,
+	[ReportName] [nvarchar](250) NOT NULL,
+	[ReportType] [int] NOT NULL,
+	[ReportServerPath] [nvarchar](500) NULL,
+	[ReportStatus] [int] NOT NULL,
+	[CreatedOn] [datetime] NULL,
+	[LogString] [nvarchar](max) NULL
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[SalesPerson]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[SalesPerson](
+	[SalesPersonID] [int] IDENTITY(1,1) NOT NULL,
+	[FirstName] [nvarchar](200) NULL,
+	[LastName] [nvarchar](200) NULL,
+	[SalesPersonName] [nvarchar](250) NOT NULL,
+	[ReportingTo] [int] NULL,
+	[ReportingLevelTop] [int] NOT NULL,
+	[Status] [tinyint] NOT NULL,
+	[CreatedDate] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[SalesPersonID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[SalesPersonName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[SampleFinalStatus]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[SampleFinalStatus](
+	[VisitNumber] [varchar](20) NOT NULL,
+	[FinalStatus] [varchar](50) NOT NULL,
+	[ClaimSubStatus] [varchar](250) NOT NULL,
+ CONSTRAINT [PK_SampleFinalStatus] PRIMARY KEY CLUSTERED 
+(
+	[VisitNumber] ASC,
+	[FinalStatus] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[SpecimenStatus]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[SpecimenStatus](
+	[SpecimenStatusId] [int] IDENTITY(1,1) NOT NULL,
+	[SpecimenStatusName] [nvarchar](500) NOT NULL,
+	[IsActive] [bit] NOT NULL,
+	[CreatedOn] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[SpecimenStatusId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[SpecimenStatusName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[TestTypeMaster]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[TestTypeMaster](
+	[TestTypeId] [int] IDENTITY(1,1) NOT NULL,
+	[TestTypeName] [nvarchar](500) NOT NULL,
+	[IsActive] [bit] NOT NULL,
+	[CreatedOn] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[TestTypeId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[TestTypeName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[TransactionDetailStaging]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[TransactionDetailStaging](
+	[TransactionDetailId] [int] IDENTITY(1,1) NOT NULL,
+	[LabIdentityKey] [nvarchar](150) NULL,
+	[TransactionType] [nvarchar](150) NULL,
+	[ChartNumber] [nvarchar](150) NULL,
+	[PatientName] [nvarchar](150) NULL,
+	[FinancialClass] [nvarchar](150) NULL,
+	[VisitNo] [nvarchar](150) NULL,
+	[FacilityName] [nvarchar](150) NULL,
+	[ProviderProfile] [nvarchar](150) NULL,
+	[ChargeCode] [nvarchar](150) NULL,
+	[TransactionCode] [nvarchar](150) NULL,
+	[TransactionCodeDesc] [nvarchar](150) NULL,
+	[Modifiers] [nvarchar](150) NULL,
+	[VisitPrimaryCarrier] [nvarchar](150) NULL,
+	[VisitSecondaryCarrier] [nvarchar](150) NULL,
+	[TransactionCarrier] [nvarchar](150) NULL,
+	[PrimaryDxICD9] [nvarchar](150) NULL,
+	[PrimaryDxICD10] [nvarchar](150) NULL,
+	[PaymentMethod] [nvarchar](150) NULL,
+	[CheckNumber] [nvarchar](150) NULL,
+	[DateofService] [date] NULL,
+	[DateofEntry] [date] NULL,
+	[DateofDeposit] [date] NULL,
+	[Void] [nvarchar](150) NULL,
+	[Units] [int] NULL,
+	[TotalBilledAmount] [decimal](10, 2) NULL,
+	[PatientPaidAmount] [decimal](10, 2) NULL,
+	[InsurancePaidAmount] [decimal](10, 2) NULL,
+	[TotalPaidAmount] [decimal](10, 2) NULL,
+	[AdjustmentAmount] [decimal](10, 2) NULL,
+	[ImportedOn] [datetime] NULL,
+	[ImportedFileID] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[TransactionDetailId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[TransactionMaster]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[TransactionMaster](
+	[TransactionDetailID] [int] IDENTITY(1,1) NOT NULL,
+	[LabIdentityKey] [int] NULL,
+	[TransactionType] [varchar](50) NULL,
+	[ChartNumber] [varchar](50) NULL,
+	[VisitNo] [varchar](50) NULL,
+	[CPTCode] [varchar](50) NULL,
+	[TransactionCodeDesc] [varchar](250) NULL,
+	[Modifiers] [varchar](50) NULL,
+	[VisitPrimaryCarrier] [varchar](50) NULL,
+	[VisitSecondaryCarrier] [varchar](50) NULL,
+	[TransactionCarrier] [varchar](50) NULL,
+	[PrimaryDxICD10] [varchar](100) NULL,
+	[PrimaryDxICD9] [varchar](50) NULL,
+	[PaymentMethod] [varchar](50) NULL,
+	[CheckNumber] [varchar](50) NULL,
+	[DateofService] [date] NULL,
+	[DateofEntry] [date] NULL,
+	[DateofDeposit] [date] NULL,
+	[Void] [varchar](50) NULL,
+	[Units] [int] NULL,
+	[TotalBilledAmount] [decimal](18, 2) NULL,
+	[PatientPaidAmount] [decimal](18, 2) NULL,
+	[InsurancePaidAmount] [decimal](18, 2) NULL,
+	[TotalPaidAmount] [decimal](18, 2) NULL,
+	[AdjustmentAmount] [decimal](18, 2) NULL,
+	[CreatedOn] [datetime] NULL,
+	[UpdatedOn] [datetime] NULL
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[TransactionSummary]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[TransactionSummary](
+	[VisitNumber] [int] NOT NULL,
+	[CPTCode] [varchar](25) NOT NULL,
+	[CheckNumber] [varchar](50) NULL,
+	[DateOfDeposit] [date] NULL,
+	[DateOfEntry] [date] NULL,
+	[TransactionType] [varchar](30) NOT NULL,
+	[Units] [int] NOT NULL,
+	[TotalBilledAmount] [decimal](18, 2) NOT NULL,
+	[AdjustmentAmount] [decimal](18, 2) NOT NULL,
+	[PatientPaidAmount] [decimal](18, 2) NOT NULL,
+	[TotalPaidAmount] [decimal](18, 2) NOT NULL,
+	[InsurancePaidAmount] [decimal](18, 2) NOT NULL,
+	[CreatedOn] [datetime] NULL
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[VAAMaster]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[VAAMaster](
+	[VisitNumber] [nvarchar](30) NOT NULL,
+	[AccessionNo] [nvarchar](30) NULL,
+	[DateOfEntry] [date] NULL,
+	[ServiceDate] [date] NULL,
+	[CreatedOn] [datetime] NULL,
+ CONSTRAINT [UQ_VAAMaster] UNIQUE NONCLUSTERED 
+(
+	[VisitNumber] ASC,
+	[AccessionNo] ASC,
+	[DateOfEntry] ASC,
+	[ServiceDate] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[VisitAgaistAccessionStaging]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[VisitAgaistAccessionStaging](
+	[VAAId] [int] IDENTITY(1,1) NOT NULL,
+	[Void] [nvarchar](50) NULL,
+	[OfficeKey] [nvarchar](250) NULL,
+	[VisitNumber] [nvarchar](250) NULL,
+	[EntryDate] [date] NULL,
+	[ServiceDate] [date] NULL,
+	[AccessionNo] [nvarchar](250) NULL,
+	[ImportedOn] [datetime] NULL,
+	[ImportedFileID] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[VAAId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[BillingMaster] ADD  CONSTRAINT [DF_BillingMaster_CreatedOn]  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[BillingMaster] ADD  CONSTRAINT [DF_BillingMaster_UpdatedOn]  DEFAULT (getdate()) FOR [UpdatedOn]
+GO
+ALTER TABLE [dbo].[BillingProviderMaster] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[BillingProviderMaster] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] ADD  DEFAULT ((0.0)) FOR [BilledAmount]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] ADD  DEFAULT ((0.0)) FOR [AllowedAmount]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] ADD  DEFAULT ((0.0)) FOR [InsurancePaidAmount]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] ADD  DEFAULT ((0.0)) FOR [InsuranceAdjustmentAmount]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] ADD  DEFAULT ((0.0)) FOR [PatientPaidAmount]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] ADD  DEFAULT ((0.0)) FOR [PatientAdjustmentAmount]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] ADD  DEFAULT ((0.0)) FOR [InsuranceBalance]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] ADD  DEFAULT ((0.0)) FOR [PatientBalance]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] ADD  DEFAULT ((0.0)) FOR [TotalBalance]
+GO
+ALTER TABLE [dbo].[ClaimBillingDetails] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] ADD  DEFAULT ((0)) FOR [BilledAmount]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] ADD  DEFAULT ((0)) FOR [AllowedAmount]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] ADD  DEFAULT ((0)) FOR [InsurancePayment]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] ADD  DEFAULT ((0)) FOR [InsuranceAdjustment]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] ADD  DEFAULT ((0)) FOR [PatientPaidAmount]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] ADD  DEFAULT ((0)) FOR [PatientAdjustment]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] ADD  DEFAULT ((0)) FOR [InsuranceBalance]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] ADD  DEFAULT ((0)) FOR [PatientBalance]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] ADD  DEFAULT ((0)) FOR [TotalBalance]
+GO
+ALTER TABLE [dbo].[ClaimsLevelStatus] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[ClaimsProdStatus] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[ClientBillingSheet] ADD  DEFAULT (getdate()) FOR [ImportedOn]
+GO
+ALTER TABLE [dbo].[ClinicMaster] ADD  DEFAULT ((1)) FOR [ClinicStatus]
+GO
+ALTER TABLE [dbo].[ClinicMaster] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[CPTCodeMaster] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[CPTCodeMaster] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[CustomCollectionStaging] ADD  DEFAULT (getdate()) FOR [ImpotedOn]
+GO
+ALTER TABLE [dbo].[DenialTrackingMaster] ADD  DEFAULT (getdate()) FOR [CreateOn]
+GO
+ALTER TABLE [dbo].[DenialTrackingMaster] ADD  DEFAULT (getdate()) FOR [UpdatedOn]
+GO
+ALTER TABLE [dbo].[DenialTrackingStaging] ADD  DEFAULT (getdate()) FOR [ImportedOn]
+GO
+ALTER TABLE [dbo].[DiagnoseLISStaging] ADD  DEFAULT (getdate()) FOR [ImportedOn]
+GO
+ALTER TABLE [dbo].[DownloadReportTypes] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[ICDCodeMaster] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[ICDCodeMaster] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[ImportedFiles] ADD  DEFAULT (getdate()) FOR [ImportedOn]
+GO
+ALTER TABLE [dbo].[ImportedFiles] ADD  DEFAULT ((3)) FOR [LabId]
+GO
+ALTER TABLE [dbo].[ImportFileLogs] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[ImportFilTypes] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[InsurancePayerMaster] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[InsurancePayerMaster] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[LabMaster] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[LabMaster] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[LISMaster] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[LISMaster] ADD  DEFAULT ('SYSTEM') FOR [CreatedBy]
+GO
+ALTER TABLE [dbo].[LISStaging] ADD  DEFAULT (getdate()) FOR [ImportedOn]
+GO
+ALTER TABLE [dbo].[OperationsGroupMaster] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[OperationsGroupMaster] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[PanelGroup] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[PanelGroup] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[PanelMasterStaging] ADD  DEFAULT (getdate()) FOR [ImportedOn]
+GO
+ALTER TABLE [dbo].[PayerTypeMaster] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[PayerTypeMaster] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[PrismBillingStaging] ADD  DEFAULT (getdate()) FOR [ImportedOn]
+GO
+ALTER TABLE [dbo].[ReferringProviderMaster] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[ReferringProviderMaster] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[SalesPerson] ADD  DEFAULT (getdate()) FOR [CreatedDate]
+GO
+ALTER TABLE [dbo].[SpecimenStatus] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[SpecimenStatus] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[TestTypeMaster] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [dbo].[TestTypeMaster] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[TransactionDetailStaging] ADD  DEFAULT (getdate()) FOR [ImportedOn]
+GO
+ALTER TABLE [dbo].[TransactionMaster] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[TransactionSummary] ADD  DEFAULT ((0)) FOR [Units]
+GO
+ALTER TABLE [dbo].[TransactionSummary] ADD  DEFAULT ((0.0)) FOR [TotalBilledAmount]
+GO
+ALTER TABLE [dbo].[TransactionSummary] ADD  DEFAULT ((0.0)) FOR [AdjustmentAmount]
+GO
+ALTER TABLE [dbo].[TransactionSummary] ADD  DEFAULT ((0.0)) FOR [PatientPaidAmount]
+GO
+ALTER TABLE [dbo].[TransactionSummary] ADD  DEFAULT ((0.0)) FOR [TotalPaidAmount]
+GO
+ALTER TABLE [dbo].[TransactionSummary] ADD  DEFAULT ((0.0)) FOR [InsurancePaidAmount]
+GO
+ALTER TABLE [dbo].[TransactionSummary] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[VAAMaster] ADD  DEFAULT (getdate()) FOR [CreatedOn]
+GO
+ALTER TABLE [dbo].[VisitAgaistAccessionStaging] ADD  DEFAULT (getdate()) FOR [ImportedOn]
+GO
+ALTER TABLE [dbo].[BillingMaster]  WITH CHECK ADD  CONSTRAINT [FK_BillingMaster_BillingProvider] FOREIGN KEY([BillingProviderID])
+REFERENCES [dbo].[BillingProviderMaster] ([BillingProviderID])
+GO
+ALTER TABLE [dbo].[BillingMaster] CHECK CONSTRAINT [FK_BillingMaster_BillingProvider]
+GO
+ALTER TABLE [dbo].[BillingMaster]  WITH CHECK ADD  CONSTRAINT [FK_BillingMaster_LISMaster] FOREIGN KEY([LISMasterId])
+REFERENCES [dbo].[LISMaster] ([LISMasterId])
+GO
+ALTER TABLE [dbo].[BillingMaster] CHECK CONSTRAINT [FK_BillingMaster_LISMaster]
+GO
+ALTER TABLE [dbo].[BillingMaster]  WITH CHECK ADD  CONSTRAINT [FK_BillingMaster_PayerType] FOREIGN KEY([PayerTypeId])
+REFERENCES [dbo].[PayerTypeMaster] ([PayerTypeId])
+GO
+ALTER TABLE [dbo].[BillingMaster] CHECK CONSTRAINT [FK_BillingMaster_PayerType]
+GO
+ALTER TABLE [dbo].[BillingMaster]  WITH CHECK ADD  CONSTRAINT [FK_BillingMaster_PrimaryPayer] FOREIGN KEY([PrimaryPayerID])
+REFERENCES [dbo].[InsurancePayerMaster] ([InsurancePayerId])
+GO
+ALTER TABLE [dbo].[BillingMaster] CHECK CONSTRAINT [FK_BillingMaster_PrimaryPayer]
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([BillingProviderID])
+REFERENCES [dbo].[BillingProviderMaster] ([BillingProviderID])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([BillingProviderID])
+REFERENCES [dbo].[BillingProviderMaster] ([BillingProviderID])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([BillingProviderID])
+REFERENCES [dbo].[BillingProviderMaster] ([BillingProviderID])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([BillingProviderID])
+REFERENCES [dbo].[BillingProviderMaster] ([BillingProviderID])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([BillingProviderID])
+REFERENCES [dbo].[BillingProviderMaster] ([BillingProviderID])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([ClinicId])
+REFERENCES [dbo].[ClinicMaster] ([ClinicId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([ClinicId])
+REFERENCES [dbo].[ClinicMaster] ([ClinicId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([ClinicId])
+REFERENCES [dbo].[ClinicMaster] ([ClinicId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([ClinicId])
+REFERENCES [dbo].[ClinicMaster] ([ClinicId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([ClinicId])
+REFERENCES [dbo].[ClinicMaster] ([ClinicId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([LabId])
+REFERENCES [dbo].[LabMaster] ([LabID])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([LabId])
+REFERENCES [dbo].[LabMaster] ([LabID])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([LabId])
+REFERENCES [dbo].[LabMaster] ([LabID])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([LabId])
+REFERENCES [dbo].[LabMaster] ([LabID])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([LabId])
+REFERENCES [dbo].[LabMaster] ([LabID])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([OperationalGroupId])
+REFERENCES [dbo].[OperationsGroupMaster] ([OperationGroupID])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([OperationalGroupId])
+REFERENCES [dbo].[OperationsGroupMaster] ([OperationGroupID])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([OperationalGroupId])
+REFERENCES [dbo].[OperationsGroupMaster] ([OperationGroupID])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([OperationalGroupId])
+REFERENCES [dbo].[OperationsGroupMaster] ([OperationGroupID])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([OperationalGroupId])
+REFERENCES [dbo].[OperationsGroupMaster] ([OperationGroupID])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([PanelId])
+REFERENCES [dbo].[PanelGroup] ([PanelGroupId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([PanelId])
+REFERENCES [dbo].[PanelGroup] ([PanelGroupId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([PanelId])
+REFERENCES [dbo].[PanelGroup] ([PanelGroupId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([PanelId])
+REFERENCES [dbo].[PanelGroup] ([PanelGroupId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([PanelId])
+REFERENCES [dbo].[PanelGroup] ([PanelGroupId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([PayerTypeId])
+REFERENCES [dbo].[PayerTypeMaster] ([PayerTypeId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([PayerTypeId])
+REFERENCES [dbo].[PayerTypeMaster] ([PayerTypeId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([PayerTypeId])
+REFERENCES [dbo].[PayerTypeMaster] ([PayerTypeId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([PayerTypeId])
+REFERENCES [dbo].[PayerTypeMaster] ([PayerTypeId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([PayerTypeId])
+REFERENCES [dbo].[PayerTypeMaster] ([PayerTypeId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([ReferringProviderId])
+REFERENCES [dbo].[ReferringProviderMaster] ([ReferingProviderId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([ReferringProviderId])
+REFERENCES [dbo].[ReferringProviderMaster] ([ReferingProviderId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([ReferringProviderId])
+REFERENCES [dbo].[ReferringProviderMaster] ([ReferingProviderId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([ReferringProviderId])
+REFERENCES [dbo].[ReferringProviderMaster] ([ReferingProviderId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([ReferringProviderId])
+REFERENCES [dbo].[ReferringProviderMaster] ([ReferingProviderId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([SampleStatusId])
+REFERENCES [dbo].[SpecimenStatus] ([SpecimenStatusId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([SampleStatusId])
+REFERENCES [dbo].[SpecimenStatus] ([SpecimenStatusId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([SampleStatusId])
+REFERENCES [dbo].[SpecimenStatus] ([SpecimenStatusId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([SampleStatusId])
+REFERENCES [dbo].[SpecimenStatus] ([SpecimenStatusId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([SampleStatusId])
+REFERENCES [dbo].[SpecimenStatus] ([SpecimenStatusId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([TestTypeId])
+REFERENCES [dbo].[TestTypeMaster] ([TestTypeId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([TestTypeId])
+REFERENCES [dbo].[TestTypeMaster] ([TestTypeId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([TestTypeId])
+REFERENCES [dbo].[TestTypeMaster] ([TestTypeId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([TestTypeId])
+REFERENCES [dbo].[TestTypeMaster] ([TestTypeId])
+GO
+ALTER TABLE [dbo].[LISMaster]  WITH NOCHECK ADD FOREIGN KEY([TestTypeId])
+REFERENCES [dbo].[TestTypeMaster] ([TestTypeId])
+GO
+ALTER TABLE [dbo].[BillingMaster]  WITH CHECK ADD  CONSTRAINT [CK_BillingMaster_NonNegativeAmounts] CHECK  ((isnull([BilledAmount],(0))>=(0) AND isnull([AllowedAmount],(0))>=(0) AND isnull([InsurancePayment],(0))>=(0) AND isnull([InsuranceAdjustment],(0))>=(0) AND isnull([PatientPaidAmount],(0))>=(0) AND isnull([PatientAdjustment],(0))>=(0) AND isnull([InsuranceBalance],(0))>=(0) AND isnull([PatientBalance],(0))>=(0) AND isnull([TotalBalance],(0))>=(0)))
+GO
+ALTER TABLE [dbo].[BillingMaster] CHECK CONSTRAINT [CK_BillingMaster_NonNegativeAmounts]
+GO
 /****** Object:  StoredProcedure [dbo].[BillingMasterProcess_Proc]******/
 SET ANSI_NULLS ON
 GO
@@ -791,7 +2623,7 @@ BEGIN
         BillingProvider,
         ReferringProvider,
         PerformingLab,
-        PatientID,
+        PatientID ChartNum,
         LTRIM(RTRIM(UPPER(PatientName))) PatientName,
         DOB,
         ResponsibleParty,
@@ -813,12 +2645,12 @@ BEGIN
         PatientAdjustments,
         InsuranceBalance,
         PatientBalance,
-        TotalBalance
+        TotalBalance,ImportedFileID
     INTO #CustomCollectionData
     FROM CustomCollectionStaging WHERE (ImportedFileID = @FileId OR @FileId IS NULL);
 
-	Select distinct lis.LISMasterId,vaa.AccessionNo,vaa.VisitNumber into #VAATemp  from VisitAgaistAccessionStaging vaa
-	join LISMaster lis on vaa.AccessionNo = lis.AccessionNo where vaa.AccessionNo is not null;
+	--Select distinct lis.LISMasterId,vaa.AccessionNo,vaa.VisitNumber into #VAATemp  from VisitAgaistAccessionStaging vaa
+	--join LISMaster lis on vaa.AccessionNo = lis.AccessionNo where vaa.AccessionNo is not null;
 
 	select distinct VisitNo,CPTCode,Units,TotalBilledAmount INTO #TransData from TransactionMaster 
 	where TransactionType = 'Charge' and TotalBilledAmount > 0 and void is null 
@@ -843,10 +2675,14 @@ BEGIN
         CC.POS,
         CC.TOS,
         CC.ICD10Code,
-		PatientID,
+		ChartNum,
         PatientName,
 		RP.ReferingProviderId,
-		ISNULL(cc.UNITS,0) UNITS,
+		ImportedFileID,
+		ResponsibleParty,
+		DOB PatientDOB,
+		Lab.LabId FacilityId,
+		ISNULL(SUM(cc.UNITS),0) UNITS,
 		ISNULL(CC.Modifier,0) Modifier,
         SUM(CC.BilledAmount) AS BilledAmount,
         SUM(CC.AllowedAmount) AS AllowedAmount,
@@ -864,6 +2700,7 @@ BEGIN
     LEFT JOIN PayerTypeMaster PT ON TRIM(CC.PayerType) = TRIM(PT.PayerType)
     LEFT JOIN BillingProviderMaster BP ON TRIM(CC.BillingProvider) = TRIM(BP.BillingProvider)
 	LEFT JOIN ReferringProviderMaster RP on TRIM(CC.ReferringProvider) = TRIM(RP.ReferringProviderName)
+	LEFT JOIN LabMaster Lab on TRIM(CC.PerformingLab) = TRIM(Lab.LabName)
     GROUP BY
 		--vaa.LISMasterId,
   --      vaa.AccessionNo,
@@ -884,8 +2721,11 @@ BEGIN
         CC.TOS,
         CC.ICD10Code,
 		--VAA.AccessionNo,
-		cc.UNITS,CC.Modifier,PatientID,
-        PatientName,RP.ReferingProviderId;
+		cc.UNITS,CC.Modifier,ChartNum,
+        PatientName,RP.ReferingProviderId,ImportedFileID,
+		ResponsibleParty,
+		DOB,
+		Lab.LabId;
 
      ------Step 3: Deduplicate
     --WITH RankedBilling AS (
@@ -943,26 +2783,32 @@ BEGIN
                 PatientBalance,
                 TotalBalance,
 				Units,
-				PatientID,
 				PatientName,
-				ReferringProviderId
+				ReferringProviderId,
+				FacilityId,
+				PatientDOB,
+				ResponsibleParty,
+				ImportFileId,
+				ChartNumber
             )
 			SELECT VisitNumber,InsurancePayerId,PayerTypeId,BillingProviderID,ClientAccNum,MemberID,BeginDOS,EndDOS,
 			ChargeEntryDate,FirstBillDate,BillingFrequency,ChargeEnteredBy,CPTCode,POS,TOS,Modifier,ICD10Code,BilledAmount,AllowedAmount,InsurancePayments,
 			InsuranceAdjustments,PatientPayments,PatientAdjustments,InsuranceBalance,PatientBalance,TotalBalance,UNITS,
-			PatientID,PatientName,ReferingProviderId FROM #BillingMaster BM 
+			PatientName,ReferingProviderId,FacilityId,PatientDOB,ResponsibleParty,ImportedFileID,ChartNum FROM #BillingMaster BM 
 
-			UPDATE BM SET BM.AccessionNo = vaa.AccessionNo,bm.LISMasterId = vaa.LISMasterId FROM BillingMaster BM 
-			JOIN #VAATemp vaa ON BM.VisitNumber = VAA.VisitNumber
+			UPDATE BM SET BM.AccessionNo = vaa.AccessionNo FROM BillingMaster BM 
+			JOIN VAAMaster vaa ON BM.VisitNumber = VAA.VisitNumber
 
-		UPDATE 	BillingMaster SET CheckDate = NULL ,PaymentPostedDate = NULL,CheckNumber = NULL,ChartNumber =NULL;
+			UPDATE BM SET BM.LISMasterId = vaa.LISMasterId FROM BillingMaster BM 
+			JOIN LISMaster vaa ON BM.AccessionNo = VAA.AccessionNo
+
+		UPDATE 	BillingMaster SET CheckDate = NULL ,PaymentPostedDate = NULL,CheckNumber = NULL;
 
 		WITH CTE_TransData AS
 		(
 			SELECT 
 				VisitNo,
 				CPTCode,
-				ChartNumber,
 				CheckNumber,
 				DateofDeposit AS CheckDate,
 				DateofEntry AS LastPostedDate,
@@ -975,7 +2821,6 @@ BEGIN
 		)
 		SELECT 
 			VisitNo,CPTCode,
-			ChartNumber,
 			CheckNumber,
 			CheckDate,
 			LastPostedDate
@@ -986,7 +2831,7 @@ BEGIN
 
 
 
-		UPDATE BM SET BM.CheckDate = PPI.CheckDate ,BM.PaymentPostedDate = PPI.LastPostedDate,bm.CheckNumber = PPI.CheckNumber,BM.ChartNumber = PPI.ChartNumber
+		UPDATE BM SET BM.CheckDate = PPI.CheckDate ,BM.PaymentPostedDate = PPI.LastPostedDate,bm.CheckNumber = PPI.CheckNumber
 		FROM BillingMaster BM JOIN #TransMaster_ChckDtl PPI ON BM.VisitNumber = PPI.VisitNo AND BM.CPTCode = PPI.CPTCode --where InsurancePayment > 0
 
 
@@ -1408,7 +3253,9 @@ CREATE PROC [dbo].[sp_GetCollectionLineLevelReport]
     @ToDate Date = NULL
 AS
 BEGIN
+
   SET NOCOUNT ON;
+
 DROP TABLE IF EXISTS #DenialCodeMaster;
 SELECT 
     VisitNumber,CPTCodes,DBO.[GetDenailCodeByVisitCPT](VisitNumber,CPTCodes) AS PaymentReasonCodes,MAX(PaymentDate) AS MostRecentDenialPostingDate
@@ -1418,49 +3265,49 @@ WHERE PaymentReasonCode IS NOT NULL
 GROUP BY VisitNumber,CPTCodes ORDER BY VisitNumber
 
 CREATE NONCLUSTERED INDEX IX_VisitNumber ON #DenialCodeMaster (VisitNumber,CPTCodes);
-
-    SELECT DISTINCT 
-        ISNULL(UPPER(b.AccessionNo),'Missing LIS Info') AccessionNo,
-        b.VisitNumber,
-        b.CPTCode,
-        b.PatientName,
-		CAST(CheckDate AS DATE) AS  PatientDOB, 
-        PayerName,
-        PayerType,
-        BillingProvider,
-		CAST(BeginDOS AS DATE) AS   BeginDOS,
-		CAST(EndDOS AS DATE) AS  EndDOS,
-		CAST(b.ChargeEntryDate AS DATE) AS	   ChargeEntryDate,
-		CAST(FirstBillDate AS DATE) AS     FirstBillDate,
-		ISNULL(pg.PanelName,'Missing LIS Info') PanelName,
-		ISNULL(l.OrderInfo,'Missing LIS Info') OrderInfo,
-        b.ICD10Code,
-        b.Units,
-		CAST(CheckDate AS DATE) AS     CheckDate,
-		CAST(PaymentPostedDate AS DATE) AS   PaymentPostedDate,
-		CAST(dt.MostRecentDenialPostingDate AS DATE) AS    DenialPostedDate,
-        b.CheckNumber,
-        b.Modifier,
-        PaymentReasonCodes as DenialCode,
-        ISNULL(BilledAmount,0.0) TotalCharge,
-        ISNULL(AllowedAmount,0.0) AS TotalAllowed,
-        ISNULL(InsurancePayment,0.0) AS CarrierPayment,
-        CAST(ROUND(CASE WHEN BilledAmount > 0 THEN InsurancePayment * 100.0 / BilledAmount ELSE 0 END, 1) AS DECIMAL(8,2)) AS PaymentPercentage,
-        ISNULL(InsuranceAdjustment,0.0) AS CarrierWO,
-        ISNULL(PatientPaidAmount,0.0) PatientPaidAmount,
-        ISNULL(PatientAdjustment,0.0) AS PatientWO,
-        ISNULL(InsuranceBalance,0.0) AS CarrierBalance,
-        ISNULL(PatientBalance,0.0) PatientBalance,
-        ISNULL(b.TotalBalance,0.0) TotalBalance,
-        (InsurancePayment + PatientPaidAmount) AS FullyPaid,
-        b.FinalClaimStatus,
-		Lab.LabName,
-		cm.ClinicName,
-		og.OperationsGroup,
-		tt.TestTypeName TestType,
-		rp.ReferringProviderName,
-		b.ClaimSubStatus,
-		CASE WHEN b.AccessionNo is null then 'Missing LIS Data' else '' end LISMissingRecord 
+SELECT DISTINCT 
+    ISNULL(UPPER(b.AccessionNo),'Missing LIS Info') AccessionNo,
+    b.VisitNumber,
+    b.CPTCode,
+    b.PatientName,
+	b.ChartNumber,
+	CONVERT(VARCHAR, CAST(b.PatientDOB AS DATE), 101)  PatientDOB, 
+	b.ResponsibleParty,
+    PayerName,
+    PayerType,
+    BillingProvider,
+	CONVERT(VARCHAR, BeginDOS, 101)   BeginDOS,
+	CONVERT(VARCHAR, EndDOS, 101)    EndDOS,
+	CONVERT(VARCHAR, b.ChargeEntryDate, 101)	   ChargeEntryDate,
+	CONVERT(VARCHAR, FirstBillDate, 101)        FirstBillDate,
+    ISNULL(pg.PanelName,'Missing LIS Info') PanelName,
+    ISNULL(l.OrderInfo,'Missing LIS Info') OrderInfo,
+    b.ICD10Code,
+    b.Units,
+	CONVERT(VARCHAR, CheckDate, 101)	     CheckDate,
+	CONVERT(VARCHAR, PaymentPostedDate, 101)	   PaymentPostedDate,
+	CONVERT(VARCHAR, dt.MostRecentDenialPostingDate, 101)	DenialPostedDate,
+    b.CheckNumber,
+    b.Modifier,
+    PaymentReasonCodes as DenialCode,
+    b.BilledAmount,
+    b.AllowedAmount,
+    b.InsurancePayment,
+    b.InsuranceAdjustment,
+    b.PatientPaidAmount,
+    b.PatientAdjustment,
+    b.InsuranceBalance,
+    b.PatientBalance,
+    b.TotalBalance,
+    b.FinalClaimStatus,
+	Lab.LabName Facility,
+	cm.ClinicName,
+	og.OperationsGroup,
+	tt.TestTypeName TestType,
+	rp.ReferringProviderName,
+	pg.PanelCategory PanelGroup,
+	CASE WHEN b.AccessionNo is null then 'Missing LIS Data' else '' end LISMissingRecord,
+	b.ClaimSubStatus
 FROM BillingMaster b
 LEFT JOIN LISMaster l ON b.LISMasterId = l.LISMasterId
 LEFT JOIN InsurancePayerMaster i ON b.PrimaryPayerID = i.InsurancePayerId
@@ -1469,17 +3316,17 @@ LEFT JOIN BillingProviderMaster bp ON b.BillingProviderID = bp.BillingProviderID
 LEFT JOIN #DenialCodeMaster dt ON b.VisitNumber = dt.VisitNumber AND b.CPTCode = dt.CPTCodes
 LEFT JOIN PanelGroup pg ON l.OrderInfo = pg.OrderInfo 
 
-LEFT JOIN LabMaster LAB ON l.LabId = LAB.LabID
+LEFT JOIN LabMaster LAB ON b.FacilityId = LAB.LabID
 LEFT JOIN ClinicMaster CM ON l.ClinicId = CM.ClinicId
 LEFT JOIN OperationsGroupMaster OG ON l.OperationalGroupId = OG.OperationGroupID 
 LEFT JOIN TestTypeMaster TT ON l.TestTypeId = TT.TestTypeId
 LEFT JOIN ReferringProviderMaster RP ON b.ReferringProviderId = RP.ReferingProviderId
 
-    WHERE 
-        (@FromDate IS NULL OR TRY_CONVERT(date, b.PaymentPostedDate) >= @FromDate)
-        AND
-        (@ToDate IS NULL OR TRY_CONVERT(date, b.PaymentPostedDate) <= @ToDate)
-    ORDER BY AccessionNo
+WHERE 
+    (@FromDate IS NULL OR TRY_CONVERT(date, b.FirstBillDate) >= @FromDate)
+    AND
+    (@ToDate IS NULL OR TRY_CONVERT(date, b.FirstBillDate) <= @ToDate)
+ORDER BY AccessionNo
 END
 GO
 /****** Object:  StoredProcedure [dbo].[sp_GetCollectionReport]******/
@@ -1494,40 +3341,35 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Step 1: Filtered BillingMaster load into temp table (single scan)
-		SELECT * INTO #BillingMasterTemp FROM BillingMaster WITH (NOLOCK)
-		WHERE (@FromDate IS NULL OR PaymentPostedDate >= @FromDate) AND (@ToDate IS NULL OR PaymentPostedDate <= @ToDate) 
-		--AND FinalClaimStatus in ('Paid','Adjusted','Denied');
-	 
-		DROP TABLE IF EXISTS #DenialCode
+    -- Temp tables
+    SELECT * INTO #BillingMasterTemp 
+    FROM BillingMaster WITH (NOLOCK)
+    WHERE (@FromDate IS NULL OR FirstBillDate >= @FromDate) 
+      AND (@ToDate IS NULL OR FirstBillDate <= @ToDate);
 
-		SELECT DISTINCT VisitNumber,DBO.GetDenailCodeByVisitNumber(VisitNumber) DenialCode INTO #DenialCode FROM DenialTrackingMaster
-		WHERE PaymentReasonCode IS NOT  NULL
+	----;WITH CTE_Trans AS(
+ ----   SELECT VisitNo, ChartNumber,ROW_NUMBER() OVER (
+ ----           PARTITION BY VisitNo 
+ ----           ORDER BY DateOfService DESC
+ ----       ) AS rn
+ ----   FROM TransactionMaster 
+ ----   WHERE VisitNo IS NOT NULL AND TransactionType = 'Charge'
+    
+	----)SELECT VisitNo,ChartNumber INTO #TransactionMaster FROM CTE_Trans WHERE rn = 1;
 
-		CREATE NONCLUSTERED INDEX IX_VisitNumber ON #DenialCode (VisitNumber);
+    CREATE NONCLUSTERED INDEX IX_VisitNumber_BM ON #BillingMasterTemp (VisitNumber);
 
-		SELECT bm.VisitNumber, bm.CheckNumber, bm.PaymentPostedDate, bm.CheckDate into #TransactionDetail
-			FROM #BillingMasterTemp bm
-			INNER JOIN (
-				SELECT VisitNumber,
-					   MAX(PaymentPostedDate) AS MaxPostedDate
-				FROM #BillingMasterTemp
-				WHERE CheckNumber IS NOT NULL
-				GROUP BY VisitNumber
-			) latestPosted ON bm.VisitNumber = latestPosted.VisitNumber
-						  AND bm.PaymentPostedDate = latestPosted.MaxPostedDate
-			WHERE bm.CheckDate = (
-				SELECT MAX(CheckDate)
-				FROM #BillingMasterTemp
-				WHERE VisitNumber = bm.VisitNumber
-				  AND PaymentPostedDate = bm.PaymentPostedDate
-			)
-			GROUP BY bm.VisitNumber, bm.CheckNumber, bm.PaymentPostedDate, bm.CheckDate
+    DROP TABLE IF EXISTS #DenialCode;
+    SELECT DISTINCT VisitNumber, DBO.GetDenailCodeByVisitNumber(VisitNumber) AS DenialCode,MAX(PaymentDate) DenialDate
+    INTO #DenialCode 
+    FROM DenialTrackingMaster 
+    WHERE PaymentReasonCode IS NOT NULL GROUP BY  VisitNumber, DBO.GetDenailCodeByVisitNumber(VisitNumber);
 
-    -- Step 2: Aggregations
+    CREATE NONCLUSTERED INDEX IX_VisitNumber_DC ON #DenialCode (VisitNumber);
+
+    -- Aggregations
     ;WITH BillingAgg AS (
-        SELECT 
-            VisitNumber,
+        SELECT VisitNumber,
             SUM(BilledAmount) AS TotalCharge,
             SUM(AllowedAmount) AS AllowedAmount,
             SUM(InsurancePayment) AS InsurancePayment,
@@ -1573,116 +3415,112 @@ BEGIN
     ),
     AggregatedCPT AS (
         SELECT VisitNumber,
-               STRING_AGG(CAST(CPTCode AS VARCHAR(20)) + 
-                 (CASE WHEN ISNULL(Units,0) = 0 THEN '' ELSE '* ' + CAST(ISNULL(Units,0) AS VARCHAR(10)) END), ', ') AS CPTCode
+            STRING_AGG(CAST(CPTCode AS VARCHAR(20)) + 
+                (CASE WHEN ISNULL(Units,0) = 0 THEN '' ELSE '* ' + CAST(ISNULL(Units,0) AS VARCHAR(10)) END), ', ') AS CPTCode
         FROM GroupedCPT
         GROUP BY VisitNumber
-    ), 
-
+    ),
     MainData AS (
         SELECT 
-            BM.VisitNumber,
-            BM.PrimaryPayerID,
-            BM.PayerTypeId,
-            BM.BillingProviderID,
-            BM.BeginDOS,
-            BM.FirstBillDate,
-            BM.ChargeEntryDate,
-            BM.TOS,
-            BM.ICD10Code,
-            LIS.LISMasterId,
-            LIS.AccessionNo,
-            BM.PatientName,
-			bm.ChartNumber,
-				TT.TestTypeName TestType,
-			CM.ClinicName,
-			PG.PanelCategory,
-            ISNULL(LIS.ReferringProviderId,0) ReferringProviderId,
-            PG.PanelName,
-			ISNULL(LIS.LabId,0) LabId,
-			ISNULL(LIS.PanelId,0) PanelId,
-            ROW_NUMBER() OVER (PARTITION BY BM.VisitNumber ORDER BY BM.FirstBillDate DESC) AS rn
-        FROM #BillingMasterTemp BM
-        LEFT JOIN LISMaster LIS WITH (NOLOCK) ON BM.LISMasterId = LIS.LISMasterId
-        LEFT JOIN PanelGroup PG WITH (NOLOCK) ON LIS.PanelId = PG.PanelGroupId
-				LEFT JOIN TestTypeMaster TT ON LIS.TestTypeId = TT.TestTypeId
-		LEFT JOIN ClinicMaster CM ON LIS.ClinicId = CM.ClinicId
+        BM.VisitNumber,
+        BM.PrimaryPayerID,
+        BM.PayerTypeId,
+        BM.BillingProviderID,
+		BM.AccessionNo,
+        -- Window function instead of MIN()
+        MIN(BM.BeginDOS) OVER (PARTITION BY BM.VisitNumber) AS BeginDOS,
+		MAX(BM.ChargeEntryDate) OVER (PARTITION BY BM.VisitNumber) AS ChargeEntryDate,
+		MAX(BM.CheckDate) OVER (PARTITION BY BM.VisitNumber) AS CheckDate,
+		MAX(BM.PaymentPostedDate) OVER (PARTITION BY BM.VisitNumber) AS PaymentPostedDate,
+		BM.PatientDOB,
+		BM.PatientName,
+		BM.ChartNumber,
+		BM.ResponsibleParty,
+        BM.FirstBillDate,
+        BM.TOS,
+        BM.ICD10Code,
+        TT.TestTypeName AS TestType,
+        CM.ClinicName,
+        LIS.SampleCollectedDate,
+        PG.PanelCategory,
+		BM.CheckNumber,
+        ISNULL(BM.ReferringProviderId, 0) AS ReferringProviderId,
+        PG.PanelName,
+        ISNULL(LIS.PanelId, 0) AS PanelId,
+		BM.FacilityId,
+        ROW_NUMBER() OVER (
+            PARTITION BY BM.VisitNumber 
+            ORDER BY BM.FirstBillDate 
+        ) AS rn
+    FROM BillingMaster BM
+    LEFT JOIN LISMaster LIS WITH (NOLOCK) 
+        ON BM.LISMasterId = LIS.LISMasterId
+    LEFT JOIN PanelGroup PG WITH (NOLOCK) 
+        ON LIS.PanelId = PG.PanelGroupId
+    LEFT JOIN TestTypeMaster TT 
+        ON LIS.TestTypeId = TT.TestTypeId
+    LEFT JOIN ClinicMaster CM 
+        ON LIS.ClinicId = CM.ClinicId
     )
-
     SELECT DISTINCT
-		md.VisitNumber VisitNumber,
-       ISNULL(md.AccessionNo,'Missing LIS Data') AccessionNo,
-        ISNULL(PG.PanelName,'Missing LIS Data') PanelName,
+        md.VisitNumber,
+        ISNULL(md.AccessionNo,'Missing LIS Data') AS AccessionNo,
+        ISNULL(md.PanelName,'Missing Panel Info') AS PanelName,
         ISNULL(IPM.PayerName,'Missing Payer Info') AS Carrier,
         FC.PayerType AS FinancialClass,
-		BP.BillingProvider BillingProvider,
-        RF.ReferringProviderName ReferringProviderName,
-        md.ChartNumber ChartNumber,
-        md.PatientName PatientName,
-		LM.LabName Facility,
-			md.TestType,
+        BP.BillingProvider,
+        RF.ReferringProviderName,
+        md.ChartNumber,
+        md.PatientName,
+		CONVERT(VARCHAR, md.PatientDOB, 101)  AS PatientDOB,	
+		md.ResponsibleParty,
+		md.TestType,
 		md.ClinicName,
 		md.PanelCategory PanelGroup,
-        CAST(md.BeginDOS AS DATE) AS BeginDOS,
-        DATEDIFF(DAY, md.FirstBillDate, td.PaymentPostedDate) AS Aging,
+        LM.LabName AS Facility,
+        CONVERT(VARCHAR, md.BeginDOS, 101)  AS BeginDOS,
+        DATEDIFF(DAY, md.SampleCollectedDate, GETDATE()) AS Aging,
         CASE 
-            WHEN DATEDIFF(DAY, md.FirstBillDate, td.PaymentPostedDate) <= 30 THEN 'Current'
-            WHEN DATEDIFF(DAY, md.FirstBillDate, td.PaymentPostedDate) BETWEEN 31 AND 60 THEN '30 +'
-            WHEN DATEDIFF(DAY, md.FirstBillDate, td.PaymentPostedDate) BETWEEN 61 AND 90 THEN '60 +'
-            WHEN DATEDIFF(DAY, md.FirstBillDate, td.PaymentPostedDate) BETWEEN 91 AND 120 THEN '90 +'
+            WHEN DATEDIFF(DAY, md.SampleCollectedDate, GETDATE()) <= 30 THEN 'Current'
+            WHEN DATEDIFF(DAY, md.SampleCollectedDate, GETDATE()) <= 60 THEN '30 +'
+            WHEN DATEDIFF(DAY, md.SampleCollectedDate, GETDATE()) <= 90 THEN '60 +'
+            WHEN DATEDIFF(DAY, md.SampleCollectedDate, GETDATE()) <= 120 THEN '90 +'
             ELSE '120 +'
         END AS AgingBucket,
-        CAST(EC.ChargeEntryDate AS DATE) AS [AMDDOE],
-        CAST(md.FirstBillDate AS DATE) AS FirstBillDate,
-        CAST(EC.ChargeEntryDate AS DATE) AS ChargeEntryDate,
-		CheckNumber,
-		CAST(td.CheckDate AS DATE) AS CheckDate,
-		CAST(td.PaymentPostedDate AS DATE) AS PaymentPostedDate,
-        CASE 
-            WHEN md.FirstBillDate IS NOT NULL THEN 'Billed'
-            ELSE 'Not Billed'
-        END AS [BilledNotBilled],
-        POS.POS AS POS,
-        TOS.TOS TOS,	
-        AG.CPTCode CPTCode,
+		CONVERT(VARCHAR, EC.ChargeEntryDate, 101)   AS AMDDOE,
+		CONVERT(VARCHAR, md.FirstBillDate, 101)  AS FirstBillDate,
+		CONVERT(VARCHAR, EC.ChargeEntryDate, 101)   AS ChargeEntryDate,
+		CONVERT(VARCHAR, DC.DenialDate, 101)	DenialPostedDate,
+		CONVERT(VARCHAR, md.CheckDate, 101)	CheckDate,
+		CONVERT(VARCHAR, md.PaymentPostedDate, 101)	PaymentPostedDate,
+		md.CheckNumber,
+        CASE WHEN md.FirstBillDate IS NOT NULL THEN 'Billed' ELSE 'Not Billed' END AS BilledNotBilled,
+        POS.POS,
+        TOS.TOS,
+        AG.CPTCode,
         md.ICD10Code AS PrimaryDiagnosis,
-        DenialCode ,
-        ISNULL(BA.TotalCharge,0.0) TotalCharge,
-        ISNULL(BA.AllowedAmount,0.0) AS TotalAllowed,
-        ISNULL(BA.InsurancePayment,0.0) AS CarrierPayment,
+        DC.DenialCode,
+        ISNULL(BA.TotalCharge, 0.0) AS TotalCharge,
+        ISNULL(BA.AllowedAmount, 0.0) AS TotalAllowed,
+        ISNULL(BA.InsurancePayment, 0.0) AS CarrierPayment,
         CAST(ROUND(CASE WHEN BA.TotalCharge > 0 THEN BA.InsurancePayment * 100.0 / BA.TotalCharge ELSE 0 END, 1) AS DECIMAL(8,2)) AS PaymentPercentage,
-        ISNULL(BA.InsuranceAdjustment,0.0) AS CarrierWO,
-        ISNULL(BA.PatientPaidAmount,0.0) PatientPaidAmount,
-        ISNULL(BA.PatientAdjustment,0.0) AS PatientWO,
-        ISNULL(BA.InsuranceBalance,0.0) AS CarrierBalance,
-        ISNULL(BA.PatientBalance,0.0) PatientBalance,
-        ISNULL(BA.TotalBalance,0.0) TotalBalance,
+        ISNULL(BA.InsuranceAdjustment, 0.0) AS CarrierWO,
+        ISNULL(BA.PatientPaidAmount, 0.0) AS PatientPaidAmount,
+        ISNULL(BA.PatientAdjustment, 0.0) AS PatientWO,
+        ISNULL(BA.InsuranceBalance, 0.0) AS CarrierBalance,
+        ISNULL(BA.PatientBalance, 0.0) AS PatientBalance,
+        ISNULL(BA.TotalBalance, 0.0) AS TotalBalance,
         (BA.InsurancePayment + BA.PatientPaidAmount) AS FullyPaid,
-        CASE 
-            WHEN CPS.FinalStatus = 'Fully Paid' THEN 'Fully Paid Count' 
-            ELSE NULL 
-        END AS [FullyPaidCount],
-        CASE 
-            WHEN DATEDIFF(DAY, md.FirstBillDate, td.PaymentPostedDate) <= 30 THEN '30 Days Count' 
-            ELSE NULL 
-        END AS [T30DaysCount],
-        CASE 
-            WHEN DATEDIFF(DAY, md.FirstBillDate, td.PaymentPostedDate) <= 30 THEN (BA.InsurancePayment + BA.PatientPaidAmount) 
-            ELSE NULL 
-        END AS [T30Amount],
-        CASE 
-            WHEN DATEDIFF(DAY,md.FirstBillDate, td.PaymentPostedDate) BETWEEN 31 AND 60 THEN '60 Days Count' 
-            ELSE NULL 
-        END AS [T60DaysCount],
-        CASE 
-            WHEN DATEDIFF(DAY,md.FirstBillDate, td.PaymentPostedDate) BETWEEN 31 AND 60 THEN (BA.InsurancePayment + BA.PatientPaidAmount) 
-            ELSE NULL 
-        END AS [T60Amount],
-		   -- Conditionally return AdjudicatedAmount
+        CASE WHEN CPS.FinalStatus = 'Fully Paid' THEN 'Fully Paid Count' ELSE NULL END AS FullyPaidCount,
+        CASE WHEN DATEDIFF(DAY, md.SampleCollectedDate, md.FirstBillDate) <= 30 THEN '30 Days Count' ELSE NULL END AS T30DaysCount,
+        CASE WHEN DATEDIFF(DAY, md.SampleCollectedDate, md.FirstBillDate) <= 30 THEN (BA.InsurancePayment + BA.PatientPaidAmount) ELSE NULL END AS T30Amount,
+        CASE WHEN DATEDIFF(DAY, md.SampleCollectedDate, md.FirstBillDate) BETWEEN 31 AND 60 THEN '60 Days Count' ELSE NULL END AS T60DaysCount,
+        CASE WHEN DATEDIFF(DAY, md.SampleCollectedDate, md.FirstBillDate) BETWEEN 31 AND 60 THEN (BA.InsurancePayment + BA.PatientPaidAmount) ELSE NULL END AS T60Amount,
+    -- Conditionally return AdjudicatedAmount
 		CASE 
 			WHEN CPS.FinalStatus IN ('No Response') THEN NULL
 			WHEN CPS.FinalStatus = 'Fully Adjusted' AND DC.DenialCode IS NULL THEN NULL
-			ELSE (BA.InsuranceAdjustment + BA.PatientAdjustment)
+			ELSE (BA.InsurancePayment)
 		END AS AdjudicatedAmount,
 
 		-- Conditionally return AdjudicatedCount
@@ -1691,13 +3529,15 @@ BEGIN
 			WHEN CPS.FinalStatus = 'Fully Adjusted' AND DC.DenialCode IS NULL THEN NULL
 			ELSE 'Adjudicated Count' END
 			 AdjudicatedCount,
-       CPS.FinalStatus
+
+        CPS.FinalStatus,
+		CASE WHEN md.AccessionNo is null then 'Missing LIS Data' else '' end LISMissingRecord 
     FROM MainData md
-    JOIN InsurancePayerMaster IPM WITH (NOLOCK) ON md.PrimaryPayerID = IPM.InsurancePayerId
-    JOIN BillingProviderMaster BP WITH (NOLOCK) ON md.BillingProviderID = BP.BillingProviderID
-    JOIN ReferringProviderMaster RF WITH (NOLOCK) ON md.ReferringProviderId = RF.ReferingProviderId
-	LEFT JOIN LabMaster LM WITH (NOLOCK) ON md.LabId = LM.LabID
-    LEFT JOIN PanelGroup PG WITH (NOLOCK) ON md.PanelId = PG.PanelGroupId
+    LEFT JOIN InsurancePayerMaster IPM WITH (NOLOCK) ON md.PrimaryPayerID = IPM.InsurancePayerId
+    LEFT JOIN BillingProviderMaster BP WITH (NOLOCK) ON md.BillingProviderID = BP.BillingProviderID
+    LEFT JOIN ReferringProviderMaster RF WITH (NOLOCK) ON md.ReferringProviderId = RF.ReferingProviderId
+    LEFT JOIN LabMaster LM WITH (NOLOCK) ON md.FacilityId = LM.LabID
+    ----LEFT JOIN #TransactionMaster TM ON md.VisitNumber = TM.VisitNo
     LEFT JOIN MostFrequentFinancialClass FC ON md.VisitNumber = FC.VisitNumber AND FC.rn = 1
     LEFT JOIN MostFrequentPOS POS ON md.VisitNumber = POS.VisitNumber AND POS.rn = 1
     LEFT JOIN MostFrequentTOS TOS ON md.VisitNumber = TOS.VisitNumber AND TOS.rn = 1
@@ -1705,11 +3545,10 @@ BEGIN
     LEFT JOIN BillingAgg BA ON md.VisitNumber = BA.VisitNumber
     LEFT JOIN AggregatedCPT AG ON md.VisitNumber = AG.VisitNumber
     LEFT JOIN ClaimsLevelStatus CPS ON md.VisitNumber = CPS.VisitNumber
-	LEFT JOIN #DenialCode DC ON md.VisitNumber = DC.VisitNumber
-	LEFT JOIN #TransactionDetail td on md.VisitNumber = td.VisitNumber
-    WHERE md.rn = 1
+    LEFT JOIN #DenialCode DC ON md.VisitNumber = DC.VisitNumber AND DC.DenialCode IS NOT NULL
+    WHERE md.rn = 1 order by FirstBillDate 
 
-    DROP TABLE IF EXISTS #BillingMasterTemp;
+    DROP TABLE IF EXISTS #BillingMasterTemp, #TransactionMaster, #DenialCode;
 END
 GO
 /****** Object:  StoredProcedure [dbo].[sp_GetLISMasterReportByDateRange]******/
@@ -1836,8 +3675,9 @@ SELECT DISTINCT
     b.VisitNumber,
     b.CPTCode,
     b.PatientName,
-	b.PatientID,
-	CONVERT(VARCHAR, CAST(PatientDOB AS DATE), 101)  PatientDOB, 
+	b.ChartNumber,
+	CONVERT(VARCHAR, CAST(b.PatientDOB AS DATE), 101)  PatientDOB, 
+	b.ResponsibleParty,
     PayerName,
     PayerType,
     BillingProvider,
@@ -1865,7 +3705,7 @@ SELECT DISTINCT
     b.PatientBalance,
     b.TotalBalance,
     b.FinalClaimStatus,
-	Lab.LabName,
+	Lab.LabName Facility,
 	cm.ClinicName,
 	og.OperationsGroup,
 	tt.TestTypeName TestType,
@@ -1881,7 +3721,7 @@ LEFT JOIN BillingProviderMaster bp ON b.BillingProviderID = bp.BillingProviderID
 LEFT JOIN #DenialCodeMaster dt ON b.VisitNumber = dt.VisitNumber AND b.CPTCode = dt.CPTCodes
 LEFT JOIN PanelGroup pg ON l.OrderInfo = pg.OrderInfo 
 
-LEFT JOIN LabMaster LAB ON l.LabId = LAB.LabID
+LEFT JOIN LabMaster LAB ON b.FacilityId = LAB.LabID
 LEFT JOIN ClinicMaster CM ON l.ClinicId = CM.ClinicId
 LEFT JOIN OperationsGroupMaster OG ON l.OperationalGroupId = OG.OperationGroupID 
 LEFT JOIN TestTypeMaster TT ON l.TestTypeId = TT.TestTypeId
@@ -1991,19 +3831,19 @@ BEGIN
         BM.PrimaryPayerID,
         BM.PayerTypeId,
         BM.BillingProviderID,
-
+		BM.AccessionNo,
         -- Window function instead of MIN()
         MIN(BM.BeginDOS) OVER (PARTITION BY BM.VisitNumber) AS BeginDOS,
 		MAX(BM.ChargeEntryDate) OVER (PARTITION BY BM.VisitNumber) AS ChargeEntryDate,
 		MAX(BM.CheckDate) OVER (PARTITION BY BM.VisitNumber) AS CheckDate,
 		MAX(BM.PaymentPostedDate) OVER (PARTITION BY BM.VisitNumber) AS PaymentPostedDate,
+		BM.PatientDOB,
+		BM.PatientName,
+		BM.ChartNumber,
+		BM.ResponsibleParty,
         BM.FirstBillDate,
         BM.TOS,
         BM.ICD10Code,
-        LIS.LISMasterId,
-        LIS.AccessionNo,
-        BM.PatientName,
-		BM.ChartNumber,
         TT.TestTypeName AS TestType,
         CM.ClinicName,
         LIS.SampleCollectedDate,
@@ -2011,12 +3851,11 @@ BEGIN
 		BM.CheckNumber,
         ISNULL(BM.ReferringProviderId, 0) AS ReferringProviderId,
         PG.PanelName,
-        ISNULL(LIS.LabId, 0) AS LabId,
         ISNULL(LIS.PanelId, 0) AS PanelId,
-
+		BM.FacilityId,
         ROW_NUMBER() OVER (
             PARTITION BY BM.VisitNumber 
-            ORDER BY BM.FirstBillDate DESC
+            ORDER BY BM.FirstBillDate 
         ) AS rn
     FROM BillingMaster BM
     LEFT JOIN LISMaster LIS WITH (NOLOCK) 
@@ -2038,6 +3877,8 @@ BEGIN
         RF.ReferringProviderName,
         md.ChartNumber,
         md.PatientName,
+		CONVERT(VARCHAR, md.PatientDOB, 101)  AS PatientDOB,	
+		md.ResponsibleParty,
 		md.TestType,
 		md.ClinicName,
 		md.PanelCategory PanelGroup,
@@ -2074,6 +3915,7 @@ BEGIN
         ISNULL(BA.InsuranceBalance, 0.0) AS CarrierBalance,
         ISNULL(BA.PatientBalance, 0.0) AS PatientBalance,
         ISNULL(BA.TotalBalance, 0.0) AS TotalBalance,
+		(ISNULL(BA.InsuranceAdjustment, 0.0) + ISNULL(BA.PatientAdjustment, 0.0)) TotalAdjustment,
         (BA.InsurancePayment + BA.PatientPaidAmount) AS FullyPaid,
         CASE WHEN CPS.FinalStatus = 'Fully Paid' THEN 'Fully Paid Count' ELSE NULL END AS FullyPaidCount,
         CASE WHEN DATEDIFF(DAY, md.SampleCollectedDate, md.FirstBillDate) <= 30 THEN '30 Days Count' ELSE NULL END AS T30DaysCount,
@@ -2100,7 +3942,7 @@ BEGIN
     LEFT JOIN InsurancePayerMaster IPM WITH (NOLOCK) ON md.PrimaryPayerID = IPM.InsurancePayerId
     LEFT JOIN BillingProviderMaster BP WITH (NOLOCK) ON md.BillingProviderID = BP.BillingProviderID
     LEFT JOIN ReferringProviderMaster RF WITH (NOLOCK) ON md.ReferringProviderId = RF.ReferingProviderId
-    LEFT JOIN LabMaster LM WITH (NOLOCK) ON md.LabId = LM.LabID
+    LEFT JOIN LabMaster LM WITH (NOLOCK) ON md.FacilityId = LM.LabID
     ----LEFT JOIN #TransactionMaster TM ON md.VisitNumber = TM.VisitNo
     LEFT JOIN MostFrequentFinancialClass FC ON md.VisitNumber = FC.VisitNumber AND FC.rn = 1
     LEFT JOIN MostFrequentPOS POS ON md.VisitNumber = POS.VisitNumber AND POS.rn = 1
@@ -2109,7 +3951,7 @@ BEGIN
     LEFT JOIN BillingAgg BA ON md.VisitNumber = BA.VisitNumber
     LEFT JOIN AggregatedCPT AG ON md.VisitNumber = AG.VisitNumber
     LEFT JOIN ClaimsLevelStatus CPS ON md.VisitNumber = CPS.VisitNumber
-    LEFT JOIN #DenialCode DC ON md.VisitNumber = DC.VisitNumber
+    LEFT JOIN #DenialCode DC ON md.VisitNumber = DC.VisitNumber AND DC.DenialCode IS NOT NULL
     WHERE md.rn = 1 order by FirstBillDate 
 
     DROP TABLE IF EXISTS #BillingMasterTemp, #TransactionMaster, #DenialCode;
@@ -4071,6 +5913,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
+
 -- Create stored procedure
 CREATE PROCEDURE [dbo].[Sp_ProcessTransactionDetails]
 @FileId INT = NULL
@@ -4087,8 +5930,11 @@ BEGIN
        DROP TABLE if exists #TransacionnDetailTemp;
 			DROP TABLE if exists #AggregatedTemp;
 
+	IF @FileId IS NULL
+		SET @FileId = (SELECT TOP 1 ImportedFileID FROM TransactionDetailStaging ORDER BY ImportedFileID DESC)
+
         -- Step 1: Create temp table from staging and LISMaster
-        SELECT DISTINCT 
+        SELECT 
             LabIdentityKey,
             TDS.TransactionType,
             TDS.ChartNumber,
@@ -4141,7 +5987,7 @@ BEGIN
 				TT.DateofDeposit,
 				TT.DateofEntry,
 				TT.DateofService,
-                TT.Units AS Units,
+                SUM(TT.Units) AS Units,
                 SUM(TT.TotalBilledAmount) AS TotalBilledAmount,
                 SUM(TT.PatientPaidAmount) AS PatientPaidAmount,
                 SUM(TT.InsurancePaidAmount) AS InsurancePaidAmount,
@@ -4169,7 +6015,7 @@ BEGIN
 				TT.DateofService,TT.Units
       
 		
-  		DELETE FROM TransactionMaster WHERE [VisitNo] IN (SELECT DISTINCT VisitNo FROM #AggregatedTemp)
+  		DELETE FROM TransactionMaster WHERE [VisitNo] IN (SELECT DISTINCT VisitNo FROM #AggregatedTemp) AND TransactionType IN  (SELECT DISTINCT TransactionType FROM #AggregatedTemp) 
 		
 		DECLARE @mx bigint;
 		SELECT @mx = ISNULL(MAX(TransactionDetailID), 0) FROM dbo.TransactionMaster WITH (TABLOCKX);
@@ -4667,6 +6513,191 @@ BEGIN
         RAISERROR(@ErrMsg, @ErrSeverity, @ErrState);
     END CATCH
 END;
+GO
+/****** Object:  StoredProcedure [dbo].[sp_RebuildNewIndexes]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE   PROCEDURE [dbo].[sp_RebuildNewIndexes]
+(
+      @MinFragReorganize  float = 5.0      -- >5% -> REORGANIZE
+    , @MinFragRebuild     float = 30.0     -- >30% -> REBUILD
+    , @MaxDOP             int   = NULL     -- NULL = server default; else 1..n
+    , @SortInTempdb       bit   = 1        -- 1 = SORT_IN_TEMPDB = ON for rebuilds
+    , @Verbose            bit   = 1        -- prints actions
+    , @IgnoreFrag         bit   = 0        -- 1 = rebuild all target indexes regardless of frag
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    ---------------------------------------------------------------------------
+    -- 1) Target list: ONLY the “new indexes” we created in your previous script
+    --    (schema, table, index). If you add more later, append them here.
+    ---------------------------------------------------------------------------
+    DECLARE @Targets TABLE
+    (
+        schemaname sysname NOT NULL,
+        tablename  sysname NOT NULL,
+        indexname  sysname NOT NULL,
+        PRIMARY KEY (schemaname, tablename, indexname)
+    );
+
+    INSERT INTO @Targets (schemaname, tablename, indexname)
+    VALUES
+    -- CustomCollectionStaging
+    (N'dbo', N'CustomCollectionStaging', N'IX_CustomCollectionStaging_ImportedFileID'),
+
+    -- VisitAgaistAccessionStaging
+    (N'dbo', N'VisitAgaistAccessionStaging', N'IX_VisitAgaistAccessionStaging_AccessionNo'),
+
+    -- LISMaster
+    (N'dbo', N'LISMaster', N'IX_LISMaster_AccessionNo'),
+    (N'dbo', N'LISMaster', N'IX_LISMaster_SampleCollectedDate'),
+    (N'dbo', N'LISMaster', N'IX_LISMaster_Panel'),
+
+    -- Masters with persisted TRIM columns
+    (N'dbo', N'InsurancePayerMaster',   N'IX_InsurancePayerMaster_PayerName_Trim'),
+    (N'dbo', N'PayerTypeMaster',        N'IX_PayerTypeMaster_PayerType_Trim'),
+    (N'dbo', N'BillingProviderMaster',  N'IX_BillingProviderMaster_BillingProvider_Trim'),
+    (N'dbo', N'ReferringProviderMaster',N'IX_RefProvMaster_Name_Trim'),
+
+    -- TransactionMaster (filtered)
+    (N'dbo', N'TransactionMaster', N'IX_TransactionMaster_Charge_Visit_CPT_Amount'),
+    (N'dbo', N'TransactionMaster', N'IX_TransactionMaster_CheckDetails'),
+
+    -- BillingMaster
+    (N'dbo', N'BillingMaster', N'IX_BillingMaster_VisitNumber'),
+    (N'dbo', N'BillingMaster', N'IX_BillingMaster_Visit_CPT'),
+    (N'dbo', N'BillingMaster', N'IX_BillingMaster_FirstBillDate'),
+    (N'dbo', N'BillingMaster', N'IX_BillingMaster_PaymentPostedDate'),
+    (N'dbo', N'BillingMaster', N'IX_BillingMaster_AccessionNo'),
+    (N'dbo', N'BillingMaster', N'IX_BillingMaster_LISMasterId'),
+
+    -- DenialTrackingMaster
+    (N'dbo', N'DenialTrackingMaster', N'IX_DenialTrackingMaster_Visit_CPT'),
+    (N'dbo', N'DenialTrackingMaster', N'IX_DenialTrackingMaster_PaymentReasonDate'),
+
+    -- Status / details
+    (N'dbo', N'ClaimsLevelStatus',  N'IX_ClaimsLevelStatus_VisitNumber'),
+    (N'dbo', N'ClaimsProdStatus',   N'IX_ClaimsProdStatus_VisitNumber'),
+    (N'dbo', N'ClaimBillingDetails',N'IX_ClaimBillingDetails_Key'),
+
+    -- ImportedFiles
+    (N'dbo', N'ImportedFiles', N'IX_ImportedFiles_ImportedFileID');
+
+    ---------------------------------------------------------------------------
+    -- 2) Gather live fragmentation for target indexes (skip heaps, PK/UC)
+    ---------------------------------------------------------------------------
+    IF OBJECT_ID('tempdb..#ix') IS NOT NULL DROP TABLE #ix;
+    CREATE TABLE #ix
+    (
+        schemaname sysname,
+        tablename  sysname,
+        indexname  sysname,
+        object_id  int,
+        index_id   int,
+        avg_fragmentation_in_percent float,
+        page_count bigint
+    );
+
+    INSERT INTO #ix (schemaname, tablename, indexname, object_id, index_id, avg_fragmentation_in_percent, page_count)
+    SELECT
+        s.name,
+        o.name,
+        i.name,
+        i.object_id,
+        i.index_id,
+        ips.avg_fragmentation_in_percent,
+        ips.page_count
+    FROM @Targets t
+    JOIN sys.schemas s ON s.name = t.schemaname
+    JOIN sys.objects o ON o.schema_id = s.schema_id AND o.name = t.tablename AND o.type = 'U'
+    JOIN sys.indexes i ON i.object_id = o.object_id AND i.name = t.indexname
+    CROSS APPLY sys.dm_db_index_physical_stats(DB_ID(), i.object_id, i.index_id, NULL, 'SAMPLED') ips;
+
+    ---------------------------------------------------------------------------
+    -- 3) Build and execute ALTER INDEX commands
+    ---------------------------------------------------------------------------
+    DECLARE
+          @schemaname sysname
+        , @tablename  sysname
+        , @indexname  sysname
+        , @frag       float
+        , @pages      bigint
+        , @sql        nvarchar(max)
+        , @opt        nvarchar(400)
+        , @onlineTry  bit = 1;
+
+    DECLARE cur CURSOR LOCAL FAST_FORWARD FOR
+        SELECT schemaname, tablename, indexname, avg_fragmentation_in_percent, page_count
+        FROM #ix
+        WHERE (@IgnoreFrag = 1)
+           OR (avg_fragmentation_in_percent >= @MinFragReorganize);
+
+    OPEN cur;
+    FETCH NEXT FROM cur INTO @schemaname, @tablename, @indexname, @frag, @pages;
+
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        -- Decide action: REORGANIZE vs REBUILD
+        IF @IgnoreFrag = 1 OR @frag >= @MinFragRebuild
+        BEGIN
+            -- REBUILD
+            SET @opt = N' WITH ('
+                       + CASE WHEN @SortInTempdb = 1 THEN N'SORT_IN_TEMPDB = ON, ' ELSE N'' END
+                       + CASE WHEN @MaxDOP IS NOT NULL THEN N'MAXDOP = ' + CAST(@MaxDOP AS nvarchar(10)) + N', ' ELSE N'' END
+                       + N'ONLINE = ON)';
+
+            SET @sql = N'ALTER INDEX ' + QUOTENAME(@indexname) + N' ON '
+                     + QUOTENAME(@schemaname) + N'.' + QUOTENAME(@tablename)
+                     + N' REBUILD' + @opt + N';';
+
+            BEGIN TRY
+                IF @Verbose = 1
+                    PRINT CONCAT('REBUILD (ONLINE): ', @schemaname, '.', @tablename, ' -> ', @indexname,
+                                 ' | frag=', FORMAT(@frag, 'N2'), ' | pages=', @pages);
+                EXEC sp_executesql @sql;
+            END TRY
+            BEGIN CATCH
+                -- If ONLINE not supported (e.g., Standard Edition), retry OFFLINE
+                SET @opt = N' WITH ('
+                           + CASE WHEN @SortInTempdb = 1 THEN N'SORT_IN_TEMPDB = ON, ' ELSE N'' END
+                           + CASE WHEN @MaxDOP IS NOT NULL THEN N'MAXDOP = ' + CAST(@MaxDOP AS nvarchar(10)) + N', ' ELSE N'' END
+                           + N'ONLINE = OFF)';
+
+                SET @sql = N'ALTER INDEX ' + QUOTENAME(@indexname) + N' ON '
+                         + QUOTENAME(@schemaname) + N'.' + QUOTENAME(@tablename)
+                         + N' REBUILD' + @opt + N';';
+
+                IF @Verbose = 1
+                    PRINT CONCAT('REBUILD (OFFLINE RETRY): ', @schemaname, '.', @tablename, ' -> ', @indexname,
+                                 ' | frag=', FORMAT(@frag, 'N2'), ' | pages=', @pages,
+                                 ' | note=', ERROR_MESSAGE());
+                EXEC sp_executesql @sql;
+            END CATCH
+        END
+        ELSE
+        BEGIN
+            -- REORGANIZE
+            SET @sql = N'ALTER INDEX ' + QUOTENAME(@indexname) + N' ON '
+                     + QUOTENAME(@schemaname) + N'.' + QUOTENAME(@tablename) + N' REORGANIZE;';
+            IF @Verbose = 1
+                PRINT CONCAT('REORGANIZE: ', @schemaname, '.', @tablename, ' -> ', @indexname,
+                             ' | frag=', FORMAT(@frag, 'N2'), ' | pages=', @pages);
+            EXEC sp_executesql @sql;
+        END
+
+        FETCH NEXT FROM cur INTO @schemaname, @tablename, @indexname, @frag, @pages;
+    END
+
+    CLOSE cur; DEALLOCATE cur;
+
+    IF @Verbose = 1
+        PRINT 'Completed sp_RebuildNewIndexes.';
+END
 GO
 /****** Object:  StoredProcedure [dbo].[SP_UpdateLIS_Statuses]******/
 SET ANSI_NULLS ON

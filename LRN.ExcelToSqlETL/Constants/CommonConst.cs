@@ -80,8 +80,17 @@ namespace LRN.ExcelToSqlETL.Core.Constants
             Diagnos_SampleLIS = 10,
 
             [Description("Client Billing Sheet")]
-            Client_Billing_Sheet = 11
+            Client_Billing_Sheet = 11,
 
+            [Description("InHealthDTR LIS Master")]
+            InHealthDTR_LIS_Master = 12,
+
+
+            [Description("DTR_CCW")]
+            DTR_CCW = 13,
+
+            [Description("DTR Denail Tracking")]
+            DTR_Denail_Tracking = 14
         }
 
         public enum DownloadReportType

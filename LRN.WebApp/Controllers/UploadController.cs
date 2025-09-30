@@ -196,6 +196,7 @@ public class UploadController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DownloadReportFile(int fileId)
     {
+        string labName = User.FindFirst("LabName").ToString();
         var file = await _importRepo.GetDownloadReportById(fileId);
         if (file == null || string.IsNullOrWhiteSpace(file.ReportServerPath) || !System.IO.File.Exists(file.ReportServerPath))
             return NotFound("File not found.");
@@ -225,7 +226,7 @@ public class UploadController : Controller
 
         // 3) Force secure Content-Disposition
         Response.Headers["Content-Disposition"] =
-            "attachment; filename=\"" + downloadName.Replace("\"", "") + "\"; filename*=UTF-8''" +
+            "attachment; filename=\"" + labName + "_" + downloadName.Replace("\"", "") + "\"; filename*=UTF-8''" +
             Uri.EscapeDataString(downloadName);
 
         Response.Headers["X-Content-Type-Options"] = "nosniff";
@@ -412,6 +413,7 @@ public class UploadController : Controller
                 break;
 
             case (int)CommonConst.ImportFileType.Custom_Collection:
+            case (int)CommonConst.ImportFileType.DTR_CCW:
                 fileName = "Custom_Collection.xlsx";
                 break;
 
@@ -424,6 +426,7 @@ public class UploadController : Controller
                 break;
 
             case (int)CommonConst.ImportFileType.Denial_Tracking_Report:
+            case (int)CommonConst.ImportFileType.DTR_Denail_Tracking:
                 fileName = "DenialTrackingDetail.xlsx";
                 break;
 
@@ -444,6 +447,9 @@ public class UploadController : Controller
                 break;
             case (int)CommonConst.ImportFileType.Client_Billing_Sheet:
                 fileName = "Prism - Client Bill Sheet.xlsx";
+                break;
+            case (int)CommonConst.ImportFileType.InHealthDTR_LIS_Master:
+                fileName = "LIS_Order_Report.xlsx";
                 break;
         }
 

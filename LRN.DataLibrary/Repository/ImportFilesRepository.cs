@@ -88,7 +88,12 @@ public class ImportFilesRepository : IImportFilesRepository
         [(int)CommonConst.ImportFileType.Order_LIS] = "Sp_Process_LISOrderStaging",
         [(int)CommonConst.ImportFileType.Diagnos_SampleLIS] = "Sp_Process_LISSample_Report",
         [(int)CommonConst.ImportFileType.Panel_Group] = "Sp_Process_PanelMasterStaging",
-        [(int)CommonConst.ImportFileType.Client_Billing_Sheet] = "Sp_Process_ClientBillingSheet"
+        [(int)CommonConst.ImportFileType.Client_Billing_Sheet] = "Sp_Process_ClientBillingSheet",
+        [(int)CommonConst.ImportFileType.InHealthDTR_LIS_Master] = "SP_Process_LISMaster_ByFileId",
+        [(int)CommonConst.ImportFileType.DTR_CCW] = "Sp_ProcessBillingMasterData",
+        [(int)CommonConst.ImportFileType.DTR_Denail_Tracking] = "Sp_ProcessDenialTrackingMaster"
+
+
     };
     public async Task ProcessImportFilesAsync(ImportFileDto file)
     {

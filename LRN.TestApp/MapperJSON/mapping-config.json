@@ -54,6 +54,21 @@
       "FileIdentifier": "Client Billing Sheet",
       "JsonMappingPath": "ClientBillingSheet.json",
       "FileType": 11
+    },
+    {
+      "FileIdentifier": "DTR CCW",
+      "JsonMappingPath": "Custom_Collection.json",
+      "FileType": 13
+    },
+    {
+      "FileIdentifier": "InHealth LIS",
+      "JsonMappingPath": "InHealthLIS_mapping.json",
+      "FileType": 12
+    },
+    {
+      "FileIdentifier": "DTR Denail Tracking",
+      "JsonMappingPath": "DenialTrackingDetail.json",
+      "FileType": 14
     }
   ]
 }

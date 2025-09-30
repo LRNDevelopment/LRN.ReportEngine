@@ -1,6 +1,6 @@
 {
   "SheetName": "",
-  "TargetTable": "dbo.DiagnoseLISStaging",
+  "TargetTable": "dbo.LISStaging",
   "Columns": [
     {
       "ExcelColumn": "Order ID",

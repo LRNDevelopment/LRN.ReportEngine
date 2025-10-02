@@ -196,7 +196,7 @@ public class UploadController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DownloadReportFile(int fileId)
     {
-        string labName = User.FindFirst("LabName").ToString();
+        string labName = User.FindFirst("LabName").Value.ToString();
         var file = await _importRepo.GetDownloadReportById(fileId);
         if (file == null || string.IsNullOrWhiteSpace(file.ReportServerPath) || !System.IO.File.Exists(file.ReportServerPath))
             return NotFound("File not found.");
@@ -205,10 +205,10 @@ public class UploadController : Controller
         var stream = System.IO.File.OpenRead(file.ReportServerPath);
 
         // 1) Build safe filename
-        var baseName = $"{file.ReportName}_{file.CreatedOn:MMddyyyy_HHmm}";
+        var baseName = $"{labName}_{file.ReportName}_{file.CreatedOn:MMddyyyy_HHmm}";
         var ext = Path.GetExtension(file.ReportServerPath);
         if (string.IsNullOrWhiteSpace(ext)) ext = ".xlsx";
-
+        baseName = baseName.Replace(' ', '_');
         // Strip duplicate extension if already present
         if (baseName.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
             baseName = baseName.Substring(0, baseName.Length - ext.Length);

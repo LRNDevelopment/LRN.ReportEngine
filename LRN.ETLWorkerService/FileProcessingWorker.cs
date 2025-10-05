@@ -52,7 +52,7 @@ public class FileProcessingWorker : BackgroundService
 
                 try
                 {
-                    await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken);
+                    await Task.Delay(TimeSpan.FromMinutes(2), stoppingToken);
                 }
                 catch (TaskCanceledException)
                 {

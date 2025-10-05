@@ -379,7 +379,7 @@ public class ExcelFileReader : IFileReader
                         ? doubleResult : DBNull.Value,
 
                 "datetime" or "date" =>
-                    TryParseFlexibleDate(value, out var dateResult, rowNum, columnName)
+                    TryParseFlexibleDate_USOnly(value, out var dateResult, rowNum, columnName)
                         ? dateResult : DBNull.Value,
 
                 "bool" or "boolean" =>
@@ -396,61 +396,54 @@ public class ExcelFileReader : IFileReader
         }
     }
 
-    private static readonly string[] SupportedFormats = new[]
-    {
-    "MM/dd/yyyy", "MM/dd/yy",
-    "MM/dd/yyyy h:mm tt", "MM/dd/yyyy h:mm:ss tt",
-    "MM/dd/yyyy HH:mm:ss",
-    "yyyy-MM-dd", "yyyy-MM-ddTHH:mm:ss", "yyyy-MM-ddTHH:mm:ssZ",
-    "yyyy-MM-ddTHH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ"
+    private static readonly string[] UsOnlyFormats =
+   {
+    "MM/dd/yyyy", "M/d/yyyy",
+    "MM/dd/yy",   "M/d/yy",
+    "MM/dd/yyyy HH:mm:ss", "M/d/yyyy HH:mm:ss",
+    "MM/dd/yyyy h:mm tt",  "M/d/yyyy h:mm tt",
+    "MM/dd/yyyy h:mm:ss tt","M/d/yyyy h:mm:ss tt"
 };
 
-    public static bool TryParseFlexibleDate(string input, out DateTime date, int rowNum = -1, string columnName = null)
+    private static readonly string[] IsoFormats =
     {
+    "yyyy-MM-dd",
+    "yyyy-MM-ddTHH:mm:ss",
+    "yyyy-MM-ddTHH:mm:ss.fff",
+    "yyyy-MM-ddTHH:mm:ss'Z'",
+    "yyyy-MM-ddTHH:mm:ss.fff'Z'"
+};
+
+    public static bool TryParseFlexibleDate_USOnly(string input, out DateTime date,
+        int rowNum = -1, string columnName = null)
+    {
+        date = default;
+        if (string.IsNullOrWhiteSpace(input))
+            return false;
+
         input = input.Trim();
 
-        var usCulture = new CultureInfo("en-US"); // MM/dd/yyyy
-        var ukCulture = new CultureInfo("en-GB"); // dd/MM/yyyy
-
-        if (double.TryParse(input, NumberStyles.Any, CultureInfo.InvariantCulture, out var serialValue)
-            && serialValue > 0 && serialValue < 60000)
+        // 1) Excel serials (OADate)
+        if (double.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out var serial)
+            && serial > 0 && serial < 60000)
         {
-            date = DateTime.FromOADate(serialValue);
+            date = DateTime.FromOADate(serial);
             return true;
         }
 
-        if (DateTime.TryParseExact(input, SupportedFormats, usCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out date)
-            || DateTime.TryParse(input, usCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out date))
-        {
+        var us = new CultureInfo("en-US");
+
+        // 2) Strict ISO (unambiguous, any culture)
+        if (DateTime.TryParseExact(input, IsoFormats, CultureInfo.InvariantCulture,
+                                   DateTimeStyles.None, out date))
             return true;
-        }
 
-        if (DateTimeOffset.TryParse(input, usCulture, DateTimeStyles.AssumeUniversal, out var dtoUs))
-        {
-            date = dtoUs.UtcDateTime;
+        // 3) Strict US month-first ONLY
+        if (DateTime.TryParseExact(input, UsOnlyFormats, us, DateTimeStyles.None, out date))
             return true;
-        }
 
-        var ukFormats = new[]
-        {
-        "dd/MM/yyyy", "d/M/yyyy", "dd/MM/yy", "d/M/yy",
-        "dd/MM/yyyy h:mm tt", "dd/MM/yyyy h:mm:ss tt",
-        "dd/MM/yyyy HH:mm:ss"
-    };
-
-        if (DateTime.TryParseExact(input, ukFormats, ukCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out date)
-            || DateTime.TryParse(input, ukCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out date))
-        {
-            return true;
-        }
-
-        if (DateTimeOffset.TryParse(input, ukCulture, DateTimeStyles.AssumeUniversal, out var dtoUk))
-        {
-            date = dtoUk.UtcDateTime;
-            return true;
-        }
-
-        date = default;
+        // 4) DO NOT fall back to general TryParse or en-GB.
+        //    If it didn’t match the allowed formats, fail.
         if (rowNum != -1 && !string.IsNullOrWhiteSpace(columnName))
         {
             ImportLog.Add(new FileLog
@@ -460,8 +453,8 @@ public class ExcelFileReader : IFileReader
                 LogMessage = $"Date conversion failed at Row {rowNum}, Column '{columnName}' for value '{input}'"
             });
         }
-
         return false;
     }
+
 
 }

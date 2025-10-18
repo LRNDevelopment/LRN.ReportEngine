@@ -30,6 +30,9 @@ GO
 /****** Object:  StoredProcedure [dbo].[sp_LIS_PanelUpdate]******/
 DROP PROCEDURE [dbo].[sp_LIS_PanelUpdate]
 GO
+/****** Object:  StoredProcedure [dbo].[SP_InsertReportDownloadLog]******/
+DROP PROCEDURE [dbo].[SP_InsertReportDownloadLog]
+GO
 /****** Object:  StoredProcedure [dbo].[sp_InsertMasterData]******/
 DROP PROCEDURE [dbo].[sp_InsertMasterData]
 GO
@@ -857,16 +860,17 @@ RETURNS NVARCHAR(MAX)
 AS
 BEGIN
     DECLARE @Result NVARCHAR(MAX);
-
-	WITH CodeCTE AS (
-    SELECT  DISTINCT 
-        CPTCode 
-    FROM BillingMaster
-    WHERE VisitNumber = @visitno and CPTCode IS NOT NULL
-	) SELECT @Result =  STRING_AGG(CPTCode, ',')  FROM CodeCTE
-
-
-    RETURN @Result
+ 
+    SELECT @Result = STRING_AGG(CPTCode, ',') WITHIN GROUP (ORDER BY CPTCode)
+    FROM (
+        SELECT DISTINCT CPTCode
+        FROM BillingMaster WITH (NOLOCK)
+        WHERE VisitNumber = @visitno 
+          AND CPTCode IS NOT NULL 
+          AND CPTCode != ''
+    ) AS DistinctCodes;
+ 
+    RETURN ISNULL(@Result, '');
 END
 GO
 /****** Object:  UserDefinedFunction [dbo].[GetDenailCodeByVisitCPT]******/
@@ -2014,6 +2018,9 @@ CREATE TABLE [dbo].[LISMaster](
 	[ReferringProviderName] [varchar](250) NULL,
 	[AccessionIdentity] [varchar](250) NULL,
 	[AccessionUnique] [nvarchar](50) NULL,
+	[FacilityName] [nvarchar](250) NULL,
+	[SalesPersonName] [nvarchar](255) NULL,
+	[RequistionType] [nvarchar](255) NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[LISMasterId] ASC
@@ -2885,11 +2892,10 @@ BEGIN
     INTO #CustomCollectionData
     FROM CustomCollectionStaging WHERE (ImportedFileID = @FileId OR @FileId is null);
 
-	select distinct VisitNo,CPTCode,Units,TotalBilledAmount INTO #TransData from TransactionMaster 
-	where TransactionType = 'Charge' and TotalBilledAmount > 0 and void is null 
+	select VisitNo,CPTCode,Units,TotalBilledAmount INTO #TransData from TransactionMaster 
+	where TransactionType = 'Charge'  and void is null 
 
-	SELECT CD.*,Units INTO #FinalBillingMaster FROM #CustomCollectionData CD 
-	LEFT JOIN #TransData TD  ON CD.VisitNumber = TD.VisitNo and CD.CPTCode = TD.CPTCode and CD.BilledAmount = TD.TotalBilledAmount;
+
 
 	-- After INTO #CustomCollectionData
 CREATE CLUSTERED INDEX CX_CustomCollectionData
@@ -2898,13 +2904,6 @@ ON #CustomCollectionData(VisitNumber, CPTCode, BilledAmount);
 -- After INTO #TransData
 CREATE CLUSTERED INDEX CX_TransData
 ON #TransData(VisitNo, CPTCode, TotalBilledAmount);
-
--- After INTO #FinalBillingMaster
-CREATE CLUSTERED INDEX CX_FinalBillingMaster
-ON #FinalBillingMaster(VisitNumber, CPTCode, BilledAmount);
-
-
-
    
    SELECT
         CC.AccessionPart,
@@ -2943,7 +2942,7 @@ ON #FinalBillingMaster(VisitNumber, CPTCode, BilledAmount);
   --      SUM(CC.InsuranceBalance) AS InsuranceBalance,
   --      SUM(CC.PatientBalance) AS PatientBalance,
   --      SUM(CC.TotalBalance) AS TotalBalance
-		cc.UNITS UNITS,
+		--cc.UNITS UNITS,
 		CC.Modifier Modifier,
         CC.BilledAmount BilledAmount,
         CC.AllowedAmount AllowedAmount,
@@ -2957,61 +2956,18 @@ ON #FinalBillingMaster(VisitNumber, CPTCode, BilledAmount);
 		CC.PayerType,CC.BillingProvider,CC.PerformingLab,cc.ReferringProvider,
 		CC.CPTCodeDescription
     INTO #BillingMaster
-    FROM #FinalBillingMaster CC
+    FROM #CustomCollectionData CC
     LEFT JOIN InsurancePayerMaster IPM ON TRIM(CC.PayerName) = TRIM(IPM.PayerName)
     LEFT JOIN PayerTypeMaster PT ON TRIM(CC.PayerType) = TRIM(PT.PayerType)
     LEFT JOIN BillingProviderMaster BP ON TRIM(CC.BillingProvider) = TRIM(BP.BillingProvider)
 
 	LEFT JOIN LabMaster Lab on TRIM(CC.PerformingLab) = TRIM(Lab.LabName)
 	LEFT JOIN ReferringProviderMaster RF on cc.ReferringProvider = rf.ReferringProviderName 
-  --  GROUP BY
-		--CC.AccessionPart,
-  --      CC.VisitNumber,
-  --      CC.CPTCode,
-  --      CC.LastBillDate ,
-  --      CC.ChargeEntryDate,
-  --      IPM.InsurancePayerId,
-  --      PT.PayerTypeId,
-  --      BP.BillingProviderID,
-  --      CC.MemberID,
-  --      CC.ClientAccNum,
-  --      CC.BeginDOS,
-  --      CC.EndDOS,
-  --      CC.BillingFrequency,
-  --      CC.ChargeEnteredBy,
-  --      CC.POS,
-  --      CC.TOS,
-  --      CC.ICD10Code,
-		--CC.PanelName,
-		--ChartNum,
-  --      CC.PatientName,
-		--RF.ReferingProviderId,
-		--ImportedFileID,
-		--ResponsibleParty,
-		--DOB,
-		--Lab.LabId,
-		--cc.UNITS,
-		--CC.Modifier,CC.PayerName;
-
+  
 
 		-- After INTO #BillingMaster (if it gets big before the insert)
 		CREATE CLUSTERED INDEX CX_BillingMaster_Temp
 		ON #BillingMaster(VisitNumber, CPTCode);
-
-    -- Step 3: Deduplicate
-    ----WITH RankedBilling AS (
-    ----    SELECT *,
-    ----        ROW_NUMBER() OVER (
-    ----            PARTITION BY 
-    ----    VisitNumber, CPTCode,  FirstBillDate,UNITS,Modifier,BilledAmount
-    ----            ORDER BY BilledAmount DESC
-    ----        ) AS RowNum
-    ----    FROM #BillingMaster
-    ----)
-    ----SELECT *
-    ----INTO #BillingMaster_Deduped
-    ----FROM RankedBilling
-    ----WHERE RowNum = 1;
 
     -- Step 4: Merge
     BEGIN TRY
@@ -3062,7 +3018,6 @@ ON #FinalBillingMaster(VisitNumber, CPTCode, BilledAmount);
                 InsuranceBalance,
                 PatientBalance,
                 TotalBalance,
-				Units,
 				PanelName,
 				PanelCarrier,
 				PatientName,
@@ -3075,7 +3030,7 @@ ON #FinalBillingMaster(VisitNumber, CPTCode, BilledAmount);
             )
 			SELECT VisitNumber,AccessionPart,InsurancePayerId,PayerTypeId,BillingProviderID,ClientAccNum,MemberID,BeginDOS,EndDOS,
 			ChargeEntryDate,FirstBillDate,BillingFrequency,ChargeEnteredBy,CPTCode,POS,TOS,Modifier,ICD10Code,BilledAmount,AllowedAmount,InsurancePayments,
-			InsuranceAdjustments,PatientPayments,PatientAdjustments,InsuranceBalance,PatientBalance,TotalBalance,UNITS,PanelName,PayerName,PatientName,
+			InsuranceAdjustments,PatientPayments,PatientAdjustments,InsuranceBalance,PatientBalance,TotalBalance,PanelName,PayerName,PatientName,
 			ReferingProviderId,FacilityId,PatientDOB,ResponsibleParty,ImportedFileID,ChartNum,CPTCodeDescription,PayerType,BillingProvider,PerformingLab,ReferringProvider FROM #BillingMaster BM 
 			
 
@@ -3093,42 +3048,15 @@ ON #FinalBillingMaster(VisitNumber, CPTCode, BilledAmount);
 
 		UPDATE 	BillingMaster SET CheckDate = NULL ,PaymentPostedDate = NULL,CheckNumber = NULL;
 
-		--WITH CTE_TransData AS
-		--(
-		--	SELECT 
-		--		VisitNo,
-		--		CPTCode,
-		--		CheckNumber,
-		--		DateofDeposit AS CheckDate,
-		--		DateofEntry AS LastPostedDate,
-		--		ROW_NUMBER() OVER (
-		--			PARTITION BY VisitNo,CPTCode
-		--			ORDER BY DateofDeposit DESC, DateofEntry DESC
-		--		) AS rn
-		--	FROM TransactionMaster 
-		--	WHERE CheckNumber is not null
-		--)
-		--SELECT 
-		--	VisitNo,CPTCode,
-		--	CheckNumber,
-		--	CheckDate,
-		--	LastPostedDate
-		--	into #TransMaster_ChckDtl
-		--FROM CTE_TransData 
-		--WHERE rn = 1
-		--ORDER BY VisitNo;
+	
+		------ Create clustered index after populating #TransData
+		----CREATE CLUSTERED INDEX TX_TransDataUQ_IX
+		----ON #TransData (VisitNo, CPTCode, TotalBilledAmount);
 
-
-		--UPDATE BM SET BM.CheckDate = PPI.CheckDate ,BM.PaymentPostedDate = PPI.LastPostedDate,bm.CheckNumber = PPI.CheckNumber
-		--FROM BillingMaster BM JOIN #TransMaster_ChckDtl PPI ON BM.VisitNumber = PPI.VisitNo AND BM.CPTCode = PPI.CPTCode --where InsurancePayment > 0
-
-		--UPDATE bm SET bm.PanelName = l.PanelCode FROM BillingMaster bm
-		--join LISMaster l on bm.AccessionNo = l.AccessionNo
-		--where bm.PanelName is null
-
-
+			Update BM SET BM.Units = TD.Units  FROM BillingMaster BM 
+			JOIN #TransData TD  ON BM.VisitNumber = TD.VisitNo and BM.CPTCode = TD.CPTCode and BM.BilledAmount = TD.TotalBilledAmount;
 		
- UPDATE BM SET 
+ 		UPDATE BM SET 
 			CheckDate = COALESCE(PD.CheckDate, BM.CheckDate),
 			PaymentPostedDate = COALESCE(PD.LastPostedDate, BM.PaymentPostedDate),
 			CheckNumber = COALESCE(PD.CheckNumber, BM.CheckNumber)
@@ -3566,6 +3494,7 @@ CREATE NONCLUSTERED INDEX IX_VisitNumber ON #DenialCodeMaster (VisitNumber,CPTCo
 		CAST(b.ChargeEntryDate AS DATE) AS    ChargeEntryDate,
 		CAST(FirstBillDate AS DATE) AS      FirstBillDate,
 		COALESCE(b.PanelName, l.PanelCode, 'No Panel Located') AS PanelGroup,
+		POS,TOS,
         b.ICD10Code,
         b.Units,
 		CAST(CheckDate AS DATE) AS      CheckDate,
@@ -3856,17 +3785,18 @@ BEGIN
 
     -- Main query with date filtering
     SELECT DISTINCT
+		RecordId,
 		ISNULL(AccessionNo,'MISSING ACCESSION#') AccessionNo,
-		RT.RequisitionTypeName RequisitionType,
+		RequistionType RequisitionType,
 		FacilityState,
 		RelationshipToInsurance,
-		rpm.ReferringProviderName ReferringProviderName,
+		ReferringProviderName ReferringProviderName,
 		FacilityCity,
 		FacilityZipcode,
 		[Time],
 		FacilityAddress ClinicAddress,
-		CM.ClinicName,
-		SpecimenStatusName SampleStatus,
+		FacilityName ClinicName,
+		StatusCode SampleStatus,
 		PrimaryMemberId PolicyId,
 		PrimaryGroupNo GroupId,
 		CASE WHEN TRIM(UPPER(PanelCode)) = 'TOX' THEN 'Toxicology' ELSE PanelCode END PanelGroup,
@@ -3884,12 +3814,13 @@ BEGIN
 		lis.LastName,
 		PatientName,
 		PatientDOB,
-		sp.SalesPersonName,
+		Race,
+		SalesPersonName,
 		CONVERT(varchar(10), SampleReceivedDate, 101) SampleReceivedDate,
 		CONVERT(varchar(10), SampleCollectedDate, 101) SampleCollectedDate,
 		CONVERT(varchar(10), SampleResultedDate, 101) SampleResultedDate,
 		PrimaryPayerName,
-		PT.PayerType BilledTo,
+		InsuranceType BilledTo,
 		CASE WHEN DaystoReceive = 0 THEN 1 ELSE DaystoReceive END DaystoReceive ,
         CASE WHEN DaystoResult = 0 THEN 1 ELSE DaystoResult END DaystoResult  ,
         CASE WHEN DaystoBill = 0 THEN 1 ELSE DaystoBill END DaystoBill ,
@@ -3906,13 +3837,13 @@ BEGIN
 		NewStatus
        
     FROM LISMaster LIS
-	LEFT JOIN RequisitionTypes RT on Lis.RequistionTypeId = rt.RequisitionTypeId
-	LEFT JOIN ReferringProviderMaster rpm on lis.ReferringProviderId = rpm.ReferingProviderId
+	--LEFT JOIN RequisitionTypes RT on Lis.RequistionTypeId = rt.RequisitionTypeId
+	--LEFT JOIN ReferringProviderMaster rpm on lis.ReferringProviderId = rpm.ReferingProviderId
 	LEFT JOIN BillingProviderMaster bpm on lis.BillingProviderID = bpm.BillingProviderID
-	LEFT JOIN SalesPerson sp on lis.SalesPersonId = sp.SalesPersonID
-    LEFT JOIN SpecimenStatus SS ON LIS.SampleStatusId = SS.SpecimenStatusId 
-    LEFT JOIN ClinicMaster CM ON LIS.ClinicId = CM.ClinicId
-    LEFT JOIN PayerTypeMaster PT ON LIS.PayerTypeId = PT.PayerTypeId
+	--LEFT JOIN SalesPerson sp on lis.SalesPersonId = sp.SalesPersonID
+    --LEFT JOIN SpecimenStatus SS ON LIS.SampleStatusId = SS.SpecimenStatusId 
+    --LEFT JOIN ClinicMaster CM ON LIS.ClinicId = CM.ClinicId
+    --LEFT JOIN PayerTypeMaster PT ON LIS.PayerTypeId = PT.PayerTypeId
 
     --LEFT JOIN OperationsGroupMaster OG ON LIS.OperationalGroupId = OG.OperationGroupID 
     --LEFT JOIN TestTypeMaster TT ON LIS.TestTypeId = TT.TestTypeId
@@ -3958,6 +3889,7 @@ CREATE NONCLUSTERED INDEX IX_VisitNumber ON #DenialCodeMaster (VisitNumber,CPTCo
 		CAST(b.ChargeEntryDate AS DATE) AS    ChargeEntryDate,
 		CAST(FirstBillDate AS DATE) AS      FirstBillDate,
 		COALESCE(b.PanelName, l.PanelCode, 'No Panel Located') AS PanelGroup,
+		POS,TOS,
         b.ICD10Code,
         b.Units,
 		CAST(CheckDate AS DATE) AS      CheckDate,
@@ -4443,6 +4375,21 @@ WHERE LTRIM(RTRIM(PerformingLab)) NOT IN (SELECT DISTINCT LabName FROM LabMaster
 
 END
 GO
+/****** Object:  StoredProcedure [dbo].[SP_InsertReportDownloadLog]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[SP_InsertReportDownloadLog]
+@ReportId INT,@LogString NVARCHAR(MAX)
+AS BEGIN 
+
+UPDATE [dbo].[ReportDownloadSts]
+   SET LogString = @LogString
+ WHERE ReportID =  @ReportId 
+
+END
+GO
 /****** Object:  StoredProcedure [dbo].[sp_LIS_PanelUpdate]******/
 SET ANSI_NULLS ON
 GO
@@ -4833,6 +4780,9 @@ BEGIN
 
     BEGIN TRY
         BEGIN TRANSACTION;
+	
+	IF @FileId IS NULL
+		SET @FileId = (SELECT TOP 1 ImportedFileID FROM LISStaging ORDER BY ImportedFileID DESC)
 
 		 update ImportedFiles set FileStatus = 3,ProcessedOn = GETDATE() where ImportedFileID = @FileId; 
 
@@ -4875,10 +4825,11 @@ SELECT DISTINCT [RecordId]
       ,LIS.[PrimaryInsuranceProvider]
       ,[ZipCode]
       ,[Race]
+	  ,RequistionType
       ,LIS.[LastName]
       ,[LabCode]
       ,pt.PayerTypeId
-	  ,Insurance_Type,LIS.[Status],PhysicianName,
+	  ,Insurance_Type,LIS.[Status],PhysicianName,FacilityName,SaleRepName,
 	 TRIM((LIS.[LastName]+LIS.[FirstName]+'_'+ CAST(FORMAT([DateOfCollection], 'MMddyyyy')AS VARCHAR)))+'/'+LIS.[Status]+'_'+ISNULL(RecordId,AccessionNo)  IdentityValue
 	  INTO #LISmaster
     FROM LISStaging LIS
@@ -4907,81 +4858,18 @@ SELECT DISTINCT [RecordId]
 		,[FacilityZipcode],[Time],[FacilityAddress],[Panel],[ReferenceId],[SampleResultedDate],[PolicyHolderDOB],[Address],[Medications],[ClinicId],[ICD10Code]
 		,[Email],[City],[Gender],[SampleCollectedDate],[NPI],[State],[PatientDOB],[TransferToLab],[PatientEthnicity],[SalesPersonId]
 		,[FirstName],[SampleStatusId],[PrimaryPayerName],[PrimaryMemberId],[PrimaryGroupNo],[ZipCode],[Race],[LastName],[LabCode],[PayerTypeId]
-		,[PatientName],[BilledTo],[PanelName],[CreatedOn],[CreatedBy],StatusCode,InsuranceType,ReferringProviderName,AccessionIdentity)
+		,[PatientName],[BilledTo],[PanelName],[CreatedOn],[CreatedBy],StatusCode,InsuranceType,ReferringProviderName,AccessionIdentity,FacilityName,
+		SalesPersonName,RequistionType)
 	
 		SELECT AccessionNo,4,RecordId,RequisitionTypeId,RelationshipToInsured,FacilityState,ReferingProviderId,ReceivedDate,FacilityCity,
 		FacilityZipcode,Time,FacilityAddress,Panel,ReferenceId,Validated_Date,PolicyHolderDOB,Address,Medications,ClinicId,ICDCodes,
 		Email,City,Gender,DateOfCollection,NPI,SpecimenStatusId,DOB,TransferTo,PatientEthnicity,SalesPersonID,
 		UPPER(LTRIM(RTRIM(FirstName))),SpecimenStatusId,PrimaryInsuranceProvider,PolicyId,GroupId,ZipCode,Race,UPPER(LTRIM(RTRIM(LastName))),LabCode,PayerTypeId,
 		UPPER(LTRIM(RTRIM(LastName + ',' + FirstName))),Insurance_Type,Panel,GETDATE(),'SYSTEM_USER',TRIM(UPPER([Status])),
-		TRIM(UPPER(Insurance_Type)),TRIM(UPPER(PhysicianName)),IdentityValue
+		TRIM(UPPER(Insurance_Type)),TRIM(UPPER(PhysicianName)),IdentityValue,FacilityName,SaleRepName,RequistionType
 		FROM #LISmaster LIS 
 
-
-      
-  --      /*******************************************************************************************
-  --       Step 2: Update existing LISMaster records based on LISStaging
-  --       - Skip 'Cancelled' or 'Rejected'
-  --      ********************************************************************************************/
-  --     UPDATE LM
-		--SET 
-		--	LM.[RecordId] = LIS.[RecordId],
-		--	LM.[RequistionTypeId] = LIS.[RequisitionTypeId],
-		--	LM.[RelationshipToInsurance] = LIS.[RelationshipToInsured],
-		--	LM.[FacilityState] = LIS.[FacilityState],
-		--	LM.[ReferringProviderId] = LIS.[ReferingProviderId],
-		--	LM.[SampleReceivedDate] = LIS.[ReceivedDate],
-		--	LM.[FacilityCity] = LIS.[FacilityCity],
-		--	LM.[FacilityZipcode] = LIS.[FacilityZipcode],
-		--	LM.[Time] = LIS.[Time],
-		--	LM.[FacilityAddress] = LIS.[FacilityAddress],
-		--	LM.[Panel] = LIS.[Panel],
-		--	LM.[ReferenceId] = LIS.[ReferenceId],
-		--	LM.[SampleResultedDate] = LIS.[Validated_Date],
-		--	LM.[PolicyHolderDOB] = LIS.[PolicyHolderDOB],
-		--	LM.[Address] = LIS.[Address],
-		--	LM.[Medications] = LIS.[Medications],
-		--	LM.[ClinicId] = LIS.[ClinicId],
-		--	LM.[ICD10Code] = LIS.[ICDCodes],
-		--	LM.[Email] = LIS.[Email],
-		--	LM.[City] = LIS.[City],
-		--	LM.[Gender] = LIS.[Gender],
-		--	LM.[SampleCollectedDate] = LIS.[DateOfCollection],
-		--	LM.[NPI] = LIS.[NPI],
-		--	LM.[State] = LIS.[SpecimenStatusId],
-		--	LM.[PatientDOB] = LIS.[DOB],
-		--	LM.[TransferToLab] = LIS.[TransferTo],
-		--	LM.[PatientEthnicity] = LIS.[PatientEthnicity],
-		--	LM.[SalesPersonId] = LIS.[SalesPersonID],
-		--	LM.[FirstName] =UPPER(LIS.[FirstName]),
-		--	LM.[SampleStatusId] = LIS.[SpecimenStatusId],
-		--	LM.[PrimaryPayerName] = LIS.[PrimaryInsuranceProvider],
-		--	LM.[PrimaryMemberId] = LIS.[PolicyId],
-		--	LM.[PrimaryGroupNo] = LIS.[GroupId],
-		--	LM.[ZipCode] = LIS.[ZipCode],
-		--	LM.[Race] = LIS.[Race],
-		--	LM.[LastName] = UPPER(LIS.[LastName]),
-		--	LM.[LabCode] = LIS.[LabCode],
-		--	LM.[PayerTypeId] = LIS.[PayerTypeId],
-		--	LM.[PatientName] = UPPER(LTRIM(RTRIM(LIS.LastName + ',' + LIS.FirstName))),
-		--	LM.[BilledTo] = LIS.[Insurance_Type],
-		--	LM.[PanelName] = LIS.[Panel],
-		--	LM.[CreatedOn] = GETDATE(),
-		--	LM.[CreatedBy] = 'SYSTEM_USER',
-		--	LM.StatusCode = TRIM(UPPER([Status])),
-		--	LM.InsuranceType = TRIM(UPPER(Insurance_Type)),
-		--	LM.ReferringProviderName =TRIM(UPPER(PhysicianName)),
-		--	LM.AccessionIdentity = LIS.IdentityValue
-		--FROM [dbo].[LISMaster] LM
-		--INNER JOIN #LISmaster LIS ON  LM.AccessionIdentity = lis.IdentityValue  ;
-
 		
-	EXEC SP_ProcessLISvsBilling;
-
-	EXEC sp_LIS_PanelUpdate;
-
-	
-	
 		/* 1) Example insert from your staging/raw table (rename columns/tables as needed) */
 		-- INSERT INTO dbo.LISMaster (AccessionNo, SampleCollectedDate, SampleResultedDate, SampleReceivedDate, StatusCode, ...other cols...)
 		-- SELECT AccessionNo, SampleCollectedDate, SampleResultedDate, SampleReceivedDate, StatusCode, ...other cols...
@@ -5001,7 +4889,7 @@ SELECT DISTINCT [RecordId]
 		Mark the latest sample by collection date or received date or resulted date mark the second line item as duplicate in the billing sub status
 		*/
 
-		WITH Ranked AS
+		;WITH Ranked AS
 		(
 			SELECT
 				LMId   = lm.LISMasterId,          
@@ -5074,7 +4962,11 @@ SELECT DISTINCT [RecordId]
 
         -- Commit the transaction if all steps succeed
         COMMIT TRANSACTION;
-    END TRY
+
+	EXEC sp_LIS_PanelUpdate;			
+	EXEC SP_ProcessLISvsBilling;
+
+   END TRY
     BEGIN CATCH
         -- Rollback on error
         IF @@TRANCOUNT > 0
@@ -5307,10 +5199,10 @@ SET
 	UPDATE LIS
 	SET LIS.PanelCode = 
 		CASE 
-			WHEN BM.PanelName IS NULL AND RT.RequisitionTypeName = 'Infectious Disease' THEN LIS.PanelName 
+			WHEN BM.PanelName IS NULL AND RT.RequisitionTypeName = 'Infectious Disease' THEN LIS.PanelCode 
 			WHEN BM.PanelName IS NULL AND RT.RequisitionTypeName <> 'Infectious Disease' THEN RT.RequisitionTypeName 
 			WHEN BM.AccessionNo IS NULL THEN 'Panel Not Listed' 
-			ELSE BM.PanelName 
+			ELSE LIS.PanelCode 
 		END
 	FROM LISMaster LIS
 	LEFT JOIN BillingMaster BM ON LIS.AccessionNo = BM.AccessionNo 
@@ -5323,13 +5215,15 @@ SET NewStatus =
 		CASE 
         WHEN ((ReferringProviderName LIKE '%TEST%' ) AND ReferringProviderName NOT IN ('DR MARK TESTA DO')) OR PatientName LIKE '%TEST%' 
 		OR (PatientName =  'DEV,DEV') OR (PatientName LIKE  '%Patient%') OR PatientName LIKE '%[0-9]%' THEN 'System Test'
+		WHEN FacilityName = 'Environmental Testing' THEN 'System Test'
         WHEN TRIM(StatusCode) IN ('Rejected','Deleted') THEN 'Deleted / Rejected'
-        WHEN SampleResultedDate IS NULL AND InsuranceType NOT IN ('SELF PAY','REF LAB - BILL PATIENT','CLIENT BILL') THEN 'Yet to be validated'
-        WHEN SampleResultedDate IS NOT NULL AND TRIM(StatusCode) IN ('Validated','Completed','RESULTS AVAILABLE') 
-		AND (InsuranceType IS NULL OR InsuranceType IN ('COMMERCIAL','MEDICAID','MEDICARE','MISSING INSURANCE','OTHER INS.')) THEN 'Billable'
-        WHEN InsuranceType = 'SELF PAY' THEN 'Self-Pay'
-		WHEN InsuranceType = 'REF LAB - BILL PATIENT' THEN 'Ref Lab - Bill Patient'
 		WHEN InsuranceType = 'CLIENT BILL' THEN 'Client Bill'
+		WHEN InsuranceType = 'SELF PAY' THEN 'Self-Pay'
+		WHEN AccessionNo IS NULL THEN 'Missing Accession'
+		WHEN InsuranceType = 'REF LAB - BILL PATIENT' THEN 'Ref Lab - Bill Patient'
+		WHEN SampleResultedDate IS NOT NULL AND TRIM(StatusCode) IN ('Validated','Completed','RESULTS AVAILABLE') 
+		AND (InsuranceType IS NULL OR InsuranceType IN ('COMMERCIAL','MEDICAID','MEDICARE','MISSING INSURANCE','OTHER INS.')) THEN 'Billable'
+        WHEN SampleResultedDate IS NULL AND InsuranceType NOT IN ('SELF PAY','REF LAB - BILL PATIENT','CLIENT BILL') THEN 'Yet to be validated'
         ELSE NULL
     END;
 
@@ -5453,32 +5347,32 @@ BEGIN
 				TT.DateofDeposit,
 				TT.DateofEntry,
 				TT.DateofService,
-                SUM(TT.Units) AS Units,
-                SUM(TT.TotalBilledAmount) AS TotalBilledAmount,
-                SUM(TT.PatientPaidAmount) AS PatientPaidAmount,
-                SUM(TT.InsurancePaidAmount) AS InsurancePaidAmount,
-                SUM(TT.TotalPaidAmount) AS TotalPaidAmount,
-                SUM(TT.AdjustmentAmount) AS AdjustmentAmount
+                TT.Units AS Units,
+                TT.TotalBilledAmount AS TotalBilledAmount,
+                TT.PatientPaidAmount AS PatientPaidAmount,
+                TT.InsurancePaidAmount AS InsurancePaidAmount,
+                TT.TotalPaidAmount AS TotalPaidAmount,
+                TT.AdjustmentAmount AS AdjustmentAmount
 				into #AggregatedTemp
             FROM #TransacionnDetailTemp TT  
-            GROUP BY 
-                TT.LabIdentityKey,
-                TT.TransactionType,
-                TT.ChartNumber,
-                TT.VisitNo,
-                TT.ChargeCode,
-                TT.TransactionCodeDesc,
-                TT.Modifiers,
-                TT.VisitPrimaryCarrier,
-                TT.VisitSecondaryCarrier,
-                TT.PrimaryDxICD10,
-                TT.PrimaryDxICD9,
-                TT.PaymentMethod,
-                TT.CheckNumber,
-                TT.Void,
-				TT.DateofDeposit,
-				TT.DateofEntry,
-				TT.DateofService,TT.Units
+    --        GROUP BY 
+    --            TT.LabIdentityKey,
+    --            TT.TransactionType,
+    --            TT.ChartNumber,
+    --            TT.VisitNo,
+    --            TT.ChargeCode,
+    --            TT.TransactionCodeDesc,
+    --            TT.Modifiers,
+    --            TT.VisitPrimaryCarrier,
+    --            TT.VisitSecondaryCarrier,
+    --            TT.PrimaryDxICD10,
+    --            TT.PrimaryDxICD9,
+    --            TT.PaymentMethod,
+    --            TT.CheckNumber,
+    --            TT.Void,
+				--TT.DateofDeposit,
+				--TT.DateofEntry,
+				--TT.DateofService,TT.Units
       
 		
   		DELETE FROM TransactionMaster WHERE [VisitNo] IN (SELECT DISTINCT VisitNo FROM #AggregatedTemp) AND TransactionType IN  (SELECT DISTINCT TransactionType FROM #AggregatedTemp) 

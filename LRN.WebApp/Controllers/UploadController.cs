@@ -405,49 +405,50 @@ public class UploadController : Controller
         string labname = User.FindFirst("LabName")?.Value ?? "DefaultLab"; // Get lab name from claims
         switch (fileTypeId)
         {
-            case (int)CommonConst.ImportFileType.LIS_Report:
-                if (labname == "Prism")
-                    fileName = "LIS.xlsx";
-                else if (labname == "Cove")
-                    fileName = "Cove_LIMS.xlsx";
+            case (int)CommonConst.ImportFileType.Cove_LIS_Report:
+                fileName = "Cove_LIMS.xlsx";
                 break;
 
-            case (int)CommonConst.ImportFileType.Custom_Collection:
+            case (int)CommonConst.ImportFileType.Cove_Custom_Collection:
             case (int)CommonConst.ImportFileType.DTR_CCW:
+            case (int)CommonConst.ImportFileType.InHealth_CCW:
                 fileName = "Custom_Collection.xlsx";
                 break;
 
-            case (int)CommonConst.ImportFileType.Visit_Against_Accession:
+            case (int)CommonConst.ImportFileType.VISIT_AGAINST_ACCESSION_IHDTR:
                 fileName = "Prism Submitted Visit to Accession Report.xlsx";
                 break;
 
-            case (int)CommonConst.ImportFileType.Transaction_Detail_Report:
+            case (int)CommonConst.ImportFileType.Cove_Transaction_Detail_Report:
+            case (int)CommonConst.ImportFileType.Transaction_Detail_Report_IHDTR:
                 fileName = "TransactionDetail.xlsx";
                 break;
 
-            case (int)CommonConst.ImportFileType.Denial_Tracking_Report:
+            case (int)CommonConst.ImportFileType.Cove_Denial_Tracking_Report:
             case (int)CommonConst.ImportFileType.DTR_Denail_Tracking:
+            case (int)CommonConst.ImportFileType.InHealth_Denial_Tracking:
+
                 fileName = "DenialTrackingDetail.xlsx";
                 break;
 
-            case (int)CommonConst.ImportFileType.Prism_Billing_Sheet:
-                fileName = "Prism Billing.xlsx";
-                break;
-            case (int)CommonConst.ImportFileType.Accession_Payment_Report:
+            //case (int)CommonConst.ImportFileType.Prism_Billing_Sheet:
+            //    fileName = "Prism Billing.xlsx";
+            //    break;
+            case (int)CommonConst.ImportFileType.Cove_Accession_Payment_Report:
                 fileName = "AccessionPaymentReports_Template.xlsx";
                 break;
-            case (int)CommonConst.ImportFileType.Panel_Group:
-                fileName = "PanelMaster.xlsx";
-                break;
-            case (int)CommonConst.ImportFileType.Diagnos_SampleLIS:
-                fileName = "LIS_Sample_Report.xlsx";
-                break;
-            case (int)CommonConst.ImportFileType.Order_LIS:
-                fileName = "LIS_Order_Report.xlsx";
-                break;
-            case (int)CommonConst.ImportFileType.Client_Billing_Sheet:
-                fileName = "Prism - Client Bill Sheet.xlsx";
-                break;
+            //case (int)CommonConst.ImportFileType.Panel_Group:
+            //    fileName = "PanelMaster.xlsx";
+            //    break;
+            //case (int)CommonConst.ImportFileType.Diagnos_SampleLIS:
+            //    fileName = "LIS_Sample_Report.xlsx";
+            //    break;
+            //case (int)CommonConst.ImportFileType.Order_LIS:
+            //    fileName = "LIS_Order_Report.xlsx";
+            //    break;
+            //case (int)CommonConst.ImportFileType.Client_Billing_Sheet:
+            //    fileName = "Prism - Client Bill Sheet.xlsx";
+            //    break;
             case (int)CommonConst.ImportFileType.InHealthDTR_LIS_Master:
                 fileName = "LIS_Order_Report.xlsx";
                 break;

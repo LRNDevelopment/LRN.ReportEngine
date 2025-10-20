@@ -59,42 +59,47 @@ public class ImportFilesRepository : IImportFilesRepository
         await UpdateImportFilesAsync(new List<ImportFileDto> { file });
     }
 
-    // map file type -> staging table
-    private static readonly IReadOnlyDictionary<int, string> StagingByType = new Dictionary<int, string>
-    {
-        [(int)CommonConst.ImportFileType.LIS_Report] = "dbo.LISStaging",
-        [(int)CommonConst.ImportFileType.Custom_Collection] = "dbo.CustomCollectionStaging",
-        [(int)CommonConst.ImportFileType.Visit_Against_Accession] = "dbo.VisitAgaistAccessionStaging",
-        [(int)CommonConst.ImportFileType.Transaction_Detail_Report] = "dbo.TransactionDetailStaging",
-        [(int)CommonConst.ImportFileType.Denial_Tracking_Report] = "dbo.DenialTrackingStaging",
-        [(int)CommonConst.ImportFileType.Prism_Billing_Sheet] = "dbo.PrismBillingStaging",
-        [(int)CommonConst.ImportFileType.Accession_Payment_Report] = "dbo.AccPaymentReportStaging",
-        [(int)CommonConst.ImportFileType.Order_LIS] = "dbo.DiagnoseLISStaging",
-        [(int)CommonConst.ImportFileType.Diagnos_SampleLIS] = "dbo.DiagnoseLISStaging",
-        [(int)CommonConst.ImportFileType.Panel_Group] = "dbo.PanelMasterStaging",
-        [(int)CommonConst.ImportFileType.Client_Billing_Sheet] = "dbo.ClientBillingSheet"
-    };
+    //// map file type -> staging table
+    //private static readonly IReadOnlyDictionary<int, string> StagingByType = new Dictionary<int, string>
+    //{
+    //    [(int)CommonConst.ImportFileType.LIS_Report] = "dbo.LISStaging",
+    //    [(int)CommonConst.ImportFileType.Custom_Collection] = "dbo.CustomCollectionStaging",
+    //    [(int)CommonConst.ImportFileType.Visit_Against_Accession] = "dbo.VisitAgaistAccessionStaging",
+    //    [(int)CommonConst.ImportFileType.Transaction_Detail_Report] = "dbo.TransactionDetailStaging",
+    //    [(int)CommonConst.ImportFileType.Denial_Tracking_Report] = "dbo.DenialTrackingStaging",
+    //    [(int)CommonConst.ImportFileType.Prism_Billing_Sheet] = "dbo.PrismBillingStaging",
+    //    [(int)CommonConst.ImportFileType.Accession_Payment_Report] = "dbo.AccPaymentReportStaging",
+    //    [(int)CommonConst.ImportFileType.Order_LIS] = "dbo.DiagnoseLISStaging",
+    //    [(int)CommonConst.ImportFileType.Diagnos_SampleLIS] = "dbo.DiagnoseLISStaging",
+    //    [(int)CommonConst.ImportFileType.Panel_Group] = "dbo.PanelMasterStaging",
+    //    [(int)CommonConst.ImportFileType.Client_Billing_Sheet] = "dbo.ClientBillingSheet"
+    //};
 
-    // map file type -> processing stored proc
     private static readonly IReadOnlyDictionary<int, string> ProcByType = new Dictionary<int, string>
     {
-        [(int)CommonConst.ImportFileType.LIS_Report] = "SP_Process_LISMaster_ByFileId",
-        [(int)CommonConst.ImportFileType.Custom_Collection] = "Sp_ProcessBillingMasterData",
-        [(int)CommonConst.ImportFileType.Visit_Against_Accession] = "Sp_Process_VAA_ByFileId",
-        [(int)CommonConst.ImportFileType.Transaction_Detail_Report] = "Sp_ProcessTransactionDetails",
-        [(int)CommonConst.ImportFileType.Denial_Tracking_Report] = "Sp_ProcessDenialTrackingMaster",
-        [(int)CommonConst.ImportFileType.Prism_Billing_Sheet] = "Sp_Process_BillingSheet_ByFileId",
-        [(int)CommonConst.ImportFileType.Accession_Payment_Report] = "Sp_ProcessAccessionPaymentReport",
-        [(int)CommonConst.ImportFileType.Order_LIS] = "Sp_Process_LISOrderStaging",
-        [(int)CommonConst.ImportFileType.Diagnos_SampleLIS] = "Sp_Process_LISSample_Report",
-        [(int)CommonConst.ImportFileType.Panel_Group] = "Sp_Process_PanelMasterStaging",
-        [(int)CommonConst.ImportFileType.Client_Billing_Sheet] = "Sp_Process_ClientBillingSheet",
+        #region Cove Files
+        [(int)CommonConst.ImportFileType.Cove_LIS_Report] = "SP_Process_LISMaster_ByFileId",
+        [(int)CommonConst.ImportFileType.Cove_Custom_Collection] = "Sp_ProcessBillingMasterData",
+        [(int)CommonConst.ImportFileType.Cove_Transaction_Detail_Report] = "Sp_ProcessTransactionDetails",
+        [(int)CommonConst.ImportFileType.Cove_Denial_Tracking_Report] = "Sp_ProcessDenialTrackingMaster",
+        [(int)CommonConst.ImportFileType.Cove_Accession_Payment_Report] = "Sp_ProcessAccessionPaymentReport",
+        #endregion
+
+        #region InHealth_DTR FILES
         [(int)CommonConst.ImportFileType.InHealthDTR_LIS_Master] = "SP_Process_LISMaster_ByFileId",
+        [(int)CommonConst.ImportFileType.InHealth_CCW] = "Sp_ProcessBillingMasterData",
         [(int)CommonConst.ImportFileType.DTR_CCW] = "Sp_ProcessBillingMasterData",
-        [(int)CommonConst.ImportFileType.DTR_Denail_Tracking] = "Sp_ProcessDenialTrackingMaster"
-
-
+        [(int)CommonConst.ImportFileType.VISIT_AGAINST_ACCESSION_IHDTR] = "Sp_Process_VAA_ByFileId",
+        [(int)CommonConst.ImportFileType.Transaction_Detail_Report_IHDTR] = "Sp_ProcessTransactionDetails",
+        [(int)CommonConst.ImportFileType.InHealth_Denial_Tracking] = "Sp_ProcessDenialTrackingMaster",
+        [(int)CommonConst.ImportFileType.DTR_Denail_Tracking] = "Sp_ProcessDenialTrackingMaster",
+        [(int)CommonConst.ImportFileType.Nexum_Claim_Scrubbing_DTR] = "Sp_ProcessNexusClaimDTRIH",
+        [(int)CommonConst.ImportFileType.Nexum_Claim_Scrubbing_IH] = "Sp_ProcessNexusClaimDTRIH",
+        [(int)CommonConst.ImportFileType.Nexum_Preprocessing_DTR] = "Sp_ProcessNexusClaimDTRIH",
+        [(int)CommonConst.ImportFileType.Nexum_Preprocessing_IH] = "Sp_ProcessNexusClaimDTRIH",
+        #endregion
     };
+
     public async Task ProcessImportFilesAsync(ImportFileDto file)
     {
         using var connection = _context.CreateConnection();
@@ -222,11 +227,12 @@ public class ImportFilesRepository : IImportFilesRepository
 
     public async Task<List<ImportFileDto>> GetImportFilesAsync()
     {
-        const string query = @"SELECT ImportedFileID AS ImportedFileId, ImportFileName, FileTypeName, c.FileStatus AS FileStatusName,
-               ExcelRowCount, ImportedRowCount, ImportedOn, ProcessedOn, a.LabId, ImportFilePath,c.FileStatusId 
-        FROM ImportedFiles a
-        JOIN ImportFilTypes b ON a.FileType = b.FileTypeId
-        JOIN FileStatuses c ON a.FileStatus = c.FileStatusId";
+        const string query = @"SELECT a.ImportedFileID AS ImportedFileId, a.ImportFileName, b.FileTypeName, c.FileStatus AS FileStatusName,
+               a.ExcelRowCount, a.ImportedRowCount, a.ImportedOn, a.ProcessedOn, a.LabId, a.ImportFilePath, c.FileStatusId 
+        FROM ImportedFiles a WITH (NOLOCK)
+        JOIN ImportFilTypes b WITH (NOLOCK) ON a.FileType = b.FileTypeId
+        JOIN FileStatuses c WITH (NOLOCK) ON a.FileStatus = c.FileStatusId";
+
         using var connection = _context.CreateConnection();
         var results = await connection.QueryAsync<ImportFileDto>(query);
         return results.ToList();
@@ -234,7 +240,7 @@ public class ImportFilesRepository : IImportFilesRepository
 
     public async Task<List<ImportFileTypesDto>> GetImportFilesTypesAsync()
     {
-        const string query = "Select FileTypeId,(CAST(SeqNo AS VARCHAR)+' . ' + FileTypeName) FileTypeName from ImportFilTypes ORDER BY SeqNo";
+        const string query = "Select FileTypeId,(CAST(SeqNo AS VARCHAR)+' . ' + FileTypeName) FileTypeName from ImportFilTypes WITH (NOLOCK) ORDER BY SeqNo";
         using var connection = _context.CreateConnection();
         var results = await connection.QueryAsync<ImportFileTypesDto>(query);
         return results.ToList();
@@ -244,7 +250,7 @@ public class ImportFilesRepository : IImportFilesRepository
     {
         const string sql = @"
         SELECT ImportedFileID
-        FROM dbo.ImportedFiles
+        FROM dbo.ImportedFiles WITH (NOLOCK)
         WHERE FileType = @fileType AND ImportedFileID = @fileId;";
 
         using var connection = _context.CreateConnection();
@@ -254,8 +260,9 @@ public class ImportFilesRepository : IImportFilesRepository
 
     public async Task<List<ReportDownloadSts>> GetReportDownloadStslst()
     {
-        const string query = "SELECT [ReportID],[ReportName],[ReportType],[ReportServerPath],[ReportStatus],[CreatedOn]," +
-            "FileStatus,LogString FROM [dbo].[ReportDownloadSts] a join FileStatuses b on a.ReportStatus = b.FileStatusId";
+        const string query = "SELECT a.[ReportID],a.[ReportName],a.[ReportType],a.[ReportServerPath],a.[ReportStatus],a.[CreatedOn]," +
+             "b.FileStatus, a.LogString FROM [dbo].[ReportDownloadSts] a WITH (NOLOCK) join FileStatuses b WITH (NOLOCK) on a.ReportStatus = b.FileStatusId";
+
         using var connection = _context.CreateConnection();
         var results = await connection.QueryAsync<ReportDownloadSts>(query);
         return results.ToList();
@@ -266,8 +273,9 @@ public class ImportFilesRepository : IImportFilesRepository
         const string query = @"
         SELECT [ImportedFileID], [ImportFileName], [ExcelRowCount], [ImportedRowCount], 
                [FileStatus], [FileType], [ImportedOn], [ProcessedOn], [LabId], [ImportFilePath]
-        FROM [dbo].[ImportedFiles]
-        WHERE ImportedFileID = @FileId";  // Use parameterized query
+        FROM [dbo].[ImportedFiles] WITH (NOLOCK)
+        WHERE ImportedFileID = @FileId";  // parameterized
+
 
         using var connection = _context.CreateConnection();
         // Use parameterized query to avoid SQL Injection
@@ -303,9 +311,10 @@ public class ImportFilesRepository : IImportFilesRepository
     public async Task<List<FileLog>> GetFileLogsById(int fileId)
     {
         const string query = @"SELECT LogType, LogMessage, RowNo, ColumnName, CreatedOn 
-                           FROM ImportFileLogs 
+                           FROM ImportFileLogs WITH (NOLOCK)
                            WHERE ImportFileId = @FileId 
                            ORDER BY CreatedOn";
+
 
         using var connection = _context.CreateConnection();
         var results = await connection.QueryAsync<FileLog>(query, new { FileId = fileId });
@@ -314,7 +323,7 @@ public class ImportFilesRepository : IImportFilesRepository
 
     public async Task<ReportDownloadSts> GetDownloadReportById(int fileId)
     {
-        const string query = "select * from ReportDownloadSts Where ReportID = @FileId";  // Use parameterized query
+        const string query = "select * from ReportDownloadSts WITH (NOLOCK) Where ReportID = @FileId";  // parameterized
 
         using var connection = _context.CreateConnection();
         // Use parameterized query to avoid SQL Injection
@@ -325,7 +334,7 @@ public class ImportFilesRepository : IImportFilesRepository
 
     public async Task<List<LabMaster>> GetLabMaster()
     {
-        const string query = "SELECT LabId, LabName, ConnectionKey FROM Labs WHERE IsActive = 1";
+        const string query = "SELECT LabId, LabName, ConnectionKey FROM Labs WITH (NOLOCK) WHERE IsActive = 1";
         using var connection = _context.CreateConnection();
 
         var result = await connection.QueryAsync<LabMaster>(query);

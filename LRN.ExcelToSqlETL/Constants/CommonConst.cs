@@ -81,16 +81,52 @@ namespace LRN.ExcelToSqlETL.Core.Constants
 
             [Description("Client Billing Sheet")]
             Client_Billing_Sheet = 11,
+            IATLISFile = 406,
+            PCRCO_LIS = 407,
 
+            #region Cove        
+            [Description("LIS Raw Report")]
+            Cove_LIS_Report = 401,
+
+            [Description("Custom Collection Report")]
+            Cove_Custom_Collection = 402,
+
+            [Description("Transaction_Detail_Report")]
+            Cove_Transaction_Detail_Report = 403,
+
+            [Description("Denial_Tracking_Report")]
+            Cove_Denial_Tracking_Report = 404,
+
+            [Description("Accession Payment Report")]
+            Cove_Accession_Payment_Report = 405,
+            #endregion
+
+            #region InHealth DTR File Types 
             [Description("InHealthDTR LIS Master")]
-            InHealthDTR_LIS_Master = 12,
-
-
+            InHealthDTR_LIS_Master = 201,
+            [Description("InHealth_CCW")]
+            InHealth_CCW = 202,
             [Description("DTR_CCW")]
-            DTR_CCW = 13,
-
+            DTR_CCW = 203,
+            [Description("VISIT_AGAINST_ACCESSION_InHealth_DTR")]
+            VISIT_AGAINST_ACCESSION_IHDTR = 204,
+            [Description("Transaction_Detail_Report")]
+            Transaction_Detail_Report_IHDTR = 205,
+            [Description("InHealth_Denial_Tracking")]
+            InHealth_Denial_Tracking = 206,
             [Description("DTR Denail Tracking")]
-            DTR_Denail_Tracking = 14
+            DTR_Denail_Tracking = 207,
+            [Description("Nexum Claim Scrubbing - DTR")]
+            Nexum_Claim_Scrubbing_DTR = 208,
+            [Description("Nexum Claim Scrubbing - IH")]
+            Nexum_Claim_Scrubbing_IH = 209,
+            [Description("Nexum Preprocessing - DTR")]
+            Nexum_Preprocessing_DTR = 210,
+            [Description("Nexum Preprocessing - IH")]
+            Nexum_Preprocessing_IH = 211,
+
+            #endregion
+
         }
 
         public enum DownloadReportType

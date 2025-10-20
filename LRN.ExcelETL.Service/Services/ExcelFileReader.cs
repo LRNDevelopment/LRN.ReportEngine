@@ -69,7 +69,7 @@ public class ExcelFileReader : IFileReader
                 }
                 catch (Exception ex)
                 {
-                    _logger.Warn($"Skipping sheet '{worksheet.Name}' due to mismatch: {ex.Message}");
+                    _logger.Warn($"Skipping sheet '{worksheet.Name}' due to Upload Template mismatch: {ex.Message}");
                     ImportLog.Add(new FileLog { ImportFileId = _ImportFileId, LogType = "Warning", LogMessage = $"Skipping sheet '{worksheet.Name}' due to mismatch: {ex.Message}" });
                     isFailed = true;
                     break;
@@ -310,50 +310,104 @@ public class ExcelFileReader : IFileReader
 
     private int FindHeaderRow(IXLWorksheet worksheet, ExcelSheetMapping mapping, int scanLimit = 20)
     {
-        List<string> allFoundHeaders = new List<string>();
-
-        for (int i = 1; i <= scanLimit; i++)
+        try
         {
-            var row = worksheet.Row(i);
-            var cellValues = row.Cells().Select(c => c.GetString().Trim())
-                                        .Where(v => !string.IsNullOrWhiteSpace(v))
-                                        .ToList();
+            List<string> allFoundHeaders = new List<string>();
+            Dictionary<int, List<string>> rowHeaders = new Dictionary<int, List<string>>();
 
-            // Collect all headers found across all rows
-            allFoundHeaders.AddRange(cellValues);
+            // First pass: collect all potential header values from each row
+            for (int i = 1; i <= scanLimit; i++)
+            {
+                var row = worksheet.Row(i);
+                var cellValues = row.Cells().Select(c => c.GetString().Trim())
+                                            .Where(v => !string.IsNullOrWhiteSpace(v))
+                                            .ToList();
 
-            int matches = mapping.Columns
-                .Count(col => cellValues.Contains(col.ExcelColumn, StringComparer.OrdinalIgnoreCase));
+                rowHeaders[i] = cellValues;
+                allFoundHeaders.AddRange(cellValues);
+            }
 
-            if (matches >= mapping.Columns.Count * 0.7)
-                return i;
+            // Second pass: look for the row that contains the most expected headers
+            int bestMatchRow = -1;
+            int bestMatchCount = 0;
+
+            for (int i = 1; i <= scanLimit; i++)
+            {
+                var cellValues = rowHeaders[i];
+                int matches = mapping.Columns
+                    .Count(col => cellValues.Contains(col.ExcelColumn, StringComparer.OrdinalIgnoreCase));
+
+                if (matches > bestMatchCount)
+                {
+                    bestMatchCount = matches;
+                    bestMatchRow = i;
+                }
+            }
+
+            // Check if we found a reasonable match (at least 70% of columns)
+            if (bestMatchCount >= mapping.Columns.Count * 0.7)
+            {
+                return bestMatchRow;
+            }
+
+            // If no single row has enough matches, try combining consecutive rows
+            // This handles cases where headers span multiple rows
+            for (int startRow = 1; startRow <= scanLimit - 1; startRow++)
+            {
+                var combinedHeaders = new List<string>();
+                for (int i = startRow; i <= Math.Min(startRow + 2, scanLimit); i++)
+                {
+                    combinedHeaders.AddRange(rowHeaders[i]);
+                }
+
+                int combinedMatches = mapping.Columns
+                    .Count(col => combinedHeaders.Contains(col.ExcelColumn, StringComparer.OrdinalIgnoreCase));
+
+                if (combinedMatches >= mapping.Columns.Count * 0.7)
+                {
+                    return startRow; // Return the starting row of the header block
+                }
+            }
+
+            // Identify missing fields
+            var missingFields = mapping.Columns
+                .Where(col => !allFoundHeaders.Contains(col.ExcelColumn, StringComparer.OrdinalIgnoreCase))
+                .Select(col => col.ExcelColumn)
+                .ToList();
+
+            var foundFields = mapping.Columns
+                .Where(col => allFoundHeaders.Contains(col.ExcelColumn, StringComparer.OrdinalIgnoreCase))
+                .Select(col => col.ExcelColumn)
+                .ToList();
+
+            var errorMessage = $"Wrong Template uploaded - Template Headings not found in the top {scanLimit} rows. " +
+                             $"Missing Fields:\n{string.Join("\n", missingFields.Select(f => $"• {f}"))}" +
+                              $"\nAvailable fields: [{string.Join(", ", foundFields)}]\n" +
+                              $"\nPlease ensure the Excel file has the correct column headers.";
+
+            ImportLog.Add(new FileLog
+            {
+                ImportFileId = _ImportFileId,
+                LogType = "Error",
+                LogMessage = errorMessage
+            });
+            throw new InvalidDataException($"No valid header row found. {errorMessage}");
+        }
+        catch (Exception ex)
+        {
+            var errorMessage = $"Exception during header row detection: {ex.Message}";
+            ImportLog.Add(new FileLog
+            {
+                ImportFileId = _ImportFileId,
+                LogType = "Error",
+                LogMessage = errorMessage
+            });
+
+            throw new InvalidDataException($"Header detection failed: {ex.Message}", ex);
+
         }
 
-        // Identify missing fields by comparing expected columns with all found headers
-        var missingFields = mapping.Columns
-            .Where(col => !allFoundHeaders.Contains(col.ExcelColumn, StringComparer.OrdinalIgnoreCase))
-            .Select(col => col.ExcelColumn)
-            .ToList();
-
-        var foundFields = mapping.Columns
-            .Where(col => allFoundHeaders.Contains(col.ExcelColumn, StringComparer.OrdinalIgnoreCase))
-            .Select(col => col.ExcelColumn)
-            .ToList();
-
-        var errorMessage = $" Wrong Template uploaded - Template Headings not found in the top {scanLimit} rows. " +
-                          $"\n Missing Fields: [ {string.Join(", ", missingFields)}. " +
-                          $"]\n Available fields: {string.Join(", ", foundFields)}";
-
-        ImportLog.Add(new FileLog
-        {
-            ImportFileId = _ImportFileId,
-            LogType = "Error",
-            LogMessage = errorMessage
-        });
-
-        //throw new Exception(errorMessage);
-
-        throw new Exception($"Header row not found in the top {scanLimit} rows.");
+       
     }
 
     public static object GetCellValue(string? cellValue, string expectedType, int rowNum = -1, string columnName = null)

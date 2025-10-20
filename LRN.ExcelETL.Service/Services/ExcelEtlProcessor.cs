@@ -90,7 +90,7 @@ namespace LRN.ExcelETL.Service.Services
                                 row["ImportedFileID"] = fileDto.ImportedFileId;
                             }
                         }
-
+                        FindPotentialProblemColumns(result.Data);
                         await _importer.ImportAsync(result.Data, mapping.TargetTable, _fileId);
 
                         fileDto.ExcelRowCount = result.TotalRows;
@@ -118,7 +118,38 @@ namespace LRN.ExcelETL.Service.Services
                 await _importRepo.UpdateFileAsync(fileDto);
             }
         }
+        private void FindPotentialProblemColumns(DataTable data)
+        {
+            _logger.Info("=== SCANNING FOR POTENTIAL PROBLEM COLUMNS ===");
 
+            foreach (DataColumn column in data.Columns)
+            {
+                int maxLength = 0;
+                int longValueCount = 0;
+
+                foreach (DataRow row in data.Rows)
+                {
+                    if (!row.IsNull(column))
+                    {
+                        string value = row[column].ToString();
+                        if (value.Length > maxLength)
+                            maxLength = value.Length;
+
+                        if (value.Length > 255)
+                            longValueCount++;
+                    }
+                }
+
+                if (maxLength > 255)
+                {
+                    _logger.Error($"⚠️ PROBLEM COLUMN: '{column.ColumnName}' - Max length: {maxLength} chars, {longValueCount} values > 255 chars");
+                }
+                else
+                {
+                    _logger.Info($"✓ OK Column: '{column.ColumnName}' - Max length: {maxLength} chars");
+                }
+            }
+        }
 
         private async Task ProcessFilesAsync(List<ImportFileDto> files)
         {

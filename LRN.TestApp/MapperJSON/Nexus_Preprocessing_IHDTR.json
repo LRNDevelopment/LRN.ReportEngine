@@ -1,0 +1,114 @@
+{
+  "SheetName": "",
+  "TargetTable": "dbo.NexusStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "ID",
+      "SqlColumn": "NexusID",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Accession",
+      "SqlColumn": "Accession",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Procedure",
+      "SqlColumn": "ProcedureCPT",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOS",
+      "SqlColumn": "DateOfService",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Status",
+      "SqlColumn": "NexusStatus",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Client",
+      "SqlColumn": "Client",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Account",
+      "SqlColumn": "Account",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Provider",
+      "SqlColumn": "RFProvider",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Provider NPI",
+      "SqlColumn": "ProviderNPI",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Performing Lab",
+      "SqlColumn": "PerformingLab",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient First",
+      "SqlColumn": "PatientFirstName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient Last",
+      "SqlColumn": "PatientLastName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient Sex",
+      "SqlColumn": "PatientSex",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient DOB",
+      "SqlColumn": "PatientDOB",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ICD10 Codes",
+      "SqlColumn": "ICD10Codes",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient ID",
+      "SqlColumn": "InsuranceID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Edit",
+      "SqlColumn": "Edit",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

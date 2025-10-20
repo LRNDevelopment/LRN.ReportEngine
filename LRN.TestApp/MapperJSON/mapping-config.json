@@ -56,19 +56,59 @@
       "FileType": 11
     },
     {
-      "FileIdentifier": "DTR CCW",
-      "JsonMappingPath": "Custom_Collection.json",
-      "FileType": 13
-    },
-    {
       "FileIdentifier": "InHealth LIS",
       "JsonMappingPath": "InHealthLIS_mapping.json",
-      "FileType": 12
+      "FileType": 201
+    },
+    {
+      "FileIdentifier": "InHealth CCW",
+      "JsonMappingPath": "Custom_Collection.json",
+      "FileType": 202
+    },
+    {
+      "FileIdentifier": "DTR Payment Report",
+      "JsonMappingPath": "Custom_Collection.json",
+      "FileType": 203
+    },
+    {
+      "FileIdentifier": "Visit Against Accession",
+      "JsonMappingPath": "VisitAgainstAccession.json",
+      "FileType": 204
+    },
+    {
+      "FileIdentifier": "Transaction Detail Report",
+      "JsonMappingPath": "Transaction_Detail.json",
+      "FileType": 205
+    },
+    {
+      "FileIdentifier": "InHealth Denial Tracking",
+      "JsonMappingPath": "DenialTrackingDetail.json",
+      "FileType": 206
     },
     {
       "FileIdentifier": "DTR Denail Tracking",
       "JsonMappingPath": "DenialTrackingDetail.json",
-      "FileType": 14
+      "FileType": 207
+    },
+    {
+      "FileIdentifier": "Nexum Claim Scrubbing - DTR",
+      "JsonMappingPath": "Nexus_Scrupping_IHDTR.json",
+      "FileType": 208
+    },
+    {
+      "FileIdentifier": "Nexum Claim Scrubbing - IH",
+      "JsonMappingPath": "Nexus_Scrupping_IHDTR.json",
+      "FileType": 209
+    },
+    {
+      "FileIdentifier": "Nexum Preprocessing - DTR",
+      "JsonMappingPath": "Nexus_Preprocessing_IHDTR.json",
+      "FileType": 210
+    },
+    {
+      "FileIdentifier": "Nexum Preprocessing - IH",
+      "JsonMappingPath": "Nexus_Preprocessing_IHDTR.json",
+      "FileType": 211
     }
   ]
 }

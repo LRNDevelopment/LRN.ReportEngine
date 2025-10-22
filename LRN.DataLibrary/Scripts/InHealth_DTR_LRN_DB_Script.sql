@@ -33,12 +33,6 @@ GO
 /****** Object:  StoredProcedure [dbo].[sp_Process_FinalCalimStatus]******/
 DROP PROCEDURE [dbo].[sp_Process_FinalCalimStatus]
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_Process_ClientBillingSheet]******/
-DROP PROCEDURE [dbo].[Sp_Process_ClientBillingSheet]
-GO
-/****** Object:  StoredProcedure [dbo].[Sp_Process_BillingSheet_ByFileId]******/
-DROP PROCEDURE [dbo].[Sp_Process_BillingSheet_ByFileId]
-GO
 /****** Object:  StoredProcedure [dbo].[SP_InsertReportDownloadLog]******/
 DROP PROCEDURE [dbo].[SP_InsertReportDownloadLog]
 GO
@@ -74,275 +68,275 @@ DROP PROCEDURE [dbo].[BillingMasterProcess_Proc]
 GO
 ALTER TABLE [dbo].[BillingMaster] DROP CONSTRAINT [CK_BillingMaster_NonNegativeAmounts]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__53E32925]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__279A9293]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__52EF04EC]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__26A66E5A]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__51FAE0B3]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__25B24A21]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__5106BC7A]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__24BE25E8]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__50129841]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__23CA01AF]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__4F1E7408]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__22D5DD76]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__4E2A4FCF]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__21E1B93D]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__4D362B96]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__20ED9504]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__4C42075D]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__1FF970CB]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__4B4DE324]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__1F054C92]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__4A59BEEB]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__1E112859]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__49659AB2]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__1D1D0420]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__48717679]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__1C28DFE7]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__477D5240]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__1B34BBAE]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__46892E07]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__1A409775]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__459509CE]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__194C733C]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__44A0E595]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__18584F03]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__43ACC15C]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__17642ACA]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__42B89D23]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__16700691]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__41C478EA]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__157BE258]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__40D054B1]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__1487BE1F]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__3FDC3078]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__139399E6]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__3EE80C3F]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__129F75AD]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__3DF3E806]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__11AB5174]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__3CFFC3CD]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__10B72D3B]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__3C0B9F94]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__0FC30902]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__3B177B5B]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__0ECEE4C9]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__3A235722]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__0DDAC090]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__392F32E9]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__0CE69C57]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__383B0EB0]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__0BF2781E]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__3746EA77]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__7F8CA139]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__3652C63E]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__7E987D00]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__355EA205]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__7DA458C7]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__346A7DCC]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__0AFE53E5]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__33765993]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__0A0A2FAC]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__3282355A]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__09160B73]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__318E1121]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__0821E73A]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__3099ECE8]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__072DC301]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__2FA5C8AF]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__06399EC8]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__2EB1A476]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__05457A8F]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__2DBD803D]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__04515656]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__2CC95C04]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__035D321D]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__2BD537CB]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__02690DE4]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__2AE11392]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__0174E9AB]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__29ECEF59]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__0080C572]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__28F8CB20]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__7CB0348E]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__2804A6E7]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__7BBC1055]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__271082AE]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__7AC7EC1C]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__261C5E75]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__79D3C7E3]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__25283A3C]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__78DFA3AA]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__24341603]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__77EB7F71]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__233FF1CA]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__76F75B38]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__224BCD91]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__760336FF]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__2157A958]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__750F12C6]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__2063851F]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__741AEE8D]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__1F6F60E6]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__7326CA54]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__1E7B3CAD]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__7232A61B]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__1D871874]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__713E81E2]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__1C92F43B]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__704A5DA9]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__1B9ED002]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__6F563970]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__1AAAABC9]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__6E621537]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__19B68790]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__6D6DF0FE]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__18C26357]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__6C79CCC5]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__17CE3F1E]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__6B85A88C]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__16DA1AE5]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__6A918453]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__15E5F6AC]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__699D601A]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__14F1D273]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__68A93BE1]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__13FDAE3A]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__67B517A8]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__13098A01]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__66C0F36F]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__121565C8]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__65CCCF36]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__1121418F]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__64D8AAFD]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__102D1D56]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__63E486C4]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__0F38F91D]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__62F0628B]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__0E44D4E4]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__61FC3E52]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__0D50B0AB]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__61081A19]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__7FF6B58D]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__6013F5E0]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__7F029154]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5F1FD1A7]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__0C5C8C72]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5E2BAD6E]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__0B686839]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5D378935]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__0A744400]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5C4364FC]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__09801FC7]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5B4F40C3]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__088BFB8E]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5A5B1C8A]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__0797D755]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5966F851]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__06A3B31C]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5872D418]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__05AF8EE3]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__577EAFDF]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__04BB6AAA]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__568A8BA6]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__03C74671]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5596676D]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__02D32238]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__54A24334]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__01DEFDFF]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__53AE1EFB]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__00EAD9C6]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__52B9FAC2]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7E0E6D1B]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__51C5D689]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7D1A48E2]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__50D1B250]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7C2624A9]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__4FDD8E17]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7B320070]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__4EE969DE]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7A3DDC37]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__4DF545A5]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7949B7FE]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__4D01216C]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__785593C5]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__4C0CFD33]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__77616F8C]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__4B18D8FA]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__766D4B53]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__4A24B4C1]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7579271A]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__49309088]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__748502E1]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__483C6C4F]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7390DEA8]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__47484816]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__729CBA6F]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__465423DD]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__71A89636]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__455FFFA4]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__70B471FD]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__446BDB6B]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6FC04DC4]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__4377B732]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6ECC298B]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__428392F9]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6DD80552]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__418F6EC0]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6CE3E119]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__409B4A87]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6BEFBCE0]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__3FA7264E]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6AFB98A7]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__3EB30215]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6A07746E]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__3DBEDDDC]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__69135035]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__3CCAB9A3]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__681F2BFC]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__3BD6956A]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__672B07C3]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__3AE27131]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6636E38A]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__39EE4CF8]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6542BF51]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__38FA28BF]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__644E9B18]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__38060486]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__635A76DF]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__3711E04D]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__626652A6]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__361DBC14]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__61722E6D]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__352997DB]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__607E0A34]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__343573A2]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__5F89E5FB]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__33414F69]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__5E95C1C2]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__324D2B30]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__5DA19D89]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__315906F7]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__5CAD7950]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__3064E2BE]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__5BB95517]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__2F70BE85]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__5AC530DE]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__2E7C9A4C]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__59D10CA5]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__2D887613]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__58DCE86C]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__2C9451DA]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__57E8C433]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__2BA02DA1]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__56F49FFA]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__2AAC0968]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__56007BC1]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__29B7E52F]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__550C5788]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__28C3C0F6]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__5418334F]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__27CF9CBD]
 GO
 ALTER TABLE [dbo].[BillingMaster] DROP CONSTRAINT [FK_BillingMaster_PrimaryPayer]
 GO
@@ -410,9 +404,9 @@ ALTER TABLE [dbo].[NexusStaging] DROP CONSTRAINT [DF__NexusStag__Impor__599C027B
 GO
 ALTER TABLE [dbo].[LISStaging] DROP CONSTRAINT [DF__LISStagin__Impor__6A90B8FC]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [DF__LISMaster__Updat__53240F16]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [DF__LISMaster__Updat__26DB7884]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [DF__LISMaster__Creat__522FEADD]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [DF__LISMaster__Creat__25E7544B]
 GO
 ALTER TABLE [dbo].[LabMaster] DROP CONSTRAINT [DF__LabMaster__Creat__1466F737]
 GO
@@ -670,6 +664,13 @@ GO
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[BillingProviderMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[BillingProviderMaster]
 GO
+/****** Object:  UserDefinedFunction [dbo].[GetPaymentDetails]******/
+DROP FUNCTION [dbo].[GetPaymentDetails]
+GO
+/****** Object:  Table [dbo].[TransactionMaster]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TransactionMaster]') AND type in (N'U'))
+DROP TABLE [dbo].[TransactionMaster]
+GO
 /****** Object:  UserDefinedFunction [dbo].[fn_GetClaimStatusByVisitAndCPT]******/
 DROP FUNCTION [dbo].[fn_GetClaimStatusByVisitAndCPT]
 GO
@@ -680,13 +681,6 @@ GO
 /****** Object:  Table [dbo].[BillingMaster]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[BillingMaster]') AND type in (N'U'))
 DROP TABLE [dbo].[BillingMaster]
-GO
-/****** Object:  UserDefinedFunction [dbo].[GetPaymentDetails]******/
-DROP FUNCTION [dbo].[GetPaymentDetails]
-GO
-/****** Object:  Table [dbo].[TransactionMaster]******/
-IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TransactionMaster]') AND type in (N'U'))
-DROP TABLE [dbo].[TransactionMaster]
 GO
 /****** Object:  UserDefinedFunction [dbo].[GetUniqueICD10Codes]******/
 DROP FUNCTION [dbo].[GetUniqueICD10Codes]
@@ -1296,81 +1290,7 @@ END
 
  
 GO
-/****** Object:  Table [dbo].[TransactionMaster]******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[TransactionMaster](
-	[TransactionDetailID] [int] IDENTITY(1,1) NOT NULL,
-	[LabIdentityKey] [int] NULL,
-	[TransactionType] [varchar](50) NULL,
-	[ChartNumber] [varchar](50) NULL,
-	[VisitNo] [varchar](50) NULL,
-	[CPTCode] [varchar](50) NULL,
-	[TransactionCodeDesc] [varchar](250) NULL,
-	[Modifiers] [varchar](50) NULL,
-	[VisitPrimaryCarrier] [varchar](50) NULL,
-	[VisitSecondaryCarrier] [varchar](50) NULL,
-	[TransactionCarrier] [varchar](50) NULL,
-	[PrimaryDxICD10] [varchar](100) NULL,
-	[PrimaryDxICD9] [varchar](50) NULL,
-	[PaymentMethod] [varchar](50) NULL,
-	[CheckNumber] [varchar](50) NULL,
-	[DateofService] [date] NULL,
-	[DateofEntry] [date] NULL,
-	[DateofDeposit] [date] NULL,
-	[Void] [varchar](50) NULL,
-	[Units] [int] NULL,
-	[TotalBilledAmount] [decimal](18, 2) NULL,
-	[PatientPaidAmount] [decimal](18, 2) NULL,
-	[InsurancePaidAmount] [decimal](18, 2) NULL,
-	[TotalPaidAmount] [decimal](18, 2) NULL,
-	[AdjustmentAmount] [decimal](18, 2) NULL,
-	[CreatedOn] [datetime] NULL,
-	[UpdatedOn] [datetime] NULL
-) ON [PRIMARY]
-GO
-/****** Object:  UserDefinedFunction [dbo].[GetPaymentDetails]    Script Date: 10/20/2025 8:51:27 pm ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-create FUNCTION [dbo].[GetPaymentDetails](
-    @VisitNo VARCHAR(50),
-    @CPTCode VARCHAR(20)
-)
-RETURNS TABLE
-AS
-RETURN
-    SELECT TOP 1
-        CheckNumber,
-        CheckDate,
-        LastPostedDate
-    FROM (
-        SELECT
-            VisitNo,
-            CPTCode,
-            ChartNumber,
-            CheckNumber,
-            DateofDeposit AS CheckDate,
-            DateofEntry AS LastPostedDate,
-            PatientPaidAmount,
-            InsurancePaidAmount,
-            PaymentMethod
-        FROM TransactionMaster
-        WHERE VisitNo = @VisitNo 
-          AND CPTCode = @CPTCode
-          AND (PatientPaidAmount > 0 OR InsurancePaidAmount > 0)
-    ) AS SubQuery
-    ORDER BY 
-        CASE 
-            WHEN CheckNumber IS NOT NULL AND CheckDate IS NOT NULL THEN 1
-            ELSE 2
-        END,
-        LastPostedDate DESC;
-GO
-/****** Object:  Table [dbo].[BillingMaster]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[BillingMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1433,7 +1353,7 @@ CREATE TABLE [dbo].[BillingMaster](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[DenialTrackingMaster]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[DenialTrackingMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1467,7 +1387,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  UserDefinedFunction [dbo].[fn_GetClaimStatusByVisitAndCPT]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  UserDefinedFunction [dbo].[fn_GetClaimStatusByVisitAndCPT]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1612,7 +1532,81 @@ AND (
 		   AND ISNULL(a.Modifier,9999) = ISNULL(@Modifier,9999)
 );
 GO
-/****** Object:  Table [dbo].[BillingProviderMaster]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[TransactionMaster]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[TransactionMaster](
+	[TransactionDetailID] [int] IDENTITY(1,1) NOT NULL,
+	[LabIdentityKey] [int] NULL,
+	[TransactionType] [varchar](50) NULL,
+	[ChartNumber] [varchar](50) NULL,
+	[VisitNo] [varchar](50) NULL,
+	[CPTCode] [varchar](50) NULL,
+	[TransactionCodeDesc] [varchar](250) NULL,
+	[Modifiers] [varchar](50) NULL,
+	[VisitPrimaryCarrier] [varchar](50) NULL,
+	[VisitSecondaryCarrier] [varchar](50) NULL,
+	[TransactionCarrier] [varchar](50) NULL,
+	[PrimaryDxICD10] [varchar](100) NULL,
+	[PrimaryDxICD9] [varchar](50) NULL,
+	[PaymentMethod] [varchar](50) NULL,
+	[CheckNumber] [varchar](50) NULL,
+	[DateofService] [date] NULL,
+	[DateofEntry] [date] NULL,
+	[DateofDeposit] [date] NULL,
+	[Void] [varchar](50) NULL,
+	[Units] [int] NULL,
+	[TotalBilledAmount] [decimal](18, 2) NULL,
+	[PatientPaidAmount] [decimal](18, 2) NULL,
+	[InsurancePaidAmount] [decimal](18, 2) NULL,
+	[TotalPaidAmount] [decimal](18, 2) NULL,
+	[AdjustmentAmount] [decimal](18, 2) NULL,
+	[CreatedOn] [datetime] NULL,
+	[UpdatedOn] [datetime] NULL
+) ON [PRIMARY]
+GO
+/****** Object:  UserDefinedFunction [dbo].[GetPaymentDetails]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create FUNCTION [dbo].[GetPaymentDetails](
+    @VisitNo VARCHAR(50),
+    @CPTCode VARCHAR(20)
+)
+RETURNS TABLE
+AS
+RETURN
+    SELECT TOP 1
+        CheckNumber,
+        CheckDate,
+        LastPostedDate
+    FROM (
+        SELECT
+            VisitNo,
+            CPTCode,
+            ChartNumber,
+            CheckNumber,
+            DateofDeposit AS CheckDate,
+            DateofEntry AS LastPostedDate,
+            PatientPaidAmount,
+            InsurancePaidAmount,
+            PaymentMethod
+        FROM TransactionMaster
+        WHERE VisitNo = @VisitNo 
+          AND CPTCode = @CPTCode
+          AND (PatientPaidAmount > 0 OR InsurancePaidAmount > 0)
+    ) AS SubQuery
+    ORDER BY 
+        CASE 
+            WHEN CheckNumber IS NOT NULL AND CheckDate IS NOT NULL THEN 1
+            ELSE 2
+        END,
+        LastPostedDate DESC;
+GO
+/****** Object:  Table [dbo].[BillingProviderMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1633,7 +1627,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ClaimBillingDetails]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[ClaimBillingDetails]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1660,7 +1654,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ClaimDenialCodes]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[ClaimDenialCodes]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1671,7 +1665,7 @@ CREATE TABLE [dbo].[ClaimDenialCodes](
 	[DenialCode] [nvarchar](30) NOT NULL
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ClaimsLevelStatus]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[ClaimsLevelStatus]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1699,7 +1693,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ClaimsProdStatus]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[ClaimsProdStatus]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1722,7 +1716,7 @@ CREATE TABLE [dbo].[ClaimsProdStatus](
 	[CreatedOn] [datetime] NULL
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ClientBillingSheet]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[ClientBillingSheet]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1740,7 +1734,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ClinicMaster]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[ClinicMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1760,7 +1754,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ClinicTypes]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[ClinicTypes]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1780,7 +1774,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[CPTCodeMaster]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[CPTCodeMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1798,7 +1792,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[CustomCollectionStaging]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[CustomCollectionStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1846,7 +1840,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[DenialTrackingStaging]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[DenialTrackingStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1878,7 +1872,7 @@ CREATE TABLE [dbo].[DenialTrackingStaging](
 	[ImportedFileID] [int] NULL
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[DiagnoseLISStaging]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[DiagnoseLISStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1940,7 +1934,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[DownloadReportTypes]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[DownloadReportTypes]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1960,7 +1954,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[FileStatuses]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[FileStatuses]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1978,7 +1972,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ICDCodeMaster]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[ICDCodeMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2000,7 +1994,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ImportedFiles]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[ImportedFiles]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2023,7 +2017,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ImportFileLogs]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[ImportFileLogs]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2042,7 +2036,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ImportFilTypes]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[ImportFilTypes]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2063,7 +2057,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[InsurancePayerMaster]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[InsurancePayerMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2084,7 +2078,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[LabMaster]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[LabMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2104,7 +2098,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[LISMaster]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[LISMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2117,7 +2111,8 @@ CREATE TABLE [dbo].[LISMaster](
 	[VerificationStatus] [nvarchar](255) NULL,
 	[ICDCodes] [nvarchar](1500) NULL,
 	[ClinicType] [nvarchar](255) NULL,
-	[InsurancePayer] [nvarchar](255) NULL,
+	[Insurance] [nvarchar](255) NULL,
+	[PrimaryInsurancePayer] [nvarchar](255) NULL,
 	[BillingLab] [nvarchar](255) NULL,
 	[PatientFirstName] [nvarchar](255) NULL,
 	[PatientLastName] [nvarchar](255) NULL,
@@ -2192,7 +2187,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[LISStaging]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[LISStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2316,7 +2311,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[NexusStaging]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[NexusStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2355,7 +2350,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[OperationsGroupMaster]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[OperationsGroupMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2375,7 +2370,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[PanelGroup]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[PanelGroup]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2393,7 +2388,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[PanelMasterStaging]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[PanelMasterStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2411,7 +2406,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[PayerTypeMaster]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[PayerTypeMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2432,7 +2427,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[PolicyStatuses]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[PolicyStatuses]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2452,7 +2447,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[PrismBillingStaging]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[PrismBillingStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2471,7 +2466,7 @@ CREATE TABLE [dbo].[PrismBillingStaging](
 	[ImportedFileID] [int] NULL
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ProdStatusRuleEngine]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[ProdStatusRuleEngine]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2512,7 +2507,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ReferringProviderMaster]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[ReferringProviderMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2533,7 +2528,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[ReportDownloadSts]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[ReportDownloadSts]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2548,7 +2543,7 @@ CREATE TABLE [dbo].[ReportDownloadSts](
 	[LogString] [nvarchar](max) NULL
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[SalesPerson]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[SalesPerson]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2572,7 +2567,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[SampleFinalStatus]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[SampleFinalStatus]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2588,7 +2583,7 @@ CREATE TABLE [dbo].[SampleFinalStatus](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[SpecimenStatus]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[SpecimenStatus]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2608,7 +2603,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[TestTypeMaster]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[TestTypeMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2628,7 +2623,7 @@ UNIQUE NONCLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[TransactionDetailStaging]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[TransactionDetailStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2672,7 +2667,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[TransactionSummary]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[TransactionSummary]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2693,7 +2688,7 @@ CREATE TABLE [dbo].[TransactionSummary](
 	[CreatedOn] [datetime] NULL
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[VAAMaster]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[VAAMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -2713,7 +2708,7 @@ CREATE TABLE [dbo].[VAAMaster](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[VisitAgaistAccessionStaging]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  Table [dbo].[VisitAgaistAccessionStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -3318,7 +3313,7 @@ ALTER TABLE [dbo].[BillingMaster]  WITH CHECK ADD  CONSTRAINT [CK_BillingMaster_
 GO
 ALTER TABLE [dbo].[BillingMaster] CHECK CONSTRAINT [CK_BillingMaster_NonNegativeAmounts]
 GO
-/****** Object:  StoredProcedure [dbo].[BillingMasterProcess_Proc]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[BillingMasterProcess_Proc]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -3522,8 +3517,6 @@ BEGIN
 		EXEC SP_ProcessLISvsBilling;
 		EXEC sp_Process_FinalCalimStatus;
 		EXEC sp_ClaimBillingDetails @FileId;
-		EXEC SP_UpdateLIS_Statuses;
-
 
     END TRY
     BEGIN CATCH
@@ -3537,7 +3530,7 @@ BEGIN
     END CATCH;
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[sp_ClaimBillingDetails]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_ClaimBillingDetails]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -3621,7 +3614,7 @@ BEGIN
     );
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[sp_ClaimLevelStatusUpdate]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_ClaimLevelStatusUpdate]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -3786,7 +3779,7 @@ ELSE 'Un Categorized' END ClaimStatus,
     END CATCH
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetCollectionLineLevelReport]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetCollectionLineLevelReport]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -3818,7 +3811,7 @@ CREATE NONCLUSTERED INDEX IX_VisitNumber ON #DenialCodeMaster (VisitNumber,CPTCo
         PayerType,
         BillingProvider,
 		CAST(BeginDOS AS DATE) AS   BeginDOS,
-		CAST(EndDOS AS DATE) AS   EndDOS,
+		--CAST(EndDOS AS DATE) AS   EndDOS,
 		CAST(b.ChargeEntryDate AS DATE) AS    ChargeEntryDate,
 		CAST(FirstBillDate AS DATE) AS      FirstBillDate,
 		ISNULL(l.PanelCode, 'No Panel Located') AS PanelGroup,
@@ -3868,7 +3861,7 @@ CREATE NONCLUSTERED INDEX IX_VisitNumber ON #DenialCodeMaster (VisitNumber,CPTCo
     ORDER BY AccessionNo
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetCollectionReport]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetCollectionReport]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -4094,7 +4087,7 @@ BEGIN
     DROP TABLE IF EXISTS #BillingMasterTemp, #TransactionMaster, #DenialCode;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetLISMasterReportByDateRange]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetLISMasterReportByDateRange]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -4116,14 +4109,16 @@ BEGIN
     FROM LISMaster;
 
     -- Main query with date filtering
-    SELECT DISTINCT
+    SELECT 
         AccessionNo,
         --Note ClaimNote,
 		VerificationStatus,
 		ICDCodes ICD10Codes,
 		ClinicType,
-		IPM.PayerName [PrimaryPayerName],
-        PrimaryPolicyInformation PrimaryMemberId,
+		PrimaryInsurancePayer [PrimaryPayerName],
+		Insurance,
+		InsuranceCode,
+        --PrimaryPolicyInformation PrimaryMemberId,
 		LAB.LabName BillingLab,
         (LIS.PatientLastName+', '+LIS.PatientFirstName) PatientName,
 		CONVERT(VARCHAR, PatientDateOfBirth, 101)   PatientDateOfBirth,	
@@ -4141,6 +4136,7 @@ BEGIN
 		Medications,
 		SpecimenType,
 		TestsOrdered,
+		OrderInfo,
 		LIS.ClinicName,
 		LIS.ClinicReferenceID ClinicId,
 		ReferringProviderName,
@@ -4156,14 +4152,22 @@ BEGIN
         CASE WHEN DaystoResult = 0 THEN 1 ELSE DaystoResult END DaystoResult  ,
         CASE WHEN DaystoBill = 0 THEN 1 ELSE DaystoBill END DaystoBill ,
         ClientStatus,
-        VisitNumber,
-       CASE 
-		WHEN ResultedStatus = 'Resulted' AND BillingStatus = 'Not Billed' 
-        AND BillingSubStatus = 'Resulted Yet to Billed' AND ISNULL(ClientStatus,'') <> '' 
-		THEN ClientStatus  ELSE BillingSubStatus END AS BillingSubStatus,
+        VisitNumberIH [Billed - Inhealth AMD],
+		VisitNumberDTR [Billed - DTR AMD],
+		BillingSubStatus,
         LIS.BillingStatus,
-		CONVERT(VARCHAR, LIS.[FirstBilledDate], 101) [FirstBilledDate],
-		CONVERT(VARCHAR, LIS.ChargeEntryDate, 101) ChargeEntryDate
+		CONVERT(VARCHAR, LIS.FirstBilledDateIH, 101) [Billed Date-IH AMD],
+		CONVERT(VARCHAR, LIS.FirstBilledDateDTR, 101) [Billed Date-DTR AMD],
+		CONVERT(VARCHAR, LIS.ChargeEntryDateIH, 101) ChargeEntryDateIH,
+		CONVERT(VARCHAR, LIS.ChargeEntryDateDTR, 101) ChargeEntryDateDTR,
+		LRNNoInsuranceInfo,
+		--TestName,
+		--BilledInHealthAMD,
+		--BilledDTRAMD,
+		--ChargeEnteredDTR,
+		--ChargeEnteredIH,
+		NexumStatusIH,
+		NexumStatusDTR
     FROM LISMaster LIS
     LEFT JOIN LabMaster LAB ON LIS.LabId = LAB.LabID
     LEFT JOIN BillingProviderMaster BP ON LIS.BillingProviderID = BP.BillingProviderID 
@@ -4172,12 +4176,12 @@ BEGIN
     --LEFT JOIN PanelGroup PG ON LIS.PanelId = PG.PanelGroupId
     LEFT JOIN ReferringProviderMaster RP ON LIS.ReferringProviderId = RP.ReferingProviderId
     --LEFT JOIN PayerTypeMaster PT ON LIS.PayerTypeId = PT.PayerTypeId
-	LEFT JOIN InsurancePayerMaster IPM ON LIS.PrimaryInsuranceId = IPM.InsurancePayerId
+	--LEFT JOIN InsurancePayerMaster IPM ON LIS.PrimaryInsuranceId = IPM.InsurancePayerId
     WHERE 
         CAST(SampleCollectionDate AS DATE) BETWEEN @ActualStartDate AND @ActualEndDate;
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetProductionLineLevelReport]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetProductionLineLevelReport]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -4209,7 +4213,7 @@ CREATE NONCLUSTERED INDEX IX_VisitNumber ON #DenialCodeMaster (VisitNumber,CPTCo
         PayerType,
         BillingProvider,
 		CAST(BeginDOS AS DATE) AS   BeginDOS,
-		CAST(EndDOS AS DATE) AS   EndDOS,
+		--CAST(EndDOS AS DATE) AS   EndDOS,
 		CAST(b.ChargeEntryDate AS DATE) AS    ChargeEntryDate,
 		CAST(FirstBillDate AS DATE) AS      FirstBillDate,
 		ISNULL(l.PanelCode, 'No Panel Located') AS PanelGroup,
@@ -4259,7 +4263,7 @@ CREATE NONCLUSTERED INDEX IX_VisitNumber ON #DenialCodeMaster (VisitNumber,CPTCo
     ORDER BY AccessionNo
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetProductionReportMaster]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetProductionReportMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -4373,7 +4377,7 @@ BEGIN
 		BM.PatientDOB,
 		BM.PatientName,
 		BM.ChartNumber,
-		BM.ResponsibleParty,
+		--BM.ResponsibleParty,
         BM.FirstBillDate,
         BM.TOS,
         TT.TestTypeName AS TestType,
@@ -4485,7 +4489,7 @@ BEGIN
     DROP TABLE IF EXISTS #BillingMasterTemp, #TransactionMaster, #DenialCode;
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_InsertClaimDenialCode]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_InsertClaimDenialCode]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -4523,7 +4527,7 @@ AS BEGIN
 
 END
 GO
-/****** Object:  StoredProcedure [dbo].[sp_InsertMasterData]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_InsertMasterData]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -4651,7 +4655,7 @@ SELECT ICD10Code,CodeDescription,[OriginalCode] FROM #ICD10Codes WHERE ICD10Code
 
 END
 GO
-/****** Object:  StoredProcedure [dbo].[SP_InsertReportDownloadLog]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[SP_InsertReportDownloadLog]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -4666,135 +4670,7 @@ UPDATE [dbo].[ReportDownloadSts]
 
 END
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_Process_BillingSheet_ByFileId]    Script Date: 10/20/2025 8:51:27 pm ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE PROCEDURE [dbo].[Sp_Process_BillingSheet_ByFileId]
-    @FileId INT = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    BEGIN TRY
-        BEGIN TRANSACTION;
-			update ImportedFiles set FileStatus = 3,ProcessedOn = GETDATE()  where ImportedFileID = @FileId;
-
-        /*******************************************************************************************
-         Step 4c: Update ClientStatus from PrismBillingStaging
-        ********************************************************************************************/
-        WITH CTE_SheetLogic AS (
-            SELECT DISTINCT 
-                SpecimenID, 
-                LTRIM(RTRIM(SheetName)) AS SheetName
-            FROM PrismBillingStaging
-            WHERE 
-                SpecimenID IS NOT NULL
-                AND ImportedFileID = @FileId OR @FileId IS NULL
-        )
-        UPDATE LIS
-        SET LIS.ClientStatus = 
-            CASE 
-                WHEN LTRIM(RTRIM(PS.SheetName)) = 'To Bill' THEN 'Current Billing Queue'
-                WHEN LTRIM(RTRIM(PS.SheetName)) = 'Medicare On Hold' THEN 'Medicare On Hold'
-                WHEN LTRIM(RTRIM(PS.SheetName)) = 'MO Medicaid On Hold' THEN 'MO Medicaid On Hold'
-                WHEN LTRIM(RTRIM(PS.SheetName)) = 'Missing Info' THEN 'Missing Information'
-                WHEN LTRIM(RTRIM(PS.SheetName)) = 'PGX' THEN 'Pending PGX  Coding / Meds'
-                WHEN LTRIM(RTRIM(PS.SheetName)) IN ('Paid', 'Billed') THEN ''
-				WHEN LTRIM(RTRIM(PS.SheetName)) IN ('New to Bill', 'Eden to Bill') THEN 'Current Billing Queue'
-                WHEN LIS.SampleResultedDate IS NOT NULL 
-                     AND LIS.ResultedStatus = 'Resulted' 
-                     AND LIS.SampleStatusId = 3 
-                     AND LIS.ChargeEntryDate IS NULL 
-                     AND LIS.FirstBilledDate IS NULL  
-                     THEN 'Billing Review Required'
-                ELSE PS.SheetName
-            END
-        FROM LISMaster LIS
-        JOIN CTE_SheetLogic PS ON LIS.AccessionNo = PS.SpecimenID;
-
-				update ImportedFiles set FileStatus = 1,ProcessedOn = GETDATE()  where ImportedFileID = @FileId;
-
-        COMMIT TRANSACTION;
-    END TRY
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0
-            ROLLBACK TRANSACTION;
-					
-		update ImportedFiles set FileStatus = 2,ProcessedOn = GETDATE()  where ImportedFileID = @FileId;
-
-        DECLARE 
-            @ErrMsg NVARCHAR(4000) = ERROR_MESSAGE(),
-            @ErrSeverity INT = ERROR_SEVERITY(),
-            @ErrState INT = ERROR_STATE();
-
-        RAISERROR(@ErrMsg, @ErrSeverity, @ErrState);
-    END CATCH
-END;
-GO
-/****** Object:  StoredProcedure [dbo].[Sp_Process_ClientBillingSheet]    Script Date: 10/20/2025 8:51:27 pm ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE PROCEDURE [dbo].[Sp_Process_ClientBillingSheet]
-    @FileId INT = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    BEGIN TRY
-        BEGIN TRANSACTION;
-			update ImportedFiles set FileStatus = 3,ProcessedOn = GETDATE()  where ImportedFileID = @FileId;
-
-        /*******************************************************************************************
-         Step 4c: Update ClientStatus from PrismBillingStaging
-        ********************************************************************************************/
-        WITH CTE_SheetLogic AS (
-            SELECT DISTINCT 
-                AccessionNo,
-				PerformingFacility,
-                LTRIM(RTRIM(SheetName)) AS SheetName
-            FROM ClientBillingSheet
-            WHERE 
-                AccessionNo IS NOT NULL
-                AND ImportedFileID = @FileId OR @FileId IS NULL
-        )
-        UPDATE LIS
-        SET LIS.ClientStatus = 
-            CASE 
-                WHEN LTRIM(RTRIM(PS.SheetName)) = 'Billed to Phi (Prism Ran)' THEN 'Phi Life (Prism) - Client Billed'
-                WHEN LTRIM(RTRIM(PS.SheetName)) = 'Phi Paid (Prism Ran)' THEN 'Phi Life (Prism) - Client Bill Paid'
-                WHEN LTRIM(RTRIM(PS.SheetName)) = 'Billed to Phi (Phi Ran)' THEN 'Phi Life - Client Billed'
-                WHEN LTRIM(RTRIM(PS.SheetName)) = 'Phi Paid (Phi Ran)' THEN 'Phi Life - Client Billed'
-				WHEN LTRIM(RTRIM(PS.PerformingFacility)) = 'Phi Life Sciences' THEN 'Phi Life Client Bill'
-               
-                ELSE PS.SheetName
-            END
-        FROM LISMaster LIS
-        JOIN CTE_SheetLogic PS ON LIS.AccessionNo = PS.AccessionNo;
-
-				update ImportedFiles set FileStatus = 1,ProcessedOn = GETDATE()  where ImportedFileID = @FileId;
-
-        COMMIT TRANSACTION;
-    END TRY
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0
-            ROLLBACK TRANSACTION;
-					
-		update ImportedFiles set FileStatus = 2,ProcessedOn = GETDATE()  where ImportedFileID = @FileId;
-
-        DECLARE 
-            @ErrMsg NVARCHAR(4000) = ERROR_MESSAGE(),
-            @ErrSeverity INT = ERROR_SEVERITY(),
-            @ErrState INT = ERROR_STATE();
-
-        RAISERROR(@ErrMsg, @ErrSeverity, @ErrState);
-    END CATCH
-END;
-GO
-/****** Object:  StoredProcedure [dbo].[sp_Process_FinalCalimStatus]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_Process_FinalCalimStatus]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -4961,7 +4837,7 @@ FROM StatusFlags;
     END CATCH
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[SP_Process_LISMaster_ByFileId]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[SP_Process_LISMaster_ByFileId]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -4984,7 +4860,7 @@ BEGIN
 		
 	DROP TABLE IF EXISTS #LISMaster;
 
-		SELECT [TestOrderHistory82Id],[SampleID],[ClaimNote],[BenefitsVerified],[ICD10],[PracticeType],[Insurance],[BillingLab2],LIS.[FirstName] PFirstName,
+		SELECT [TestOrderHistory82Id],[SampleID],[ClaimNote],[BenefitsVerified],[ICD10],[PracticeType],PrimaryInsurance,[Insurance],[BillingLab2],LIS.[FirstName] PFirstName,
 		LIS.[LastName] PLastName, TRY_CONVERT(date, NULLIF([DateOfBirth], '')) AS DateOfBirth,[Gender],[Race],[Ethnicity],[PatientID],[StreetAddress],
 		[City],[State],[Zip],[Order1] [OrderInfo],[TestCategory],[CollectedBy],[Medications],[SpecimenType],[Components],[Account],[AccountID],
 		[ProviderLast],[ProviderFirst],[NPI],[RepEmail],[PerformingLab],[InsuranceCode],BillingLab,EntryStatus,
@@ -5039,18 +4915,18 @@ BEGIN
 		TRUNCATE TABLE LISMaster;
 
 		INSERT INTO [dbo].[LISMaster]
-		([TestOrderHistoryId],[AccessionNo],[CalimNote],[VerificationStatus],[ICDCodes],[ClinicType],[InsurancePayer],[BillingLab],[PatientFirstName],[PatientLastName]
+		([TestOrderHistoryId],[AccessionNo],[CalimNote],[VerificationStatus],[ICDCodes],[ClinicType],Insurance,[BillingLab],[PatientFirstName],[PatientLastName]
 		,[PatientDateOfBirth],[PatientGender],[PtRace],[PtEthnicity],[PatientID],[PtStreetAddress],[PtCity],[PtState],[PtZip],[OrderInfo],[TestCategory],[CollectorName]
 		,[Medications],[SpecimenType],[TestsOrdered],[ClinicName],[ClinicReferenceID],[RPLastName],[RPFirstName],[RPNPI],[SalesRepEmail],[PerformingLab]
 		,[InsuranceCode],[BillingLab2],[Entry_Status],[SampleCollectionDate],[SampleAccessionedDate],[SampleSubmittedDate],[LabId]
 		,[ClinicId],[SalesPersonId],[TestTypeId],[FacilityId],[ReferringProviderId],[SampleStatusId],[ImportedFileId],[CreatedOn]
-		,[UpdatedOn],[LRNNoInsuranceInfo])
+		,[UpdatedOn],[LRNNoInsuranceInfo],PrimaryInsurancePayer)
 
 		SELECT TestOrderHistory82Id,SampleID,ClaimNote,[BenefitsVerified],ICD10,[PracticeType],Insurance,BillingLab,PFirstName,PLastName,
 		DateOfBirth,Gender,Race,Ethnicity,PatientID,StreetAddress,City,[State],Zip,OrderInfo,TestCategory,CollectedBy,
 		Medications,SpecimenType,[Components],Account,AccountID,ProviderFirst,ProviderLast,NPI,RepEmail,PerformingLab,
 		InsuranceCode,BillingLab2,EntryStatus,LastTestDate,EntryDateCreated,EntryDateSubmitted,LabID,
-		ClinicId,SalesPersonID,TestTypeId,LabID,ReferingProviderId,SpecimenStatusId,ImportedFileID,GETDATE(),GETDATE(),LRNNoInsuranceInfo
+		ClinicId,SalesPersonID,TestTypeId,LabID,ReferingProviderId,SpecimenStatusId,ImportedFileID,GETDATE(),GETDATE(),LRNNoInsuranceInfo,PrimaryInsurance
 		FROM #LISMaster WHERE LastTestDate >= '2025-01-01'
 
 
@@ -5080,7 +4956,7 @@ BEGIN
     END CATCH
 END
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_Process_PanelMasterStaging]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[Sp_Process_PanelMasterStaging]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -5138,7 +5014,7 @@ BEGIN
     END CATCH;
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_Process_VAA_ByFileId]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[Sp_Process_VAA_ByFileId]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -5201,7 +5077,7 @@ BEGIN
         --        v.ServiceDate = t.ServiceDate
         --);
 
-		EXEC SP_ProcessVAAvsLIS;
+		
 
         -- Update the file status
         UPDATE ImportedFiles
@@ -5211,6 +5087,7 @@ BEGIN
 
 
         COMMIT TRANSACTION;
+		EXEC SP_ProcessVAAvsLIS;
     END TRY
     BEGIN CATCH
         -- Rollback on error
@@ -5230,7 +5107,7 @@ BEGIN
     END CATCH
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_ProcessBillingMasterData]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[Sp_ProcessBillingMasterData]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -5265,7 +5142,7 @@ BEGIN
     END CATCH;
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_ProcessDenialTrackingMaster]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[Sp_ProcessDenialTrackingMaster]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -5360,7 +5237,7 @@ BEGIN
     END CATCH
 END
 GO
-/****** Object:  StoredProcedure [dbo].[SP_ProcessLISvsBilling]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[SP_ProcessLISvsBilling]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -5394,8 +5271,10 @@ BEGIN
         SET
             VisitNumberIH     = SCD.VisitNumber,
             FirstBilledDateIH = SCD.FirstBillDate,
-            ChargeEntryDateIH = SCD.ChargeEntryDate
-        FROM [dbo].[LISMaster] LIS
+            ChargeEntryDateIH = SCD.ChargeEntryDate,
+			BilledInHealthAMD = SCD.VisitNumber
+        
+		FROM [dbo].[LISMaster] LIS
         JOIN CTE_BillingIH SCD
           ON LTRIM(RTRIM(LIS.AccessionNo)) = LTRIM(RTRIM(SCD.AccessionNo));
 
@@ -5416,7 +5295,8 @@ BEGIN
         SET
             VisitNumberDTR     = SCD.VisitNumber,
             FirstBilledDateDTR = SCD.FirstBillDate,
-            ChargeEntryDateDTR = SCD.ChargeEntryDate
+            ChargeEntryDateDTR = SCD.ChargeEntryDate,
+			BilledDTRAMD = SCD.VisitNumber
         FROM [dbo].[LISMaster] LIS
         JOIN CTE_BillingDTR SCD
           ON LTRIM(RTRIM(LIS.AccessionNo)) = LTRIM(RTRIM(SCD.AccessionNo));
@@ -5427,8 +5307,8 @@ BEGIN
         UPDATE [dbo].[LISMaster]
         SET 
             ResultedStatus = CASE 
-                WHEN SampleCollectionDate IS NULL THEN 'Not Resulted'
-                ELSE 'Resulted'
+                WHEN LTRIM(RTRIM(Entry_Status)) = 'Sent to Billing' THEN 'Resulted'
+                ELSE 'Not Resulted'
             END,
             BillingStatus = CASE 
                 WHEN FirstBilledDateDTR IS NOT NULL OR FirstBilledDateIH IS NOT NULL THEN 'Billed' 
@@ -5454,14 +5334,24 @@ BEGIN
         --    If BillingStatus = 'Other Samples' AND Accession is duplicated anywhere,
         --    overwrite to 'Duplicate'. (Logic unchanged)
         -------------------------------------------------------------------------------
-        UPDATE LISMaster 
-        SET BillingStatus = 'Duplicate'
-        WHERE LTRIM(RTRIM(BillingStatus)) = 'Other Samples'
-          AND LTRIM(RTRIM(AccessionNo)) IN (
-                SELECT DISTINCT LTRIM(RTRIM(AccessionNo))
-                FROM dbo.LISMaster  
-                WHERE LTRIM(RTRIM(BillingStatus)) <> 'Other Samples'
-          );
+     
+		-- Only flip rows that are currently "Other Samples"
+		UPDATE LM
+		   SET BillingStatus    = 'Duplicate',
+			   BillingSubStatus = 'Requires Review'
+		FROM dbo.LISMaster AS LM
+		WHERE LTRIM(RTRIM(LM.BillingStatus)) = 'Other Samples'
+		  AND LM.LISMasterId IN
+		  (
+			  SELECT LISMasterId
+			  FROM dbo.LISMaster AS X
+			  WHERE LTRIM(RTRIM(X.AccessionNo)) = LTRIM(RTRIM(LM.AccessionNo))
+				AND (
+					  LTRIM(RTRIM(X.BillingStatus)) <> 'Other Samples'
+					  OR LTRIM(RTRIM(X.Entry_Status)) = 'Incomplete'
+					)
+		  );
+
 
         -------------------------------------------------------------------------------
         -- 3) System Test (logic unchanged; only added LTRIM/RTRIM around text checks)
@@ -5472,17 +5362,16 @@ BEGIN
         WHERE LTRIM(RTRIM(OS.BillingStatus)) = 'Other Samples'
           AND (
                 -- PatientName contains 'TEST' or 'DEMO'
-                UPPER(LTRIM(RTRIM(OS.PatientLastName)) + LTRIM(RTRIM(OS.PatientFirstName))) LIKE '%TEST%'
-                OR UPPER(LTRIM(RTRIM(OS.PatientLastName)) + LTRIM(RTRIM(OS.PatientFirstName))) LIKE '%DEMO%'
+                 UPPER(LTRIM(RTRIM(OS.PatientLastName)) +', ' + LTRIM(RTRIM(OS.PatientFirstName))) LIKE '%TEST%'
+                OR UPPER(LTRIM(RTRIM(OS.PatientLastName)) +', ' + LTRIM(RTRIM(OS.PatientFirstName))) LIKE '%DEMO%'
 
-                -- ProviderAccount contains 'TEST' or 'TRAIN'  (kept original columns as-is)
-                OR UPPER(LTRIM(RTRIM(OS.PatientLastName)) + LTRIM(RTRIM(OS.PatientFirstName))) LIKE '%TEST%'
                 OR UPPER(LTRIM(RTRIM(OS.PatientLastName)) + LTRIM(RTRIM(OS.PatientFirstName))) LIKE '%TRAIN%'
 
                 -- Provider exactly equals 'TEST'
                 OR UPPER(LTRIM(RTRIM(OS.RPFirstName))) = 'TEST'
                 OR UPPER(LTRIM(RTRIM(OS.RPLastName)))  = 'TEST'
 
+				OR UPPER(LTRIM(RTRIM(OS.PatientFirstName))+' '+LTRIM(RTRIM(OS.PatientLastName))) LIKE 'Mickey Mouse'
                 -- Specific fake names
                 OR UPPER(LTRIM(RTRIM(OS.PatientFirstName)) + ', ' + LTRIM(RTRIM(OS.PatientLastName))) IN ('JOHN, DOE', 'DONALD, DUCK')
               );
@@ -5495,7 +5384,7 @@ BEGIN
         FROM dbo.LISMaster AS OS
         WHERE LTRIM(RTRIM(OS.BillingStatus)) = 'Other Samples'
           AND (
-                LTRIM(RTRIM(UPPER(OS.InsurancePayer))) IN ('SELF','SELF PAY','PRIVATE PAY','PAY')
+                LTRIM(RTRIM(UPPER(OS.PrimaryInsurancePayer))) IN ('SELF','SELF PAY','PRIVATE PAY','PAY')
                 OR LTRIM(RTRIM(UPPER(OS.InsuranceCode))) = 'SELF PAY'
               );
 
@@ -5542,7 +5431,7 @@ BEGIN
     END CATCH
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_ProcessNexusClaimDTRIH]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[Sp_ProcessNexusClaimDTRIH]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -5609,7 +5498,7 @@ BEGIN
     END CATCH;
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[Sp_ProcessTransactionDetails]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[Sp_ProcessTransactionDetails]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -5825,7 +5714,7 @@ BEGIN
     END CATCH
 END
 GO
-/****** Object:  StoredProcedure [dbo].[SP_ProcessVAAvsLIS]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[SP_ProcessVAAvsLIS]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -5848,54 +5737,25 @@ BEGIN
 
         -- Prepare a grouped temp version of CustomCollectionStaging
         SELECT 
-            PatientID,
-            DOB,
-            ResponsibleParty,
-            LastBillDate,
-            PerformingLab,
-            BillingProvider,
-            PayerType,
-            ReferringProvider,
+            FirstBillDate,
             VisitNumber,
-            ICD10Code,
-            ChargeEntryDate
+            ChargeEntryDate,
+			BillingLab
         INTO #CCSTemp
-        FROM CustomCollectionStaging
-        GROUP BY 
-            PatientID,
-            DOB,
-            ResponsibleParty,
-            LastBillDate,
-            PerformingLab,
-            BillingProvider,
-            PayerType,
-            ReferringProvider,
-            VisitNumber,
-            ICD10Code,
-            ChargeEntryDate;
+        FROM BillingMaster;
+        
 
         WITH RankedData AS (
             SELECT 
                 LIS.AccessionNo,
-                LAB.LabID,
-                BPM.BillingProviderID,
-                CCS.PatientID,
-                CCS.DOB,
-                CCS.ResponsibleParty,
-                PT.PayerTypeId,
+                CCS.BillingLab,
                 VAA.VisitNumber,
-                CCS.ICD10Code,
-                CCS.LastBillDate,
+                CCS.FirstBillDate,
                 CCS.ChargeEntryDate,
-                RP.ReferingProviderId,
-                ROW_NUMBER() OVER (PARTITION BY LIS.AccessionNo ORDER BY VAA.DateOfEntry) AS RowNum
+                ROW_NUMBER() OVER (PARTITION BY LIS.AccessionNo ORDER BY CCS.FirstBillDate) AS RowNum
             FROM [dbo].[LISMaster] LIS
             LEFT JOIN VAAMaster VAA                   ON LIS.AccessionNo = VAA.AccessionNo  
             LEFT JOIN #CCSTemp CCS                   ON VAA.VisitNumber = CCS.VisitNumber 
-            LEFT JOIN LabMaster LAB                  ON CCS.PerformingLab = LAB.LabName
-            LEFT JOIN BillingProviderMaster BPM      ON CCS.BillingProvider = BPM.BillingProvider
-            LEFT JOIN PayerTypeMaster PT             ON CCS.PayerType = PT.PayerType
-            LEFT JOIN ReferringProviderMaster RP     ON CCS.ReferringProvider = RP.ReferringProviderName
         )
         SELECT *
         INTO #SampleCollectionData
@@ -5907,16 +5767,21 @@ BEGIN
         ********************************************************************************************/
         UPDATE LIS
         SET 
-            LabId                = SCD.LabID,
-            BillingProviderID    = SCD.BillingProviderID,
-            PatientID            = SCD.PatientID,
-            VisitNumber          = SCD.VisitNumber,
-            ReferringProviderId  = SCD.ReferingProviderId,
-            PayerTypeId          = SCD.PayerTypeId,
-            FirstBilledDate      = SCD.LastBillDate,
-            ChargeEntryDate      = SCD.ChargeEntryDate
+            VisitNumberIH         = SCD.VisitNumber,
+            FirstBilledDateIH      = SCD.FirstBillDate,
+            ChargeEntryDateIH    = SCD.ChargeEntryDate
         FROM [dbo].[LISMaster] LIS
-        JOIN #SampleCollectionData SCD ON LIS.AccessionNo = SCD.AccessionNo;
+        JOIN #SampleCollectionData SCD ON LIS.AccessionNo = SCD.AccessionNo
+		WHERE SCD.BillingLab = 'In Health';
+
+		   UPDATE LIS
+        SET 
+            VisitNumberDTR         = SCD.VisitNumber,
+            FirstBilledDateDTR      = SCD.FirstBillDate,
+            ChargeEntryDateDTR    = SCD.ChargeEntryDate
+        FROM [dbo].[LISMaster] LIS
+        JOIN #SampleCollectionData SCD ON LIS.AccessionNo = SCD.AccessionNo
+		WHERE SCD.BillingLab = 'DTR';
 
         COMMIT TRANSACTION;
     END TRY
@@ -5933,7 +5798,7 @@ BEGIN
     END CATCH
 END;
 GO
-/****** Object:  StoredProcedure [dbo].[sp_RebuildNewIndexes]    Script Date: 10/20/2025 8:51:27 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_RebuildNewIndexes]******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON

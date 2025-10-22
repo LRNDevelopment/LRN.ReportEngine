@@ -5221,7 +5221,7 @@ SET NewStatus =
 		WHEN InsuranceType = 'SELF PAY' THEN 'Self-Pay'
 		WHEN AccessionNo IS NULL THEN 'Missing Accession'
 		WHEN InsuranceType = 'REF LAB - BILL PATIENT' THEN 'Ref Lab - Bill Patient'
-		WHEN SampleResultedDate IS NOT NULL AND TRIM(StatusCode) IN ('Validated','Completed','RESULTS AVAILABLE') 
+		WHEN SampleResultedDate IS NOT NULL AND TRIM(StatusCode) IN ('Validated','Completed','RESULTS AVAILABLE','PENDING PHARMD') 
 		AND (InsuranceType IS NULL OR InsuranceType IN ('COMMERCIAL','MEDICAID','MEDICARE','MISSING INSURANCE','OTHER INS.')) THEN 'Billable'
         WHEN SampleResultedDate IS NULL AND InsuranceType NOT IN ('SELF PAY','REF LAB - BILL PATIENT','CLIENT BILL') THEN 'Yet to be validated'
         ELSE NULL

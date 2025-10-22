@@ -3,17 +3,17 @@
     {
       "FileIdentifier": "LIS",
       "JsonMappingPath": "COVE_LIS.json",
-      "FileType": 1
+      "FileType": 401
     },
     {
       "FileIdentifier": "Collection",
       "JsonMappingPath": "Custom_Collection.json",
-      "FileType": 2
+      "FileType": 402
     },
     {
       "FileIdentifier": "Transaction",
       "JsonMappingPath": "Transaction_Detail.json",
-      "FileType": 4
+      "FileType": 403
     },
     {
       "FileIdentifier": "Visit",
@@ -33,12 +33,12 @@
     {
       "FileIdentifier": "Denial",
       "JsonMappingPath": "DenialTrackingDetail.json",
-      "FileType": 5
+      "FileType": 404
     },
     {
       "FileIdentifier": "Payment",
       "JsonMappingPath": "AccPaymentReport.json",
-      "FileType": 8
+      "FileType": 405
     },
     {
       "FileIdentifier": "Diagnose Order LIS",

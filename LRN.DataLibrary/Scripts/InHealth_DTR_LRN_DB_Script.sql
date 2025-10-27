@@ -1360,6 +1360,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[DenialTrackingMaster](
 	[DenailTrackID] [int] IDENTITY(1,1) NOT NULL,
+	[LISMasterID] [int] NULL,
 	[VisitNumber] [varchar](50) NULL,
 	[CPTCodes] [varchar](25) NULL,
 	[TransactionCarrierCode] [varchar](50) NULL,
@@ -3690,7 +3691,7 @@ BEGIN
             DenailCode,
     CASE
 -------Rule Id : 1 Fully Adjusted: Total Charge = Carrier WO No denial code
-WHEN FirstBillDate IS NOT NULL and BilledAmount = InsuranceAdjustment and DenailCode IS NULL THEN 'Fully Adjusted' 
+WHEN FirstBillDate IS NOT NULL and (BilledAmount = InsuranceAdjustment OR BilledAmount = (InsuranceAdjustment + PatientAdjustment) OR BilledAmount = PatientAdjustment) and DenailCode IS NULL THEN 'Fully Adjusted' 
 
 -------Rule Id : 2 Fully Denied: First Billed Date = Date AND Denial Code = Code AND Total Charge = Carrier Balance
 WHEN FirstBillDate IS NOT NULL and DenailCode is not null and BilledAmount = InsuranceBalance  THEN 'Fully Denied' 
@@ -3723,35 +3724,35 @@ and TotalBalance = InsuranceBalance THEN 'Partially Denied'
 -------Rule Id : 11 Patient Payment: First Billed = Date AND Carrier Payment = 0 AND Patient Payment > 0 AND Carrier Balance = 0
 WHEN FirstBillDate IS NOT NULL and InsurancePayment = 0 and PatientPaidAmount > 0 and InsuranceBalance = 0 THEN 'Patient Payment'
 
--------Rule Id : 12 Unbilled: First Billed = Blank AND Total Charge = Carrier Balance 
+-------Rule Id : 12 Patient Payment	First Billed = Date AND Carrier Payment = 0 AND Patient Payment > 0 AND Carrier Balance > 0
+WHEN FirstBillDate IS NOT NULL and InsurancePayment = 0 and PatientPaidAmount > 0 and InsuranceBalance > 0 THEN 'Patient Payment'
+
+-------Rule Id : 13 Unbilled	First Billed = Blank AND Total Charge = Carrier Balance AND CPT Code not equal to 99999
 WHEN FirstBillDate IS NULL and BilledAmount = InsuranceBalance  and  CPTCode NOT LIKE '%99999%' THEN 'Unbilled'
 
--------Rule Id : 13 Unbilled: Fully Adjusted: First Billed = Blank AND Total Charge = Carrier WO
-WHEN FirstBillDate IS NULL and BilledAmount = InsuranceAdjustment  THEN 'Unbilled - Fully Adjusted'
+-------Rule Id : 14 Unbilled - Fully Adjusted First Billed = Blank AND Total Charge = Carrier WO or Total Charge = Patient WO or Total Charge = Carrier WO + Patient WO AND CPT Code not equal to 99999
+WHEN FirstBillDate IS NULL and BilledAmount = InsuranceAdjustment OR BilledAmount = PatientAdjustment  OR BilledAmount = (InsuranceAdjustment + PatientAdjustment) AND CPTCode NOT LIKE '%99999%' THEN 'Unbilled - Fully Adjusted'
 
--------Rule Id : 14 Unbilled - Client: First Billed = Blank  AND CPT code = 99999 AND Total Charge = Carrier Balance
+-------Rule Id : 15 Unbilled - Client	First Billed = Blank  AND CPT code = 99999 AND Total Charge = Carrier Balance
 WHEN FirstBillDate IS NULL and  CPTCode LIKE '%99999%' and BilledAmount = InsuranceBalance  THEN 'Unbilled - Client'
 
--------Rule Id : 15 Partially Adjusted: First Billed = Date AND Carrier Payment = 0 AND Patient Payment = 0 AND  Carrier WO > 0 AND Carrier Balance > 0 AND Denial Code = Blank
+-------Rule Id : 16 Partially Adjusted	First Billed = Date AND Carrier Payment = 0 AND Patient Payment = 0 AND  Carrier WO > 0 AND Carrier Balance > 0 AND Denial Code = Blank
 WHEN FirstBillDate IS NOT NULL AND InsurancePayment = 0 AND PatientPaidAmount = 0 AND InsuranceAdjustment > 0 AND InsuranceBalance > 0 AND DenailCode IS NULL THEN 'Partially Adjusted'
 
--------Rule Id : 16 Unbilled - Patient Payment: First Billed Date = Blank AND Carrier Payment = 0 AND Patient Payment > 0 AND Patient WO > = 0
+-------Rule Id : 17 Unbilled - Patient Payment	First Billed Date = Blank AND Carrier Payment = 0 AND Patient Payment > 0 AND Patient WO > = 0
 WHEN FirstBillDate IS NULL AND InsurancePayment = 0 AND PatientPaidAmount > 0 AND PatientAdjustment >= 0 THEN 'Unbilled - Patient Payment'
 
-
--------Rule Id : 17 Unbilled - Patient Balance: First Billed Date = Blank AND Carrier Payment = 0 AND Patient Balance > 0 AND Patient WO > = 0
+-------Rule Id : 18 Unbilled - Patient Balance	First Billed Date = Blank AND Carrier Payment = 0 AND Patient Balance > 0 AND Patient WO > = 0
 WHEN FirstBillDate IS NULL AND InsurancePayment = 0 AND PatientBalance > 0 AND PatientAdjustment >= 0 THEN 'Unbilled - Patient Balance'
 
--------Rule Id : 18	Partial Patient Payment:	First Billed = Date AND Carrier Payment = 0 AND Patient Payment > 0 AND Carrier Balance > 0 and Patient Balance=0
-WHEN FirstBillDate IS NOT NULL AND InsurancePayment = 0 AND PatientPaidAmount > 0 and PatientBalance = 0 AND InsuranceBalance > 0 THEN 'Partial Payment'
+-------Rule Id : 19	Partial Patient Payment	First Billed = Date AND Carrier Payment = 0 AND Patient Payment > 0 AND Carrier Balance > 0  and Patient Balance=0
+WHEN FirstBillDate IS NOT NULL AND InsurancePayment = 0 AND PatientPaidAmount > 0 AND InsuranceBalance > 0 AND PatientBalance = 0 THEN 'Partial Patient Payment'
 
--------Rule Id : 19	Unbilled - Patient WO	First Billed Date = Blank AND Carrier Payment = 0 AND TotalCharge=Patient WO
+-------Rule Id : 20	Unbilled - Patient WO	First Billed Date = Blank AND Carrier Payment = 0 AND TotalCharge=Patient WO
 WHEN FirstBillDate IS NULL AND InsurancePayment = 0 AND BilledAmount =  PatientAdjustment  THEN 'Unbilled - Patient WO'
 
--------Rule Id :20	Partial Patient Responsibility:	First Billed = Date AND Carrier Payment = 0 AND Patient Payment = 0 AND Carrier Balance > 0  and Patient Balance > 0 
-WHEN FirstBillDate IS NOT NULL AND InsurancePayment = 0 AND PatientPaidAmount = 0 and InsuranceBalance > 0 and PatientBalance > 0   THEN 'Partial Patient Responsibility'
-
-
+-------Rule Id :21	Partial PartialResponsibility	First Billed = Date AND Carrier Payment = 0 AND Patient Payment = 0 AND Carrier Balance > 0  and Patient Balance > 0 
+WHEN FirstBillDate IS NOT NULL AND InsurancePayment = 0 AND PatientPaidAmount = 0 and InsuranceBalance > 0 and PatientBalance > 0 THEN 'Partial Patient Responsibility'
 
 ELSE 'Un Categorized' END ClaimStatus,
             GETDATE()
@@ -4295,15 +4296,6 @@ BEGIN
 
 	  Select distinct VisitNumber,DBO.GetUniqueICD10Codes(VisitNumber) ICD10Code INTO #ICDCode from BillingMaster 
 
-	----;WITH CTE_Trans AS(
- ----   SELECT VisitNo, ChartNumber,ROW_NUMBER() OVER (
- ----           PARTITION BY VisitNo 
- ----           ORDER BY DateOfService DESC
- ----       ) AS rn
- ----   FROM TransactionMaster 
- ----   WHERE VisitNo IS NOT NULL AND TransactionType = 'Charge'
-    
-	----)SELECT VisitNo,ChartNumber INTO #TransactionMaster FROM CTE_Trans WHERE rn = 1;
 
     CREATE NONCLUSTERED INDEX IX_VisitNumber_BM ON #BillingMasterTemp (VisitNumber);
 
@@ -4937,8 +4929,6 @@ BEGIN
 		Join PanelGroup PG on LIS.OrderInfo = PG.OrderInfo
 
 		
---EXEC sp_GetLISMasterReportByDateRange 
-
 		UPDATE LISMaster SET TestName = CASE 
 		WHEN LTRIM(RTRIM(OrderInfo)) = 'VDX Screening + inSight Confirmation' THEN 'Clinical Toxicology' 
 		WHEN LTRIM(RTRIM(OrderInfo)) = 'Urine Drug Screen + inSight Confirmation' THEN 'Clinical Toxicology' 
@@ -4953,6 +4943,7 @@ BEGIN
 		WHEN LTRIM(RTRIM(OrderInfo)) = 'PO Urine Drug Screening' THEN 'Clinical Toxicology' 
 		WHEN LTRIM(RTRIM(OrderInfo)) = 'Keele Oral inSight Confirmation Only' THEN 'Clinical Toxicology' 
 		WHEN LTRIM(RTRIM(OrderInfo)) = 'Oral Drug Screen and inSight Confirmation' THEN 'Clinical Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'Oral inSight Confirmation Only' THEN 'Clinical Toxicology' 
 		ELSE 'No Test Located' END,PanelCode =  CASE
 		WHEN LTRIM(RTRIM(OrderInfo)) = 'VDX Screening + inSight Confirmation' THEN 'Toxicology' 
 		WHEN LTRIM(RTRIM(OrderInfo)) = 'Urine Drug Screen + inSight Confirmation' THEN 'Toxicology' 
@@ -4967,6 +4958,7 @@ BEGIN
 		WHEN LTRIM(RTRIM(OrderInfo)) = 'PO Urine Drug Screening' THEN 'Toxicology' 
 		WHEN LTRIM(RTRIM(OrderInfo)) = 'Keele Oral inSight Confirmation Only' THEN 'Toxicology' 
 		WHEN LTRIM(RTRIM(OrderInfo)) = 'Oral Drug Screen and inSight Confirmation' THEN 'Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'Oral inSight Confirmation Only' THEN 'Toxicology' 
 		ELSE 'No Panel Located' END
 		FROM LISMaster 
 
@@ -5199,7 +5191,7 @@ BEGIN
 
 	IF (Select FileType from ImportedFiles Where ImportedFileID = @FileId) = 206
 		SET @LabName = 'In Health'
-	ELSE IF (Select FileType from ImportedFiles Where ImportedFileID = @FileId) = 206
+	ELSE IF (Select FileType from ImportedFiles Where ImportedFileID = @FileId) = 207
 		SET @LabName = 'DTR'
 
         -- Drop temp table if exists
@@ -5303,7 +5295,7 @@ BEGIN
                     ORDER BY FirstBillDate
                 ) AS RowNum
             FROM BillingMaster
-            WHERE LTRIM(RTRIM(BillingLab)) = 'In Health'
+            WHERE LTRIM(RTRIM(BillingLab)) = 'In Health'  AND  FirstBillDate IS NOT NULL
         )
         UPDATE LIS
         SET
@@ -5324,10 +5316,10 @@ BEGIN
                 AccessionNo,
                 ROW_NUMBER() OVER (
                     PARTITION BY VisitNumber, PayerTypeId, PrimaryPayerID, FirstBillDate, ChargeEntryDate
-                    ORDER BY FirstBillDate
+                    ORDER BY FirstBillDate 
                 ) AS RowNum
-            FROM BillingMaster
-            WHERE LTRIM(RTRIM(BillingLab)) = 'DTR'
+            FROM BillingMaster 
+            WHERE LTRIM(RTRIM(BillingLab)) = 'DTR' AND  FirstBillDate IS NOT NULL
         )
         UPDATE LIS
         SET
@@ -5392,38 +5384,14 @@ BEGIN
 
 
         -------------------------------------------------------------------------------
-        -- 3) System Test (logic unchanged; only added LTRIM/RTRIM around text checks)
-        -------------------------------------------------------------------------------
-        UPDATE OS
-        SET BillingStatus = 'System Test'
-        FROM dbo.LISMaster AS OS
-        WHERE LTRIM(RTRIM(OS.BillingStatus)) = 'Other Samples'
-          AND (
-                -- PatientName contains 'TEST' or 'DEMO'
-                 UPPER(LTRIM(RTRIM(OS.PatientLastName)) +', ' + LTRIM(RTRIM(OS.PatientFirstName))) LIKE '%TEST%'
-                OR UPPER(LTRIM(RTRIM(OS.PatientLastName)) +', ' + LTRIM(RTRIM(OS.PatientFirstName))) LIKE '%DEMO%'
-
-                OR UPPER(LTRIM(RTRIM(OS.PatientLastName)) + LTRIM(RTRIM(OS.PatientFirstName))) LIKE '%TRAIN%'
-
-                -- Provider exactly equals 'TEST'
-                OR UPPER(LTRIM(RTRIM(OS.RPFirstName))) = 'TEST'
-                OR UPPER(LTRIM(RTRIM(OS.RPLastName)))  = 'TEST'
-
-				OR UPPER(LTRIM(RTRIM(OS.PatientFirstName))+' '+LTRIM(RTRIM(OS.PatientLastName))) LIKE 'Mickey Mouse'
-                -- Specific fake names
-                OR UPPER(LTRIM(RTRIM(OS.PatientFirstName)) + ', ' + LTRIM(RTRIM(OS.PatientLastName))) IN ('JOHN, DOE', 'DONALD, DUCK')
-              );
-
-        -------------------------------------------------------------------------------
         -- 4) Self-Pay (logic unchanged; only added LTRIM/RTRIM)
         -------------------------------------------------------------------------------
         UPDATE OS
         SET BillingStatus = 'Self-Pay'
         FROM dbo.LISMaster AS OS
-        WHERE LTRIM(RTRIM(OS.BillingStatus)) = 'Other Samples'
-          AND (
-                LTRIM(RTRIM(UPPER(OS.PrimaryInsurancePayer))) IN ('SELF','SELF PAY','PRIVATE PAY','PAY')
-                OR LTRIM(RTRIM(UPPER(OS.InsuranceCode))) = 'SELF PAY'
+        WHERE (
+                LTRIM(RTRIM(UPPER(OS.PrimaryInsurancePayer))) IN ('SELF','SELF PAY','PRIVATE PAY','PAY','SELF PA','SEL')
+                --OR LTRIM(RTRIM(UPPER(OS.InsuranceCode))) = 'SELF PAY'
               );
 
         -------------------------------------------------------------------------------
@@ -5436,27 +5404,65 @@ BEGIN
             WHEN FirstBilledDateIH IS NOT NULL AND FirstBilledDateDTR IS NOT NULL THEN 'Billed Via DTR & IH AMD'
             WHEN ChargeEnteredIH IS NOT NULL AND FirstBilledDateIH IS NULL THEN 'Entered in IH AMD but not billed'
             WHEN ChargeEnteredDTR IS NOT NULL AND FirstBilledDateDTR IS NULL THEN 'Entered in DTR AMD but not billed'
-            WHEN LTRIM(RTRIM(BillingStatus)) = 'Billable'
+            WHEN LTRIM(RTRIM(BillingStatus)) = 'Billable' AND IsBilled = 'Un Billed' 
+                 AND LTRIM(RTRIM(NexumStatusDTR)) IN ('Eligibility')
+                 THEN 'Nexum Eligibility - DTR'
+
+			WHEN LTRIM(RTRIM(BillingStatus)) = 'Billable' AND IsBilled = 'Un Billed' 
+                 AND LTRIM(RTRIM(NexumStatusDTR)) IN ('Diagnosis Validity')
+                 THEN 'Nexum Diagnosis Validity - DTR'
+			WHEN LTRIM(RTRIM(BillingStatus)) = 'Billable' AND IsBilled = 'Un Billed' 
+                 AND LTRIM(RTRIM(NexumStatusDTR)) IN ('AMD Output')
+                 THEN 'Nexum Scrubber Queue - DTR'
+
+			WHEN LTRIM(RTRIM(BillingStatus)) = 'Billable' AND IsBilled = 'Un Billed' 
                  AND LTRIM(RTRIM(NexumStatusDTR)) IN ('Invalid Diagnosis','Invalid Provider','Invalid Client Procedure','Invalid Payer')
                  THEN 'Nexum Pre Processing Queue - DTR'
-            WHEN LTRIM(RTRIM(BillingStatus)) = 'Billable'
+
+            WHEN LTRIM(RTRIM(BillingStatus)) = 'Billable' AND IsBilled = 'Un Billed' 
                  AND LTRIM(RTRIM(NexumStatusIH)) = 'Eligibility'
                  THEN 'Nexum Eligibility - IH'
-            WHEN LTRIM(RTRIM(BillingStatus)) = 'Billable'
+            WHEN LTRIM(RTRIM(BillingStatus)) = 'Billable' AND IsBilled = 'Un Billed' 
                  AND LTRIM(RTRIM(NexumStatusIH)) = 'Diagnosis Validity'
-                 THEN 'Nexum Diagnosis Validity - IH'
-            WHEN LTRIM(RTRIM(BillingStatus)) = 'Billable'
+                 THEN 'Nexum Diagnosis Validity - IH' 
+            WHEN LTRIM(RTRIM(BillingStatus)) = 'Billable' AND IsBilled = 'Un Billed' 
                  AND LTRIM(RTRIM(NexumStatusIH)) = 'AMD Output'
                  THEN 'Nexum Scrubber Queue - IH'
-            WHEN LTRIM(RTRIM(BillingStatus)) = 'Billable'
+            WHEN LTRIM(RTRIM(BillingStatus)) = 'Billable' AND IsBilled = 'Un Billed' 
                  AND LTRIM(RTRIM(NexumStatusIH)) IN ('Invalid Diagnosis','Invalid Provider','Invalid Client Procedure','Invalid Payer')
                  THEN 'Nexum Pre Processing Queue - IH'
             ELSE 'Requires Review'
         END;
 
 		UPDATE LISMaster SET IsBilled = CASE 
-										WHEN BilledDTRAMD IS NOT NULL OR BilledInHealthAMD IS NOT NULL THEN 'Billed'
+										WHEN FirstBilledDateDTR IS NOT NULL OR FirstBilledDateIH IS NOT NULL THEN 'Billed'
 										ELSE 'Un Billed' END
+
+		
+        -------------------------------------------------------------------------------
+        -- 3) System Test (logic unchanged; only added LTRIM/RTRIM around text checks)
+        -------------------------------------------------------------------------------
+        UPDATE OS
+        SET BillingStatus = 'System Test'
+        FROM dbo.LISMaster AS OS
+        WHERE (
+                -- PatientName contains 'TEST' or 'DEMO'
+                 UPPER(LTRIM(RTRIM(OS.PatientLastName)) +', ' + LTRIM(RTRIM(OS.PatientFirstName))) LIKE '%TEST%'
+                OR UPPER(LTRIM(RTRIM(OS.PatientLastName)) +', ' + LTRIM(RTRIM(OS.PatientFirstName))) LIKE '%DEMO%'
+
+                OR UPPER(LTRIM(RTRIM(OS.PatientLastName)) + LTRIM(RTRIM(OS.PatientFirstName))) LIKE '%TRAIN%'
+
+				OR UPPER(LTRIM(RTRIM(OS.PatientFirstName)) + ' ' + LTRIM(RTRIM(OS.PatientLastName)))  = 'TARA TRAINOR'
+				
+                -- Provider exactly equals 'TEST'
+                OR UPPER(LTRIM(RTRIM(OS.RPFirstName))) = 'TEST'
+                OR UPPER(LTRIM(RTRIM(OS.RPLastName)))  = 'TEST'
+
+				OR UPPER(LTRIM(RTRIM(OS.PatientFirstName))+' '+LTRIM(RTRIM(OS.PatientLastName))) LIKE 'Mickey Mouse'
+                -- Specific fake names
+                OR UPPER(LTRIM(RTRIM(OS.PatientFirstName)) + ', ' + LTRIM(RTRIM(OS.PatientLastName))) IN ('JOHN, DOE', 'DONALD, DUCK')
+              );
+
 
         COMMIT TRANSACTION;
     END TRY

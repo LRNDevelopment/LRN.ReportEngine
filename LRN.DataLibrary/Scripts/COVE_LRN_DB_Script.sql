@@ -5214,7 +5214,7 @@ SET
 SET NewStatus = 
 		CASE 
         WHEN ((ReferringProviderName LIKE '%TEST%' ) AND ReferringProviderName NOT IN ('DR MARK TESTA DO')) OR PatientName LIKE '%TEST%' 
-		OR (PatientName =  'DEV,DEV') OR (PatientName LIKE  '%Patient%') OR PatientName LIKE '%[0-9]%' THEN 'System Test'
+		OR (PatientName =  'DEV,DEV') OR (PatientName LIKE  '%Patient%') OR PatientName LIKE '%[0-9]%' OR LastName = 'QA' THEN 'System Test'
 		WHEN FacilityName = 'Environmental Testing' THEN 'System Test'
         WHEN TRIM(StatusCode) IN ('Rejected','Deleted') THEN 'Deleted / Rejected'
 		WHEN InsuranceType = 'CLIENT BILL' THEN 'Client Bill'

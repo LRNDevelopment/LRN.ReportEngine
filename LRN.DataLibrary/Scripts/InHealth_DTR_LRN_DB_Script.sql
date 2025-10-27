@@ -68,275 +68,275 @@ DROP PROCEDURE [dbo].[BillingMasterProcess_Proc]
 GO
 ALTER TABLE [dbo].[BillingMaster] DROP CONSTRAINT [CK_BillingMaster_NonNegativeAmounts]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__279A9293]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__530F007D]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__26A66E5A]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__521ADC44]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__25B24A21]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__5126B80B]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__24BE25E8]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__503293D2]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__23CA01AF]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__4F3E6F99]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__22D5DD76]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__4E4A4B60]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__21E1B93D]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__4D562727]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__20ED9504]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__4C6202EE]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__1FF970CB]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__4B6DDEB5]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__1F054C92]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__4A79BA7C]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__1E112859]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__49859643]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__1D1D0420]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__4891720A]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__1C28DFE7]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__479D4DD1]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__1B34BBAE]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__46A92998]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__1A409775]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__TestT__45B5055F]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__194C733C]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__44C0E126]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__18584F03]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__43CCBCED]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__17642ACA]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__42D898B4]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__16700691]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__41E4747B]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__157BE258]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__40F05042]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__1487BE1F]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__3FFC2C09]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__139399E6]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__3F0807D0]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__129F75AD]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__3E13E397]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__11AB5174]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__3D1FBF5E]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__10B72D3B]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__3C2B9B25]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__0FC30902]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__3B3776EC]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__0ECEE4C9]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__3A4352B3]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__0DDAC090]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__394F2E7A]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__0CE69C57]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__385B0A41]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__0BF2781E]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Sampl__3766E608]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__7F8CA139]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__3672C1CF]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__7E987D00]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__357E9D96]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__7DA458C7]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__348A795D]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__0AFE53E5]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__33965524]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__0A0A2FAC]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__32A230EB]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__09160B73]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__31AE0CB2]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__0821E73A]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__30B9E879]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__072DC301]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__2FC5C440]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__06399EC8]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__2ED1A007]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__05457A8F]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__2DDD7BCE]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__04515656]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__2CE95795]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__035D321D]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__2BF5335C]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__02690DE4]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__2B010F23]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__0174E9AB]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__2A0CEAEA]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__0080C572]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Refer__2918C6B1]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__7CB0348E]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__2824A278]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__7BBC1055]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__27307E3F]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__7AC7EC1C]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__263C5A06]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__79D3C7E3]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__254835CD]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__78DFA3AA]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__24541194]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__77EB7F71]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__235FED5B]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__76F75B38]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__226BC922]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__760336FF]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__2177A4E9]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__750F12C6]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__208380B0]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__741AEE8D]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__1F8F5C77]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__7326CA54]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__1E9B383E]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__7232A61B]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__1DA71405]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__713E81E2]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__1CB2EFCC]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__704A5DA9]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__1BBECB93]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__6F563970]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Payer__1ACAA75A]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__6E621537]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__19D68321]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__6D6DF0FE]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__18E25EE8]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__6C79CCC5]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__17EE3AAF]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__6B85A88C]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__16FA1676]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__6A918453]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__1605F23D]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__699D601A]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__1511CE04]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__68A93BE1]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__141DA9CB]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__67B517A8]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__13298592]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__66C0F36F]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__12356159]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__65CCCF36]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__11413D20]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__64D8AAFD]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__104D18E7]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__63E486C4]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__0F58F4AE]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__62F0628B]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__0E64D075]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__61FC3E52]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__0D70AC3C]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__61081A19]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Panel__0C7C8803]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__6013F5E0]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__7F228CE5]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5F1FD1A7]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__7E2E68AC]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5E2BAD6E]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__0B8863CA]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5D378935]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__0A943F91]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5C4364FC]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__09A01B58]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5B4F40C3]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__08ABF71F]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5A5B1C8A]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__07B7D2E6]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5966F851]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__06C3AEAD]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5872D418]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__05CF8A74]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__577EAFDF]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__04DB663B]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__568A8BA6]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__03E74202]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__5596676D]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__02F31DC9]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__54A24334]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__01FEF990]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__53AE1EFB]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__010AD557]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__52B9FAC2]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Opera__0016B11E]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__51C5D689]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7D3A4473]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__50D1B250]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7C46203A]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__4FDD8E17]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7B51FC01]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__4EE969DE]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7A5DD7C8]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__4DF545A5]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__7969B38F]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__4D01216C]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__78758F56]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__4C0CFD33]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__77816B1D]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__4B18D8FA]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__768D46E4]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__4A24B4C1]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__759922AB]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__49309088]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__74A4FE72]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__483C6C4F]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__73B0DA39]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__47484816]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__72BCB600]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__465423DD]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__71C891C7]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__455FFFA4]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__70D46D8E]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__446BDB6B]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__LabId__6FE04955]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__4377B732]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6EEC251C]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__428392F9]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6DF800E3]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__418F6EC0]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6D03DCAA]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__409B4A87]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6C0FB871]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__3FA7264E]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6B1B9438]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__3EB30215]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6A276FFF]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__3DBEDDDC]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__69334BC6]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__3CCAB9A3]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__683F278D]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__3BD6956A]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__674B0354]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__3AE27131]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6656DF1B]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__39EE4CF8]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__6562BAE2]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__38FA28BF]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__646E96A9]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__38060486]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__637A7270]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__3711E04D]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__62864E37]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__361DBC14]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Clini__619229FE]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__352997DB]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__609E05C5]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__343573A2]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__5FA9E18C]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__33414F69]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__5EB5BD53]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__324D2B30]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__5DC1991A]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__315906F7]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__5CCD74E1]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__3064E2BE]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__5BD950A8]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__2F70BE85]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__5AE52C6F]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__2E7C9A4C]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__59F10836]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__2D887613]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__58FCE3FD]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__2C9451DA]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__5808BFC4]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__2BA02DA1]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__57149B8B]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__2AAC0968]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__56207752]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__29B7E52F]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__552C5319]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__28C3C0F6]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__54382EE0]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__27CF9CBD]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [FK__LISMaster__Billi__53440AA7]
 GO
 ALTER TABLE [dbo].[BillingMaster] DROP CONSTRAINT [FK_BillingMaster_PrimaryPayer]
 GO
@@ -400,13 +400,13 @@ ALTER TABLE [dbo].[OperationsGroupMaster] DROP CONSTRAINT [DF__Operation__Creat_
 GO
 ALTER TABLE [dbo].[OperationsGroupMaster] DROP CONSTRAINT [DF__Operation__IsAct__43D61337]
 GO
-ALTER TABLE [dbo].[NexusStaging] DROP CONSTRAINT [DF__NexusStag__Impor__599C027B]
+ALTER TABLE [dbo].[NexusStaging] DROP CONSTRAINT [DF__NexusStag__Impor__2FFACE6A]
 GO
 ALTER TABLE [dbo].[LISStaging] DROP CONSTRAINT [DF__LISStagin__Impor__6A90B8FC]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [DF__LISMaster__Updat__26DB7884]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [DF__LISMaster__Updat__524FE66E]
 GO
-ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [DF__LISMaster__Creat__25E7544B]
+ALTER TABLE [dbo].[LISMaster] DROP CONSTRAINT [DF__LISMaster__Creat__515BC235]
 GO
 ALTER TABLE [dbo].[LabMaster] DROP CONSTRAINT [DF__LabMaster__Creat__1466F737]
 GO
@@ -434,9 +434,9 @@ ALTER TABLE [dbo].[DiagnoseLISStaging] DROP CONSTRAINT [DF__DiagnoseL__Impor__09
 GO
 ALTER TABLE [dbo].[DenialTrackingStaging] DROP CONSTRAINT [DF__DenialTra__Impor__08F5448B]
 GO
-ALTER TABLE [dbo].[DenialTrackingMaster] DROP CONSTRAINT [DF__DenialTra__Updat__3AC275A0]
+ALTER TABLE [dbo].[DenialTrackingMaster] DROP CONSTRAINT [DF__DenialTra__Updat__45DF2291]
 GO
-ALTER TABLE [dbo].[DenialTrackingMaster] DROP CONSTRAINT [DF__DenialTra__Creat__39CE5167]
+ALTER TABLE [dbo].[DenialTrackingMaster] DROP CONSTRAINT [DF__DenialTra__Creat__44EAFE58]
 GO
 ALTER TABLE [dbo].[CustomCollectionStaging] DROP CONSTRAINT [DF__CustomCol__Impot__0618D7E0]
 GO
@@ -2181,6 +2181,7 @@ CREATE TABLE [dbo].[LISMaster](
 	[ChargeEnteredIH] [nvarchar](255) NULL,
 	[NexumStatusIH] [nvarchar](255) NULL,
 	[NexumStatusDTR] [nvarchar](255) NULL,
+	[IsBilled] [nvarchar](50) NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[LISMasterId] ASC
@@ -3430,9 +3431,9 @@ BEGIN
     -- Step 4: Merge
 	Declare @LabName NVARCHAR(50);
 
-	IF (Select FileType from ImportedFiles Where ImportedFileID = @FileId) = 2
+	IF (Select FileType from ImportedFiles Where ImportedFileID = @FileId) = 202
 		SET @LabName = 'In Health'
-	ELSE 
+	ELSE IF (Select FileType from ImportedFiles Where ImportedFileID = @FileId) = 203
 		SET @LabName = 'DTR'
 
     BEGIN TRY
@@ -3742,7 +3743,7 @@ WHEN FirstBillDate IS NULL AND InsurancePayment = 0 AND PatientPaidAmount > 0 AN
 WHEN FirstBillDate IS NULL AND InsurancePayment = 0 AND PatientBalance > 0 AND PatientAdjustment >= 0 THEN 'Unbilled - Patient Balance'
 
 -------Rule Id : 18	Partial Patient Payment:	First Billed = Date AND Carrier Payment = 0 AND Patient Payment > 0 AND Carrier Balance > 0 and Patient Balance=0
-WHEN FirstBillDate IS NOT NULL AND InsurancePayment = 0 AND PatientPaidAmount > 0 and PatientBalance = 0 AND InsuranceBalance > 0 THEN 'Partial Partial Payment'
+WHEN FirstBillDate IS NOT NULL AND InsurancePayment = 0 AND PatientPaidAmount > 0 and PatientBalance = 0 AND InsuranceBalance > 0 THEN 'Partial Payment'
 
 -------Rule Id : 19	Unbilled - Patient WO	First Billed Date = Blank AND Carrier Payment = 0 AND TotalCharge=Patient WO
 WHEN FirstBillDate IS NULL AND InsurancePayment = 0 AND BilledAmount =  PatientAdjustment  THEN 'Unbilled - Patient WO'
@@ -3811,7 +3812,7 @@ CREATE NONCLUSTERED INDEX IX_VisitNumber ON #DenialCodeMaster (VisitNumber,CPTCo
         PayerType,
         BillingProvider,
 		CAST(BeginDOS AS DATE) AS   BeginDOS,
-		--CAST(EndDOS AS DATE) AS   EndDOS,
+		CAST(EndDOS AS DATE) AS   EndDOS,
 		CAST(b.ChargeEntryDate AS DATE) AS    ChargeEntryDate,
 		CAST(FirstBillDate AS DATE) AS      FirstBillDate,
 		ISNULL(l.PanelCode, 'No Panel Located') AS PanelGroup,
@@ -3846,7 +3847,7 @@ CREATE NONCLUSTERED INDEX IX_VisitNumber ON #DenialCodeMaster (VisitNumber,CPTCo
 		b.BillingLab
 
     FROM BillingMaster b
-    LEFT JOIN LISMaster l ON b.AccessionNo = l.AccessionNo 
+    LEFT JOIN LISMaster l ON b.AccessionNo = l.AccessionNo AND l.Entry_Status <> 'Incomplete'
 	LEFT JOIN #DenialCodeMaster dt on b.VisitNumber = dt.VisitNumber AND b.CPTCode = dt.CPTCodes
 	--LEFT JOIN RequisitionTypes RT on l.RequistionTypeId = RT.RequisitionTypeId
     --LEFT JOIN OperationsGroupMaster OG ON l.OperationalGroupId = OG.OperationGroupID 
@@ -3992,7 +3993,7 @@ BEGIN
         ) AS rn
     FROM BillingMaster BM
     LEFT JOIN LISMaster LIS WITH (NOLOCK) 
-        ON BM.AccessionNo = LIS.AccessionNo
+        ON BM.AccessionNo = LIS.AccessionNo AND LIS.Entry_Status <> 'Incomplete'
     LEFT JOIN TestTypeMaster TT 
         ON LIS.TestTypeId = TT.TestTypeId
    		--LEFT JOIN RequisitionTypes rt ON LIS.RequistionTypeId = rt.RequisitionTypeId
@@ -4130,8 +4131,9 @@ BEGIN
 		CONVERT(VARCHAR, SampleAccessionedDate, 101) AS SampleAccessionedDate,
 		CONVERT(VARCHAR, SampleSubmittedDate, 101)   AS SampleSubmittedDate,
 		PanelCode PanelGroup,
+		--TestName,
 		--LIS.PanelName,
-		TestCategory,
+		TestName TestCategory,
 		CollectorName,
 		Medications,
 		SpecimenType,
@@ -4145,6 +4147,7 @@ BEGIN
 		BP.BillingProvider,
 		PerformingLab,
 		ResultedStatus,
+		IsBilled [Billed / Un-Billed],
         SS.SpecimenStatusName,
   --      OG.OperationsGroup,
 		--pg.PanelCategory PanelGroup,
@@ -4213,7 +4216,7 @@ CREATE NONCLUSTERED INDEX IX_VisitNumber ON #DenialCodeMaster (VisitNumber,CPTCo
         PayerType,
         BillingProvider,
 		CAST(BeginDOS AS DATE) AS   BeginDOS,
-		--CAST(EndDOS AS DATE) AS   EndDOS,
+		CAST(EndDOS AS DATE) AS   EndDOS,
 		CAST(b.ChargeEntryDate AS DATE) AS    ChargeEntryDate,
 		CAST(FirstBillDate AS DATE) AS      FirstBillDate,
 		ISNULL(l.PanelCode, 'No Panel Located') AS PanelGroup,
@@ -4248,7 +4251,7 @@ CREATE NONCLUSTERED INDEX IX_VisitNumber ON #DenialCodeMaster (VisitNumber,CPTCo
 		b.BillingLab
 
     FROM BillingMaster b
-    LEFT JOIN LISMaster l ON b.AccessionNo = l.AccessionNo 
+    LEFT JOIN LISMaster l ON b.AccessionNo = l.AccessionNo AND l.Entry_Status <> 'Incomplete'
 	LEFT JOIN #DenialCodeMaster dt on b.VisitNumber = dt.VisitNumber AND b.CPTCode = dt.CPTCodes
 	--LEFT JOIN RequisitionTypes RT on l.RequistionTypeId = RT.RequisitionTypeId
     --LEFT JOIN OperationsGroupMaster OG ON l.OperationalGroupId = OG.OperationGroupID 
@@ -4377,7 +4380,7 @@ BEGIN
 		BM.PatientDOB,
 		BM.PatientName,
 		BM.ChartNumber,
-		--BM.ResponsibleParty,
+		BM.ResponsibleParty,
         BM.FirstBillDate,
         BM.TOS,
         TT.TestTypeName AS TestType,
@@ -4394,7 +4397,7 @@ BEGIN
         ) AS rn
     FROM BillingMaster BM
     LEFT JOIN LISMaster LIS WITH (NOLOCK) 
-        ON BM.AccessionNo = LIS.AccessionNo
+        ON BM.AccessionNo = LIS.AccessionNo AND LIS.Entry_Status <> 'Incomplete'
     LEFT JOIN TestTypeMaster TT 
         ON LIS.TestTypeId = TT.TestTypeId
    		--LEFT JOIN RequisitionTypes rt ON LIS.RequistionTypeId = rt.RequisitionTypeId
@@ -4898,7 +4901,7 @@ BEGIN
 
 		  Lab.LabID, CM.ClinicId, SP.SalesPersonID, TTM.TestTypeId, RPM.ReferingProviderId, SS.SpecimenStatusId, LIS.ImportedFileID,
 		  GETDATE() AS CreatedAt, GETDATE() AS UpdatedAt,
-		  CASE WHEN IPM.InsurancePayerId IS NULL THEN 'No Insurance Info' ELSE NULL END [LRNNoInsuranceInfo]
+		  CASE WHEN PrimaryInsurance IS NULL THEN 'No Insurance Info' ELSE NULL END [LRNNoInsuranceInfo]
 		  INTO #LISMaster
 		FROM [dbo].[LISStaging] AS LIS
 		LEFT JOIN InsurancePayerMaster IPM ON LTRIM(RTRIM(LIS.PrimaryInsurance)) = IPM.PayerName
@@ -4930,8 +4933,43 @@ BEGIN
 		FROM #LISMaster WHERE LastTestDate >= '2025-01-01'
 
 
-		UPDATE LIS SET LIS.PanelId = PG.PanelGroupId,LIS.PanelCode = PG.PanelCategory,LIS.PanelName = PG.OrderInfo from LISMaster LIS
+		UPDATE LIS SET LIS.PanelId = PG.PanelGroupId,LIS.PanelName = PG.OrderInfo from LISMaster LIS
 		Join PanelGroup PG on LIS.OrderInfo = PG.OrderInfo
+
+		
+--EXEC sp_GetLISMasterReportByDateRange 
+
+		UPDATE LISMaster SET TestName = CASE 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'VDX Screening + inSight Confirmation' THEN 'Clinical Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'Urine Drug Screen + inSight Confirmation' THEN 'Clinical Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'PO Urine Drug Screening + inSight Confirmation' THEN 'Clinical Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'Wound Panel' THEN 'Molecular' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'Oral Drug Screen + inSight Confirmation' THEN 'Clinical Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'inSight Urine Drug Confirmation Only' THEN 'Clinical Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'UTI Panel' THEN 'Molecular' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'STI Panel' THEN 'Molecular' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'Respiratory Panel' THEN 'Molecular' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'Screening w/o THC' THEN 'Clinical Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'PO Urine Drug Screening' THEN 'Clinical Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'Keele Oral inSight Confirmation Only' THEN 'Clinical Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'Oral Drug Screen and inSight Confirmation' THEN 'Clinical Toxicology' 
+		ELSE 'No Test Located' END,PanelCode =  CASE
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'VDX Screening + inSight Confirmation' THEN 'Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'Urine Drug Screen + inSight Confirmation' THEN 'Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'PO Urine Drug Screening + inSight Confirmation' THEN 'Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'Wound Panel' THEN 'Wound Panel' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'Oral Drug Screen + inSight Confirmation' THEN 'Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'inSight Urine Drug Confirmation Only' THEN 'Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'UTI Panel' THEN 'UTI Panel' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'STI Panel' THEN 'STI Panel' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'Respiratory Panel' THEN 'Respiratory Panel' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'Screening w/o THC' THEN 'Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'PO Urine Drug Screening' THEN 'Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'Keele Oral inSight Confirmation Only' THEN 'Toxicology' 
+		WHEN LTRIM(RTRIM(OrderInfo)) = 'Oral Drug Screen and inSight Confirmation' THEN 'Toxicology' 
+		ELSE 'No Panel Located' END
+		FROM LISMaster 
+
 
 
 	 update ImportedFiles set FileStatus = 1,ProcessedOn = GETDATE() where ImportedFileID = @FileId; 
@@ -5159,9 +5197,9 @@ BEGIN
 
 	Declare @LabName NVARCHAR(50);
 
-	IF (Select FileType from ImportedFiles Where ImportedFileID = @FileId) = 5
+	IF (Select FileType from ImportedFiles Where ImportedFileID = @FileId) = 206
 		SET @LabName = 'In Health'
-	ELSE 
+	ELSE IF (Select FileType from ImportedFiles Where ImportedFileID = @FileId) = 206
 		SET @LabName = 'DTR'
 
         -- Drop temp table if exists
@@ -5415,6 +5453,10 @@ BEGIN
                  THEN 'Nexum Pre Processing Queue - IH'
             ELSE 'Requires Review'
         END;
+
+		UPDATE LISMaster SET IsBilled = CASE 
+										WHEN BilledDTRAMD IS NOT NULL OR BilledInHealthAMD IS NOT NULL THEN 'Billed'
+										ELSE 'Un Billed' END
 
         COMMIT TRANSACTION;
     END TRY

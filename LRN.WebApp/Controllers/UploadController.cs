@@ -450,7 +450,15 @@ public class UploadController : Controller
             //    fileName = "Prism - Client Bill Sheet.xlsx";
             //    break;
             case (int)CommonConst.ImportFileType.InHealthDTR_LIS_Master:
-                fileName = "LIS_Order_Report.xlsx";
+                fileName = "InHealth_DTR_LIS_Master.xlsx";
+                break;
+            case (int)CommonConst.ImportFileType.Nexum_Claim_Scrubbing_DTR:
+            case (int)CommonConst.ImportFileType.Nexum_Claim_Scrubbing_IH:
+                fileName = "Nexum Claim Scrubbing.xlsx";
+                break;
+            case (int)CommonConst.ImportFileType.Nexum_Preprocessing_DTR:
+            case (int)CommonConst.ImportFileType.Nexum_Preprocessing_IH:
+                fileName = "Nexum Preprocessing.xlsx";
                 break;
         }
 

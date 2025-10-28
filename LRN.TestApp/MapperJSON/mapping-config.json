@@ -41,6 +41,11 @@
       "FileType": 405
     },
     {
+      "FileIdentifier": "Denail Mapper",
+      "JsonMappingPath": "DenailCodeMapper.json",
+      "FileType": 406
+    },
+    {
       "FileIdentifier": "Diagnose Order LIS",
       "JsonMappingPath": "Order_LIS.json",
       "FileType": 9

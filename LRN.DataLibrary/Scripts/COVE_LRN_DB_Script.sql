@@ -1,5 +1,8 @@
 ﻿USE [CoveLRN]
 GO
+/****** Object:  StoredProcedure [dbo].[usp_GetDenialDetails]******/
+DROP PROCEDURE [dbo].[usp_GetDenialDetails]
+GO
 /****** Object:  StoredProcedure [dbo].[SP_UpdateLIS_Statuses]******/
 DROP PROCEDURE [dbo].[SP_UpdateLIS_Statuses]
 GO
@@ -47,6 +50,9 @@ DROP PROCEDURE [dbo].[sp_GetProductionLineLevelReport]
 GO
 /****** Object:  StoredProcedure [dbo].[sp_GetLISMasterReportByDateRange]******/
 DROP PROCEDURE [dbo].[sp_GetLISMasterReportByDateRange]
+GO
+/****** Object:  StoredProcedure [dbo].[sp_GetDenialActionReport]******/
+DROP PROCEDURE [dbo].[sp_GetDenialActionReport]
 GO
 /****** Object:  StoredProcedure [dbo].[sp_GetCollectionReport]******/
 DROP PROCEDURE [dbo].[sp_GetCollectionReport]
@@ -213,6 +219,8 @@ GO
 ALTER TABLE [dbo].[DenialTrackingMaster] DROP CONSTRAINT [DF__DenialTra__Updat__290DD9B9]
 GO
 ALTER TABLE [dbo].[DenialTrackingMaster] DROP CONSTRAINT [DF__DenialTra__Creat__2819B580]
+GO
+ALTER TABLE [dbo].[DenialCodeMapper] DROP CONSTRAINT [DF__DenialCod__Creat__02491253]
 GO
 ALTER TABLE [dbo].[CustomCollectionStaging] DROP CONSTRAINT [DF__CustomCol__Impot__125F7E8B]
 GO
@@ -416,6 +424,10 @@ GO
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DenialTrackingStaging]') AND type in (N'U'))
 DROP TABLE [dbo].[DenialTrackingStaging]
 GO
+/****** Object:  Table [dbo].[DenialCodeMapper]******/
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DenialCodeMapper]') AND type in (N'U'))
+DROP TABLE [dbo].[DenialCodeMapper]
+GO
 /****** Object:  Table [dbo].[CustomCollectionStaging]******/
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CustomCollectionStaging]') AND type in (N'U'))
 DROP TABLE [dbo].[CustomCollectionStaging]
@@ -479,6 +491,12 @@ DROP TABLE [dbo].[ClaimDenialCodes]
 GO
 /****** Object:  UserDefinedFunction [dbo].[GetUniqueICD10Codes]******/
 DROP FUNCTION [dbo].[GetUniqueICD10Codes]
+GO
+/****** Object:  UserDefinedFunction [dbo].[GetOrignaltDenailCodeByVisitNumber]******/
+DROP FUNCTION [dbo].[GetOrignaltDenailCodeByVisitNumber]
+GO
+/****** Object:  UserDefinedFunction [dbo].[GetOriginalDenailCodeByVisitCPT]******/
+DROP FUNCTION [dbo].[GetOriginalDenailCodeByVisitCPT]
 GO
 /****** Object:  UserDefinedFunction [dbo].[GetDenailCodeByVisitNumber]******/
 DROP FUNCTION [dbo].[GetDenailCodeByVisitNumber]
@@ -974,6 +992,115 @@ BEGIN
         FROM Tokenized
             WHERE Code NOT IN ('CO45','CO253','CO1','CO2','CO3','PR1','PR2','PR3','PR45','PR253','PI45','PI1','PI2','PI3',
 							'PI253','CO 45','CO 253','CO 1','CO 2','CO 3','PR 1','PR 2','PR 3','PR 45','PR 253','PI 253','PI 45','PI 1','PI 2','PI 3')
+        GROUP BY Code
+    )
+    SELECT @Result = STRING_AGG(Code, ';') WITHIN GROUP (ORDER BY Code)
+    FROM Filtered;
+
+    RETURN @Result;
+END
+GO
+/****** Object:  UserDefinedFunction [dbo].[GetOriginalDenailCodeByVisitCPT]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE FUNCTION [dbo].[GetOriginalDenailCodeByVisitCPT] (@visitno VARCHAR(100),@cptCode VARCHAR(30))
+RETURNS NVARCHAR(MAX)
+AS
+BEGIN
+   DECLARE @Result NVARCHAR(MAX);
+
+    WITH CTE_DenailMaster AS
+    (
+        SELECT
+            VisitNumber,
+            CPTCodes,
+            -- Use normalized date if you created it; otherwise keep PaymentDate
+            PaymentDate = ISNULL(PaymentDate, TRY_CONVERT(date, PaymentDate)),
+            STRING_AGG(PaymentReasonCode, ';') AS PaymentReasonCode
+        FROM dbo.DenialTrackingMaster
+        WHERE VisitNumber = @visitno and CPTCodes = @cptCode
+          AND PaymentReasonCode IS NOT NULL
+        GROUP BY VisitNumber, CPTCodes,
+                 ISNULL(PaymentDate, TRY_CONVERT(date, PaymentDate))
+    ),
+    CTE_Denial AS
+    (
+        SELECT VisitNumber, CPTCodes, PaymentReasonCode, PaymentDate,
+               ROW_NUMBER() OVER (PARTITION BY VisitNumber, CPTCodes
+                                  ORDER BY PaymentDate DESC) AS RowNumByLatestPayment
+        FROM CTE_DenailMaster
+    ),
+    Tokenized AS
+    (
+        SELECT DISTINCT TRIM(s.value) AS Code, PaymentDate
+        FROM CTE_Denial d
+        CROSS APPLY STRING_SPLIT(d.PaymentReasonCode, ';') AS s
+        WHERE d.RowNumByLatestPayment = 1
+          AND TRIM(s.value) <> ''
+    ),
+    Filtered AS
+    (
+        SELECT Code, MAX(PaymentDate) AS PaymentDate
+        FROM Tokenized
+       -- WHERE Code NOT IN ('CO45','CO253','CO1','CO2','CO3','PR1','PR2','PR3','PR45','PR253','PI45','PI1','PI2','PI3',
+							--'PI253','CO 45','CO 253','CO 1','CO 2','CO 3','PR 1','PR 2','PR 3','PR 45','PR 253','PI 253','PI 45','PI 1','PI 2','PI 3')
+        GROUP BY Code
+    )
+    SELECT @Result = STRING_AGG(Code, ';') WITHIN GROUP (ORDER BY Code)
+    FROM Filtered;
+
+    RETURN @Result;
+END
+GO
+/****** Object:  UserDefinedFunction [dbo].[GetOrignaltDenailCodeByVisitNumber]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE FUNCTION [dbo].[GetOrignaltDenailCodeByVisitNumber] (@visitno VARCHAR(100))
+RETURNS NVARCHAR(MAX)
+AS
+BEGIN
+    DECLARE @Result NVARCHAR(MAX);
+
+    WITH CTE_DenailMaster AS
+    (
+        SELECT
+            VisitNumber,
+            CPTCodes,
+            -- Use normalized date if you created it; otherwise keep PaymentDate
+            PaymentDate = ISNULL(PaymentDate, TRY_CONVERT(date, PaymentDate)),
+            STRING_AGG(PaymentReasonCode, ';') AS PaymentReasonCode
+        FROM dbo.DenialTrackingMaster
+        WHERE VisitNumber = @visitno
+          AND PaymentReasonCode IS NOT NULL
+        GROUP BY VisitNumber, CPTCodes,
+                 ISNULL(PaymentDate, TRY_CONVERT(date, PaymentDate))
+    ),
+    CTE_Denial AS
+    (
+        SELECT VisitNumber, CPTCodes, PaymentReasonCode, PaymentDate,
+               ROW_NUMBER() OVER (PARTITION BY VisitNumber, CPTCodes
+                                  ORDER BY PaymentDate DESC) AS RowNumByLatestPayment
+        FROM CTE_DenailMaster
+    ),
+    Tokenized AS
+    (
+        SELECT DISTINCT TRIM(s.value) AS Code, PaymentDate
+        FROM CTE_Denial d
+        CROSS APPLY STRING_SPLIT(d.PaymentReasonCode, ';') AS s
+        WHERE d.RowNumByLatestPayment = 1
+          AND TRIM(s.value) <> ''
+    ),
+    Filtered AS
+    (
+        SELECT Code, MAX(PaymentDate) AS PaymentDate
+        FROM Tokenized
+       --     WHERE Code NOT IN ('CO45','CO253','CO1','CO2','CO3','PR1','PR2','PR3','PR45','PR253','PI45','PI1','PI2','PI3',
+							--'PI253','CO 45','CO 253','CO 1','CO 2','CO 3','PR 1','PR 2','PR 3','PR 45','PR 253','PI 253','PI 45','PI 1','PI 2','PI 3')
         GROUP BY Code
     )
     SELECT @Result = STRING_AGG(Code, ';') WITHIN GROUP (ORDER BY Code)
@@ -1700,6 +1827,26 @@ PRIMARY KEY CLUSTERED
 	[CCWId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[DenialCodeMapper]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[DenialCodeMapper](
+	[DenialMapperId] [int] IDENTITY(1,1) NOT NULL,
+	[DenialCode] [nvarchar](20) NOT NULL,
+	[DenialDescription] [nvarchar](max) NULL,
+	[ReplacementDescrp] [nvarchar](255) NULL,
+	[DenialComment] [nvarchar](255) NULL,
+	[ActionComment] [nvarchar](255) NULL,
+	[CreateOn] [datetime] NULL,
+	[ImportedFileID] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[DenialMapperId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
 /****** Object:  Table [dbo].[DenialTrackingStaging]******/
 SET ANSI_NULLS ON
@@ -2620,6 +2767,8 @@ ALTER TABLE [dbo].[CPTCodeMaster] ADD  DEFAULT (getdate()) FOR [CreatedOn]
 GO
 ALTER TABLE [dbo].[CustomCollectionStaging] ADD  DEFAULT (getdate()) FOR [ImpotedOn]
 GO
+ALTER TABLE [dbo].[DenialCodeMapper] ADD  DEFAULT (getdate()) FOR [CreateOn]
+GO
 ALTER TABLE [dbo].[DenialTrackingMaster] ADD  DEFAULT (getdate()) FOR [CreateOn]
 GO
 ALTER TABLE [dbo].[DenialTrackingMaster] ADD  DEFAULT (getdate()) FOR [UpdatedOn]
@@ -3368,7 +3517,7 @@ BEGIN
             DenailCode,
     CASE
 -------Rule Id : 1 Fully Adjusted: Total Charge = Carrier WO No denial code
-WHEN FirstBillDate IS NOT NULL and BilledAmount = InsuranceAdjustment or BilledAmount = (InsuranceAdjustment + PatientAdjustment) Or BilledAmount = PatientAdjustment  and DenailCode IS NULL THEN 'Fully Adjusted' 
+WHEN FirstBillDate IS NOT NULL and (BilledAmount = InsuranceAdjustment OR BilledAmount = (InsuranceAdjustment + PatientAdjustment) OR BilledAmount = PatientAdjustment) and DenailCode IS NULL THEN 'Fully Adjusted' 
 
 -------Rule Id : 2 Fully Denied: First Billed Date = Date AND Denial Code = Code AND Total Charge = Carrier Balance
 WHEN FirstBillDate IS NOT NULL and DenailCode is not null and BilledAmount = InsuranceBalance  THEN 'Fully Denied' 
@@ -3401,35 +3550,35 @@ and TotalBalance = InsuranceBalance THEN 'Partially Denied'
 -------Rule Id : 11 Patient Payment: First Billed = Date AND Carrier Payment = 0 AND Patient Payment > 0 AND Carrier Balance = 0
 WHEN FirstBillDate IS NOT NULL and InsurancePayment = 0 and PatientPaidAmount > 0 and InsuranceBalance = 0 THEN 'Patient Payment'
 
--------Rule Id : 12 Unbilled: First Billed = Blank AND Total Charge = Carrier Balance 
+-------Rule Id : 12 Patient Payment	First Billed = Date AND Carrier Payment = 0 AND Patient Payment > 0 AND Carrier Balance > 0
+WHEN FirstBillDate IS NOT NULL and InsurancePayment = 0 and PatientPaidAmount > 0 and InsuranceBalance > 0 THEN 'Patient Payment'
+
+-------Rule Id : 13 Unbilled	First Billed = Blank AND Total Charge = Carrier Balance AND CPT Code not equal to 99999
 WHEN FirstBillDate IS NULL and BilledAmount = InsuranceBalance  and  CPTCode NOT LIKE '%99999%' THEN 'Unbilled'
 
--------Rule Id : 13 Unbilled: Fully Adjusted: First Billed = Blank AND Total Charge = Carrier WO
-WHEN FirstBillDate IS NULL and BilledAmount = InsuranceAdjustment  THEN 'Unbilled - Fully Adjusted'
+-------Rule Id : 14 Unbilled - Fully Adjusted First Billed = Blank AND Total Charge = Carrier WO or Total Charge = Patient WO or Total Charge = Carrier WO + Patient WO AND CPT Code not equal to 99999
+WHEN FirstBillDate IS NULL and BilledAmount = InsuranceAdjustment OR BilledAmount = PatientAdjustment  OR BilledAmount = (InsuranceAdjustment + PatientAdjustment) AND CPTCode NOT LIKE '%99999%' THEN 'Unbilled - Fully Adjusted'
 
--------Rule Id : 14 Unbilled - Client: First Billed = Blank  AND CPT code = 99999 AND Total Charge = Carrier Balance
+-------Rule Id : 15 Unbilled - Client	First Billed = Blank  AND CPT code = 99999 AND Total Charge = Carrier Balance
 WHEN FirstBillDate IS NULL and  CPTCode LIKE '%99999%' and BilledAmount = InsuranceBalance  THEN 'Unbilled - Client'
 
--------Rule Id : 15 Partially Adjusted: First Billed = Date AND Carrier Payment = 0 AND Patient Payment = 0 AND  Carrier WO > 0 AND Carrier Balance > 0 AND Denial Code = Blank
+-------Rule Id : 16 Partially Adjusted	First Billed = Date AND Carrier Payment = 0 AND Patient Payment = 0 AND  Carrier WO > 0 AND Carrier Balance > 0 AND Denial Code = Blank
 WHEN FirstBillDate IS NOT NULL AND InsurancePayment = 0 AND PatientPaidAmount = 0 AND InsuranceAdjustment > 0 AND InsuranceBalance > 0 AND DenailCode IS NULL THEN 'Partially Adjusted'
 
--------Rule Id : 16 Unbilled - Patient Payment: First Billed Date = Blank AND Carrier Payment = 0 AND Patient Payment > 0 AND Patient WO > = 0
+-------Rule Id : 17 Unbilled - Patient Payment	First Billed Date = Blank AND Carrier Payment = 0 AND Patient Payment > 0 AND Patient WO > = 0
 WHEN FirstBillDate IS NULL AND InsurancePayment = 0 AND PatientPaidAmount > 0 AND PatientAdjustment >= 0 THEN 'Unbilled - Patient Payment'
 
-
--------Rule Id : 17 Unbilled - Patient Balance: First Billed Date = Blank AND Carrier Payment = 0 AND Patient Balance > 0 AND Patient WO > = 0
+-------Rule Id : 18 Unbilled - Patient Balance	First Billed Date = Blank AND Carrier Payment = 0 AND Patient Balance > 0 AND Patient WO > = 0
 WHEN FirstBillDate IS NULL AND InsurancePayment = 0 AND PatientBalance > 0 AND PatientAdjustment >= 0 THEN 'Unbilled - Patient Balance'
 
--------Rule Id : 18	Partial Patient Payment:	First Billed = Date AND Carrier Payment = 0 AND Patient Payment > 0 AND Carrier Balance > 0 and Patient Balance=0
-WHEN FirstBillDate IS NOT NULL AND InsurancePayment = 0 AND PatientPaidAmount > 0 and PatientBalance = 0 AND InsuranceBalance > 0 THEN 'Partial Partial Payment'
+-------Rule Id : 19	Partial Patient Payment	First Billed = Date AND Carrier Payment = 0 AND Patient Payment > 0 AND Carrier Balance > 0  and Patient Balance=0
+WHEN FirstBillDate IS NOT NULL AND InsurancePayment = 0 AND PatientPaidAmount > 0 AND InsuranceBalance > 0 AND PatientBalance = 0 THEN 'Partial Patient Payment'
 
--------Rule Id : 19	Unbilled - Patient WO	First Billed Date = Blank AND Carrier Payment = 0 AND TotalCharge=Patient WO
+-------Rule Id : 20	Unbilled - Patient WO	First Billed Date = Blank AND Carrier Payment = 0 AND TotalCharge=Patient WO
 WHEN FirstBillDate IS NULL AND InsurancePayment = 0 AND BilledAmount =  PatientAdjustment  THEN 'Unbilled - Patient WO'
 
--------Rule Id :20	Partial Patient Responsibility:	First Billed = Date AND Carrier Payment = 0 AND Patient Payment = 0 AND Carrier Balance > 0  and Patient Balance > 0 
-WHEN FirstBillDate IS NOT NULL AND InsurancePayment = 0 AND PatientPaidAmount = 0 and InsuranceBalance > 0 and PatientBalance > 0   THEN 'Partial Patient Responsibility'
-
-
+-------Rule Id :21	Partial PartialResponsibility	First Billed = Date AND Carrier Payment = 0 AND Patient Payment = 0 AND Carrier Balance > 0  and Patient Balance > 0 
+WHEN FirstBillDate IS NOT NULL AND InsurancePayment = 0 AND PatientPaidAmount = 0 and InsuranceBalance > 0 and PatientBalance > 0 THEN 'Partial Patient Responsibility'
 
 ELSE 'Un Categorized' END ClaimStatus,
             GETDATE()
@@ -3760,6 +3909,159 @@ BEGIN
     WHERE md.rn = 1 order by FirstBillDate 
 
     DROP TABLE IF EXISTS #BillingMasterTemp, #TransactionMaster, #DenialCode;
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sp_GetDenialActionReport]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   PROCEDURE [dbo].[sp_GetDenialActionReport]
+    @CPTCode varchar(20) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    /*-------------------------
+      1) Seed rows
+    -------------------------*/
+    IF OBJECT_ID('tempdb..#DenialCodeMaster') IS NOT NULL DROP TABLE #DenialCodeMaster;
+    CREATE TABLE #DenialCodeMaster
+    (
+        VisitNumber   bigint         NOT NULL,
+        CPTCode       varchar(20)    NOT NULL,
+        PanelCarrier  nvarchar(100)  NULL,
+        BilledAmount  decimal(18,2)  NOT NULL,
+        DenialCode    varchar(512)   NULL
+    );
+
+    INSERT INTO #DenialCodeMaster (VisitNumber, CPTCode, PanelCarrier, BilledAmount, DenialCode)
+    SELECT DISTINCT
+        bm.VisitNumber,
+        bm.CPTCode,
+        bm.PanelCarrier,
+        CAST(bm.BilledAmount AS decimal(18,2)),
+        CAST(dbo.[GetOriginalDenailCodeByVisitCPT](bm.VisitNumber, bm.CPTCode) AS varchar(512))
+    FROM BillingMaster AS bm
+    WHERE (@CPTCode IS NULL OR bm.CPTCode = @CPTCode);
+
+    CREATE INDEX IX_DCMaster_VC
+      ON #DenialCodeMaster(VisitNumber, CPTCode)
+      INCLUDE (PanelCarrier, BilledAmount, DenialCode);
+
+    /*-------------------------
+      2) Split + dedupe per code;
+         allocate amount to first code only
+    -------------------------*/
+    IF OBJECT_ID('tempdb..#FinalDenial') IS NOT NULL DROP TABLE #FinalDenial;
+    CREATE TABLE #FinalDenial
+    (
+        VisitNumber   bigint        NOT NULL,
+        CPTCode       varchar(20)   NOT NULL,
+        DenialCode    varchar(32)   NOT NULL,
+        PanelCarrier  nvarchar(100) NULL,
+        BilledAmount  decimal(18,2) NOT NULL,  -- allocated to exactly one code
+        DenialCodeNum int           NULL
+    );
+
+    ;WITH Split AS
+    (
+        SELECT
+            t.VisitNumber,
+            t.CPTCode,
+            t.PanelCarrier,
+            t.BilledAmount,
+            LTRIM(RTRIM(s.value)) AS DenialCodeRaw,
+            ROW_NUMBER() OVER
+            (
+                PARTITION BY t.VisitNumber, t.CPTCode
+                ORDER BY LTRIM(RTRIM(s.value))
+            ) AS rn_first_for_amount,
+            ROW_NUMBER() OVER
+            (
+                PARTITION BY t.VisitNumber, t.CPTCode, LTRIM(RTRIM(s.value))
+                ORDER BY (SELECT 0)
+            ) AS rn_per_code           -- removes duplicates of the same code
+        FROM #DenialCodeMaster AS t
+        CROSS APPLY STRING_SPLIT(t.DenialCode, ';') AS s
+        WHERE t.DenialCode IS NOT NULL
+          AND LTRIM(RTRIM(s.value)) <> ''
+    )
+    INSERT INTO #FinalDenial (VisitNumber, CPTCode, DenialCode, PanelCarrier, BilledAmount, DenialCodeNum)
+    SELECT
+        VisitNumber,
+        CPTCode,
+        CAST(DenialCodeRaw AS varchar(32)) AS DenialCode,
+        PanelCarrier,
+        CASE WHEN rn_first_for_amount = 1 THEN BilledAmount ELSE CAST(0 AS decimal(18,2)) END AS BilledAmount,
+        TRY_CONVERT(int,
+            LEFT(
+                STUFF(DenialCodeRaw, 1, NULLIF(PATINDEX('%[0-9]%', DenialCodeRaw),0)-1, ''),
+                NULLIF(PATINDEX('%[^0-9]%', STUFF(DenialCodeRaw, 1, NULLIF(PATINDEX('%[0-9]%', DenialCodeRaw),0)-1, '') + 'X'),0)-1
+            )
+        ) AS DenialCodeNum
+    FROM Split
+    WHERE rn_per_code = 1;  -- keep only the first occurrence of the same denial code
+
+    CREATE INDEX IX_FinalDenial_VC
+      ON #FinalDenial(VisitNumber, CPTCode);
+
+    CREATE INDEX IX_FinalDenial_CodeNum
+      ON #FinalDenial(DenialCodeNum)
+      INCLUDE (DenialCode, PanelCarrier, BilledAmount);
+
+    CREATE INDEX IX_FinalDenial_CodeText
+      ON #FinalDenial(DenialCode)
+      INCLUDE (DenialCodeNum, PanelCarrier, BilledAmount);
+
+    /*-------------------------
+      3) Map with numeric-preferred, else text (never both)
+    -------------------------*/
+    ;WITH Mapped AS
+    (
+        SELECT
+            f.VisitNumber,
+            f.CPTCode,
+            f.DenialCode,
+            f.PanelCarrier,
+            f.BilledAmount,
+            /* prefer numeric match when it exists */
+            COALESCE(m_num.ReplacementDescrp, m_txt.ReplacementDescrp) AS ReplacementDescrp,
+            COALESCE(m_num.DenialDescription, m_txt.DenialDescription) AS DenialDescription,
+            COALESCE(m_num.ActionComment,     m_txt.ActionComment)     AS ActionComment,
+            COALESCE(m_num.DenialComment,     m_txt.DenialComment)     AS DenialComment
+        FROM #FinalDenial AS f
+        /* numeric match candidate */
+        OUTER APPLY
+        (
+            SELECT TOP (1) dm.*
+            FROM DenialCodeMapper AS dm
+            WHERE f.DenialCodeNum IS NOT NULL
+              AND TRY_CONVERT(int, dm.DenialCode) = f.DenialCodeNum
+            ORDER BY dm.DenialCode  -- or dm.Precedence if you have one
+        ) AS m_num
+        /* text match candidate; used only if numeric wasn't found */
+        OUTER APPLY
+        (
+            SELECT TOP (1) dm.*
+            FROM DenialCodeMapper AS dm
+            WHERE (m_num.DenialCode IS NULL)    -- block when numeric match exists
+              AND dm.DenialCode = f.DenialCode
+            ORDER BY dm.DenialCode  -- or dm.Precedence
+        ) AS m_txt
+    )
+    SELECT
+        VisitNumber,
+        CPTCode,
+        DenialCode,
+        PanelCarrier,
+        BilledAmount,
+        ReplacementDescrp,
+        DenialDescription,
+        ActionComment,
+        DenialComment
+    FROM Mapped
+    ORDER BY VisitNumber, CPTCode, DenialCode;
 END
 GO
 /****** Object:  StoredProcedure [dbo].[sp_GetLISMasterReportByDateRange]******/
@@ -5628,4 +5930,125 @@ SET
 		  
 		--UPDATE LISMaster SET BillingSubStatus = 'Deleted' Where StatusCode = 'Deleted'
 	END
+GO
+/****** Object:  StoredProcedure [dbo].[usp_GetDenialDetails]******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   PROCEDURE [dbo].[usp_GetDenialDetails]
+    @PanelCarrier   varchar(100)  = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    /*========================
+      1) Seed input rows
+    ========================*/
+    DROP TABLE IF EXISTS #DenialCodeMaster;
+
+    SELECT DISTINCT
+        bm.VisitNumber,
+        bm.CPTCode,
+        bm.PanelCarrier,
+        CAST(bm.BilledAmount AS decimal(18,2)) AS BilledAmount,
+        dbo.[GetOriginalDenailCodeByVisitCPT](bm.VisitNumber, bm.CPTCode) AS DenialCode
+    INTO #DenialCodeMaster
+    FROM BillingMaster AS bm
+    WHERE (@PanelCarrier IS NULL OR bm.PanelCarrier = @PanelCarrier);
+
+    /* Covering index for later split/join */
+    CREATE INDEX IX_DCMaster_VC ON #DenialCodeMaster(VisitNumber, CPTCode) INCLUDE (PanelCarrier, BilledAmount, DenialCode);
+
+    /*========================
+      2) Split DenialCode; assign amount only to first row per (VisitNumber, CPTCode)
+         NOTE: Using deterministic ORDER BY value for rn; adjust if you prefer ordinal order.
+    ========================*/
+    DROP TABLE IF EXISTS #FinalDenial;
+
+    WITH Split AS
+    (
+        SELECT
+            t.VisitNumber,
+            t.CPTCode,
+            t.PanelCarrier,
+            t.BilledAmount,
+            LTRIM(RTRIM(s.value)) AS DenialCode,
+            ROW_NUMBER() OVER (
+                PARTITION BY t.VisitNumber, t.CPTCode
+                ORDER BY LTRIM(RTRIM(s.value))  -- deterministic "first"
+            ) AS rn
+        FROM #DenialCodeMaster AS t
+        CROSS APPLY STRING_SPLIT(t.DenialCode, ';') AS s
+        WHERE t.DenialCode IS NOT NULL
+          AND LTRIM(RTRIM(s.value)) <> ''
+    )
+    SELECT
+        VisitNumber,
+        CPTCode,
+        DenialCode,
+        PanelCarrier,
+        CASE WHEN rn = 1 THEN BilledAmount ELSE CAST(0 AS decimal(18,2)) END AS BilledAmount,
+        -- Extract leading integer portion once (NULL if none):
+        TRY_CONVERT(int,
+            LEFT(
+                STUFF(DenialCode, 1, NULLIF(PATINDEX('%[0-9]%', DenialCode),0)-1, ''),
+                NULLIF(PATINDEX('%[^0-9]%', STUFF(DenialCode, 1, NULLIF(PATINDEX('%[0-9]%', DenialCode),0)-1, '') + 'X'),0)-1
+            )
+        ) AS DenialCodeNum
+    INTO #FinalDenial
+    FROM Split;
+
+    /* Index to speed mapping */
+    CREATE INDEX IX_FinalDenial_VC ON #FinalDenial(VisitNumber, CPTCode);
+    CREATE INDEX IX_FinalDenial_Code ON #FinalDenial(DenialCodeNum) INCLUDE (DenialCode, PanelCarrier, BilledAmount);
+    CREATE INDEX IX_FinalDenial_CodeText ON #FinalDenial(DenialCode) INCLUDE (DenialCodeNum, PanelCarrier, BilledAmount);
+
+    /*========================
+      3) Map to DenialCodeMapper with ONE pass (no UNION)
+         - Prefer numeric match when both exist; else fall back to text match.
+         - This keeps results disjoint and avoids amount duplication.
+    ========================*/
+    ;WITH Mapped AS
+    (
+        SELECT
+            f.VisitNumber,
+            f.CPTCode,
+            f.DenialCode,
+            f.PanelCarrier,
+            f.BilledAmount,
+            m.ReplacementDescrp,
+            m.DenialDescription,
+            m.ActionComment,
+            m.DenialComment
+        FROM #FinalDenial AS f
+        OUTER APPLY
+        (
+            /* First try numeric match (only when both sides numeric) */
+            SELECT TOP (1) dm.*
+            FROM DenialCodeMapper AS dm
+            WHERE f.DenialCodeNum IS NOT NULL
+              AND TRY_CONVERT(int, dm.DenialCode) = f.DenialCodeNum
+
+            UNION ALL
+
+            /* Fallback to exact text code match */
+            SELECT TOP (1) dm.*
+            FROM DenialCodeMapper AS dm
+            WHERE dm.DenialCode = f.DenialCode
+        ) AS m
+    )
+    SELECT
+        VisitNumber,
+        CPTCode,
+        DenialCode,
+        PanelCarrier,
+        BilledAmount,
+        ReplacementDescrp,
+        DenialDescription,
+        ActionComment,
+        DenialComment
+    FROM Mapped
+    ORDER BY VisitNumber, CPTCode, DenialCode;
+END
 GO

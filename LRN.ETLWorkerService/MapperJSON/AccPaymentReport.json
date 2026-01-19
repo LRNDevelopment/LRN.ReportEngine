@@ -1,156 +1,156 @@
 {
-	"SheetName": "",
-	"TargetTable": "dbo.AccPaymentReportStaging",
-	"Columns": [
-		{
-			"ExcelColumn": "RecordId",
-			"SqlColumn": "RecordId",
-			"DataType": "string",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "AccessionNo",
-			"SqlColumn": "AccessionNo",
-			"DataType": "string",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "Category",
-			"SqlColumn": "Category",
-			"DataType": "string",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "BillStatus",
-			"SqlColumn": "BillingStatus",
-			"DataType": "string",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "Billed Application",
-			"SqlColumn": "BilledApplication",
-			"DataType": "string",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "AMD Visit#",
-			"SqlColumn": "AMDVisitNumber",
-			"DataType": "int",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "CMD Visit#",
-			"SqlColumn": "CMDVisitNumber",
-			"DataType": "int",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "CMD Visit#",
-			"SqlColumn": "CMDVisitNumber",
-			"DataType": "int",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "FirstBilledDate",
-			"SqlColumn": "FirstBilledDate",
-			"DataType": "date",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "AMD Insurance",
-			"SqlColumn": "AMD_Insurance",
-			"DataType": "string",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "$Charged",
-			"SqlColumn": "BilledAmount",
-			"DataType": "int",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "$Paid",
-			"SqlColumn": "PaidAmount",
-			"DataType": "decimal",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "$Patient Balance",
-			"SqlColumn": "PatientBalance",
-			"DataType": "int",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "Case Type",
-			"SqlColumn": "Case_Type",
-			"DataType": "string",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "Paid Status",
-			"SqlColumn": "Paid_Status",
-			"DataType": "string",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "Requistion_Type",
-			"SqlColumn": "Requistion_Type",
-			"DataType": "string",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "PhysicianName",
-			"SqlColumn": "PhysicianName",
-			"DataType": "string",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "Panel",
-			"SqlColumn": "Panel",
-			"DataType": "string",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "Validated_Date",
-			"SqlColumn": "Validated_Date",
-			"DataType": "datetime",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "FacilityName",
-			"SqlColumn": "FacilityName",
-			"DataType": "string",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "DateOfCollection",
-			"SqlColumn": "DateOfCollection",
-			"DataType": "datetime",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "SaleRepName",
-			"SqlColumn": "SaleRepName",
-			"DataType": "decimal",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "Status",
-			"SqlColumn": "SpecimenStatus",
-			"DataType": "string",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "Insurance_Type",
-			"SqlColumn": "Insurance_Type",
-			"DataType": "decimal",
-			"Required": false
-		},
-		{
-			"ExcelColumn": "ImportedFileID",
-			"SqlColumn": "ImportedFileID",
-			"DataType": "int",
-			"Required": false
-		}
-	]
+  "SheetName": "",
+  "TargetTable": "dbo.AccPaymentReportStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "RecordId",
+      "SqlColumn": "RecordId",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "AccessionNo",
+      "SqlColumn": "AccessionNo",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Category",
+      "SqlColumn": "Category",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "BillStatus",
+      "SqlColumn": "BillingStatus",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Billed Application",
+      "SqlColumn": "BilledApplication",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "AMD Visit#",
+      "SqlColumn": "AMDVisitNumber",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "CMD Visit#",
+      "SqlColumn": "CMDVisitNumber",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "CMD Visit#",
+      "SqlColumn": "CMDVisitNumber",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "FirstBilledDate",
+      "SqlColumn": "FirstBilledDate",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "AMD Insurance",
+      "SqlColumn": "AMD_Insurance",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "$Charged",
+      "SqlColumn": "BilledAmount",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "$Paid",
+      "SqlColumn": "PaidAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "$Patient Balance",
+      "SqlColumn": "PatientBalance",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Case Type",
+      "SqlColumn": "Case_Type",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Paid Status",
+      "SqlColumn": "Paid_Status",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Requistion_Type",
+      "SqlColumn": "Requistion_Type",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PhysicianName",
+      "SqlColumn": "PhysicianName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Panel",
+      "SqlColumn": "Panel",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Validated_Date",
+      "SqlColumn": "Validated_Date",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "FacilityName",
+      "SqlColumn": "FacilityName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DateOfCollection",
+      "SqlColumn": "DateOfCollection",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "SaleRepName",
+      "SqlColumn": "SaleRepName",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Status",
+      "SqlColumn": "SpecimenStatus",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Insurance_Type",
+      "SqlColumn": "Insurance_Type",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
 }

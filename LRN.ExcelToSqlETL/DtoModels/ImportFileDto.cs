@@ -33,5 +33,7 @@ namespace LRN.ExcelToSqlETL.Core.DtoModels
         public string ImportFilePath { get; set; }
 
         public int FileStatusId { get; set; }
+
+        public int IsMasterImport { get; set; }
     }
 }

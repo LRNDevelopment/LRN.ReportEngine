@@ -1,0 +1,18 @@
+{
+  "SheetName": "",
+  "TargetTable": "dbo.PanelGroup",
+  "Columns": [
+    {
+      "ExcelColumn": "Panel Group",
+      "SqlColumn": "PanelName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Order Info",
+      "SqlColumn": "OrderInfo",
+      "DataType": "string",
+      "Required": false
+    }
+  ]
+}

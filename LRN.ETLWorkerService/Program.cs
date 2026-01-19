@@ -34,7 +34,10 @@ namespace LRN.ETLWorkerService
 
                     // App services
                     services.AddAutoMapper(typeof(Program).Assembly);
-                    services.AddScoped<ILoggerService, LogManagerService>();
+                    //services.AddScoped<ILoggerService, LogManagerService>();
+                    services.AddSingleton<ILoggerService, LogManagerService>();
+
+
                     services.AddScoped<IExcelMapperLoader, JsonExcelMapperLoader>();
                     services.AddScoped<IFileReader, ExcelFileReader>();
                     services.AddScoped<IDataValidator, MappingValidator>();
@@ -66,6 +69,8 @@ namespace LRN.ETLWorkerService
             CommonConst.DownloadFilePath = config["FilePaths:DownloadFilePath"];
             CommonConst.CollectionTemplate = config["TemplatePath:CollectionTemplate"];
             CommonConst.ImportFilePath = config["FilePaths:ImportFilePath"];
+            CommonConst.MasterFilesPath = config["FilePaths:MasterFilesPath"];
+            CommonConst.ArchiveFilesPath = config["FilePaths:ArchiveFilesPath"];
         }
     }
 }

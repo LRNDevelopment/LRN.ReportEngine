@@ -1,23 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="ClosedXML" Version="0.104.2" />
-    <PackageReference Include="CsvHelper" Version="33.1.0" />
-	  <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.6" />
-	  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="ClosedXML" Version="0.105.0" />
+		<PackageReference Include="CsvHelper" Version="33.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.6" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\LRN.CommonLogger\LRN.CommonLogger.csproj" />
-    <ProjectReference Include="..\LRN.DataLibrary\LRN.DataLibrary.csproj" />
-    <ProjectReference Include="..\LRN.ExcelToSqlETL\LRN.ExcelToSqlETL.Core.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		
+		<ProjectReference Include="..\LRN.CommonLogger\LRN.CommonLogger.csproj" />
+		<ProjectReference Include="..\LRN.DataLibrary\LRN.DataLibrary.csproj" />
+		<ProjectReference Include="..\LRN.ExcelToSqlETL\LRN.ExcelToSqlETL.Core.csproj" />
+	</ItemGroup>
 
 </Project>

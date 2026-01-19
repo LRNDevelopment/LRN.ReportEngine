@@ -1,119 +1,174 @@
 {
-  "Mappings": [
-    {
-      "FileIdentifier": "LIS",
-      "JsonMappingPath": "COVE_LIS.json",
-      "FileType": 401
-    },
-    {
-      "FileIdentifier": "Collection",
-      "JsonMappingPath": "Custom_Collection.json",
-      "FileType": 402
-    },
-    {
-      "FileIdentifier": "Transaction",
-      "JsonMappingPath": "Transaction_Detail.json",
-      "FileType": 403
-    },
-    {
-      "FileIdentifier": "Visit",
-      "JsonMappingPath": "VisitAgainstAccession.json",
-      "FileType": 3
-    },
-    {
-      "FileIdentifier": "Panel",
-      "JsonMappingPath": "PanelMaster.json",
-      "FileType": 7
-    },
-    {
-      "FileIdentifier": "Prism Billing",
-      "JsonMappingPath": "PrismBillingSheel.json",
-      "FileType": 6
-    },
-    {
-      "FileIdentifier": "Denial",
-      "JsonMappingPath": "DenialTrackingDetail.json",
-      "FileType": 404
-    },
-    {
-      "FileIdentifier": "Payment",
-      "JsonMappingPath": "AccPaymentReport.json",
-      "FileType": 405
-    },
-    {
-      "FileIdentifier": "Denail Mapper",
-      "JsonMappingPath": "DenailCodeMapper.json",
-      "FileType": 406
-    },
-    {
-      "FileIdentifier": "Diagnose Order LIS",
-      "JsonMappingPath": "Order_LIS.json",
-      "FileType": 9
-    },
-    {
-      "FileIdentifier": "Diagnose Sample LIS",
-      "JsonMappingPath": "Diagnos_SampleLIS.json",
-      "FileType": 10
-    },
-    {
-      "FileIdentifier": "Client Billing Sheet",
-      "JsonMappingPath": "ClientBillingSheet.json",
-      "FileType": 11
-    },
-    {
-      "FileIdentifier": "InHealth LIS",
-      "JsonMappingPath": "InHealthLIS_mapping.json",
-      "FileType": 201
-    },
-    {
-      "FileIdentifier": "InHealth CCW",
-      "JsonMappingPath": "Custom_Collection.json",
-      "FileType": 202
-    },
-    {
-      "FileIdentifier": "DTR Payment Report",
-      "JsonMappingPath": "Custom_Collection.json",
-      "FileType": 203
-    },
-    {
-      "FileIdentifier": "Visit Against Accession",
-      "JsonMappingPath": "VisitAgainstAccession.json",
-      "FileType": 204
-    },
-    {
-      "FileIdentifier": "Transaction Detail Report",
-      "JsonMappingPath": "Transaction_Detail.json",
-      "FileType": 205
-    },
-    {
-      "FileIdentifier": "InHealth Denial Tracking",
-      "JsonMappingPath": "DenialTrackingDetail.json",
-      "FileType": 206
-    },
-    {
-      "FileIdentifier": "DTR Denail Tracking",
-      "JsonMappingPath": "DenialTrackingDetail.json",
-      "FileType": 207
-    },
-    {
-      "FileIdentifier": "Nexum Claim Scrubbing - DTR",
-      "JsonMappingPath": "Nexus_Scrupping_IHDTR.json",
-      "FileType": 208
-    },
-    {
-      "FileIdentifier": "Nexum Claim Scrubbing - IH",
-      "JsonMappingPath": "Nexus_Scrupping_IHDTR.json",
-      "FileType": 209
-    },
-    {
-      "FileIdentifier": "Nexum Preprocessing - DTR",
-      "JsonMappingPath": "Nexus_Preprocessing_IHDTR.json",
-      "FileType": 210
-    },
-    {
-      "FileIdentifier": "Nexum Preprocessing - IH",
-      "JsonMappingPath": "Nexus_Preprocessing_IHDTR.json",
-      "FileType": 211
-    }
-  ]
+	"Mappings": [
+		{
+			"FileIdentifier": "LIS",
+			"JsonMappingPath": "COVE_LIS.json",
+			"FileType": 401
+		},
+		{
+			"FileIdentifier": "Collection",
+			"JsonMappingPath": "Custom_Collection.json",
+			"FileType": 402
+		},
+		{
+			"FileIdentifier": "Transaction",
+			"JsonMappingPath": "Transaction_Detail.json",
+			"FileType": 403
+		},
+		{
+			"FileIdentifier": "Denial",
+			"JsonMappingPath": "DenialTrackingDetail.json",
+			"FileType": 404
+		},
+		{
+			"FileIdentifier": "Payment",
+			"JsonMappingPath": "AccPaymentReport.json",
+			"FileType": 405
+		},
+		{
+			"FileIdentifier": "Denail Mapper",
+			"JsonMappingPath": "DenailCodeMapper.json",
+			"FileType": 406
+		},
+		{
+			"FileIdentifier": "Commit Transaction Report",
+			"JsonMappingPath": "CoveCommitTransactionReport.json",
+			"FileType": 407
+		},
+		{
+			"FileIdentifier": "Commit Denial Report",
+			"JsonMappingPath": "CoveCommitDenialReport.json",
+			"FileType": 408
+		},
+		{
+			"FileIdentifier": "Diagnose Order LIS",
+			"JsonMappingPath": "Order_LIS.json",
+			"FileType": 9
+		},
+		{
+			"FileIdentifier": "Diagnose Sample LIS",
+			"JsonMappingPath": "Diagnos_SampleLIS.json",
+			"FileType": 10
+		},
+		{
+			"FileIdentifier": "Client Billing Sheet",
+			"JsonMappingPath": "ClientBillingSheet.json",
+			"FileType": 11
+		},
+		{
+			"FileIdentifier": "InHealth LIS",
+			"JsonMappingPath": "InHealthLIS_mapping.json",
+			"FileType": 201
+		},
+		{
+			"FileIdentifier": "InHealth CCW",
+			"JsonMappingPath": "Custom_Collection.json",
+			"FileType": 202
+		},
+		{
+			"FileIdentifier": "DTR Payment Report",
+			"JsonMappingPath": "Custom_Collection.json",
+			"FileType": 203
+		},
+		{
+			"FileIdentifier": "Visit Against Accession",
+			"JsonMappingPath": "VisitAgainstAccession.json",
+			"FileType": 204
+		},
+		{
+			"FileIdentifier": "Transaction Detail Report",
+			"JsonMappingPath": "Transaction_Detail.json",
+			"FileType": 205
+		},
+		{
+			"FileIdentifier": "InHealth Denial Tracking",
+			"JsonMappingPath": "DenialTrackingDetail.json",
+			"FileType": 206
+		},
+		{
+			"FileIdentifier": "DTR Denail Tracking",
+			"JsonMappingPath": "DenialTrackingDetail.json",
+			"FileType": 207
+		},
+		{
+			"FileIdentifier": "Nexum Claim Scrubbing - DTR",
+			"JsonMappingPath": "Nexus_Scrupping_IHDTR.json",
+			"FileType": 208
+		},
+		{
+			"FileIdentifier": "Nexum Claim Scrubbing - IH",
+			"JsonMappingPath": "Nexus_Scrupping_IHDTR.json",
+			"FileType": 209
+		},
+		{
+			"FileIdentifier": "Nexum Preprocessing - DTR",
+			"JsonMappingPath": "Nexus_Preprocessing_IHDTR.json",
+			"FileType": 210
+		},
+		{
+			"FileIdentifier": "Nexum Preprocessing - IH",
+			"JsonMappingPath": "Nexus_Preprocessing_IHDTR.json",
+			"FileType": 211
+		},
+		{
+			"FileIdentifier": "Bill Log by External Number Report",
+			"JsonMappingPath": "BillLogbyExternalNumberReport.json",
+			"FileType": 1802
+		},
+		{
+			"FileIdentifier": "Bill log by postdate report",
+			"JsonMappingPath": "BillLogByPostdateReport.json",
+			"FileType": 1803
+		},
+		{
+			"FileIdentifier": "Bill Log by Date of Service",
+			"JsonMappingPath": "BillLogbyDateofService.json",
+			"FileType": 1804
+		},
+		{
+			"FileIdentifier": "Payment Log by Patient Report",
+			"JsonMappingPath": "PaymentLogbyPatientReport.json",
+			"FileType": 1805
+		},
+		{
+			"FileIdentifier": "Adjustment Log By Date of Service",
+			"JsonMappingPath": "AdjustmentLogByDateofService.json",
+			"FileType": 1806
+		},
+		{
+			"FileIdentifier": "Insurance Aging by Date of Service",
+			"JsonMappingPath": "InsuranceAgingbyDateofService.json",
+			"FileType": 1807
+		},
+		{
+			"FileIdentifier": "Patient Aging by Date of Service",
+			"JsonMappingPath": "PatientAgingbyDateofService.json",
+			"FileType": 1808
+		},
+		{
+			"FileIdentifier": "Rejected Claims",
+			"JsonMappingPath": "RejectedClaims.json",
+			"FileType": 1809
+		},
+		{
+			"FileIdentifier": "Bill_Report_By_Collection_Date",
+			"JsonMappingPath": "BillByCollectionDate.json",
+			"FileType": 1810
+		},
+		{
+			"FileIdentifier": "Bill_Report_by_Received_Date",
+			"JsonMappingPath": "BillByReceiveDate.json",
+			"FileType": 1811
+		},
+		{
+			"FileIdentifier": "Result_Report_by_Collection_Date",
+			"JsonMappingPath": "ResultByCollectionDate.json",
+			"FileType": 1812
+		},
+		{
+			"FileIdentifier": "Result_Report_by_Received_Date_",
+			"JsonMappingPath": "ResultByReceivedDate.json",
+			"FileType": 1813
+		}
+	]
 }

@@ -1,0 +1,666 @@
+{
+  "SheetName": "",
+  "TargetTable": "dbo.LISStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "TestOrderHistory82_Id",
+      "SqlColumn": "TestOrderHistory82Id",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Name",
+      "SqlColumn": "Name",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "SampleID",
+      "SqlColumn": "SampleID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DocRequest",
+      "SqlColumn": "DocRequest",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "InAppeals",
+      "SqlColumn": "InAppeals",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ClaimDenied",
+      "SqlColumn": "ClaimDenied",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "UpdateDate",
+      "SqlColumn": "UpdateDate",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ClaimNote",
+      "SqlColumn": "ClaimNote",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Verified",
+      "SqlColumn": "Verified",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ReverifyBy",
+      "SqlColumn": "ReverifyBy",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PrimaryInsurance",
+      "SqlColumn": "PrimaryInsurance",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "InsuranceCode2",
+      "SqlColumn": "InsuranceCode2",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PayerCodeLookup",
+      "SqlColumn": "PayerCodeLookup",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PayerCodeLookup_Label",
+      "SqlColumn": "PayerCodeLookupLabel",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PrimaryPolicyInformation",
+      "SqlColumn": "PrimaryPolicyInformation",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Note",
+      "SqlColumn": "Note",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "BenefitsVerified",
+      "SqlColumn": "BenefitsVerified",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PVerifyCode",
+      "SqlColumn": "PVerifyCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "RequestBillingInfo",
+      "SqlColumn": "RequestBillingInfo",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "NoteToOfficeContact",
+      "SqlColumn": "NoteToOfficeContact",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Discovery",
+      "SqlColumn": "Discovery",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "EligibilityPortal",
+      "SqlColumn": "EligibilityPortal",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ClearinghouseName",
+      "SqlColumn": "ClearinghouseName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PortalName",
+      "SqlColumn": "PortalName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "HCPCS",
+      "SqlColumn": "HCPCS",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ICD10",
+      "SqlColumn": "ICD10",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PracticeType",
+      "SqlColumn": "PracticeType",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "NonCoveredToxCodes",
+      "SqlColumn": "NonCoveredToxCodes",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "SendToBilling",
+      "SqlColumn": "SendToBilling",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "HCPCS2",
+      "SqlColumn": "HCPCS2",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Insurance",
+      "SqlColumn": "Insurance",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "BillingLab2",
+      "SqlColumn": "BillingLab2",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "RegistrationID",
+      "SqlColumn": "RegistrationID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "WTHold",
+      "SqlColumn": "WTHold",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Rejected",
+      "SqlColumn": "Rejected",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PARRequired",
+      "SqlColumn": "PARRequired",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "AnnualTestCount",
+      "SqlColumn": "AnnualTestCount",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "RegisteredDate",
+      "SqlColumn": "RegisteredDate",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "FirstName",
+      "SqlColumn": "FirstName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "LastName",
+      "SqlColumn": "LastName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DateOfBirth",
+      "SqlColumn": "DateOfBirth",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Gender",
+      "SqlColumn": "Gender",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Race",
+      "SqlColumn": "Race",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Ethnicity",
+      "SqlColumn": "Ethnicity",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PatientID",
+      "SqlColumn": "PatientID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "StreetAddress",
+      "SqlColumn": "StreetAddress",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "City",
+      "SqlColumn": "City",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "State",
+      "SqlColumn": "State",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Zip",
+      "SqlColumn": "Zip",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PatientIDEntry",
+      "SqlColumn": "PatientIDEntry",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "SecondaryInsurance",
+      "SqlColumn": "SecondaryInsurance",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "SecondaryPolicyInformation",
+      "SqlColumn": "SecondaryPolicyInformation",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "VerifiedDate",
+      "SqlColumn": "VerifiedDate",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "NewPatient",
+      "SqlColumn": "NewPatient",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "EditPatient",
+      "SqlColumn": "EditPatient",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "LastTest",
+      "SqlColumn": "LastTest",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Order1",
+      "SqlColumn": "Order1",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Reflex",
+      "SqlColumn": "Reflex",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "TestCategory",
+      "SqlColumn": "TestCategory",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "EntryNumber",
+      "SqlColumn": "EntryNumber",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "CollectionMedia",
+      "SqlColumn": "CollectionMedia",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "CollectedBy",
+      "SqlColumn": "CollectedBy",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Medications",
+      "SqlColumn": "Medications",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "OrderReason",
+      "SqlColumn": "OrderReason",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "SpecimenType",
+      "SqlColumn": "SpecimenType",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Components",
+      "SqlColumn": "Components",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "OrderFormEntryNumber",
+      "SqlColumn": "OrderFormEntryNumber",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "CollectedTime",
+      "SqlColumn": "CollectedTime",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ElectronicSignature",
+      "SqlColumn": "ElectronicSignature",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Account",
+      "SqlColumn": "Account",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "AccountID",
+      "SqlColumn": "AccountID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ProviderLast",
+      "SqlColumn": "ProviderLast",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ProviderFirst",
+      "SqlColumn": "ProviderFirst",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "NPI",
+      "SqlColumn": "NPI",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ParentCompany",
+      "SqlColumn": "ParentCompany",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ParentAccountID",
+      "SqlColumn": "ParentAccountID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "AccountContactEmail",
+      "SqlColumn": "AccountContactEmail",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "RepEmail",
+      "SqlColumn": "RepEmail",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "OrderIPAddress",
+      "SqlColumn": "OrderIPAddress",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PerformingLab",
+      "SqlColumn": "PerformingLab",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PerformingLabAddress",
+      "SqlColumn": "PerformingLabAddress",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PerformingLabCLIA",
+      "SqlColumn": "PerformingLabCLIA",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "BillingLabCLIA",
+      "SqlColumn": "BillingLabCLIA",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ResultsPortal",
+      "SqlColumn": "ResultsPortal",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "BillingLabAddress",
+      "SqlColumn": "BillingLabAddress",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Division",
+      "SqlColumn": "Division",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "IHBillingForDTR",
+      "SqlColumn": "IHBillingForDTR",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "EditLink",
+      "SqlColumn": "EditLink",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "UploadToQbench",
+      "SqlColumn": "UploadToQbench",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "InsuranceCode",
+      "SqlColumn": "InsuranceCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "BillingLab",
+      "SqlColumn": "BillingLab",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "CPT",
+      "SqlColumn": "CPT",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PatientRegisterLink",
+      "SqlColumn": "PatientRegisterLink",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ReqLink",
+      "SqlColumn": "ReqLink",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ResultLink",
+      "SqlColumn": "ResultLink",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ToxRules1",
+      "SqlColumn": "ToxRules1",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ToxRules2",
+      "SqlColumn": "ToxRules2",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ToxRules3",
+      "SqlColumn": "ToxRules3",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ToxRules4",
+      "SqlColumn": "ToxRules4",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ToxRules5",
+      "SqlColumn": "ToxRules5",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ToxGate1",
+      "SqlColumn": "ToxGate1",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ToxGate2",
+      "SqlColumn": "ToxGate2",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ToxApproved",
+      "SqlColumn": "ToxApproved",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PolicyNumberCharacteristics",
+      "SqlColumn": "PolicyNumberCharacteristics",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ResultMatched",
+      "SqlColumn": "ResultMatched",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Entry_Status",
+      "SqlColumn": "EntryStatus",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Entry_DateCreated",
+      "SqlColumn": "EntryDatecreated",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Entry_DateSubmitted",
+      "SqlColumn": "EntryDatesubmitted",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Entry_DateUpdated",
+      "SqlColumn": "EntryDateupdated",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

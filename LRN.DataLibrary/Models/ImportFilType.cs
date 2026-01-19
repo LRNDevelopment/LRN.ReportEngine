@@ -12,4 +12,8 @@ public partial class ImportFilType
     public int LabId { get; set; }
 
     public bool? IsActive { get; set; }
+
+    public int SeqNo { get; set; }
+
+    public string TemplateFileName { get; set; }
 }

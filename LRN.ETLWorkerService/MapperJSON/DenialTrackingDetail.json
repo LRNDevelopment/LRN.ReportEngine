@@ -1,0 +1,144 @@
+{
+  "SheetName": "",
+  "TargetTable": "dbo.DenialTrackingStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "Provider",
+      "SqlColumn": "Provider",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Transaction Carrier Code",
+      "SqlColumn": "TransactionCarrierCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Financial Class",
+      "SqlColumn": "FinancialClass",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Payment Date",
+      "SqlColumn": "PaymentDate",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Payment Reason Code",
+      "SqlColumn": "PaymentReasonCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Payment Reason Description",
+      "SqlColumn": "PaymentReasonDescription",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Charge Code",
+      "SqlColumn": "ChargeCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient Name",
+      "SqlColumn": "PatientName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Service Date",
+      "SqlColumn": "ServiceDate",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Visit Number",
+      "SqlColumn": "VisitNumber",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Charge",
+      "SqlColumn": "Charge",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Total Balance",
+      "SqlColumn": "TotalBalance",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Total Adjustment",
+      "SqlColumn": "TotalAdjustment",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Reason Amount",
+      "SqlColumn": "ReasonAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "User",
+      "SqlColumn": "DenialUser",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Last Action Date",
+      "SqlColumn": "LastActionDate",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Last Action",
+      "SqlColumn": "LastAction",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Next Action Date",
+      "SqlColumn": "NextActionDate",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Next Action",
+      "SqlColumn": "NextAction",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Note",
+      "SqlColumn": "Note",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Denial Category Code",
+      "SqlColumn": "DenialCategoryCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Denial Category Description",
+      "SqlColumn": "DenialCategoryDescription",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

@@ -1,4 +1,9 @@
 ﻿using Common.Logging;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using LRN.DataLibrary.Repository.Interfaces;
 using LRN.ExcelToSqlETL.Core.DtoModels;
 using LRN.ExcelToSqlETL.Core.Interface;
@@ -20,8 +25,6 @@ namespace LRN.ExcelETL.Service.Services
         private readonly IConfiguration _config;
         private readonly IImportFilesRepository _importRepo;
         private readonly IFileCSVReader _fileCSVReader;
-        private static List<FileLog> ImportLog;
-        private static int _fileId = 0;
 
         public ExcelEtlProcessor(
             IExcelMapperLoader mapper,
@@ -40,113 +43,142 @@ namespace LRN.ExcelETL.Service.Services
             _logger = logger;
             _config = config;
             _importRepo = importRepo;
-            ImportLog = new List<FileLog>();
             _fileCSVReader = fileCSVReader;
         }
 
-        private async Task HandleFileProcessingAsync(ImportFileDto fileDto, string fileName, string jsonPath)
+        private async Task HandleFileProcessingAsync(
+            ImportFileDto fileDto,
+            string fileName,
+            string jsonPath,
+            int fileId,
+            List<FileLog> importLog)
         {
             try
             {
                 _logger.Info($"Processing file {fileName}...");
+                importLog.Add(new FileLog { ImportFileId = fileId, LogType = "Info", LogMessage = $"Processing file {fileName}..." });
+
                 var mapping = _mapper.LoadMapping(jsonPath);
 
                 using var stream = File.OpenRead(fileDto.ImportFilePath);
 
                 List<ExcelReadResult> readResults;
-                if (Path.GetExtension(fileDto.ImportFilePath).ToLower() == ".csv")
+                if (Path.GetExtension(fileDto.ImportFilePath).ToLowerInvariant() == ".csv")
                 {
-                    readResults = await _fileCSVReader.ReadAsync(stream, mapping, _fileId);
+                    readResults = await _fileCSVReader.ReadAsync(stream, mapping, fileId);
                 }
                 else
                 {
-                    readResults = await _reader.ReadAsync(stream, mapping, _fileId);
+                    readResults = await _reader.ReadAsync(stream, mapping, fileId);
                 }
 
-                if (readResults != null && !readResults.Any(c => c.IsFailedRead))
+                // Reader already logs detailed header mismatch / missing required columns.
+                if (readResults == null || readResults.Any(r => r.IsFailedRead))
                 {
-                    foreach (var result in readResults)
-                    {
-                        var validation = await _validator.Validate(result.Data, mapping, _fileId);
-                        if (!validation.IsValid)
-                        {
-                            foreach (var error in validation.Errors)
-                            {
-                                ImportLog.Add(new FileLog { ImportFileId = _fileId, LogType = "Error", LogMessage = $"Validation error in {fileName}: {error}" });
-                                _logger.Error($"Validation error in {fileName}: {error}");
-                            }
+                    var msg = $"File skipped (template/header mismatch or missing required columns): {fileName}";
+                    _logger.Error(msg);
+                    importLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = msg });
 
-                            fileDto.ExcelRowCount = 0;
-                            fileDto.ImportedRowCount = 0;
-                            fileDto.FileStatus = (int)FileStatusEnum.ImportFailed;
-                            await _importRepo.UpdateFileAsync(fileDto);
-                            continue;
-                        }
-
-                        if (result.Data.Columns.Contains("ImportedFileID"))
-                        {
-                            foreach (DataRow row in result.Data.Rows)
-                            {
-                                row["ImportedFileID"] = fileDto.ImportedFileId;
-                            }
-                        }
-                        FindPotentialProblemColumns(result.Data);
-                        await _importer.ImportAsync(result.Data, mapping.TargetTable, _fileId);
-
-                        fileDto.ExcelRowCount = result.TotalRows;
-                        fileDto.ImportedRowCount = result.ImportedRows;
-                        fileDto.FileStatus = (int)FileStatusEnum.ImportInProgresss;
-
-                        await _importRepo.UpdateFileAsync(fileDto);
-                        await _importRepo.ProcessImportFilesAsync(fileDto);
-
-                        _logger.Info($"Imported {result.ImportedRows} rows to {mapping.TargetTable}.");
-                    }
-                }
-                else
-                {
-                    _logger.Error($"Error processing file {fileName}");
+                    fileDto.ExcelRowCount = 0;
+                    fileDto.ImportedRowCount = 0;
                     fileDto.FileStatus = (int)FileStatusEnum.ImportFailed;
                     await _importRepo.UpdateFileAsync(fileDto);
+                    return;
+                }
+
+                foreach (var result in readResults)
+                {
+                    // Validate (MappingValidator no longer logs to DB, avoids duplicates)
+                    var validation = await _validator.Validate(result.Data, mapping, fileId);
+
+                    if (!validation.IsValid)
+                    {
+                        foreach (var error in validation.Errors)
+                        {
+                            var msg = $"Validation error in {fileName}: {error}";
+                            importLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = msg });
+                            _logger.Error(msg);
+                        }
+
+                        fileDto.ExcelRowCount = 0;
+                        fileDto.ImportedRowCount = 0;
+                        fileDto.FileStatus = (int)FileStatusEnum.ImportFailed;
+                        await _importRepo.UpdateFileAsync(fileDto);
+                        return; // Skip import
+                    }
+
+                    // Fill staging column if needed
+                    if (result.Data.Columns.Contains("ImportedFileID"))
+                    {
+                        foreach (DataRow row in result.Data.Rows)
+                        {
+                            row["ImportedFileID"] = fileDto.ImportedFileId;
+                        }
+                    }
+
+                    LogPotentialProblemColumns(result.Data, fileId, importLog);
+
+                    await _importer.ImportAsync(result.Data, mapping.TargetTable, fileId);
+
+                    fileDto.ExcelRowCount = result.TotalRows;
+                    fileDto.ImportedRowCount = result.ImportedRows;
+                    fileDto.FileStatus = (int)FileStatusEnum.ImportInProgresss;
+
+                    await _importRepo.UpdateFileAsync(fileDto);
+                    await _importRepo.ProcessImportFilesAsync(fileDto);
+
+                    var okMsg = $"Imported {result.ImportedRows} rows to {mapping.TargetTable}.";
+                    _logger.Info(okMsg);
+                    importLog.Add(new FileLog { ImportFileId = fileId, LogType = "Info", LogMessage = okMsg });
                 }
             }
             catch (Exception ex)
             {
-                _logger.Error($"Error processing file {fileName}: {ex.Message}");
-                ImportLog.Add(new FileLog { ImportFileId = _fileId, LogType = "Error", LogMessage = $"Error processing file {fileName}: {ex.Message}" });
+                var msg = $"Error processing file {fileName}: {ex.Message} {(ex.InnerException != null ? " INNER: " + ex.InnerException.Message : string.Empty)}";
+                _logger.Error(msg);
+                importLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = msg });
+
                 fileDto.FileStatus = (int)FileStatusEnum.ImportFailed;
                 await _importRepo.UpdateFileAsync(fileDto);
             }
         }
-        private void FindPotentialProblemColumns(DataTable data)
+
+        /// <summary>
+        /// Optimization: scan only a limited number of rows, and only log columns that exceed 255 chars.
+        /// </summary>
+        private void LogPotentialProblemColumns(DataTable data, int fileId, List<FileLog> importLog, int rowScanLimit = 500)
         {
-            _logger.Info("=== SCANNING FOR POTENTIAL PROBLEM COLUMNS ===");
+            if (data.Rows.Count == 0)
+                return;
+
+            int rowsToScan = Math.Min(rowScanLimit, data.Rows.Count);
 
             foreach (DataColumn column in data.Columns)
             {
                 int maxLength = 0;
                 int longValueCount = 0;
 
-                foreach (DataRow row in data.Rows)
+                for (int i = 0; i < rowsToScan; i++)
                 {
-                    if (!row.IsNull(column))
-                    {
-                        string value = row[column].ToString();
-                        if (value.Length > maxLength)
-                            maxLength = value.Length;
+                    var row = data.Rows[i];
+                    if (row.IsNull(column))
+                        continue;
 
-                        if (value.Length > 255)
-                            longValueCount++;
-                    }
+                    var value = row[column]?.ToString() ?? string.Empty;
+                    int len = value.Length;
+
+                    if (len > maxLength)
+                        maxLength = len;
+
+                    if (len > 255)
+                        longValueCount++;
                 }
 
                 if (maxLength > 255)
                 {
-                    _logger.Error($"⚠️ PROBLEM COLUMN: '{column.ColumnName}' - Max length: {maxLength} chars, {longValueCount} values > 255 chars");
-                }
-                else
-                {
-                    _logger.Info($"✓ OK Column: '{column.ColumnName}' - Max length: {maxLength} chars");
+                    var msg = $"Potential column length issue: '{column.ColumnName}' - Max length (sampled): {maxLength}, Count>255 (sampled): {longValueCount}";
+                    _logger.Warn(msg);
+                    importLog.Add(new FileLog { ImportFileId = fileId, LogType = "Warning", LogMessage = msg });
                 }
             }
         }
@@ -155,17 +187,30 @@ namespace LRN.ExcelETL.Service.Services
         {
             foreach (var file in files)
             {
+                var fileId = (int)file.ImportedFileId;
+                var importLog = new List<FileLog>();
+
                 string fileName = Path.GetFileName(file.ImportFileName);
                 _logger.Info($"File Processing Start for: {fileName}");
 
-                var mappingDtl = _validator.FileMapping(JsonConvert.DeserializeObject<MappingConfigRoot>(File.ReadAllText(MappingJSONPath)), fileName, file.FileType.ToString());
+                var mappingDtl = _validator.FileMapping(
+                    JsonConvert.DeserializeObject<MappingConfigRoot>(File.ReadAllText(MappingJSONPath)),
+                    fileName,
+                    file.FileType.ToString());
+
                 var jsonPath = Path.Combine(JSONPath, mappingDtl.JsonMappingPath);
 
                 if (!File.Exists(jsonPath))
                 {
-                    _logger.Error($"Mapping file not found: {jsonPath}");
+                    var msg = $"Mapping file not found: {jsonPath}";
+                    _logger.Error(msg);
+
+                    importLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = msg });
+
                     file.FileStatus = (int)FileStatusEnum.ImportFailed;
                     await _importRepo.UpdateFileAsync(file);
+
+                    await _importRepo.InsertFileLog(importLog);
                     continue;
                 }
 
@@ -173,23 +218,27 @@ namespace LRN.ExcelETL.Service.Services
                 file.FileStatus = (int)FileStatusEnum.ImportInProgresss;
                 await _importRepo.UpdateFileAsync(file);
 
-                await HandleFileProcessingAsync(file, fileName, jsonPath);
+                await HandleFileProcessingAsync(file, fileName, jsonPath, fileId, importLog);
 
+                await _importRepo.InsertFileLog(importLog);
                 _logger.Info($"File Processing completed for: {fileName}");
             }
         }
 
         public async Task ProcessImportFileAsync(int fileId)
         {
-            _logger.Info("-----------Bulk Copy Process Initiated--------------");
-            _fileId = fileId;
+            var importLog = new List<FileLog>();
 
-            ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Info", LogMessage = "Import Process Started" });
+            _logger.Info("-----------Bulk Copy Process Initiated--------------");
+            importLog.Add(new FileLog { ImportFileId = fileId, LogType = "Info", LogMessage = "Import Process Started" });
+
             var file = await _importRepo.GetImportFileById(fileId);
             if (file == null)
             {
-                _logger.Error($"File with ID {fileId} not found.");
-                ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = $"File with ID {fileId} not found" });
+                var msg = $"File with ID {fileId} not found.";
+                _logger.Error(msg);
+                importLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = msg });
+                await _importRepo.InsertFileLog(importLog);
                 return;
             }
 
@@ -199,8 +248,10 @@ namespace LRN.ExcelETL.Service.Services
 
                 if (!File.Exists(configPath))
                 {
-                    _logger.Error($"Mapping config file not found: {configPath}");
-                    ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = $"Mapping config file not found: {configPath}" });
+                    var msg = $"Mapping config file not found: {configPath}";
+                    _logger.Error(msg);
+                    importLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = msg });
+                    await _importRepo.InsertFileLog(importLog);
                     return;
                 }
 
@@ -213,33 +264,33 @@ namespace LRN.ExcelETL.Service.Services
 
                 if (!File.Exists(jsonPath))
                 {
-                    _logger.Error($"Mapping file not found: {jsonPath}");
-                    ImportLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = $"Mapping file not found: {jsonPath}" });
+                    var msg = $"Mapping file not found: {jsonPath}";
+                    _logger.Error(msg);
+                    importLog.Add(new FileLog { ImportFileId = fileId, LogType = "Error", LogMessage = msg });
+                    await _importRepo.InsertFileLog(importLog);
                     return;
                 }
 
-                await HandleFileProcessingAsync(file, file.ImportFileName, jsonPath);
+                await HandleFileProcessingAsync(file, file.ImportFileName, jsonPath, fileId, importLog);
 
-
-
-                await _importRepo.InsertFileLog(ImportLog);
+                await _importRepo.InsertFileLog(importLog);
             }
             catch (Exception ex)
             {
-                _logger.Error($"Error processing file {file.ImportFileName}: {ex.Message}");
+                var msg = $"Error processing file {file.ImportFileName}: {ex.Message} {(ex.InnerException != null ? " INNER: " + ex.InnerException.Message : string.Empty)}";
+                _logger.Error(msg);
 
-                ImportLog.Add(new FileLog
+                importLog.Add(new FileLog
                 {
                     ImportFileId = fileId,
                     LogType = "Error",
-                    LogMessage = $"Error processing file {file.ImportFileName}: {ex.Message} : INNER EXCEPTION : {(ex.InnerException != null ? ex.InnerException.Message : string.Empty)}"
+                    LogMessage = msg
                 });
 
                 file.FileStatus = (int)FileStatusEnum.ImportFailed;
                 await _importRepo.UpdateFileAsync(file);
-                await _importRepo.InsertFileLog(ImportLog);
+                await _importRepo.InsertFileLog(importLog);
             }
-
         }
 
         public async Task RunAsync()
@@ -274,7 +325,6 @@ namespace LRN.ExcelETL.Service.Services
                 _logger.Error("Error on importing data : ", ex);
                 throw;
             }
-
         }
     }
 }

@@ -1,0 +1,140 @@
+{
+  "SheetName": "",
+  "UseSheetName": false,
+  "AddSheetName": false,
+  "TargetTable": "dbo.RejectedClaimsStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "TPID",
+      "SqlColumn": "TPID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "NPI",
+      "SqlColumn": "NPI",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Worked",
+      "SqlColumn": "Worked",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Payer Name",
+      "SqlColumn": "PayerName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Payer Code",
+      "SqlColumn": "PayerCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient Name",
+      "SqlColumn": "PatientName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient Cntl",
+      "SqlColumn": "PatientCntl",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Encounter",
+      "SqlColumn": "EncounterId",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOS",
+      "SqlColumn": "DOS",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Received Date",
+      "SqlColumn": "ReceivedDate",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Ins Type",
+      "SqlColumn": "InsType",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Claim Type",
+      "SqlColumn": "ClaimType",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Total Charges",
+      "SqlColumn": "TotalCharges",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Detail Message",
+      "SqlColumn": "DetailMessage",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Trace Nbr",
+      "SqlColumn": "TraceNbr",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Loop",
+      "SqlColumn": "Loop",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Segment",
+      "SqlColumn": "Segment",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Field",
+      "SqlColumn": "Field",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Data",
+      "SqlColumn": "Data",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Reject Date",
+      "SqlColumn": "RejectDate",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Source",
+      "SqlColumn": "Source",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

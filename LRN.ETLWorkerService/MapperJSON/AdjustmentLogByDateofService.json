@@ -1,0 +1,38 @@
+{
+  "SheetName": "Denial Code",
+  "UseSheetName": true,
+  "AddSheetName": false,
+  "TargetTable": "dbo.AdjusmentLogStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "Encounter",
+      "SqlColumn": "EncounterID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "CPT",
+      "SqlColumn": "CPTCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "UID",
+      "SqlColumn": "UID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Denial Code",
+      "SqlColumn": "DenialCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

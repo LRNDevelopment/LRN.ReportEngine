@@ -1,0 +1,426 @@
+{
+	"SheetName": "",
+	"TargetTable": "dbo.CommitTransactionStaging",
+	"Columns": [
+		{
+			"ExcelColumn": "Visit No",
+			"SqlColumn": "VisitNumber",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Accession No",
+			"SqlColumn": "AccessionNo",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Reference No",
+			"SqlColumn": "ReferrenceNo",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Patient Ac No",
+			"SqlColumn": "PateintAccNo",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Additional MRN",
+			"SqlColumn": "AdditionalMRN",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Patient First Name",
+			"SqlColumn": "PatientFirstName",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Patient Last Name",
+			"SqlColumn": "PatientLastName",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Patient Middle Name",
+			"SqlColumn": "PatientMiddleName",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "DOB",
+			"SqlColumn": "DOB",
+			"DataType": "date",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Carrier",
+			"SqlColumn": "InsurancePayer",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "SUBID",
+			"SqlColumn": "SUBID",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Primary Payer Family",
+			"SqlColumn": "PrimaryPayerFamily",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Insurance Plan Name",
+			"SqlColumn": "InsurancePlanName",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Service From Date",
+			"SqlColumn": "ServiceFromDate",
+			"DataType": "date",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Service To Date",
+			"SqlColumn": "ServiceToDate",
+			"DataType": "date",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "SOD",
+			"SqlColumn": "SOD",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "POS",
+			"SqlColumn": "POS",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Facility",
+			"SqlColumn": "Facility",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Facility State",
+			"SqlColumn": "FacilityState",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Physician First Name",
+			"SqlColumn": "PhysicianFirstName",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Physician Last Name",
+			"SqlColumn": "PhysicianLastName",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Physician NPI",
+			"SqlColumn": "PhysicianNPI",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Referring Provider First Name",
+			"SqlColumn": "ReferringProviderFirstName",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Referring Provider Last Name",
+			"SqlColumn": "ReferringProviderLastName",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Rendering Physician First Name",
+			"SqlColumn": "RenderingPhysicianFirstName",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Rendering Physician Last Name",
+			"SqlColumn": "RenderingPhysicianLastName",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Supervising Physician First Name",
+			"SqlColumn": "SupervisingPhysicianFirstName",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Supervising Physician Last Name",
+			"SqlColumn": "SupervisingPhysicianLastName",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Batch No",
+			"SqlColumn": "BatchNo",
+			"DataType": "int",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Claim Status",
+			"SqlColumn": "ClaimStatus",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Service Location",
+			"SqlColumn": "ServiceLocation",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Service Type",
+			"SqlColumn": "ServiceType",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Test/Procedure Type",
+			"SqlColumn": "TestProcedureType",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Active Bucket",
+			"SqlColumn": "ActiveBucket",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Sub State",
+			"SqlColumn": "SubState",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "ICD",
+			"SqlColumn": "ICD",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "MolDx",
+			"SqlColumn": "MolDx",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "CPT",
+			"SqlColumn": "CPT",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "CPT STATUS",
+			"SqlColumn": "CPTSTATUS",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Modifiers",
+			"SqlColumn": "Modifiers",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Units",
+			"SqlColumn": "Units",
+			"DataType": "int",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Charges",
+			"SqlColumn": "ChargesAmount",
+			"DataType": "decimal",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Allowed",
+			"SqlColumn": "AllowedAmount",
+			"DataType": "decimal",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Adjustment",
+			"SqlColumn": "AdjustmentAmount",
+			"DataType": "decimal",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "M.Write Off",
+			"SqlColumn": "MWriteOff",
+			"DataType": "decimal",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Primary Paid",
+			"SqlColumn": "PrimaryPaid",
+			"DataType": "decimal",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Secondary Paid",
+			"SqlColumn": "SecondaryPaid",
+			"DataType": "decimal",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Tertiary Paid",
+			"SqlColumn": "TertiaryPaid",
+			"DataType": "decimal",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Patient Paid",
+			"SqlColumn": "PatientPaid",
+			"DataType": "decimal",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Interest Paid",
+			"SqlColumn": "InterestPaid",
+			"DataType": "decimal",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Total Paid",
+			"SqlColumn": "TotalPaid",
+			"DataType": "decimal",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Closure Adjustment",
+			"SqlColumn": "ClosureAdjustment",
+			"DataType": "decimal",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Patient Adjustments",
+			"SqlColumn": "PatientAdjustments",
+			"DataType": "decimal",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Balance Responsibility",
+			"SqlColumn": "BalanceResponsibility",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Total Balance",
+			"SqlColumn": "TotalBalance",
+			"DataType": "decimal",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Insurance Balance",
+			"SqlColumn": "InsuranceBalance",
+			"DataType": "decimal",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Patient Balance",
+			"SqlColumn": "PatientBalance",
+			"DataType": "decimal",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Primary Deposited Date",
+			"SqlColumn": "PrimaryDepositedDate",
+			"DataType": "date",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Secondary Deposited Date",
+			"SqlColumn": "SecondaryDepositedDate",
+			"DataType": "date",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Patient Deposited Date",
+			"SqlColumn": "PatientDepositedDate",
+			"DataType": "date",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Billing Provider",
+			"SqlColumn": "BillingProvider",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Bill Type",
+			"SqlColumn": "BillType",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "First Billed On",
+			"SqlColumn": "FirstBilledOn",
+			"DataType": "date",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Last Billed On",
+			"SqlColumn": "LastBilledOn",
+			"DataType": "date",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Last  Updated Note",
+			"SqlColumn": "LastUpdatedNote",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Created On",
+			"SqlColumn": "CreatedOn",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Created By",
+			"SqlColumn": "CreatedBy",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Updated On",
+			"SqlColumn": "UpdatedOn",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Updated By",
+			"SqlColumn": "UpdatedBy",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "ImportedFileID",
+			"SqlColumn": "ImportedFileID",
+			"DataType": "int",
+			"Required": false
+		}
+	]
+}

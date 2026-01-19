@@ -1,0 +1,104 @@
+{
+  "SheetName": "Edited File",
+  "UseSheetName": true,
+  "AddSheetName": false,
+  "TargetTable": "dbo.ExternalLogStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "Charge Entered Date",
+      "SqlColumn": "ChargeEnteredDate",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Status",
+      "SqlColumn": "SpecimenStatus",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Accession",
+      "SqlColumn": "AccessionNo",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Encounter ID",
+      "SqlColumn": "EncounterID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient ID",
+      "SqlColumn": "PatientID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient Name",
+      "SqlColumn": "PatientName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ICD Codes",
+      "SqlColumn": "ICDCodes",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Insurance Name",
+      "SqlColumn": "InsuranceName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Claim Amount",
+      "SqlColumn": "ClaimAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOS",
+      "SqlColumn": "DOS",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Procedure Code",
+      "SqlColumn": "CPTCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Mod",
+      "SqlColumn": "Mod",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Service Unit",
+      "SqlColumn": "ServiceUnit",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Description",
+      "SqlColumn": "Description",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Biilled Amounts",
+      "SqlColumn": "BiilledAmounts",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

@@ -24,10 +24,16 @@
                class="nav-link @(currentAction == "Index" && currentController == "Upload" ? "active" : "")">
                 Upload
             </a>
-
-            <a href="@Url.Action("DownloadReport", "Upload")"
-               class="nav-link @(currentAction == "DownloadReport" && currentController == "Upload" ? "active" : "")">
-                Reports
+            @if (ViewBag.LabName != "LRN Master")
+            {
+                <a href="@Url.Action("DownloadReport", "Upload")"
+                   class="nav-link @(currentAction == "DownloadReport" && currentController == "Upload" ? "active" : "")">
+                    Reports
+                </a>
+            }
+            <a href="@Url.Action("MasterImport", "Upload")"
+               class="nav-link @(currentAction == "MasterImport" && currentController == "Upload" ? "active" : "")">
+                Master Import
             </a>
         </div>
 
@@ -56,5 +62,32 @@
     <div class="main-container">
         @RenderBody()
     </div>
+    <script>
+        function formatLocalNoTz(utcIso) {
+          if (!utcIso) return "";
+          const d = new Date(utcIso);
+
+          // No "GMT+8" because we DO NOT include timeZoneName
+          return new Intl.DateTimeFormat(undefined, {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+          }).format(d).replace(",", "");
+        }
+
+        document.querySelectorAll(".js-local-dt").forEach(el => {
+          const utcIso = el.getAttribute("data-utc");
+          el.textContent = formatLocalNoTz(utcIso);
+        });
+
+        // (Optional) If you want to see what timezone browser detected:
+        // console.log("Browser TZ:", Intl.DateTimeFormat().resolvedOptions().timeZone);
+    </script>
+
+
 </body>
+
 </html>

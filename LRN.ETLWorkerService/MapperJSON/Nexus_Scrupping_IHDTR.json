@@ -1,0 +1,114 @@
+{
+  "SheetName": "",
+  "TargetTable": "dbo.NexusStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "ID",
+      "SqlColumn": "NexusID",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Created",
+      "SqlColumn": "Created",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Accession",
+      "SqlColumn": "Accession",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Test Types",
+      "SqlColumn": "TestTypes",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Date of Service",
+      "SqlColumn": "DateOfService",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Stage",
+      "SqlColumn": "Stage",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Status",
+      "SqlColumn": "NexusStatus",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Detail",
+      "SqlColumn": "Detail",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Assigned",
+      "SqlColumn": "Assigned",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Performing Lab",
+      "SqlColumn": "PerformingLab",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Client",
+      "SqlColumn": "Client",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Account",
+      "SqlColumn": "Account",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Provider",
+      "SqlColumn": "RFProvider",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Provider NPI",
+      "SqlColumn": "ProviderNPI",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient",
+      "SqlColumn": "Patient",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Insurance",
+      "SqlColumn": "Insurance",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Edit",
+      "SqlColumn": "Edit",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

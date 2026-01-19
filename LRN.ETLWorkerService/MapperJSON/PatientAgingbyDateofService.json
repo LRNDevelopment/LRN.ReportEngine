@@ -1,0 +1,32 @@
+{
+  "SheetName": "Patient Balance",
+  "UseSheetName": true,
+  "AddSheetName": false,
+  "TargetTable": "dbo.PatientBalanceStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "Encounter",
+      "SqlColumn": "EncounterID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient Balance",
+      "SqlColumn": "PatientBalance",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "MF Enc",
+      "SqlColumn": "MFEnc",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

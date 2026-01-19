@@ -46,7 +46,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="wwwroot\ImportTemplate\" />
 		<None Include="wwwroot\ImportTemplate\Custom_Collection.xlsx" />
 		<None Include="wwwroot\ImportTemplate\DenialTrackingDetail.xlsx" />
 		<None Include="wwwroot\ImportTemplate\LIS.xlsx" />

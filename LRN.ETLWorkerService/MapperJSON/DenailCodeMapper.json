@@ -1,0 +1,42 @@
+{
+  "SheetName": "",
+  "TargetTable": "dbo.DenialCodeMapper",
+  "Columns": [
+    {
+      "ExcelColumn": "Denial Code",
+      "SqlColumn": "DenialCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Denial Description",
+      "SqlColumn": "DenialDescription",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Replacement Description",
+      "SqlColumn": "ReplacementDescrp",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Denial Comment",
+      "SqlColumn": "DenialComment",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Action Comment",
+      "SqlColumn": "ActionComment",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

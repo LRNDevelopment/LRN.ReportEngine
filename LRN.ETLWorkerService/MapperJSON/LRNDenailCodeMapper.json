@@ -1,0 +1,25 @@
+{
+	"SheetName": "",
+	"TargetTable": "dbo.DenialCodeStaging",
+	"Columns": [
+
+		{
+			"ExcelColumn": "Denial Code",
+			"SqlColumn": "DenialCode",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "Denial Description",
+			"SqlColumn": "DenialDescription",
+			"DataType": "string",
+			"Required": false
+		},
+		{
+			"ExcelColumn": "ImportedFileID",
+			"SqlColumn": "ImportedFileID",
+			"DataType": "int",
+			"Required": false
+		}
+	]
+}

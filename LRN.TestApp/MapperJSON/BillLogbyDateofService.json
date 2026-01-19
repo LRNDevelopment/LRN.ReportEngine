@@ -1,0 +1,27 @@
+{
+  "SheetName": "Subscriber ID",
+  "UseSheetName": true,
+  "AddSheetName": false,
+  "TargetTable": "dbo.BillLogByDOSStaging",
+  "Columns": [
+
+    {
+      "ExcelColumn": "Encounter",
+      "SqlColumn": "EncounterID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Subscriber ID",
+      "SqlColumn": "SubscriberID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

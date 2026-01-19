@@ -1,0 +1,32 @@
+{
+  "SheetName": "Insurance Balance",
+  "UseSheetName": true,
+  "AddSheetName": false,
+  "TargetTable": "dbo.InsuranceBalanceStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "Encounter",
+      "SqlColumn": "EncounterID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Insurance Balance",
+      "SqlColumn": "InsuranceBalance",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "MF Enc",
+      "SqlColumn": "MFEnc",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

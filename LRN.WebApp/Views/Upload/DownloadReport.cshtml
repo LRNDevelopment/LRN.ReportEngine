@@ -76,7 +76,8 @@
             <thead class="table-dark">
                 <tr>
                     <th>Report Type</th>
-                    <th>Generated Date</th>
+                    <th>Generated On</th>
+                    <th>Completed On</th>
                     <th>Status / Action</th>
                 </tr>
             </thead>
@@ -85,7 +86,18 @@
                 {
                     <tr>
                         <td>@item.ReportName</td>
-                        <td>@item.CreatedOn.ToString("dd-MMM-yyyy hh:mm tt")</td>
+                        <td>
+                            <span class="js-local-dt"
+                                  data-utc="@(item.CreatedOn.ToUniversalTime().ToString("O"))"></span>
+                        </td>
+                        <td>
+                            @if (item.ReportStatus == 2 || item.ReportStatus == 1)
+                            {
+                                <span class="js-local-dt"
+                                      data-utc="@(item.CompletedOn.ToUniversalTime().ToString("O"))"></span>
+                            }
+                        </td>
+
                         <td class="text-center">
                             @if (item.ReportStatus == 3)
                             {
@@ -223,7 +235,7 @@
                 </ul>
 
                 <!-- Jump to page -->
-            @*     <form method="get" action="@Url.Action("DownloadReport")" class="d-flex ms-2" style="width:150px;">
+                @*     <form method="get" action="@Url.Action("DownloadReport")" class="d-flex ms-2" style="width:150px;">
                     <input type="number" class="form-control form-control-sm" name="page" min="1" max="@ViewBag.TotalPages" placeholder="Page #" />
                     <button type="submit" class="btn btn-sm btn-primary ms-1">Go</button>
                 </form> *@

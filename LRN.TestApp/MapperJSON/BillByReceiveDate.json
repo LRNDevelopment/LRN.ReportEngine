@@ -1,0 +1,705 @@
+{
+  "SheetName": "",
+  "TargetTable": "dbo.BillReportStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "ORGANIZATION_CODE",
+      "SqlColumn": "OrganizationCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ORGANIZATION_NAME",
+      "SqlColumn": "OrganizationName",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "PATIENT_CODE",
+      "SqlColumn": "PatientCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_L_NAME",
+      "SqlColumn": "PatientLName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_F_NAME",
+      "SqlColumn": "PatientFName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_M_NAME",
+      "SqlColumn": "PatientMName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_PREFIX",
+      "SqlColumn": "PatientPrefix",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_SUFFIX",
+      "SqlColumn": "PatientSuffix",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "SSN",
+      "SqlColumn": "SSN",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_GENDER",
+      "SqlColumn": "PatientGender",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_BIRTH",
+      "SqlColumn": "PatientBirth",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_AGE_COUNT",
+      "SqlColumn": "PatientAgeCount",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_AGE_UNITS",
+      "SqlColumn": "PatientAgeUnits",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "SPECIES_ID",
+      "SqlColumn": "SpeciesId",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "SPECIES_NAME",
+      "SqlColumn": "SpeciesName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_ETHNICITY",
+      "SqlColumn": "PatientEthnicity",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_RACE",
+      "SqlColumn": "PatientRace",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_COUNTY",
+      "SqlColumn": "PatientCounty",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_REQUISITION TYPE",
+      "SqlColumn": "PatientRequisitionType",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "DOCTOR_CODE",
+      "SqlColumn": "DoctorCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOCTOR_LAST_NAME",
+      "SqlColumn": "DoctorLastName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOCTOR_FIRST_NAME",
+      "SqlColumn": "DoctorFirstName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOCTOR_MIDDLE_NAME",
+      "SqlColumn": "DoctorMiddleName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOCTOR_PREFIX",
+      "SqlColumn": "DoctorPrefix",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOCTOR_SUFFIX",
+      "SqlColumn": "DoctorSuffix",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOCTOR_NPI",
+      "SqlColumn": "DoctorNpi",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "CC1_NPI",
+      "SqlColumn": "Cc1Npi",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "CC2_NPI",
+      "SqlColumn": "Cc2Npi",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "CC3_NPI",
+      "SqlColumn": "Cc3Npi",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "REQ_ACCESSION",
+      "SqlColumn": "ReqAccession",
+      "DataType": "string",
+      "Required": true
+    },
+    {
+      "ExcelColumn": "REQTERNAL_NO",
+      "SqlColumn": "ReqExternalNo",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "REQ_DATE",
+      "SqlColumn": "ReqDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_INITIALS",
+      "SqlColumn": "ReqInitials",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_COLLECT_DATE",
+      "SqlColumn": "ReqCollectDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_COLLECT_INITIALS",
+      "SqlColumn": "ReqCollectInitials",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_RECEIVED_DATE",
+      "SqlColumn": "ReqReceivedDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_RECEIVED_INITIALS",
+      "SqlColumn": "ReqReceivedInitials",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_PRINTED_DATE",
+      "SqlColumn": "ReqPrintedDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_REQ PRINT NUMBER",
+      "SqlColumn": "ReqReqPrintNumber",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "REQ_SPECIMEN TYPE",
+      "SqlColumn": "ReqSpecimenType",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_AEL ORDER",
+      "SqlColumn": "ReqAelOrder",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_LN ORDER",
+      "SqlColumn": "ReqLnOrder",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_WOUND LOCATION",
+      "SqlColumn": "ReqWoundLocation",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_ALLERGIES",
+      "SqlColumn": "ReqAllergies",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_PRESCRIBED ANTIBIOTICS",
+      "SqlColumn": "ReqPrescribedAntibiotics",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_IV MEDICATION NEEDED?",
+      "SqlColumn": "ReqIvMedicationNeeded",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_ICD 10 CODES (PCR)",
+      "SqlColumn": "ReqIcd10CodesPcr",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "REQ_LOCATION_CODE",
+      "SqlColumn": "ReqLocationCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_LOCATION_NAME",
+      "SqlColumn": "ReqLocationName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_COMPANY_CODE",
+      "SqlColumn": "ReqCompanyCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_COMPANY_NAME",
+      "SqlColumn": "ReqCompanyName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_DISTRICT_CODE",
+      "SqlColumn": "ReqDistrictCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_DISTRICT_NAME",
+      "SqlColumn": "ReqDistrictName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_REGION_CODE",
+      "SqlColumn": "ReqRegionCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_REGION_NAME",
+      "SqlColumn": "ReqRegionName",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "INS_REIMBURSEMENT_GROUP_NAME",
+      "SqlColumn": "InsReimbursementGroupName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "BILL_TYPE",
+      "SqlColumn": "BillType",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "INSURANCE_CODE",
+      "SqlColumn": "InsuranceCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_NAME",
+      "SqlColumn": "InsuranceName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_ADDRESS1",
+      "SqlColumn": "InsuranceAddress1",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_ADDRESS2",
+      "SqlColumn": "InsuranceAddress2",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_CITY",
+      "SqlColumn": "InsuranceCity",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_STATE",
+      "SqlColumn": "InsuranceState",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_ZIP_CODE",
+      "SqlColumn": "InsuranceZipCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_GROUP_ID",
+      "SqlColumn": "InsuranceGroupId",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_GROUP_NAME",
+      "SqlColumn": "InsuranceGroupName",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "INSURED_POLICY_NO",
+      "SqlColumn": "InsuredPolicyNo",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURED_GROUP_NO",
+      "SqlColumn": "InsuredGroupNo",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURED_EFFECTIVE_DATE",
+      "SqlColumn": "InsuredEffectiveDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURED_EXPIRE_DATE",
+      "SqlColumn": "InsuredExpireDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURED_AUTHORIZATION_NO",
+      "SqlColumn": "InsuredAuthorizationNo",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURED_RELATIONSHIP",
+      "SqlColumn": "InsuredRelationship",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "INSURANCE_CODE1",
+      "SqlColumn": "InsuranceCode1",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_NAME1",
+      "SqlColumn": "InsuranceName1",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_ADDRESS11",
+      "SqlColumn": "InsuranceAddress11",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_ADDRESS21",
+      "SqlColumn": "InsuranceAddress21",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_CITY1",
+      "SqlColumn": "InsuranceCity1",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_STATE1",
+      "SqlColumn": "InsuranceState1",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_ZIP_CODE1",
+      "SqlColumn": "InsuranceZipCode1",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_GROUP_ID1",
+      "SqlColumn": "InsuranceGroupId1",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_GROUP_NAME1",
+      "SqlColumn": "InsuranceGroupName1",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "INSURED_POLICY_NO1",
+      "SqlColumn": "InsuredPolicyNo1",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURED_GROUP_NO1",
+      "SqlColumn": "InsuredGroupNo1",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURED_EFFECTIVE_DATE1",
+      "SqlColumn": "InsuredEffectiveDate1",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURED_EXPIRE_DATE1",
+      "SqlColumn": "InsuredExpireDate1",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURED_AUTHORIZATION_NO1",
+      "SqlColumn": "InsuredAuthorizationNo1",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURED_RELATIONSHIP1",
+      "SqlColumn": "InsuredRelationship1",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "INSURANCE_ADDRESS12",
+      "SqlColumn": "InsuranceAddress12",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_ADDRESS22",
+      "SqlColumn": "InsuranceAddress22",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_CITY2",
+      "SqlColumn": "InsuranceCity2",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_STATE2",
+      "SqlColumn": "InsuranceState2",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "INSURANCE_ZIP_CODE2",
+      "SqlColumn": "InsuranceZipCode2",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "PANEL_LAB_NAME",
+      "SqlColumn": "PanelLabName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PANEL_CODE",
+      "SqlColumn": "PanelCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PANEL_NAME",
+      "SqlColumn": "PanelName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PANEL_RUN_DATE",
+      "SqlColumn": "PanelRunDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PANEL_RUN_INITIALS",
+      "SqlColumn": "PanelRunInitials",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PANEL_STAT",
+      "SqlColumn": "PanelStat",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "CPT_CODES",
+      "SqlColumn": "CptCodes",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ABN_FAIL_TYPE",
+      "SqlColumn": "AbnFailType",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "FAIL_TYPE_DESC",
+      "SqlColumn": "FailTypeDesc",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "ORGANIZATION_PRICE",
+      "SqlColumn": "OrganizationPrice",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ORGANIZATION_COST",
+      "SqlColumn": "OrganizationCost",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "LOCATION_PRICE",
+      "SqlColumn": "LocationPrice",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "LOCATION_COST",
+      "SqlColumn": "LocationCost",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "COMPANY_PRICE",
+      "SqlColumn": "CompanyPrice",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "COMPANY_COST",
+      "SqlColumn": "CompanyCost",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REGION_PRICE",
+      "SqlColumn": "RegionPrice",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REGION_COST",
+      "SqlColumn": "RegionCost",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DISTRICT_PRICE",
+      "SqlColumn": "DistrictPrice",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DISTRICT_COST",
+      "SqlColumn": "DistrictCost",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REIMBURSE_PRICE",
+      "SqlColumn": "ReimbursePrice",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REIMBURSE_COST",
+      "SqlColumn": "ReimburseCost",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

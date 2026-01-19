@@ -1,29 +1,119 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>dotnet-LRN.ETLWorkerService-69cdc67a-b8c9-4a9f-a06a-399e37e4bc3f</UserSecretsId>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>dotnet-LRN.ETLWorkerService-69cdc67a-b8c9-4a9f-a06a-399e37e4bc3f</UserSecretsId>
+		<AssemblyName>PCRAL.ETLWorkerService</AssemblyName>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Common.Logging" Version="3.4.1" />
-    <PackageReference Include="Dapper" Version="2.1.66" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.6" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.7" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.7" />
-    <PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
-  </ItemGroup>
+	<ItemGroup>
+		<Content Remove="log4net.config" />
+		<Content Remove="MapperJSON\AccPaymentReport.json" />
+		<Content Remove="MapperJSON\AdjustmentLogByDateofService.json" />
+		<Content Remove="MapperJSON\BillByCollectionDate.json" />
+		<Content Remove="MapperJSON\BillByReceiveDate.json" />
+		<Content Remove="MapperJSON\BillLogbyDateofService.json" />
+		<Content Remove="MapperJSON\BillLogbyExternalNumberReport.json" />
+		<Content Remove="MapperJSON\BillLogByPostdateReport.json" />
+		<Content Remove="MapperJSON\ClientBillingSheet.json" />
+		<Content Remove="MapperJSON\CoveCommitDenialReport.json" />
+		<Content Remove="MapperJSON\CoveCommitTransactionReport.json" />
+		<Content Remove="MapperJSON\COVE_LIS.json" />
+		<Content Remove="MapperJSON\Custom_Collection.json" />
+		<Content Remove="MapperJSON\DenailCodeMapper.json" />
+		<Content Remove="MapperJSON\DenialCommentMaster.json" />
+		<Content Remove="MapperJSON\DenialTrackingDetail.json" />
+		<Content Remove="MapperJSON\Diagnos_SampleLIS.json" />
+		<Content Remove="MapperJSON\InHealthLIS_mapping.json" />
+		<Content Remove="MapperJSON\InsuranceAgingbyDateofService.json" />
+		<Content Remove="MapperJSON\LISFile.json" />
+		<Content Remove="MapperJSON\LRNDenailCodeMapper.json" />
+		<Content Remove="MapperJSON\mapping-config.json" />
+		<Content Remove="MapperJSON\Nexus_Preprocessing_IHDTR.json" />
+		<Content Remove="MapperJSON\Nexus_Scrupping_IHDTR.json" />
+		<Content Remove="MapperJSON\Order_LIS.json" />
+		<Content Remove="MapperJSON\PanelGroup.json" />
+		<Content Remove="MapperJSON\PanelMaster.json" />
+		<Content Remove="MapperJSON\PatientAgingbyDateofService.json" />
+		<Content Remove="MapperJSON\PaymentLogbyPatientReport.json" />
+		<Content Remove="MapperJSON\PrismBillingSheel.json" />
+		<Content Remove="MapperJSON\RejectedClaims.json" />
+		<Content Remove="MapperJSON\ResultByCollectionDate.json" />
+		<Content Remove="MapperJSON\ResultByReceivedDate.json" />
+		<Content Remove="MapperJSON\Transaction_Detail.json" />
+		<Content Remove="MapperJSON\VisitAgainstAccession.json" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\LRN.ExcelETL.Service\LRN.ExcelETL.Service.csproj" />
-    <ProjectReference Include="..\LRN.ExcelGenerator\LRN.ExcelGenerator.csproj" />
-    <ProjectReference Include="..\LRN.ExcelToSqlETL\LRN.ExcelToSqlETL.Core.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="log4net.config" />
+		<None Include="MapperJSON\AccPaymentReport.json" />
+		<None Include="MapperJSON\AdjustmentLogByDateofService.json" />
+		<None Include="MapperJSON\BillByCollectionDate.json" />
+		<None Include="MapperJSON\BillByReceiveDate.json" />
+		<None Include="MapperJSON\BillLogbyDateofService.json" />
+		<None Include="MapperJSON\BillLogbyExternalNumberReport.json" />
+		<None Include="MapperJSON\BillLogByPostdateReport.json" />
+		<None Include="MapperJSON\ClientBillingSheet.json" />
+		<None Include="MapperJSON\CoveCommitDenialReport.json" />
+		<None Include="MapperJSON\CoveCommitTransactionReport.json" />
+		<None Include="MapperJSON\LRNDenailCodeMapper.json" />
+		<None Include="MapperJSON\COVE_LIS.json" />
+		<None Include="MapperJSON\Custom_Collection.json" />
+		<None Include="MapperJSON\DenailCodeMapper.json" />
+		<None Include="MapperJSON\DenialTrackingDetail.json" />
+		<None Include="MapperJSON\Diagnos_SampleLIS.json" />
+		<None Include="MapperJSON\InHealthLIS_mapping.json" />
+		<None Include="MapperJSON\InsuranceAgingbyDateofService.json" />
+		<None Include="MapperJSON\LISFile.json" />
+		<None Include="MapperJSON\mapping-config.json" />
+		<None Include="MapperJSON\Nexus_Preprocessing_IHDTR.json" />
+		<None Include="MapperJSON\Nexus_Scrupping_IHDTR.json" />
+		<None Include="MapperJSON\Order_LIS.json" />
+		<None Include="MapperJSON\PanelGroup.json" />
+		<None Include="MapperJSON\DenialCommentMaster.json" />
+		<None Include="MapperJSON\PanelMaster.json" />
+		<None Include="MapperJSON\PatientAgingbyDateofService.json" />
+		<None Include="MapperJSON\PaymentLogbyPatientReport.json" />
+		<None Include="MapperJSON\PrismBillingSheel.json" />
+		<None Include="MapperJSON\RejectedClaims.json" />
+		<None Include="MapperJSON\ResultByCollectionDate.json" />
+		<None Include="MapperJSON\ResultByReceivedDate.json" />
+		<None Include="MapperJSON\Transaction_Detail.json" />
+		<None Include="MapperJSON\VisitAgainstAccession.json" />
+	</ItemGroup>
 
-  <ProjectExtensions><VisualStudio><UserProperties appsettings_1etl_1json__JsonSchema="https://www.schemastore.org/appsscript.json" /></VisualStudio></ProjectExtensions>
+	<ItemGroup>
+		<PackageReference Include="ClosedXML" Version="0.105.0" />
+		<PackageReference Include="Common.Logging" Version="3.4.1" />
+		<PackageReference Include="Dapper" Version="2.1.66" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.6" />
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.7" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.7" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.7" />
+		<PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LRN.ExcelETL.Service\LRN.ExcelETL.Service.csproj" />
+		<ProjectReference Include="..\LRN.ExcelGenerator\LRN.ExcelGenerator.csproj" />
+		<ProjectReference Include="..\LRN.ExcelToSqlETL\LRN.ExcelToSqlETL.Core.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Update="log4net.config">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+
+	<ProjectExtensions>
+		<VisualStudio>
+			<UserProperties appsettings_1etl_1json__JsonSchema="https://www.schemastore.org/appsscript.json" />
+		</VisualStudio>
+	</ProjectExtensions>
+
+	
 </Project>

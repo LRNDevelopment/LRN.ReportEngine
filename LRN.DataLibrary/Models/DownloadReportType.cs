@@ -11,5 +11,5 @@ public partial class DownloadReportType
 
     public bool? IsActive { get; set; }
 
-    public int? LabId { get; set; }
+    public int? SeqNo { get; set; }
 }

@@ -1,0 +1,420 @@
+{
+  "SheetName": "",
+  "TargetTable": "dbo.ResultbyCollDateStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "ORGANIZATION_CODE",
+      "SqlColumn": "OrganizationCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ORGANIZATION_NAME",
+      "SqlColumn": "OrganizationName",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "PATIENT_CODE",
+      "SqlColumn": "PatientCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_L_NAME",
+      "SqlColumn": "PatientLName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_F_NAME",
+      "SqlColumn": "PatientFName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_M_NAME",
+      "SqlColumn": "PatientMName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_PREFIX",
+      "SqlColumn": "PatientPrefix",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_SUFFIX",
+      "SqlColumn": "PatientSuffix",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_GENDER",
+      "SqlColumn": "PatientGender",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_BIRTH",
+      "SqlColumn": "PatientBirth",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_AGE_COUNT",
+      "SqlColumn": "PatientAgeCount",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_AGE_UNITS",
+      "SqlColumn": "PatientAgeUnits",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "SPECIES_ID",
+      "SqlColumn": "SpeciesId",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "SPECIES_NAME",
+      "SqlColumn": "SpeciesName",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "PATIENT_ETHNICITY",
+      "SqlColumn": "PatientEthnicity",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_RACE",
+      "SqlColumn": "PatientRace",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PATIENT_COUNTY",
+      "SqlColumn": "PatientCounty",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "PATIENT_REQUISITION TYPE",
+      "SqlColumn": "PatientRequisitionType",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "DOCTOR_CODE",
+      "SqlColumn": "DoctorCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOCTOR_LAST_NAME",
+      "SqlColumn": "DoctorLastName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOCTOR_FIRST_NAME",
+      "SqlColumn": "DoctorFirstName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOCTOR_MIDDLE_NAME",
+      "SqlColumn": "DoctorMiddleName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOCTOR_PREFIX",
+      "SqlColumn": "DoctorPrefix",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOCTOR_SUFFIX",
+      "SqlColumn": "DoctorSuffix",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "REQ_ACCESSION",
+      "SqlColumn": "ReqAccession",
+      "DataType": "string",
+      "Required": true
+    },
+    {
+      "ExcelColumn": "REQ_EXTERNAL_NO",
+      "SqlColumn": "ReqExternalNo",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "REQ_DATE",
+      "SqlColumn": "ReqDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_INITIALS",
+      "SqlColumn": "ReqInitials",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "REQ_COLLECT_DATE",
+      "SqlColumn": "ReqCollectDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_COLLECT_INITIALS",
+      "SqlColumn": "ReqCollectInitials",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "REQ_RECEIVED_DATE",
+      "SqlColumn": "ReqReceivedDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_RECEIVED_INITIALS",
+      "SqlColumn": "ReqReceivedInitials",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "REQ_PRINTED_DATE",
+      "SqlColumn": "ReqPrintedDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_REQ PRINT NUMBER",
+      "SqlColumn": "ReqReqPrintNumber",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "REQ_SPECIMEN TYPE",
+      "SqlColumn": "ReqSpecimenType",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_AEL ORDER",
+      "SqlColumn": "ReqAelOrder",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_LN ORDER",
+      "SqlColumn": "ReqLnOrder",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_WOUND LOCATION",
+      "SqlColumn": "ReqWoundLocation",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_ALLERGIES",
+      "SqlColumn": "ReqAllergies",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_PRESCRIBED ANTIBIOTICS",
+      "SqlColumn": "ReqPrescribedAntibiotics",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "REQ_IV MEDICATION NEEDED?",
+      "SqlColumn": "ReqIvMedicationNeeded",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_ICD 10 CODES (PCR)",
+      "SqlColumn": "ReqIcd10CodesPcr",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_LOCATION_CODE",
+      "SqlColumn": "ReqLocationCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "REQ_LOCATION_NAME",
+      "SqlColumn": "ReqLocationName",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "PANEL_LAB_NAME",
+      "SqlColumn": "PanelLabName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PANEL_CODE",
+      "SqlColumn": "PanelCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PANEL_NAME",
+      "SqlColumn": "PanelName",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "PANEL_RUN_DATE",
+      "SqlColumn": "PanelRunDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PANEL_RUN_INITIALS",
+      "SqlColumn": "PanelRunInitials",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PANEL_STAT",
+      "SqlColumn": "PanelStat",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "RESULT_TEST_CODE",
+      "SqlColumn": "ResultTestCode",
+      "DataType": "string",
+      "Required": true
+    },
+    {
+      "ExcelColumn": "RESULT_TEST_NAME",
+      "SqlColumn": "ResultTestName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "RESULT_COLUMN_INDEX",
+      "SqlColumn": "ResultColumnIndex",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "RESULT_UNIT_OF_MEASURE",
+      "SqlColumn": "ResultUnitOfMeasure",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "RESULT_FLAG",
+      "SqlColumn": "ResultFlag",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "RESULT_QUALIFIER_CODE",
+      "SqlColumn": "ResultQualifierCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "RESULT_QUALIFIER_TEXT",
+      "SqlColumn": "ResultQualifierText",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "RESULT_REFERENCE_RANGE_TEXT",
+      "SqlColumn": "ResultReferenceRangeText",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "RESULT_NUMERIC",
+      "SqlColumn": "ResultNumeric",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "RESULT_RAW",
+      "SqlColumn": "ResultRaw",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "RESULT",
+      "SqlColumn": "Result",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "RESULT_IS_MEDICATED",
+      "SqlColumn": "ResultIsMedicated",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "RESULT_IS_CONSISTENT",
+      "SqlColumn": "ResultIsConsistent",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "RESULT_NOTE",
+      "SqlColumn": "ResultNote",
+      "DataType": "string",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "RESULT_CREATED_DATE",
+      "SqlColumn": "ResultCreatedDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

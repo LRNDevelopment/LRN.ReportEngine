@@ -1,0 +1,142 @@
+{
+  "SheetName": "Edited File",
+  "UseSheetName": true,
+  "AddSheetName": false,
+  "TargetTable": "dbo.PaymentLogbyPatientStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "Location",
+      "SqlColumn": "Facility",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Referring",
+      "SqlColumn": "ReferringProvider",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient ID",
+      "SqlColumn": "PatientID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Patient Name",
+      "SqlColumn": "PatientName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Posted Date",
+      "SqlColumn": "PostedDate",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "UID",
+      "SqlColumn": "UID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Encounte",
+      "SqlColumn": "EncounterId",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Date of Service ",
+      "SqlColumn": "DateofService",
+      "DataType": "date",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Primary Payment From",
+      "SqlColumn": "PrimaryInsurancePayer",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Secondary Payment From",
+      "SqlColumn": "SecondaryInsurancePayer",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Procedure Code",
+      "SqlColumn": "CPTCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Charge",
+      "SqlColumn": "ChargeAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Allowed",
+      "SqlColumn": "AllowedAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Applied",
+      "SqlColumn": "AppliedAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Deductible",
+      "SqlColumn": "DeductibleAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "Co. Insurance",
+      "SqlColumn": "CoInsuranceAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+
+    {
+      "ExcelColumn": "Co. Payment",
+      "SqlColumn": "CoPaymentAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Other Adjustment",
+      "SqlColumn": "OtherAdjustmentAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Ins. Payment",
+      "SqlColumn": "InsurancePayment",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Pat. Payment",
+      "SqlColumn": "PatientPayment",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Bal. Due",
+      "SqlColumn": "BalanceDue",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

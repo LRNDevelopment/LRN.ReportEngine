@@ -129,7 +129,8 @@
                     <th>File Name</th>
                     @* <th>Lab</th> *@
                     <th>File Type</th>
-                    <th>Uploaded On</th>
+                    <th>Imported On</th>
+                    <th>Completed On</th>
                     <th>Excel Row Count</th>
                     <th>Imported Row Count</th>
                     <th>Status</th>
@@ -149,7 +150,18 @@
                     </td>
                         @* <td>Prism</td> *@
                         <td>@item.FileTypeName</td>
-                        <td>@item.ImportedOn?.ToString("dd-MMM-yyyy hh:mm tt")</td>
+                       
+                     <td>
+                        <span class="js-local-dt"
+                              data-utc="@(item.ImportedOn?.ToUniversalTime().ToString("O"))"></span>
+                    </td>
+                     <td>
+                         @if(item.FileStatusName !="InProgress" || item.FileStatusName !="Queued")
+                         {
+                        <span class="js-local-dt" data-utc="@(item.ProcessedOn?.ToUniversalTime().ToString("O"))"></span>
+                         }
+                    </td>
+
                         <td>@item.ExcelRowCount</td>
                         <td>@item.ImportedRowCount</td>
                         <td> <span class="@item.FileStatusName.ToLower()">@item.FileStatusName</span></td>

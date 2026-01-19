@@ -1,0 +1,210 @@
+{
+  "SheetName": "",
+  "TargetTable": "dbo.CustomCollectionStaging",
+  "Columns": [
+    {
+      "ExcelColumn": "Carrier",
+      "SqlColumn": "PayerName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "FinancialClass",
+      "SqlColumn": "PayerType",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Provider",
+      "SqlColumn": "BillingProvider",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ReferringProvider",
+      "SqlColumn": "ReferringProvider",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Facility",
+      "SqlColumn": "PerformingLab",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ChartNum",
+      "SqlColumn": "PatientID",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PatientName",
+      "SqlColumn": "PatientName",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOB",
+      "SqlColumn": "DOB",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ResponsibleParty",
+      "SqlColumn": "ResponsibleParty",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "SubscriberID",
+      "SqlColumn": "MemberID",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "VisitNum",
+      "SqlColumn": "VisitNumber",
+      "DataType": "int",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ClientAccNum",
+      "SqlColumn": "ClientAccNum",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Accession",
+      "SqlColumn": "AccessionNo",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "BeginDOS",
+      "SqlColumn": "BeginDOS",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "EndDOS",
+      "SqlColumn": "EndDOS",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "DOE",
+      "SqlColumn": "ChargeEntryDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "LastBillDate",
+      "SqlColumn": "LastBillDate",
+      "DataType": "datetime",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "BillOccurance",
+      "SqlColumn": "BillingFrequency",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "EntryUser",
+      "SqlColumn": "ChargeEnteredBy",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Procedure",
+      "SqlColumn": "BilledCPTCode",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "POS",
+      "SqlColumn": "POS",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "TOS",
+      "SqlColumn": "TOS",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "Modifier",
+      "SqlColumn": "Modifier",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PrimaryDiagnosis",
+      "SqlColumn": "ICD10Code",
+      "DataType": "string",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "TotalCharge",
+      "SqlColumn": "BilledAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "TotalAllowed",
+      "SqlColumn": "AllowedAmount",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "CarrierPayment",
+      "SqlColumn": "InsurancePayments",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "CarrierWO",
+      "SqlColumn": "InsuranceAdjustments",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PatientPayment",
+      "SqlColumn": "PatientPayments",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PatientWO",
+      "SqlColumn": "PatientAdjustments",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "CarrierBalance",
+      "SqlColumn": "InsuranceBalance",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "PatientBalance",
+      "SqlColumn": "PatientBalance",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "TotalBalance",
+      "SqlColumn": "TotalBalance",
+      "DataType": "decimal",
+      "Required": false
+    },
+    {
+      "ExcelColumn": "ImportedFileID",
+      "SqlColumn": "ImportedFileID",
+      "DataType": "int",
+      "Required": false
+    }
+  ]
+}

@@ -362,6 +362,49 @@ namespace LRN.CodingMasterValidation
             }
         }
         // ==================== CORE METHODS ====================
+        //private List<ProductionRecord> LoadProductionData(string csvPath)
+        //{
+        //    var records = new List<ProductionRecord>();
+
+        //    if (!File.Exists(csvPath))
+        //        throw new FileNotFoundException($"Production CSV not found: {csvPath}");
+
+        //    using (var reader = new StreamReader(csvPath))
+        //    {
+        //        reader.ReadLine(); // Skip header
+
+        //        while (!reader.EndOfStream)
+        //        {
+        //            var line = reader.ReadLine();
+        //            if (string.IsNullOrWhiteSpace(line)) continue;
+
+        //            //var values = ParseCsvLine(line);
+        //            var values = ParseCsvLineSafe(line);
+
+        //            if (values.Length >= 8)
+        //            {
+        //                records.Add(new ProductionRecord
+        //                {
+        //                    VisitNumber = values[0],
+        //                    AccessionNo = values[1],
+        //                    PanelName = values[2],
+        //                    Carrier = values[3],
+        //                    ActualCPTCode = values[4],
+        //                    TotalCharge = decimal.TryParse(values[5], out decimal charge) ? charge : 0,
+        //                    Panel1 = values[6],
+        //                    // FirstBillDate = values[7]   // ✅ FIX
+        //                    FirstBillDate = values.Length > 7 ? values[7] : ""
+
+
+        //                });
+        //            }
+        //        }
+        //    }
+
+        //    return records;
+        //}
+
+
         private List<ProductionRecord> LoadProductionData(string csvPath)
         {
             var records = new List<ProductionRecord>();
@@ -369,36 +412,51 @@ namespace LRN.CodingMasterValidation
             if (!File.Exists(csvPath))
                 throw new FileNotFoundException($"Production CSV not found: {csvPath}");
 
-            using (var reader = new StreamReader(csvPath))
+            using var reader = new StreamReader(csvPath);
+
+            // 1️⃣ Read header
+            var headerLine = reader.ReadLine();
+            if (string.IsNullOrWhiteSpace(headerLine))
+                throw new Exception("Production CSV header is missing");
+
+            var headers = ParseCsvLineSafe(headerLine);
+
+            // 2️⃣ Header → index map
+            var indexMap = headers
+                .Select((name, index) => new { name = name.Trim(), index })
+                .ToDictionary(x => x.name, x => x.index, StringComparer.OrdinalIgnoreCase);
+
+            // 3️⃣ Safe getter
+            string Get(string col, string[] values)
+                => indexMap.ContainsKey(col) && indexMap[col] < values.Length
+                    ? values[indexMap[col]]
+                    : "";
+
+            // 4️⃣ Read rows
+            while (!reader.EndOfStream)
             {
-                reader.ReadLine(); // Skip header
+                var line = reader.ReadLine();
+                if (string.IsNullOrWhiteSpace(line)) continue;
 
-                while (!reader.EndOfStream)
+                var values = ParseCsvLineSafe(line);
+
+                records.Add(new ProductionRecord
                 {
-                    var line = reader.ReadLine();
-                    if (string.IsNullOrWhiteSpace(line)) continue;
+                    VisitNumber = Get("VisitNumber", values),
+                    AccessionNo = Get("AccessionNo", values),
+                    PanelName = Get("PanelName", values),
+                    Carrier = Get("Carrier", values),
+                    ActualCPTCode = Get("ActualCPTCode", values),
+                    TotalCharge = decimal.TryParse(Get("TotalCharge", values), out var charge) ? charge : 0,
 
-                    //var values = ParseCsvLine(line);
-                    var values = ParseCsvLineSafe(line);
-
-                    if (values.Length >= 7)
-                    {
-                        records.Add(new ProductionRecord
-                        {
-                            VisitNumber = values[0],
-                            AccessionNo = values[1],
-                            PanelName = values[2],
-                            Carrier = values[3],
-                            ActualCPTCode = values[4],
-                            TotalCharge = decimal.TryParse(values[5], out decimal charge) ? charge : 0,
-                            Panel1 = values[6]
-                        });
-                    }
-                }
+                    Panel1 = Get("Panel1", values),
+                    FirstBillDate = Get("FirstBillDate", values)
+                });
             }
 
             return records;
         }
+
 
         private string[] ParseCsvLineSafe(string line)
         {

@@ -146,8 +146,9 @@ namespace LRN.CodingMasterValidation
                               !string.IsNullOrEmpty(r.PanelName))
                   .GroupBy(r => new PanelExpectedActualComboKey
                   {
-                      PanelName =isPCRAL && !string.IsNullOrWhiteSpace(r.Panel1)
-                     ? r.Panel1: r.PanelName,
+                      // PanelName =isPCRAL && !string.IsNullOrWhiteSpace(r.Panel1)
+                      //? r.Panel1: r.PanelName,
+                      PanelName = r.PanelName,
                       ExpectedCPTCode = FormatOriginalCodes(r.ExpectedCPTCode),
                       ActualCPTCode = FormatOriginalCodes(r.ActualCPTCode)
                   })

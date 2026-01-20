@@ -210,8 +210,19 @@ namespace LRN.CodingMasterValidation
         private void GeneratePCRALReport(List<ValidationResult> results,StreamWriter writer)
         {
             // 🔹 HEADER (Panel1 INCLUDED)
+            //writer.WriteLine(
+            //    "VisitNumber,AccessionNo,PanelName,Panel1,Carrier,FirstBillDate,ActualCPTCode,ExpectedCPTCode," +
+            //    "MissingCPTCodes,AdditionalCPTCodes," +
+            //    "Missing CPT (Charge),MissingCPT_ChargeSource," +
+            //    "Additional CPT (Charges),AdditionalCPT_ChargeSource," +
+            //    "TotalCharge,Expected Charges,Validation Status,Remarks," +
+            //    "MissingCPT_AvgAllowedAmount,MissingCPT_AvgPaidAmount,MissingCPT_AvgPatientResponsibilityAmount," +
+            //    "AdditionalCPT_AvgAllowedAmount,AdditionalCPT_AvgPaidAmount,AdditionalCPT_AvgPatientResponsibilityAmount"
+            //);
+
+
             writer.WriteLine(
-                "VisitNumber,AccessionNo,PanelName,Panel1,Carrier,ActualCPTCode,ExpectedCPTCode," +
+                "VisitNumber,AccessionNo,PanelName,Carrier,FirstBillDate,ActualCPTCode,ExpectedCPTCode," +
                 "MissingCPTCodes,AdditionalCPTCodes," +
                 "Missing CPT (Charge),MissingCPT_ChargeSource," +
                 "Additional CPT (Charges),AdditionalCPT_ChargeSource," +
@@ -230,7 +241,7 @@ namespace LRN.CodingMasterValidation
         {
             // 🔹 HEADER (Panel1 EXCLUDED)
             writer.WriteLine(
-                "VisitNumber,AccessionNo,PanelName,Carrier,ActualCPTCode,ExpectedCPTCode," +
+                "VisitNumber,AccessionNo,PanelName,Carrier,FirstBillDate,ActualCPTCode,ExpectedCPTCode," +
                 "MissingCPTCodes,AdditionalCPTCodes," +
                 "Missing CPT (Charge),MissingCPT_ChargeSource," +
                 "Additional CPT (Charges),AdditionalCPT_ChargeSource," +
@@ -244,98 +255,7 @@ namespace LRN.CodingMasterValidation
                 WriteCommonRow(result, writer, includePanel1: false);
             }
         }
-        //private void WriteCommonRow(ValidationResult result,StreamWriter writer,bool includePanel1)
-        //{
-        //    var record = result.ProductionRecord;
-        //    string visit = record?.VisitNumber ?? "UNKNOWN";
-        //  //  string payerName = record?.Carrier?.Trim().ToUpperInvariant();
-
-        //    string payerName = result.PayerName?.Trim().ToUpperInvariant();
-
-
-        //    DateTime? beginDOS = ParseBeginDOS(record?.BeginDOS);
-
-        //    // ---- AVG CALCULATIONS ----
-        //    var missingAvgAllowed = _chargeCalculator.CalculateAverageAmount(
-        //        result.MissingCPTCodes, result.PayerCommonCode, payerName,
-        //        x => x.AvgAllowed, visit, "MissingCPT_AvgAllowedAmount");
-
-        //    var missingAvgPaid = _chargeCalculator.CalculateAverageAmount(
-        //        result.MissingCPTCodes, result.PayerCommonCode, payerName,
-        //        x => x.AvgInsurance, visit, "MissingCPT_AvgPaidAmount");
-
-        //    var missingAvgPatient = _chargeCalculator.CalculateAverageAmount(
-        //        result.MissingCPTCodes, result.PayerCommonCode, payerName,
-        //        x => x.AvgPatientBalance, visit, "MissingCPT_AvgPatientResponsibilityAmount");
-
-        //    var additionalAvgAllowed = _chargeCalculator.CalculateAverageAmount(
-        //        result.AdditionalCPTCodes, result.PayerCommonCode, payerName,
-        //        x => x.AvgAllowed, visit, "AdditionalCPT_AvgAllowedAmount");
-
-        //    var additionalAvgPaid = _chargeCalculator.CalculateAverageAmount(
-        //        result.AdditionalCPTCodes, result.PayerCommonCode, payerName,
-        //        x => x.AvgInsurance, visit, "AdditionalCPT_AvgPaidAmount");
-
-        //    var additionalAvgPatient = _chargeCalculator.CalculateAverageAmount(
-        //        result.AdditionalCPTCodes, result.PayerCommonCode, payerName,
-        //        x => x.AvgPatientBalance, visit, "AdditionalCPT_AvgPatientResponsibilityAmount");
-
-        //    // ---- CHARGES ----
-        //    decimal missingCharge =
-        //        _chargeCalculator.CalculateTotalChargeForMissingCPTs(
-        //            result.MissingCPTCodes, beginDOS);
-
-        //    decimal additionalCharge =
-        //        _chargeCalculator.CalculateTotalChargeForAdditionalCPTs(
-        //            result.AdditionalCPTCodes, beginDOS);
-
-        //    decimal expectedCharge =
-        //        result.ExpectedCPTCodes.Any()
-        //            ? _chargeCalculator.CalculateExpectedCharges(
-        //                string.Join(", ", result.ExpectedCPTCodes), beginDOS)
-        //            : 0m;
-
-        //    string missingChargeSource =
-        //        _chargeCalculator.GetChargeSourceSummary(result.MissingCPTCodes, beginDOS);
-
-        //    string additionalChargeSource =
-        //        _chargeCalculator.GetChargeSourceSummary(result.AdditionalCPTCodes, beginDOS);
-
-        //    string validationStatus = GetValidationStatus(result);
-
-        //    // ---- WRITE ROW ----
-        //    writer.Write(
-        //        $"\"{Escape(record?.VisitNumber)}\"," +
-        //        $"\"{Escape(record?.AccessionNo)}\"," +
-        //        $"\"{Escape(record?.PanelName)}\",");
-
-        //    if (includePanel1)
-        //    {
-        //        writer.Write($"\"{Escape(record?.Panel1)}\",");
-        //    }
-
-        //    writer.WriteLine(
-        //        $"\"{Escape(record?.Carrier)}\"," +
-        //        $"\"{Escape(record?.ActualCPTCode)}\"," +
-        //        $"\"{Escape(string.Join(", ", result.ExpectedCPTCodes))}\"," +
-        //        $"\"{Escape(FormatCodes(result.MissingCPTCodes))}\"," +
-        //        $"\"{Escape(FormatCodes(result.AdditionalCPTCodes))}\"," +
-        //        $"\"{missingCharge:0.00}\"," +
-        //        $"\"{missingChargeSource}\"," +
-        //        $"\"{additionalCharge:0.00}\"," +
-        //        $"\"{additionalChargeSource}\"," +
-        //        $"\"{record?.TotalCharge:0.00}\"," +
-        //        $"\"{expectedCharge:0.00}\"," +
-        //        $"\"{validationStatus}\"," +
-        //        $"\"{Escape(result.Remarks)}\"," +
-        //        $"\"{missingAvgAllowed:0.00}\"," +
-        //        $"\"{missingAvgPaid:0.00}\"," +
-        //        $"\"{missingAvgPatient:0.00}\"," +
-        //        $"\"{additionalAvgAllowed:0.00}\"," +
-        //        $"\"{additionalAvgPaid:0.00}\"," +
-        //        $"\"{additionalAvgPatient:0.00}\""
-        //    );
-        //}
+     
 
         private void WriteCommonRow(ValidationResult result, StreamWriter writer, bool includePanel1)
         {
@@ -438,19 +358,26 @@ namespace LRN.CodingMasterValidation
 
             string validationStatus = GetValidationStatus(result);
 
+            string panelValue = includePanel1 && !string.IsNullOrWhiteSpace(record?.Panel1)
+                            ? record.Panel1           // PCRAL → use Panel1
+                            : record?.PanelName;      // Non-PCRAL → normal PanelName
+
             // ---- WRITE ROW ----
             writer.Write(
                 $"\"{Escape(record?.VisitNumber)}\"," +
                 $"\"{Escape(record?.AccessionNo)}\"," +
-                $"\"{Escape(record?.PanelName)}\",");
+                // $"\"{Escape(record?.PanelName)}\",");
+                $"\"{Escape(panelValue)}\",");
 
-            if (includePanel1)
-            {
-                writer.Write($"\"{Escape(record?.Panel1)}\",");
-            }
+            //if (includePanel1)
+            //{
+            //    writer.Write($"\"{Escape(record?.Panel1)}\",");
+            //}
 
             writer.WriteLine(
                 $"\"{Escape(record?.Carrier)}\"," +
+               // $"\"{Escape(record?.FirstBillDate)}\"," +   // ✅ NEW
+                $"\"{FormatDate(record?.FirstBillDate)}\"," +
                 $"\"{Escape(record?.ActualCPTCode)}\"," +
                 $"\"{Escape(string.Join(", ", result.ExpectedCPTCodes))}\"," +
                 $"\"{Escape(FormatCodes(result.MissingCPTCodes))}\"," +
@@ -472,6 +399,12 @@ namespace LRN.CodingMasterValidation
             );
         }
         // ---------------- HELPERS ----------------
+        private static string FormatDate(string value)
+        {
+            return DateTime.TryParse(value, out var d)
+                ? d.ToString("yyyy-MM-dd")
+                : value ?? "";
+        }
 
         private static DateTime? ParseBeginDOS(string beginDos)
         {

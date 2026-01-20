@@ -222,6 +222,8 @@ namespace LRN.CodingMasterValidation
                 cell.Style.Border.BottomBorderColor = XLColor.Black;
 
             }
+            int firstBillDateColIndex =
+                       headers.FindIndex(h => h.Equals("FirstBillDate", StringComparison.OrdinalIgnoreCase));
 
             // Write data rows with conditional formatting
             for (int row = 1; row < lines.Length; row++)
@@ -245,7 +247,14 @@ namespace LRN.CodingMasterValidation
                     cell.Style.Font.FontName = BodyFont;
                     cell.Style.Font.FontSize = 10;
                     cell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                  
 
+                    if (col == firstBillDateColIndex && DateTime.TryParse(values[col], out DateTime billDate))
+                    {
+                        cell.Value = billDate;
+                        cell.Style.DateFormat.Format = "yyyy-MM-dd";
+                        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    }
 
                     // Format numeric columns
                     //if (col >= 8 && col <= 11) // Assuming charges columns are 8-11
@@ -706,7 +715,7 @@ namespace LRN.CodingMasterValidation
                 cell.Style.Fill.BackgroundColor = XLColor.LightGray;
                 cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             }
-
+            int panelColIndex = headers.FindIndex(h => h.Equals("Panel", StringComparison.OrdinalIgnoreCase));
             // =========================
             // COLUMN INDEX LOOKUP
             // =========================
@@ -731,6 +740,7 @@ namespace LRN.CodingMasterValidation
             for (int row = 1; row < lines.Length; row++)
             {
                 var values = ParseCsvLine(lines[row]);
+                
 
                 decimal missingAmt = SafeParseCurrency(values[missingAmountIdx]);
                 decimal additionalAmt = SafeParseCurrency(values[additionalAmountIdx]);
@@ -740,12 +750,23 @@ namespace LRN.CodingMasterValidation
                     continue;
 
                 totalImpact += (additionalAmt - missingAmt);
-
+               
                 for (int col = 0; col < headers.Count; col++)
                 {
+                   
+
+
                     var cell = worksheet.Cell(currentRow, col + 1);
                     string header = headers[col];
                     string rawValue = col < values.Count ? values[col] : string.Empty;
+
+                    if (col == panelColIndex)
+                    {
+                        cell.Value = rawValue;
+                        cell.Style.NumberFormat.Format = "@"; // TEXT
+                        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                        continue;
+                    }
 
                     // COUNT columns → integer
                     if (header.Contains("Count", StringComparison.OrdinalIgnoreCase)

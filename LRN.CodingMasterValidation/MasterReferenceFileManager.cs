@@ -150,6 +150,62 @@ namespace LRN.CodingMasterValidation
             return latest.ImportedFileID;
         }
 
+        //private int? HandleCodingMaster()
+        //{
+        //    var latest = _db.GetLatestImportedFile(20003); // CodingMaster
+        //    if (latest == null) return null;
+
+        //    int existingId = _config.GetValue<int>(
+        //        $"LabExecution:{_lab}:CodingMasterImportedFileID");
+
+        //    if (latest.ImportedFileID == existingId)
+        //    {
+        //        Log($"CodingMaster already processed. ImportedFileID={existingId}");
+        //        return null;
+        //    }
+
+        //    //string targetPath = ResolveLabPath(
+        //    //    _config["CodingMaster:FilePath"]);
+
+
+        //    string targetPath = ResolveLabPath(_config["ValidationSettings:CodingMaster:FilePath"]);
+
+
+        //    ArchiveIfExists(targetPath);
+        //    Download(latest.ImportFilePath, targetPath);
+
+        //    Log($"CodingMaster updated. New ImportedFileID={latest.ImportedFileID}");
+        //    return latest.ImportedFileID;
+        //}
+
+        private int? HandleCodingMaster()
+        {
+            var latest = _db.GetLatestImportedFile(20003);
+            if (latest == null) return null;
+
+            int existingId = _config.GetValue<int>(
+                $"LabExecution:{_lab}:CodingMasterImportedFileID", 0);
+
+            if (latest.ImportedFileID == existingId)
+            {
+                Log($"CodingMaster already processed. ImportedFileID={existingId}");
+                return null;
+            }
+
+            var templatePath = _config["ValidationSettings:CodingMaster:FilePath"];
+            if (string.IsNullOrWhiteSpace(templatePath))
+                throw new InvalidOperationException(
+                    "Missing config: ValidationSettings:CodingMaster:FilePath");
+
+            string targetPath = ResolveLabPath(templatePath);
+
+            ArchiveIfExists(targetPath);
+            Download(latest.ImportFilePath, targetPath);
+
+            Log($"CodingMaster updated. New ImportedFileID={latest.ImportedFileID}");
+            return latest.ImportedFileID;
+        }
+
 
         public ReferenceFileUpdateResult RefreshReferenceFiles()
         {
@@ -157,6 +213,7 @@ namespace LRN.CodingMasterValidation
 
             result.FeeScheduleImportedFileID = HandleFeeSchedule();
             result.PayerMasterImportedFileID = HandleInsuranceMaster();
+            result.CodingMasterImportedFileID = HandleCodingMaster();
 
             return result;
         }

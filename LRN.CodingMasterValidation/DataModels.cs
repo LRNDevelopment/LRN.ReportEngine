@@ -217,6 +217,8 @@
     {
         public int? FeeScheduleImportedFileID { get; set; }
         public int? PayerMasterImportedFileID { get; set; }
+
+        public int? CodingMasterImportedFileID { get; set; }
     }
 
     public class ImportedFileInfo

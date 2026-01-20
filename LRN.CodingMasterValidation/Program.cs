@@ -519,12 +519,14 @@ class Program
                         var updateResult = refManager.RefreshReferenceFiles();
 
                         if (updateResult.FeeScheduleImportedFileID.HasValue ||
-                            updateResult.PayerMasterImportedFileID.HasValue)
+                            updateResult.PayerMasterImportedFileID.HasValue ||
+                             updateResult.CodingMasterImportedFileID.HasValue)
                         {
                             UpdateImportedFileIdsInAppSettings(
                                 lab.Lab,
                                 updateResult.FeeScheduleImportedFileID,
-                                updateResult.PayerMasterImportedFileID);
+                                updateResult.PayerMasterImportedFileID,
+                                updateResult.CodingMasterImportedFileID);
 
                             FileLogger.Info($"Updated appsettings ImportedFileIDs for lab {lab.Lab}");
                         }
@@ -808,7 +810,8 @@ class Program
     static void UpdateImportedFileIdsInAppSettings(
       string lab,
       int? feeScheduleId,
-      int? payerMasterId)
+      int? payerMasterId,
+      int? codingMasterId)
     {
         var appSettingsPath = Path.Combine(
             AppContext.BaseDirectory, "appsettings.json");
@@ -834,6 +837,10 @@ class Program
 
         if (payerMasterId.HasValue)
             labExecution[lab]["PayerMasterImportedFileID"] = payerMasterId.Value;
+
+        if (codingMasterId.HasValue)
+            labExecution[lab]["CodingMasterImportedFileID"] = codingMasterId.Value;
+
 
         root["LabExecution"] = labExecution;
 

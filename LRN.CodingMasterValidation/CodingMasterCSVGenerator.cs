@@ -961,6 +961,7 @@ namespace LRN.CodingMasterValidation
                 TotalCharge = GetCellDecimalValue(row.Cell(columnMapping["TotalCharge"])),
 
                 // NEW fields - string values
+                FirstBillDate = GetCellStringValueSafe(columnMapping, "FirstBillDate", row),
                 FinancialClass = GetCellStringValueSafe(columnMapping, "FinancialClass", row),
                 BillingProvider = GetCellStringValueSafe(columnMapping, "BillingProvider", row),
                 ReferringProviderName = GetCellStringValueSafe(columnMapping, "ReferringProviderName", row),
@@ -975,7 +976,6 @@ namespace LRN.CodingMasterValidation
                 Aging = GetCellStringValueSafe(columnMapping, "Aging", row),
                 AgingBucket = GetCellStringValueSafe(columnMapping, "AgingBucket", row),
                 AMDDOE = GetCellStringValueSafe(columnMapping, "AMDDOE", row),
-                FirstBillDate = GetCellStringValueSafe(columnMapping, "FirstBillDate", row),
                 ChargeEntryDate = GetCellStringValueSafe(columnMapping, "ChargeEntryDate", row),
                 DenialPostedDate = GetCellStringValueSafe(columnMapping, "DenialPostedDate", row),
                 CheckDate = GetCellStringValueSafe(columnMapping, "CheckDate", row),

@@ -44,7 +44,7 @@ public class FileProcessingWorker : BackgroundService
                 {
                     try
                     {
-                        HandleMasterFileIfRequired(file);
+                       // HandleMasterFileIfRequired(file);
                         await fileReader.ProcessImportFileAsync((int)file.ImportedFileId);
                         //_logger.Info("Processed file {FileId} successfully.", file.ImportedFileId);
                         _logger.Info($"Processed file {file.ImportedFileId} successfully.");

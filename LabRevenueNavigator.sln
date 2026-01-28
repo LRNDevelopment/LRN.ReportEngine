@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.3.11408.92 d18.3
+VisualStudioVersion = 18.3.11408.92
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LabRevenueNavigator.API", "LabRevenueNavigator\LabRevenueNavigator.API.csproj", "{5710573C-3D2C-486B-9B3D-CFA66AE018DB}"
 EndProject
@@ -34,6 +34,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.SqlServiceMonitor", "LRN.SqlServiceMonitor\LRN.SqlServiceMonitor.csproj", "{701C3C16-9386-6BE7-44F3-429D5EACB63E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.Notifications", "LRN.Notification\LRN.Notifications.csproj", "{6D4D2AD4-6777-D21B-C54A-BF62E8376665}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.BillingFrequencyWorker", "LRN.BillingFrequencyWorker\LRN.BillingFrequencyWorker.csproj", "{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -237,6 +239,18 @@ Global
 		{6D4D2AD4-6777-D21B-C54A-BF62E8376665}.Release|x64.Build.0 = Release|Any CPU
 		{6D4D2AD4-6777-D21B-C54A-BF62E8376665}.Release|x86.ActiveCfg = Release|Any CPU
 		{6D4D2AD4-6777-D21B-C54A-BF62E8376665}.Release|x86.Build.0 = Release|Any CPU
+		{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}.Debug|x64.Build.0 = Debug|Any CPU
+		{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}.Debug|x86.Build.0 = Debug|Any CPU
+		{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}.Release|x64.ActiveCfg = Release|Any CPU
+		{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}.Release|x64.Build.0 = Release|Any CPU
+		{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}.Release|x86.ActiveCfg = Release|Any CPU
+		{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

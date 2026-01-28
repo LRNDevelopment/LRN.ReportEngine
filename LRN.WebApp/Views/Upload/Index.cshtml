@@ -156,7 +156,7 @@
                               data-utc="@(item.ImportedOn?.ToUniversalTime().ToString("O"))"></span>
                     </td>
                      <td>
-                         @if(item.FileStatusName !="InProgress" || item.FileStatusName !="Queued")
+                         @if(item.FileStatusName.ToUpper() !="INPROGRESS" && item.FileStatusName.ToUpper() !="QUEUED")
                          {
                         <span class="js-local-dt" data-utc="@(item.ProcessedOn?.ToUniversalTime().ToString("O"))"></span>
                          }

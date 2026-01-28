@@ -1,15 +1,15 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-var builder = Host.CreateApplicationBuilder(args);
-
-builder.Services.Configure<ImportOptions>(builder.Configuration.GetSection("BillingFrequency"));
-builder.Services.AddHostedService<BillingFrequencyWorker>();
-
-builder.Services.AddWindowsService(options =>
-{
-	options.ServiceName = "Billing Frequency Worker";
-});
-
-var host = builder.Build();
-host.Run();
+Host.CreateDefaultBuilder(args)
+	.UseContentRoot(AppContext.BaseDirectory)
+	.UseWindowsService(o => o.ServiceName = "Billing Frequency Worker")
+	.ConfigureLogging(logging => logging.AddEventLog()) // 👈
+	.ConfigureServices((context, services) =>
+	{
+		services.Configure<ImportOptions>(context.Configuration.GetSection("BillingFrequency"));
+		services.AddHostedService<BillingFrequencyWorker>();
+	})
+	.Build()
+	.Run();

@@ -22,23 +22,34 @@ public sealed class BillingFrequencyWorker : BackgroundService
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
-		Directory.CreateDirectory(_opt.WatchFolder);
-		Directory.CreateDirectory(_opt.ArchiveFolder);
-		Directory.CreateDirectory(_opt.ErrorFolder);
+		_logger.LogInformation("Billing Frequency Worker starting. Watch={Watch} Archive={Archive} Error={Error} Sheet={Sheet}",
+			_opt.WatchFolder, _opt.ArchiveFolder, _opt.ErrorFolder, _opt.SheetName);
 
 		while (!stoppingToken.IsCancellationRequested)
 		{
 			try
 			{
+				// If config missing, don't crash the service—log and retry.
+				if (string.IsNullOrWhiteSpace(_opt.WatchFolder) ||
+					string.IsNullOrWhiteSpace(_opt.ArchiveFolder) ||
+					string.IsNullOrWhiteSpace(_opt.ErrorFolder))
+				{
+					_logger.LogError("BillingFrequency config folders are empty. Ensure appsettings.json is deployed and has BillingFrequency section.");
+					await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+					continue;
+				}
+
+				Directory.CreateDirectory(_opt.WatchFolder);
+				Directory.CreateDirectory(_opt.ArchiveFolder);
+				Directory.CreateDirectory(_opt.ErrorFolder);
+
+				// --- your existing processing logic here ---
 				var files = Directory.GetFiles(_opt.WatchFolder, _opt.SearchPattern);
-
-				// Map file -> LabId
 				var mapped = files
-					.Select(f => new { File = f, LabId = ResolveLabId(Path.GetFileName(f)) })
-					.Where(x => x.LabId != null)
-					.GroupBy(x => x.LabId!.Value)
-					.ToList();
-
+				.Select(f => new { File = f, LabId = ResolveLabId(Path.GetFileName(f)) })
+				.Where(x => x.LabId != null)
+				.GroupBy(x => x.LabId!.Value)
+				.ToList();
 				foreach (var labGroup in mapped)
 				{
 					var labId = labGroup.Key;
@@ -82,14 +93,13 @@ public sealed class BillingFrequencyWorker : BackgroundService
 						SafeMoveToArchive(file);
 				}
 
-				// Sleep
 				await Task.Delay(TimeSpan.FromSeconds(_opt.PollSeconds), stoppingToken);
 			}
 			catch (TaskCanceledException) { }
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "Worker loop error");
-				await Task.Delay(TimeSpan.FromSeconds(_opt.PollSeconds), stoppingToken);
+				await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
 			}
 		}
 	}

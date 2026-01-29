@@ -1,4 +1,4 @@
-﻿using ClosedXML.Excel;
+using ClosedXML.Excel;
 using System.Globalization;
 
 public sealed class BillingLineRow

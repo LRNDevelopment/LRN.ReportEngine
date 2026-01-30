@@ -1,212 +1,349 @@
+using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Configuration;
 using System.Data;
 
 public sealed class BillingFrequencyWorker : BackgroundService
 {
-    private readonly ILogger<BillingFrequencyWorker> _logger;
-    private readonly ImportOptions _opt;
-    private readonly string _connStr;
+	private readonly ILogger<BillingFrequencyWorker> _logger;
+	private readonly ImportOptions _opt;
+	private readonly string _connStr;
+	private readonly SharePointDownloader _sp;
+	private readonly BillingFrequencyFileStatusStore _statusStore;
+	private static string _payerPolicyfile = "";
+	public BillingFrequencyWorker(
+		ILogger<BillingFrequencyWorker> logger,
+		IOptions<ImportOptions> options,
+		IConfiguration config,
+		SharePointDownloader sp,
+		BillingFrequencyFileStatusStore statusStore)
+	{
+		_logger = logger;
+		_opt = options.Value;
+		_connStr = config.GetConnectionString("DefaultConnection")!;
+		_sp = sp;
+		_statusStore = statusStore;
 
-    private readonly SharePointDownloader _sp;
-    private readonly BillingFrequencyFileStatusStore _statusStore;
+		// Quick visibility during local debugging
+		_logger.LogInformation("Config: SharePoint.Enabled={Enabled}", _opt.SharePoint.Enabled);
+	}
 
-    private string? _processedFolderIdCache;
+	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+	{
+		_payerPolicyfile = Path.Combine(_opt.PayerPolicyDataFile, DateTime.Now.ToString("MMddyyyy")); ;
+		Directory.CreateDirectory(_opt.WatchFolder);
+		Directory.CreateDirectory(_opt.ArchiveFolder);
+		Directory.CreateDirectory(_opt.ErrorFolder);
+		Directory.CreateDirectory(_payerPolicyfile);
 
-    public BillingFrequencyWorker(
-        ILogger<BillingFrequencyWorker> logger,
-        IOptions<ImportOptions> options,
-        IConfiguration config,
-        SharePointDownloader sp,
-        BillingFrequencyFileStatusStore statusStore)
-    {
-        _logger = logger;
-        _opt = options.Value;
-        _connStr = config.GetConnectionString("DefaultConnection")!;
-        _sp = sp;
-        _statusStore = statusStore;
-    }
+		_logger.LogInformation("BillingFrequencyWorker started. WatchFolder={WatchFolder}", _opt.WatchFolder);
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        _logger.LogInformation(
-            "Billing Frequency Worker started. Watch={Watch} Archive={Archive} Error={Error} PollSeconds={Poll} Labs={LabCount}",
-            _opt.WatchFolder, _opt.ArchiveFolder, _opt.ErrorFolder, _opt.PollSeconds, _opt.Labs.Count);
+		// Resolve processed folder (optional SharePoint move) once, and refresh if it fails later.
+		string? processedFolderId = null;
 
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try
-            {
-                ValidateFolders();
-                Directory.CreateDirectory(_opt.WatchFolder);
-                Directory.CreateDirectory(_opt.ArchiveFolder);
-                Directory.CreateDirectory(_opt.ErrorFolder);
+		while (!stoppingToken.IsCancellationRequested)
+		{
+			try
+			{
+				if (_opt.SharePoint.Enabled)
+				{
+					if (processedFolderId is null)
+					{
+						try
+						{
+							processedFolderId = await _sp.TryResolveProcessedFolderIdAsync(stoppingToken);
+							if (!string.IsNullOrWhiteSpace(processedFolderId))
+								_logger.LogInformation("Resolved SharePoint processed folder id.");
+						}
+						catch (Exception ex)
+						{
+							_logger.LogWarning(ex, "Failed to resolve processed folder id (will retry later). Moving on.");
+						}
+					}
 
-                // Resolve processed folder id once if move is enabled
-                if (_processedFolderIdCache == null && _opt.SharePoint.MoveToProcessed)
-                {
-                    _processedFolderIdCache = await _sp.TryResolveProcessedFolderIdAsync(stoppingToken);
-                    if (string.IsNullOrWhiteSpace(_processedFolderIdCache))
-                        _logger.LogWarning("MoveToProcessed is enabled but ProcessedFolderPath could not be resolved.");
-                }
+					await ProcessSharePointLabsOnceAsync(processedFolderId, stoppingToken);
+				}
+				else
+				{
+					await ProcessLocalFolderOnceAsync(stoppingToken);
+				}
 
-                int year = DateTime.Now.Year;
+				await Task.Delay(TimeSpan.FromSeconds(_opt.PollSeconds), stoppingToken);
+			}
+			catch (TaskCanceledException)
+			{
+				// normal shutdown
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Worker loop error");
+				await Task.Delay(TimeSpan.FromSeconds(_opt.PollSeconds), stoppingToken);
+			}
+		}
 
-                foreach (var lab in _opt.Labs)
-                {
-                    stoppingToken.ThrowIfCancellationRequested();
+		_logger.LogInformation("BillingFrequencyWorker stopped.");
+	}
 
-                    if (string.IsNullOrWhiteSpace(lab.SharePointRootPath))
-                    {
-                        _logger.LogWarning("Lab {LabId}: SharePointRootPath is empty. Skipping.", lab.LabId);
-                        continue;
-                    }
+	private async Task ProcessSharePointLabsOnceAsync(string? processedFolderId, CancellationToken ct)
+	{
+		int currentYear = DateTime.Now.Year;
 
-                    var selected = await _sp.TryGetLatestFileForLabAsync(lab, year, stoppingToken);
-                    if (selected == null) continue;
+		foreach (var lab in _opt.Labs)
+		{
+			ct.ThrowIfCancellationRequested();
 
-                    if (await _statusStore.IsProcessedAsync(selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey, stoppingToken))
-                    {
-                        _logger.LogInformation("Lab {LabId}: already processed. Skipping {File}.", selected.LabId, selected.Name);
-                        continue;
-                    }
+			if (string.IsNullOrWhiteSpace(lab.SharePointRootPath))
+			{
+				_logger.LogWarning("Lab {LabId}: SharePointRootPath is empty; skipping.", lab.LabId);
+				continue;
+			}
 
-                    string localFileName = $"{selected.LabId}_{SanitizeFileName(selected.Name)}";
-                    string localFinal = Path.Combine(_opt.WatchFolder, localFileName);
-                    string localTmp = localFinal + ".download";
+			if (string.IsNullOrWhiteSpace(lab.SharePointFilePattern))
+				lab.SharePointFilePattern = "*.xlsx";
 
-                    try
-                    {
-                        await _statusStore.UpsertStatusAsync(
-                            selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey,
-                            selected.Name, selected.SharePointPath, selected.LastModifiedUtc,
-                            status: "DOWNLOADING",
-                            statusMessage: "Downloading file from SharePoint.",
-                            processedAtUtc: null,
-                            ct: stoppingToken);
+			SharePointDownloader.SelectedFile? selected = null;
+			string? localPath = null;
 
-                        SafeDelete(localTmp);
-                        await _sp.DownloadFileAsync(selected.DriveId, selected.ItemId, localTmp, stoppingToken);
+			try
+			{
+				selected = await _sp.TryGetLatestFileForLabAsync(lab, currentYear, ct);
+				if (selected == null)
+					continue;
 
-                        SafeDelete(localFinal);
-                        File.Move(localTmp, localFinal);
+				// Skip if already processed
+				//if (await _statusStore.IsProcessedAsync(selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey, ct))
+				//{
+				//	_logger.LogInformation("Lab {LabId}: already PROCESSED -> {Path}", selected.LabId, selected.SharePointPath);
+				//	continue;
+				//}
 
-                        await _statusStore.UpsertStatusAsync(
-                            selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey,
-                            selected.Name, selected.SharePointPath, selected.LastModifiedUtc,
-                            status: "DOWNLOADED",
-                            statusMessage: $"Downloaded to {localFinal}",
-                            processedAtUtc: null,
-                            ct: stoppingToken);
+				// Mark attempt
+				await _statusStore.UpsertStatusAsync(
+					labId: selected.LabId,
+					driveId: selected.DriveId,
+					itemId: selected.ItemId,
+					eTagKey: selected.ETagKey,
+					fileName: selected.Name,
+					sharePointPath: selected.SharePointPath,
+					lastModifiedUtc: selected.LastModifiedUtc,
+					status: "IN_PROGRESS",
+					statusMessage: "Downloading + processing",
+					processedAtUtc: null,
+					ct: ct);
 
-                        // Extract excel
-                        var rows = BillingExcelReader.ReadLineLevelRows(localFinal, _opt.SheetName, _opt.HeaderRow);
-                        if (rows.Count == 0)
-                            throw new InvalidOperationException($"No line-level rows found in '{localFinal}'.");
+				var localName = $"{selected.LabId}_{SanitizeFileName(selected.Name)}";
+				localPath = Path.Combine(_opt.WatchFolder, localName);
+				var PayerPolicyDataFileLocalName = Path.Combine(_payerPolicyfile, selected.Name);
+				_logger.LogInformation("Lab {LabId}: downloading '{File}' -> '{Local}'", selected.LabId, selected.Name, localPath);
+				////await _sp.DownloadFileAsync(selected.DriveId, selected.ItemId, localPath!, ct);
+				if (!File.Exists(PayerPolicyDataFileLocalName))
+				{
+					await _sp.DownloadFileAsync(selected.DriveId, selected.ItemId, PayerPolicyDataFileLocalName!, ct);
+				}
+				//await ValidateOrThrowAsync(localPath, ct);
 
-                        // Group counts
-                        DataTable countsDt = BillingGrouper.BuildBillingCounts(rows, selected.LabId);
+				// Extract process with grouping and SQL load commented for now
 
-                        // Load to SQL (delete existing for lab + bulk insert)
-                        await BillingSqlLoader.ReplaceLabDataAsync(_connStr, _opt.DestinationTable, selected.LabId, countsDt, stoppingToken);
+				////_logger.LogInformation("Lab {LabId}: reading Excel '{Local}'", selected.LabId, localPath);
+				////            var rows = BillingExcelReader.ReadLineLevelRows(localPath!, _opt.SheetName, _opt.HeaderRow);
 
-                        await _statusStore.UpsertStatusAsync(
-                            selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey,
-                            selected.Name, selected.SharePointPath, selected.LastModifiedUtc,
-                            status: "PROCESSED",
-                            statusMessage: $"Loaded {countsDt.Rows.Count} grouped rows from {rows.Count} line rows.",
-                            processedAtUtc: DateTimeOffset.UtcNow,
-                            ct: stoppingToken);
+				////            if (rows.Count == 0)
+				////                throw new InvalidOperationException("No line-level rows found in the Excel file.");
 
-                        // Optional: move file on SharePoint after success
-                        if (_opt.SharePoint.MoveToProcessed && !string.IsNullOrWhiteSpace(_processedFolderIdCache))
-                        {
-                            try
-                            {
-                                await _sp.MoveItemAsync(selected.DriveId, selected.ItemId, _processedFolderIdCache!, stoppingToken);
-                                _logger.LogInformation("Lab {LabId}: moved SharePoint file to processed folder: {File}", selected.LabId, selected.Name);
-                            }
-                            catch (Exception exMove)
-                            {
-                                _logger.LogError(exMove, "Lab {LabId}: failed to move SharePoint file to processed folder: {File}", selected.LabId, selected.Name);
-                            }
-                        }
+				////            // Group
+				////            DataTable countsDt = BillingGrouper.BuildBillingCounts(rows, selected.LabId);
 
-                        // Archive local file
-                        SafeMoveToFolder(localFinal, _opt.ArchiveFolder, "archived");
-                    }
-                    catch (Exception ex)
-                    {
-                        string msg = ex.ToString();
-                        if (msg.Length > 3500) msg = msg[..3500];
+				////            // Replace lab data
+				////            _logger.LogInformation("Lab {LabId}: deleting + bulk inserting {Count} grouped rows", selected.LabId, countsDt.Rows.Count);
+				////            await BillingSqlLoader.ReplaceLabDataAsync(_connStr, _opt.DestinationTable, selected.LabId, countsDt, ct);
 
-                        _logger.LogError(ex, "Lab {LabId}: failed processing SharePoint file {File}", selected.LabId, selected.Name);
+				////            // Archive local file
+				////            SafeMoveToArchive(localPath!);
 
-                        await _statusStore.UpsertStatusAsync(
-                            selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey,
-                            selected.Name, selected.SharePointPath, selected.LastModifiedUtc,
-                            status: "ERROR",
-                            statusMessage: msg,
-                            processedAtUtc: null,
-                            ct: stoppingToken);
+				////            // Optional: move file on SharePoint to processed folder
+				////            if (!string.IsNullOrWhiteSpace(processedFolderId))
+				////            {
+				////                try
+				////                {
+				////                    await _sp.MoveItemAsync(selected.DriveId, selected.ItemId, processedFolderId!, ct);
+				////                    _logger.LogInformation("Lab {LabId}: moved SharePoint file to processed folder.", selected.LabId);
+				////                }
+				////                catch (Exception ex)
+				////                {
+				////                    _logger.LogWarning(ex, "Lab {LabId}: failed to move SharePoint file to processed folder (non-fatal).", selected.LabId);
+				////                }
+				////            }
 
-                        SafeMoveToFolder(localFinal, _opt.ErrorFolder, "error");
-                        SafeDelete(localTmp);
-                    }
-                }
+				// Mark success
+				await _statusStore.UpsertStatusAsync(
+					labId: selected.LabId,
+					driveId: selected.DriveId,
+					itemId: selected.ItemId,
+					eTagKey: selected.ETagKey,
+					fileName: selected.Name,
+					sharePointPath: selected.SharePointPath,
+					lastModifiedUtc: selected.LastModifiedUtc,
+					status: "PROCESSED",
+					statusMessage: null,
+					processedAtUtc: DateTimeOffset.UtcNow,
+					ct: ct);
 
-                await Task.Delay(TimeSpan.FromSeconds(_opt.PollSeconds), stoppingToken);
-            }
-            catch (TaskCanceledException) { }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Worker loop error");
-                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
-            }
-        }
-    }
+				_logger.LogInformation("Lab {LabId}: PROCESSED -> {Path}", selected.LabId, selected.SharePointPath);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Lab {LabId}: ERROR processing SharePoint file", lab.LabId);
+				//if (!string.IsNullOrWhiteSpace(localPath)) SafeMoveToError(localPath!);
 
-    private void ValidateFolders()
-    {
-        if (string.IsNullOrWhiteSpace(_opt.WatchFolder) ||
-            string.IsNullOrWhiteSpace(_opt.ArchiveFolder) ||
-            string.IsNullOrWhiteSpace(_opt.ErrorFolder))
-        {
-            throw new InvalidOperationException("WatchFolder/ArchiveFolder/ErrorFolder must be configured (BillingFrequency section).");
-        }
-    }
+				// Best-effort: record error status
+				if (selected != null)
+				{
+					await _statusStore.UpsertStatusAsync(
+						labId: selected.LabId,
+						driveId: selected.DriveId,
+						itemId: selected.ItemId,
+						eTagKey: selected.ETagKey,
+						fileName: selected.Name,
+						sharePointPath: selected.SharePointPath,
+						lastModifiedUtc: selected.LastModifiedUtc,
+						status: "ERROR",
+						statusMessage: ex.Message,
+						processedAtUtc: null,
+						ct: ct);
+				}
+			}
+		}
+	}
 
-    private static void SafeMoveToFolder(string filePath, string destFolder, string tag)
-    {
-        try
-        {
-            if (!File.Exists(filePath)) return;
+	// Optional local fallback if you want to drop files manually into WatchFolder.
+	private async Task ProcessLocalFolderOnceAsync(CancellationToken ct)
+	{
+		var files = Directory.GetFiles(_opt.WatchFolder, _opt.SearchPattern);
 
-            Directory.CreateDirectory(destFolder);
-            var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var dest = Path.Combine(destFolder,
-                $"{Path.GetFileNameWithoutExtension(filePath)}_{tag}_{stamp}{Path.GetExtension(filePath)}");
+		var mapped = files
+			.Select(f => new { File = f, LabId = ResolveLabId(Path.GetFileName(f)) })
+			.Where(x => x.LabId != null)
+			.GroupBy(x => x.LabId!.Value)
+			.ToList();
 
-            File.Move(filePath, dest, overwrite: true);
-        }
-        catch { }
-    }
+		foreach (var labGroup in mapped)
+		{
+			var labId = labGroup.Key;
+			var labFiles = labGroup.Select(x => x.File).ToList();
 
-    private static void SafeDelete(string path)
-    {
-        try
-        {
-            if (File.Exists(path)) File.Delete(path);
-        }
-        catch { }
-    }
+			var allLineRows = new List<BillingLineRow>();
 
-    private static string SanitizeFileName(string name)
-    {
-        foreach (var c in Path.GetInvalidFileNameChars())
-            name = name.Replace(c, '_');
-        return name;
-    }
+			foreach (var file in labFiles)
+			{
+				if (!IsFileReady(file))
+					continue;
+
+				_logger.LogInformation("Reading local file {File}", file);
+
+				var rows = BillingExcelReader.ReadLineLevelRows(file, _opt.SheetName, _opt.HeaderRow);
+				allLineRows.AddRange(rows);
+			}
+
+			if (allLineRows.Count == 0)
+				continue;
+
+			DataTable countsDt = BillingGrouper.BuildBillingCounts(allLineRows, labId);
+
+			await BillingSqlLoader.ReplaceLabDataAsync(_connStr, _opt.DestinationTable, labId, countsDt, ct);
+
+			//foreach (var file in labFiles)
+			//	SafeMoveToArchive(file);
+		}
+	}
+
+	private int? ResolveLabId(string fileName)
+	{
+		foreach (var map in _opt.Labs)
+		{
+			if (!string.IsNullOrWhiteSpace(map.FilePattern) && WildcardMatch(fileName, map.FilePattern))
+				return map.LabId;
+		}
+		return null;
+	}
+
+	private void SafeMoveToArchive(string file)
+	{
+		try
+		{
+			if (!File.Exists(file)) return;
+
+			var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+			var dest = Path.Combine(_opt.ArchiveFolder, $"{Path.GetFileNameWithoutExtension(file)}_{stamp}{Path.GetExtension(file)}");
+			File.Move(file, dest, overwrite: true);
+			_logger.LogInformation("Archived {File} -> {Dest}", file, dest);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Failed to archive {File}", file);
+		}
+	}
+
+	private void SafeMoveToError(string file)
+	{
+		try
+		{
+			if (!File.Exists(file)) return;
+
+			var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+			var dest = Path.Combine(_opt.ErrorFolder, $"{Path.GetFileNameWithoutExtension(file)}_{stamp}{Path.GetExtension(file)}");
+			File.Move(file, dest, overwrite: true);
+			_logger.LogInformation("Moved to error {File} -> {Dest}", file, dest);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Failed to move to error {File}", file);
+		}
+	}
+
+	private static string SanitizeFileName(string name)
+	{
+		foreach (var c in Path.GetInvalidFileNameChars())
+			name = name.Replace(c, '_');
+		return name;
+	}
+
+	private static bool WildcardMatch(string input, string pattern)
+	{
+		var regex = "^" + System.Text.RegularExpressions.Regex.Escape(pattern)
+			.Replace("\\*", ".*")
+			.Replace("\\?", ".") + "$";
+		return System.Text.RegularExpressions.Regex.IsMatch(input, regex, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+	}
+
+	private static bool IsFileReady(string path)
+	{
+		try
+		{
+			using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None);
+			return stream.Length > 0;
+		}
+		catch { return false; }
+	}
+
+	static bool LooksLikeXlsxZip(string path)
+	{
+		using var fs = File.OpenRead(path);
+		if (fs.Length < 4) return false;
+		Span<byte> b = stackalloc byte[2];
+		fs.Read(b);
+		return b[0] == (byte)'P' && b[1] == (byte)'K'; // zip signature
+	}
+
+	static async Task ValidateOrThrowAsync(string path, CancellationToken ct)
+	{
+		var fi = new FileInfo(path);
+		if (!fi.Exists || fi.Length < 10_000) // adjust threshold as you like
+			throw new InvalidDataException($"Downloaded file too small: {fi.Length} bytes");
+
+		if (!LooksLikeXlsxZip(path))
+			throw new InvalidDataException("Downloaded file is not a valid XLSX (zip signature missing).");
+	}
+
 }

@@ -3,6 +3,7 @@ using Azure.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -14,6 +15,7 @@ public sealed class SharePointDownloader
 
     private string? _siteId;
     private string? _driveId;
+    private string? _rootFolderId; // when SharedFolderUrl is used
 
     public SharePointDownloader(HttpClient http, IOptions<ImportOptions> opt, ILogger<SharePointDownloader> logger)
     {
@@ -31,25 +33,28 @@ public sealed class SharePointDownloader
         DateTimeOffset? LastModifiedUtc,
         string SharePointPath);
 
+    /// <summary>
+    /// Finds the latest matching file for a lab by navigating:
+    /// LabRoot -> Year -> Latest Month -> Latest DateRange -> Latest File (matching pattern)
+    /// </summary>
     public async Task<SelectedFile?> TryGetLatestFileForLabAsync(LabFileMap lab, int currentYear, CancellationToken ct)
     {
         if (!_opt.SharePoint.Enabled) return null;
 
-        await EnsureGraphAuthAsync(ct);
+        await EnsureDriveAsync(ct);
 
-        _siteId ??= await GetSiteIdAsync(ct);
-        _driveId ??= await GetDriveIdAsync(_siteId!, ct);
+        var driveId = _driveId!;
 
         // 1) Lab root folder
-        var labRootId = await GetItemIdByPathAsync(_driveId!, lab.SharePointRootPath, ct);
+        var labRootId = await GetLabRootFolderIdAsync(driveId, lab.SharePointRootPath, ct);
 
         // 2) Year folder (prefer current year; fallback to latest year)
-        var yearChildren = await ListChildrenPagedAsync(_driveId!, labRootId, ct);
+        var yearChildren = await ListChildrenPagedAsync(driveId, labRootId, ct);
         var yearFolder = yearChildren
             .Where(x => x.IsFolder)
             .Select(x => new { Item = x, Year = TryParseYearFolder(x.Name) })
             .Where(x => x.Year != null)
-            .OrderByDescending(x => x.Year == currentYear) // true first
+            .OrderByDescending(x => x.Year == currentYear) // current year first if present
             .ThenByDescending(x => x.Year)
             .Select(x => x.Item)
             .FirstOrDefault();
@@ -60,11 +65,8 @@ public sealed class SharePointDownloader
             return null;
         }
 
-        if (!yearFolder.Name.Equals(currentYear.ToString(), StringComparison.OrdinalIgnoreCase))
-            _logger.LogWarning("Lab {LabId}: Current year '{Year}' not found; using '{Folder}'.", lab.LabId, currentYear, yearFolder.Name);
-
         // 3) Latest month folder inside year (e.g. '01. January')
-        var monthChildren = await ListChildrenPagedAsync(_driveId!, yearFolder.Id, ct);
+        var monthChildren = await ListChildrenPagedAsync(driveId, yearFolder.Id, ct);
         var monthFolder = monthChildren
             .Where(x => x.IsFolder)
             .OrderByDescending(MonthSortKey)
@@ -77,7 +79,7 @@ public sealed class SharePointDownloader
         }
 
         // 4) Latest date-range folder inside month (e.g. '01.20.2026 - 01.26.2026')
-        var dateChildren = await ListChildrenPagedAsync(_driveId!, monthFolder.Id, ct);
+        var dateChildren = await ListChildrenPagedAsync(driveId, monthFolder.Id, ct);
         var dateFolder = dateChildren
             .Where(x => x.IsFolder)
             .OrderByDescending(DateRangeSortKey)
@@ -90,7 +92,7 @@ public sealed class SharePointDownloader
         }
 
         // 5) Pick latest matching file by pattern
-        var fileChildren = await ListChildrenPagedAsync(_driveId!, dateFolder.Id, ct);
+        var fileChildren = await ListChildrenPagedAsync(driveId, dateFolder.Id, ct);
         var file = fileChildren
             .Where(x => !x.IsFolder && WildcardMatch(x.Name, lab.SharePointFilePattern))
             .OrderByDescending(x => x.LastModifiedUtc ?? DateTimeOffset.MinValue)
@@ -103,9 +105,9 @@ public sealed class SharePointDownloader
         }
 
         var eTagKey = file.ETag ?? string.Empty;
-        var spPath = $"{lab.SharePointRootPath}/{yearFolder.Name}/{monthFolder.Name}/{dateFolder.Name}/{file.Name}";
+        var spPath = BuildSpPath(lab.SharePointRootPath, yearFolder.Name, monthFolder.Name, dateFolder.Name, file.Name);
 
-        return new SelectedFile(lab.LabId, _driveId!, file.Id, file.Name, eTagKey, file.LastModifiedUtc, spPath);
+        return new SelectedFile(lab.LabId, driveId, file.Id, file.Name, eTagKey, file.LastModifiedUtc, spPath);
     }
 
     public async Task DownloadFileAsync(string driveId, string itemId, string localPath, CancellationToken ct)
@@ -120,15 +122,29 @@ public sealed class SharePointDownloader
         await remote.CopyToAsync(local, ct);
     }
 
+	public async Task DownoadFileForPayerPloicyAsync(string driveId, string itemId, string localPath, CancellationToken ct)
+	{
+		var url = $"https://graph.microsoft.com/v1.0/drives/{driveId}/items/{itemId}/content";
+
+		using var resp = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+		resp.EnsureSuccessStatusCode();
+
+		await using var remote = await resp.Content.ReadAsStreamAsync(ct);
+		await using var local = new FileStream(localPath, FileMode.Create, FileAccess.Write, FileShare.None);
+		await remote.CopyToAsync(local, ct);
+	}
+
+	
     public async Task<string?> TryResolveProcessedFolderIdAsync(CancellationToken ct)
     {
         var sp = _opt.SharePoint;
         if (!sp.MoveToProcessed || string.IsNullOrWhiteSpace(sp.ProcessedFolderPath))
             return null;
 
-        await EnsureGraphAuthAsync(ct);
-        _siteId ??= await GetSiteIdAsync(ct);
-        _driveId ??= await GetDriveIdAsync(_siteId!, ct);
+        await EnsureDriveAsync(ct);
+
+        if (!string.IsNullOrWhiteSpace(_rootFolderId))
+            return await GetItemIdByPathUnderItemAsync(_driveId!, _rootFolderId!, sp.ProcessedFolderPath!, ct);
 
         return await GetItemIdByPathAsync(_driveId!, sp.ProcessedFolderPath!, ct);
     }
@@ -140,14 +156,38 @@ public sealed class SharePointDownloader
 
         using var req = new HttpRequestMessage(HttpMethod.Patch, url)
         {
-            Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json")
+            Content = new StringContent(body, Encoding.UTF8, "application/json")
         };
 
         using var resp = await _http.SendAsync(req, ct);
         resp.EnsureSuccessStatusCode();
     }
 
-    // ---------------- Auth + Site/Drive ----------------
+    // ---------------- Drive bootstrap ----------------
+
+    private async Task EnsureDriveAsync(CancellationToken ct)
+    {
+        await EnsureGraphAuthAsync(ct);
+
+        var sp = _opt.SharePoint;
+
+        // If user configured a long sharing URL, use it to resolve drive + root folder
+        if (!string.IsNullOrWhiteSpace(sp.SharedFolderUrl))
+        {
+            if (!string.IsNullOrWhiteSpace(_driveId) && !string.IsNullOrWhiteSpace(_rootFolderId))
+                return;
+
+            var (driveId, folderItemId) = await ResolveSharedFolderAsync(sp.SharedFolderUrl!, ct);
+            _driveId = driveId;
+            _rootFolderId = folderItemId;
+            return;
+        }
+
+        // Otherwise use Hostname + SitePath + DriveName
+        _siteId ??= await GetSiteIdAsync(ct);
+        _driveId ??= await GetDriveIdAsync(_siteId!, ct);
+        _rootFolderId = null;
+    }
 
     private async Task EnsureGraphAuthAsync(CancellationToken ct)
     {
@@ -175,8 +215,9 @@ public sealed class SharePointDownloader
         var sp = _opt.SharePoint;
 
         if (string.IsNullOrWhiteSpace(sp.Hostname) || string.IsNullOrWhiteSpace(sp.SitePath))
-            throw new InvalidOperationException("SharePoint Hostname/SitePath missing.");
+            throw new InvalidOperationException("SharePoint Hostname/SitePath missing (or configure SharedFolderUrl).");
 
+        // Hostname must be domain only, e.g. 3eclaimsprocessingllc.sharepoint.com
         var url = $"https://graph.microsoft.com/v1.0/sites/{sp.Hostname}:{sp.SitePath}";
         var json = await _http.GetStringAsync(url, ct);
 
@@ -200,10 +241,33 @@ public sealed class SharePointDownloader
         throw new InvalidOperationException($"DriveName '{_opt.SharePoint.DriveName}' not found on site.");
     }
 
+    // ---------------- Folder helpers ----------------
+
+    private async Task<string> GetLabRootFolderIdAsync(string driveId, string labRootPath, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(labRootPath))
+            throw new InvalidOperationException("Lab.SharePointRootPath is empty.");
+
+        if (!string.IsNullOrWhiteSpace(_rootFolderId))
+            return await GetItemIdByPathUnderItemAsync(driveId, _rootFolderId!, labRootPath, ct);
+
+        return await GetItemIdByPathAsync(driveId, labRootPath, ct);
+    }
+
     private async Task<string> GetItemIdByPathAsync(string driveId, string path, CancellationToken ct)
     {
         var normalized = Uri.EscapeDataString(path).Replace("%2F", "/");
         var url = $"https://graph.microsoft.com/v1.0/drives/{driveId}/root:/{normalized}";
+        var json = await _http.GetStringAsync(url, ct);
+
+        using var doc = JsonDocument.Parse(json);
+        return doc.RootElement.GetProperty("id").GetString()!;
+    }
+
+    private async Task<string> GetItemIdByPathUnderItemAsync(string driveId, string parentItemId, string relativePath, CancellationToken ct)
+    {
+        var normalized = Uri.EscapeDataString(relativePath).Replace("%2F", "/");
+        var url = $"https://graph.microsoft.com/v1.0/drives/{driveId}/items/{parentItemId}:/{normalized}";
         var json = await _http.GetStringAsync(url, ct);
 
         using var doc = JsonDocument.Parse(json);
@@ -300,5 +364,36 @@ public sealed class SharePointDownloader
     {
         var regex = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
         return Regex.IsMatch(input, regex, RegexOptions.IgnoreCase);
+    }
+
+    private static string BuildSpPath(params string[] parts)
+    {
+        return string.Join('/', parts.Select(p => p.Trim().Trim('/')).Where(p => !string.IsNullOrWhiteSpace(p)));
+    }
+
+    // ---------------- Shared URL support ----------------
+
+    private static string EncodeSharingUrlToShareId(string sharingUrl)
+    {
+        // Graph expects: u! + base64url(no padding) of the full URL
+        var bytes = Encoding.UTF8.GetBytes(sharingUrl);
+        var base64 = Convert.ToBase64String(bytes);
+        var base64Url = base64.TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        return "u!" + base64Url;
+    }
+
+    private async Task<(string driveId, string itemId)> ResolveSharedFolderAsync(string shareFolderUrl, CancellationToken ct)
+    {
+        var shareId = EncodeSharingUrlToShareId(shareFolderUrl);
+        var url = $"https://graph.microsoft.com/v1.0/shares/{shareId}/driveItem";
+
+        var json = await _http.GetStringAsync(url, ct);
+        using var doc = JsonDocument.Parse(json);
+
+        var root = doc.RootElement;
+        var itemId = root.GetProperty("id").GetString()!;
+        var driveId = root.GetProperty("parentReference").GetProperty("driveId").GetString()!;
+
+        return (driveId, itemId);
     }
 }

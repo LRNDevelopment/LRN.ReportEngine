@@ -1,4 +1,4 @@
-using ClosedXML.Excel;
+﻿using ClosedXML.Excel;
 using System.Globalization;
 
 public sealed class BillingLineRow
@@ -12,23 +12,25 @@ public sealed class BillingLineRow
 
 public static class BillingExcelReader
 {
-	public static List<BillingLineRow> ReadLineLevelRows(string filePath, string? sheetName, int headerRow)
+
+	public static List<BillingLineRow> ReadLineLevelRows(string filePath, string? sheetNamesCsv, int headerRow)
 	{
 		using var wb = new XLWorkbook(filePath);
-		var ws = !string.IsNullOrWhiteSpace(sheetName)
-			? wb.Worksheet(sheetName)
-			: wb.Worksheets.First();
 
+		// ✅ pick the first sheet that exists from the comma-separated list
+		var ws = ResolveWorksheet(wb, sheetNamesCsv);
+
+		// --- existing code continues ---
 		var hdr = ws.Row(headerRow);
 
-		int cChart = FindCol(hdr, "ChartNumber", "PatientId", "Patient ID");
-		int cPay = FindCol(hdr, "PanelCarrier", "Payer", "Carrier", "PayerName");
-		int cCpt = FindCol(hdr, "CPTCode", "CPT", "Panel");
-		int cVisit = FindCol(hdr, "VisitNumber", "BillingNumber", "Billing #", "Visit #");
-		int cDos = FindCol(hdr, "BeginDOS", "DateOfService", "DOS", "Date Of Service");
+		int cChart = FindCol(hdr, "ChartNumber", "PatientId", "Patient ID", "ChartNum", "Patient Ac No");
+		int cPay = FindCol(hdr, "PanelCarrier", "Payer", "Carrier", "Insurance Name", "Primary Payer");
+		int cCpt = FindCol(hdr, "CPTCode", "CPT", "Procedure");
+		int cVisit = FindCol(hdr, "VisitNumber", "BillingNumber", "Billing #", "Visit #", "VisitNum", "UID", "Visit No");
+		int cDos = FindCol(hdr, "BeginDOS", "DateOfService", "DOS", "Date Of Service", "Service From Date");
 
 		if (cChart == 0 || cVisit == 0 || cDos == 0)
-			throw new InvalidOperationException($"Missing required headers in {filePath}");
+			throw new InvalidOperationException($"Missing required headers in {filePath} (Sheet: {ws.Name})");
 
 		var lastRow = ws.LastRowUsed()?.RowNumber() ?? headerRow;
 		var list = new List<BillingLineRow>();
@@ -36,15 +38,14 @@ public static class BillingExcelReader
 		for (int r = headerRow + 1; r <= lastRow; r++)
 		{
 			var row = ws.Row(r);
+
 			var chart = row.Cell(cChart).GetString().Trim();
 			var visit = row.Cell(cVisit).GetString().Trim();
-
 			if (string.IsNullOrWhiteSpace(chart) || string.IsNullOrWhiteSpace(visit))
 				continue;
 
 			var payer = cPay > 0 ? row.Cell(cPay).GetString().Trim() : "";
 			var cpt = cCpt > 0 ? row.Cell(cCpt).GetString().Trim() : "";
-
 			var dos = ParseExcelDate(row.Cell(cDos)).Date;
 
 			list.Add(new BillingLineRow
@@ -58,6 +59,31 @@ public static class BillingExcelReader
 		}
 
 		return list;
+	}
+
+	private static IXLWorksheet ResolveWorksheet(XLWorkbook wb, string? sheetNamesCsv)
+	{
+		// If nothing provided, fall back to first sheet
+		if (string.IsNullOrWhiteSpace(sheetNamesCsv))
+			return wb.Worksheets.First();
+
+		var candidates = sheetNamesCsv
+			.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+		// Case-insensitive match
+		foreach (var name in candidates)
+		{
+			var match = wb.Worksheets.FirstOrDefault(w =>
+				string.Equals(w.Name, name, StringComparison.OrdinalIgnoreCase));
+
+			if (match != null)
+				return match;
+		}
+
+		// If none matched, throw a helpful error
+		var available = string.Join(", ", wb.Worksheets.Select(w => w.Name));
+		throw new InvalidOperationException(
+			$"None of the configured sheet names exist. Configured: [{string.Join(", ", candidates)}]. Available: [{available}].");
 	}
 
 	private static int FindCol(IXLRow headerRow, params string[] names)
@@ -103,4 +129,6 @@ public static class BillingExcelReader
 
 		throw new InvalidOperationException($"Invalid DOS: '{s}'");
 	}
+
+
 }

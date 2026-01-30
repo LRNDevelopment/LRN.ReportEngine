@@ -5,10 +5,6 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>dotnet-LRN.BillingFrequencyWorker-d383e787-7e5e-40ad-914b-0722dd3a2553</UserSecretsId>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <EnableDefaultContentItems>false</EnableDefaultContentItems>
   </PropertyGroup>
 
@@ -20,11 +16,15 @@
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
+    <PackageReference Include="Azure.Identity" Version="1.17.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.EventLog" Version="8.0.1" />
-    <PackageReference Include="Azure.Identity" Version="1.17.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LRN.CommonLogger\LRN.CommonLogger.csproj" />
   </ItemGroup>
 
 </Project>

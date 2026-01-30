@@ -1,21 +1,16 @@
+using Common.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Extensions.Logging;
 
-var builder = Host.CreateDefaultBuilder(args)
-    .UseContentRoot(AppContext.BaseDirectory) // helps Windows Service find appsettings.json in published folder
+Host.CreateDefaultBuilder(args)
+    .UseContentRoot(AppContext.BaseDirectory) // important for Windows Service + finding appsettings.json
+    .UseWindowsService(o => o.ServiceName = "LRN.BillingFrequencyWorker")
     .ConfigureLogging(logging =>
     {
         logging.ClearProviders();
         logging.AddConsole();
-        logging.AddDebug();
-
-        // EventLog is useful only when running as a Windows Service
-        if (OperatingSystem.IsWindows() && WindowsServiceHelpers.IsWindowsService())
-        {
-            logging.AddEventLog();
-        }
+        logging.AddEventLog(); // Windows Event Log when running as a service
     })
     .ConfigureServices((context, services) =>
     {
@@ -23,14 +18,8 @@ var builder = Host.CreateDefaultBuilder(args)
 
         services.AddHttpClient<SharePointDownloader>();
         services.AddSingleton<BillingFrequencyFileStatusStore>();
-
-        services.AddHostedService<BillingFrequencyWorker>();
-    });
-
-// Only configure Windows Service hosting when actually running as a service.
-if (OperatingSystem.IsWindows() && WindowsServiceHelpers.IsWindowsService())
-{
-    builder.UseWindowsService(o => o.ServiceName = "Billing Frequency Worker");
-}
-
-builder.Build().Run();
+		services.AddSingleton<ILoggerService, LogManagerService>();
+		services.AddHostedService<BillingFrequencyWorker>();
+    })
+    .Build()
+    .Run();

@@ -1,27 +1,29 @@
-﻿using ClosedXML.Excel;
+using ClosedXML.Excel;
 using System.Globalization;
 
 public sealed class BillingLineRow
 {
-	public string ChartNumber { get; set; } = "";
-	public string PanelCarrier { get; set; } = "";
-	public string CPTCode { get; set; } = "";
-	public string VisitNumber { get; set; } = "";
-	public DateTime BeginDOS { get; set; }
+    public string ChartNumber { get; set; } = "";
+    public string PanelCarrier { get; set; } = "";
+    public string CPTCode { get; set; } = "";
+    public string VisitNumber { get; set; } = "";
+    public DateTime BeginDOS { get; set; }
 }
 
 public static class BillingExcelReader
 {
+    /// <summary>
+    /// Reads line-level rows from the first worksheet that matches any name in the comma-separated candidates list.
+    /// If sheetCandidatesCsv is null/empty, the first worksheet is used.
+    /// </summary>
+    public static List<BillingLineRow> ReadLineLevelRows(string filePath, string? sheetCandidatesCsv, int headerRow)
+    {
+        ValidateDownloadedXlsxOrThrow(filePath);
 
-	public static List<BillingLineRow> ReadLineLevelRows(string filePath, string? sheetNamesCsv, int headerRow)
-	{
-		using var wb = new XLWorkbook(filePath);
+        using var wb = new XLWorkbook(filePath);
+        var ws = ResolveWorksheet(wb, sheetCandidatesCsv);
 
-		// ✅ pick the first sheet that exists from the comma-separated list
-		var ws = ResolveWorksheet(wb, sheetNamesCsv);
-
-		// --- existing code continues ---
-		var hdr = ws.Row(headerRow);
+        var hdr = ws.Row(headerRow);
 
 		int cChart = FindCol(hdr, "ChartNumber", "PatientId", "Patient ID", "ChartNum", "Patient Ac No");
 		int cPay = FindCol(hdr, "PanelCarrier", "Payer", "Carrier", "Insurance Name", "Primary Payer");
@@ -30,105 +32,149 @@ public static class BillingExcelReader
 		int cDos = FindCol(hdr, "BeginDOS", "DateOfService", "DOS", "Date Of Service", "Service From Date");
 
 		if (cChart == 0 || cVisit == 0 || cDos == 0)
-			throw new InvalidOperationException($"Missing required headers in {filePath} (Sheet: {ws.Name})");
+            throw new InvalidOperationException($"Missing required headers in {filePath} (Sheet: {ws.Name})");
 
-		var lastRow = ws.LastRowUsed()?.RowNumber() ?? headerRow;
-		var list = new List<BillingLineRow>();
+        var lastRow = ws.LastRowUsed()?.RowNumber() ?? headerRow;
+        var list = new List<BillingLineRow>();
 
-		for (int r = headerRow + 1; r <= lastRow; r++)
-		{
-			var row = ws.Row(r);
+        for (int r = headerRow + 1; r <= lastRow; r++)
+        {
+            var row = ws.Row(r);
 
-			var chart = row.Cell(cChart).GetString().Trim();
-			var visit = row.Cell(cVisit).GetString().Trim();
-			if (string.IsNullOrWhiteSpace(chart) || string.IsNullOrWhiteSpace(visit))
-				continue;
+            var chart = row.Cell(cChart).GetString().Trim();
+            var visit = row.Cell(cVisit).GetString().Trim();
+            if (string.IsNullOrWhiteSpace(chart) || string.IsNullOrWhiteSpace(visit))
+                continue;
 
-			var payer = cPay > 0 ? row.Cell(cPay).GetString().Trim() : "";
-			var cpt = cCpt > 0 ? row.Cell(cCpt).GetString().Trim() : "";
-			var dos = ParseExcelDate(row.Cell(cDos)).Date;
+            var payer = cPay > 0 ? row.Cell(cPay).GetString().Trim() : "";
+            var cpt = cCpt > 0 ? row.Cell(cCpt).GetString().Trim() : "";
+            var dos = ParseExcelDate(row.Cell(cDos)).Date;
 
-			list.Add(new BillingLineRow
-			{
-				ChartNumber = chart,
-				VisitNumber = visit,
-				PanelCarrier = payer,
-				CPTCode = cpt,
-				BeginDOS = dos
-			});
-		}
+            list.Add(new BillingLineRow
+            {
+                ChartNumber = chart,
+                VisitNumber = visit,
+                PanelCarrier = payer,
+                CPTCode = cpt,
+                BeginDOS = dos
+            });
+        }
 
-		return list;
-	}
+        return list;
+    }
 
-	private static IXLWorksheet ResolveWorksheet(XLWorkbook wb, string? sheetNamesCsv)
-	{
-		// If nothing provided, fall back to first sheet
-		if (string.IsNullOrWhiteSpace(sheetNamesCsv))
-			return wb.Worksheets.First();
+    /// <summary>
+    /// Export exactly one worksheet from source workbook into a new workbook file.
+    /// The worksheet is selected by matching any sheet name in candidatesCsv.
+    /// </summary>
+    public static string ExportSingleSheetToFile(
+        string sourceXlsxPath,
+        string? sheetCandidatesCsv,
+        string destXlsxPath)
+    {
+        ValidateDownloadedXlsxOrThrow(sourceXlsxPath);
 
-		var candidates = sheetNamesCsv
-			.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        Directory.CreateDirectory(Path.GetDirectoryName(destXlsxPath)!);
 
-		// Case-insensitive match
-		foreach (var name in candidates)
-		{
-			var match = wb.Worksheets.FirstOrDefault(w =>
-				string.Equals(w.Name, name, StringComparison.OrdinalIgnoreCase));
+        using var src = new XLWorkbook(sourceXlsxPath);
+        var ws = ResolveWorksheet(src, sheetCandidatesCsv);
 
-			if (match != null)
-				return match;
-		}
+        // Create new workbook containing only that sheet
+        using var dest = new XLWorkbook();
+        ws.CopyTo(dest, ws.Name);
 
-		// If none matched, throw a helpful error
-		var available = string.Join(", ", wb.Worksheets.Select(w => w.Name));
-		throw new InvalidOperationException(
-			$"None of the configured sheet names exist. Configured: [{string.Join(", ", candidates)}]. Available: [{available}].");
-	}
+        // Overwrite if exists
+        if (File.Exists(destXlsxPath))
+            File.Delete(destXlsxPath);
 
-	private static int FindCol(IXLRow headerRow, params string[] names)
-	{
-		int lastCol = headerRow.Worksheet.LastColumnUsed()?.ColumnNumber() ?? 0;
+        dest.SaveAs(destXlsxPath);
 
-		for (int c = 1; c <= lastCol; c++)
-		{
-			var h = headerRow.Cell(c).GetString().Trim();
-			foreach (var n in names)
-				if (h.Equals(n, StringComparison.OrdinalIgnoreCase))
-					return c;
-		}
-		return 0;
-	}
+        return ws.Name;
+    }
 
-	private static DateTime ParseExcelDate(IXLCell cell)
-	{
-		if (cell.DataType == XLDataType.DateTime) return cell.GetDateTime();
-		if (cell.DataType == XLDataType.Number) return DateTime.FromOADate(cell.GetDouble());
+    /// <summary>
+    /// Returns the first worksheet that exists from comma-separated candidates. If empty, first worksheet.
+    /// Throws if candidates are provided and none match.
+    /// </summary>
+    public static IXLWorksheet ResolveWorksheet(XLWorkbook wb, string? sheetCandidatesCsv)
+    {
+        if (string.IsNullOrWhiteSpace(sheetCandidatesCsv))
+            return wb.Worksheets.First();
 
-		var s = cell.GetString().Trim();
-		if (string.IsNullOrWhiteSpace(s))
-			throw new InvalidOperationException("DOS is blank.");
+        var candidates = sheetCandidatesCsv
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-		var formats = new[]
-		{
-			"yyyy-MM-dd","yyyy/MM/dd",
-			"dd/MM/yyyy","d/M/yyyy",
-			"MM/dd/yyyy","M/d/yyyy",
-			"dd-MM-yyyy","d-M-yyyy",
-			"MM-dd-yyyy","M-d-yyyy"
-		};
+        foreach (var name in candidates)
+        {
+            var match = wb.Worksheets.FirstOrDefault(w =>
+                string.Equals(w.Name, name, StringComparison.OrdinalIgnoreCase));
 
-		if (DateTime.TryParseExact(s, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
-			return dt;
+            if (match != null)
+                return match;
+        }
 
-		if (DateTime.TryParse(s, new CultureInfo("en-SG"), DateTimeStyles.None, out dt))
-			return dt;
+        var available = string.Join(", ", wb.Worksheets.Select(w => w.Name));
+        throw new InvalidOperationException(
+            $"None of the configured sheet names exist. Configured: [{string.Join(", ", candidates)}]. Available: [{available}].");
+    }
 
-		if (DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.None, out dt))
-			return dt;
+    /// <summary>
+    /// Quick validation to catch truncated downloads / HTML error pages saved as .xlsx.
+    /// XLSX is a ZIP; first two bytes must be 'PK'.
+    /// </summary>
+    public static void ValidateDownloadedXlsxOrThrow(string path)
+    {
+        var fi = new FileInfo(path);
+        if (!fi.Exists)
+            throw new FileNotFoundException("Excel file not found.", path);
 
-		throw new InvalidOperationException($"Invalid DOS: '{s}'");
-	}
+        if (fi.Length < 1024)
+            throw new InvalidDataException($"Excel file looks too small ({fi.Length} bytes): {path}");
 
+        using var fs = File.OpenRead(path);
+        int b1 = fs.ReadByte();
+        int b2 = fs.ReadByte();
+        if (b1 != 'P' || b2 != 'K')
+            throw new InvalidDataException($"File is not a valid XLSX (zip signature missing): {path}");
+    }
 
+    private static int FindCol(IXLRow headerRow, params string[] names)
+    {
+        foreach (var cell in headerRow.CellsUsed())
+        {
+            var txt = cell.GetString().Trim();
+            if (names.Any(n => string.Equals(txt, n, StringComparison.OrdinalIgnoreCase)))
+                return cell.Address.ColumnNumber;
+        }
+        return 0;
+    }
+
+    private static DateTime ParseExcelDate(IXLCell cell)
+    {
+        // Date cell
+        if (cell.DataType == XLDataType.DateTime)
+            return cell.GetDateTime();
+
+        // Numeric serial
+        if (cell.DataType == XLDataType.Number)
+            return DateTime.FromOADate(cell.GetDouble());
+
+        // String
+        var s = cell.GetString().Trim();
+        if (DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var dt))
+            return dt;
+
+        // try dd/MM vs MM/dd
+        string[] fmts =
+        {
+            "MM/dd/yyyy","M/d/yyyy","dd/MM/yyyy","d/M/yyyy",
+            "MM-dd-yyyy","M-d-yyyy","dd-MM-yyyy","d-M-yyyy",
+            "yyyy-MM-dd","yyyy/M/d"
+        };
+
+        if (DateTime.TryParseExact(s, fmts, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out dt))
+            return dt;
+
+        throw new FormatException($"Could not parse date '{s}'.");
+    }
 }

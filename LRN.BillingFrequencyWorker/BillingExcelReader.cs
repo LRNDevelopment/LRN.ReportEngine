@@ -73,23 +73,84 @@ public static class BillingExcelReader
         string destXlsxPath)
     {
         ValidateDownloadedXlsxOrThrow(sourceXlsxPath);
+		using var wb = new XLWorkbook(sourceXlsxPath);
+		TryDisableClosedXmlEventTracking(wb);
+        return ExportSingleSheetToFile(wb, sheetCandidatesCsv, destXlsxPath);
+    }
 
+	static void TryDisableClosedXmlEventTracking(object wb)
+	{
+		var prop = wb.GetType().GetProperty("EventTracking");
+		if (prop?.CanWrite != true) return;
+
+		var enumType = prop.PropertyType;
+		var disabled = Enum.Parse(enumType, "Disabled");
+		prop.SetValue(wb, disabled);
+	}
+
+	/// <summary>
+	/// Export exactly one worksheet from an already-open workbook into a new workbook file.
+	/// Optimized: copies ONLY the range with actual CONTENT (ignores huge formatted-but-empty regions).
+	/// </summary>
+	public static string ExportSingleSheetToFile(
+        XLWorkbook sourceWorkbook,
+        string? sheetCandidatesCsv,
+        string destXlsxPath)
+    {
         Directory.CreateDirectory(Path.GetDirectoryName(destXlsxPath)!);
 
-        using var src = new XLWorkbook(sourceXlsxPath);
-        var ws = ResolveWorksheet(src, sheetCandidatesCsv);
+        var ws = ResolveWorksheet(sourceWorkbook, sheetCandidatesCsv);
 
-        // Create new workbook containing only that sheet
-        using var dest = new XLWorkbook();
-        ws.CopyTo(dest, ws.Name);
+		using var dest = new XLWorkbook();
+		TryDisableClosedXmlEventTracking(dest);
 
-        // Overwrite if exists
+		//using var dest = new XLWorkbook(XLEventTracking.Disabled);
+        var destWs = dest.AddWorksheet(ws.Name);
+
+        // IMPORTANT:
+        // ClaimLevel sheets often have formatting applied to huge areas (e.g. entire 1,048,576 rows).
+        // ws.CopyTo(...) will clone that entire area and can take 10-30+ minutes.
+        // RangeUsed(Contents) keeps it tight to actual data.
+        var used = ws.RangeUsed(XLCellsUsedOptions.Contents);
+        if (used != null)
+        {
+            used.CopyTo(destWs.Cell(1, 1));
+
+            // Optional: copy basic layout (column widths + row heights) for the used region only
+            CopyLayout(ws, destWs, used);
+        }
+
         if (File.Exists(destXlsxPath))
             File.Delete(destXlsxPath);
 
         dest.SaveAs(destXlsxPath);
-
         return ws.Name;
+    }
+
+    private static void CopyLayout(IXLWorksheet srcWs, IXLWorksheet destWs, IXLRange used)
+    {
+        try
+        {
+            // Columns
+            int startCol = used.RangeAddress.FirstAddress.ColumnNumber;
+            int endCol = used.RangeAddress.LastAddress.ColumnNumber;
+            for (int c = startCol; c <= endCol; c++)
+            {
+                destWs.Column(c - startCol + 1).Width = srcWs.Column(c).Width;
+            }
+
+            // Rows
+            int startRow = used.RangeAddress.FirstAddress.RowNumber;
+            int endRow = used.RangeAddress.LastAddress.RowNumber;
+            for (int r = startRow; r <= endRow; r++)
+            {
+                destWs.Row(r - startRow + 1).Height = srcWs.Row(r).Height;
+            }
+        }
+        catch
+        {
+            // layout copy is best-effort; ignore if ClosedXML throws for any reason
+        }
     }
 
     /// <summary>

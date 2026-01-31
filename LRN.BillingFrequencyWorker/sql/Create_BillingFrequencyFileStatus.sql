@@ -1,6 +1,4 @@
-
-DROP TABLE IF EXISTS BillingFrequencyFileStatus;
-
+\
 IF OBJECT_ID('dbo.BillingFrequencyFileStatus','U') IS NULL
 BEGIN
     CREATE TABLE dbo.BillingFrequencyFileStatus

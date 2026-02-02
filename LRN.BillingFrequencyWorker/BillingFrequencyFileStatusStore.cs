@@ -34,6 +34,10 @@ WHERE LabId=@LabId AND DriveId=@DriveId AND ItemId=@ItemId AND ETagKey=@ETagKey 
         return obj != null;
     }
 
+    /// <summary>
+    /// Upsert status row for a SharePoint file. If your table contains a column named "ErrorLogInfo",
+    /// it will be updated/inserted automatically; otherwise it's ignored.
+    /// </summary>
     public async Task UpsertStatusAsync(
         int labId,
         string driveId,
@@ -45,9 +49,13 @@ WHERE LabId=@LabId AND DriveId=@DriveId AND ItemId=@ItemId AND ETagKey=@ETagKey 
         string status,
         string? statusMessage,
         DateTimeOffset? processedAtUtc,
-        CancellationToken ct)
+        CancellationToken ct,
+        string? errorLogInfo = null)
     {
+        // NOTE: This SQL safely updates ErrorLogInfo only if the column exists.
         string sql = $@"
+DECLARE @HasErrorLogInfo BIT = CASE WHEN COL_LENGTH('{_tableName}', 'ErrorLogInfo') IS NULL THEN 0 ELSE 1 END;
+
 IF EXISTS (SELECT 1 FROM {_tableName} WHERE LabId=@LabId AND ItemId=@ItemId AND ETagKey=@ETagKey)
 BEGIN
     UPDATE {_tableName}
@@ -59,15 +67,26 @@ BEGIN
         StatusMessage=@StatusMessage,
         Attempts = Attempts + 1,
         LastAttemptUtc = SYSUTCDATETIME(),
-        ProcessedAtUtc = COALESCE(@ProcessedAtUtc, ProcessedAtUtc)
+        ProcessedAtUtc = COALESCE(@ProcessedAtUtc, ProcessedAtUtc),
+        ErrorLogInfo = CASE WHEN @HasErrorLogInfo = 1 THEN @ErrorLogInfo ELSE ErrorLogInfo END
     WHERE LabId=@LabId AND ItemId=@ItemId AND ETagKey=@ETagKey;
 END
 ELSE
 BEGIN
-    INSERT INTO {_tableName}
-    (LabId, DriveId, ItemId, ETagKey, FileName, SharePointPath, LastModifiedUtc, Status, StatusMessage, Attempts, FirstSeenUtc, LastAttemptUtc, ProcessedAtUtc)
-    VALUES
-    (@LabId, @DriveId, @ItemId, @ETagKey, @FileName, @SharePointPath, @LastModifiedUtc, @Status, @StatusMessage, 1, SYSUTCDATETIME(), SYSUTCDATETIME(), @ProcessedAtUtc);
+    IF (@HasErrorLogInfo = 1)
+    BEGIN
+        INSERT INTO {_tableName}
+        (LabId, DriveId, ItemId, ETagKey, FileName, SharePointPath, LastModifiedUtc, Status, StatusMessage, ErrorLogInfo, Attempts, FirstSeenUtc, LastAttemptUtc, ProcessedAtUtc)
+        VALUES
+        (@LabId, @DriveId, @ItemId, @ETagKey, @FileName, @SharePointPath, @LastModifiedUtc, @Status, @StatusMessage, @ErrorLogInfo, 1, SYSUTCDATETIME(), SYSUTCDATETIME(), @ProcessedAtUtc);
+    END
+    ELSE
+    BEGIN
+        INSERT INTO {_tableName}
+        (LabId, DriveId, ItemId, ETagKey, FileName, SharePointPath, LastModifiedUtc, Status, StatusMessage, Attempts, FirstSeenUtc, LastAttemptUtc, ProcessedAtUtc)
+        VALUES
+        (@LabId, @DriveId, @ItemId, @ETagKey, @FileName, @SharePointPath, @LastModifiedUtc, @Status, @StatusMessage, 1, SYSUTCDATETIME(), SYSUTCDATETIME(), @ProcessedAtUtc);
+    END
 END";
 
         using var conn = new SqlConnection(_connStr);
@@ -84,6 +103,7 @@ END";
         cmd.Parameters.AddWithValue("@Status", status);
         cmd.Parameters.AddWithValue("@StatusMessage", (object?)statusMessage ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@ProcessedAtUtc", (object?)processedAtUtc?.UtcDateTime ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@ErrorLogInfo", (object?)errorLogInfo ?? DBNull.Value);
 
         await cmd.ExecuteNonQueryAsync(ct);
     }

@@ -1,32 +1,44 @@
+using Common.Logging;
+using LRN.ExcelValidator.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 Host.CreateDefaultBuilder(args)
-	.UseContentRoot(AppContext.BaseDirectory) // important for Windows Service + finding appsettings.json
-	.UseWindowsService(o => o.ServiceName = "LRN.BillingFrequencyWorker")
-	.ConfigureLogging(logging =>
-	{
-		logging.ClearProviders();
-		logging.AddConsole();
-		logging.AddEventLog(); // Windows Event Log when running as a service
+    .UseContentRoot(AppContext.BaseDirectory) // important for Windows Service + finding appsettings.json
+    .UseWindowsService(o => o.ServiceName = "LRN.BillingFrequencyWorker")
+    .ConfigureLogging((context, logging) =>
+    {
+        logging.ClearProviders();
 
-		// File logs via log4net (so you can see progress during long exports)
-		// NOTE: the provider reads log4net.config from AppContext.BaseDirectory.
-		var log4NetConfigPath = Path.Combine(AppContext.BaseDirectory, "log4net.config");
-		var logDir = Path.Combine(AppContext.BaseDirectory, "logs");
-		logging.AddProvider(new Log4NetLoggerProvider(log4NetConfigPath, logDir));
-	})
-	.ConfigureServices((context, services) =>
-	{
-		services.Configure<ImportOptions>(context.Configuration.GetSection("BillingFrequency"));
+        // Console is helpful when running locally
+        logging.AddConsole();
 
-		services.AddHttpClient<SharePointDownloader>();
-		services.AddSingleton<BillingFrequencyFileStatusStore>();
+        // EventLog is helpful when installed as a Windows Service
+        logging.AddEventLog();
 
-		services.AddHostedService<BillingFrequencyWorker>();
-		System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+        // Show only OUR categories; suppress framework noise
+        logging.AddFilter((provider, category, level) =>
+        {
+            if (category.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase)) return false;
+            if (category.StartsWith("System.", StringComparison.OrdinalIgnoreCase)) return false;
+            return level >= LogLevel.Information;
+        });
+    })
+    .ConfigureServices((context, services) =>
+    {
+        services.Configure<ImportOptions>(context.Configuration.GetSection("BillingFrequency"));
 
-	})
-	.Build()
-	.Run();
+        services.AddHttpClient<SharePointDownloader>();
+        services.AddSingleton<BillingFrequencyFileStatusStore>();
+
+        // File logger (log4net) - logs only what you explicitly write via ILoggerService
+        services.AddSingleton<ILoggerService, LogManagerService>();
+
+        // Global schema validator library
+        services.AddExcelValidator();
+
+        services.AddHostedService<BillingFrequencyWorker>();
+    })
+    .Build()
+    .Run();

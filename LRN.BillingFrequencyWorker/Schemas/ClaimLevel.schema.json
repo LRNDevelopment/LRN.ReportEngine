@@ -1,0 +1,48 @@
+{
+  "SchemaName": "ClaimLevel",
+  "HeaderRow": 1,
+  "Columns": [
+    {
+      "Name": "ChartNumber",
+      "Required": true,
+      "DataType": "string",
+      "Aliases": [
+        "Chart Number",
+        "Chart #",
+        "PatientId",
+        "Patient ID"
+      ]
+    },
+    {
+      "Name": "VisitNumber",
+      "Required": true,
+      "DataType": "string",
+      "Aliases": [
+        "Visit #",
+        "BillingNumber",
+        "Billing #"
+      ]
+    },
+    {
+      "Name": "ClaimNumber",
+      "Required": false,
+      "DataType": "string",
+      "Aliases": [
+        "Claim #",
+        "Claim Id",
+        "ClaimID"
+      ]
+    },
+    {
+      "Name": "BeginDOS",
+      "Required": false,
+      "DataType": "datetime",
+      "Aliases": [
+        "DateOfService",
+        "DOS",
+        "Date Of Service",
+        "Begin DOS"
+      ]
+    }
+  ]
+}

@@ -1,15 +1,6 @@
 using ClosedXML.Excel;
 using System.Globalization;
 
-public sealed class BillingLineRow
-{
-    public string ChartNumber { get; set; } = "";
-    public string PanelCarrier { get; set; } = "";
-    public string CPTCode { get; set; } = "";
-    public string VisitNumber { get; set; } = "";
-    public DateTime BeginDOS { get; set; }
-}
-
 public static class BillingExcelReader
 {
     /// <summary>
@@ -52,7 +43,7 @@ public static class BillingExcelReader
 
             list.Add(new BillingLineRow
             {
-                ChartNumber = chart,
+				ChartNumber = chart,
                 VisitNumber = visit,
                 PanelCarrier = payer,
                 CPTCode = cpt,

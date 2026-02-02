@@ -37,6 +37,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.Notifications", "LRN.No
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.BillingFrequencyWorker", "LRN.BillingFrequencyWorker\LRN.BillingFrequencyWorker.csproj", "{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.ExcelValidator", "LRN.ExcelValidator\LRN.ExcelValidator.csproj", "{C6B457A2-D62C-1A9A-E3EE-7A3A168DA68C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -251,6 +253,18 @@ Global
 		{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}.Release|x64.Build.0 = Release|Any CPU
 		{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}.Release|x86.ActiveCfg = Release|Any CPU
 		{93FDA67E-29E6-4029-ADCC-7B87C3ADEE86}.Release|x86.Build.0 = Release|Any CPU
+		{C6B457A2-D62C-1A9A-E3EE-7A3A168DA68C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6B457A2-D62C-1A9A-E3EE-7A3A168DA68C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6B457A2-D62C-1A9A-E3EE-7A3A168DA68C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C6B457A2-D62C-1A9A-E3EE-7A3A168DA68C}.Debug|x64.Build.0 = Debug|Any CPU
+		{C6B457A2-D62C-1A9A-E3EE-7A3A168DA68C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C6B457A2-D62C-1A9A-E3EE-7A3A168DA68C}.Debug|x86.Build.0 = Debug|Any CPU
+		{C6B457A2-D62C-1A9A-E3EE-7A3A168DA68C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6B457A2-D62C-1A9A-E3EE-7A3A168DA68C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6B457A2-D62C-1A9A-E3EE-7A3A168DA68C}.Release|x64.ActiveCfg = Release|Any CPU
+		{C6B457A2-D62C-1A9A-E3EE-7A3A168DA68C}.Release|x64.Build.0 = Release|Any CPU
+		{C6B457A2-D62C-1A9A-E3EE-7A3A168DA68C}.Release|x86.ActiveCfg = Release|Any CPU
+		{C6B457A2-D62C-1A9A-E3EE-7A3A168DA68C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,4 +1,4 @@
-﻿namespace Common.Logging
+namespace Common.Logging
 {
     public interface ILoggerService
     {

@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="ExcelDataReader" Version="3.8.0" />
+    <PackageReference Include="ExcelDataReader.DataSet" Version="3.8.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
     <PackageReference Include="Azure.Identity" Version="1.17.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />

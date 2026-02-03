@@ -1,9 +1,9 @@
 {
-  "SchemaName": "Certus_LineLevel",
+  "SchemaName": "PCR Labs of America_LineLevel",
   "HeaderRow": 1,
   "Columns": [
     {
-      "Name": "Encounter ID",
+      "Name": "VisitNum",
       "Required": true,
       "DataType": "string"
     },
@@ -13,42 +13,47 @@
       "DataType": "string"
     },
     {
-      "Name": "Insurance Name",
+      "Name": "Carrier",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Ref Physician Name",
+      "Name": "FinancialClass",
       "Required": false,
       "DataType": "string"
     },
     {
-      "Name": "Organization Name",
+      "Name": "Provider",
       "Required": false,
       "DataType": "string"
     },
     {
-      "Name": "Patient ID",
+      "Name": "ReferringProvider",
       "Required": false,
       "DataType": "string"
     },
     {
-      "Name": "DOB",
+      "Name": "Facility",
+      "Required": false,
+      "DataType": "string"
+    },
+    {
+      "Name": "ChartNum",
+      "Required": false,
+      "DataType": "string"
+    },
+    {
+      "Name": "BeginDOS",
       "Required": true,
       "DataType": "datetime"
     },
     {
-      "Name": "DOS",
-      "Required": true,
-      "DataType": "datetime"
-    },
-    {
-      "Name": "Charge Entered Date",
+      "Name": "DOE",
       "Required": false,
       "DataType": "datetime"
     },
     {
-      "Name": "Billed Date",
+      "Name": "LastBillDate",
       "Required": true,
       "DataType": "datetime"
     },
@@ -63,42 +68,67 @@
       "DataType": "string"
     },
     {
-      "Name": "Service Unit",
+      "Name": "Units",
       "Required": true,
       "DataType": "int"
     },
     {
-      "Name": "Mod",
+      "Name": "Modifier",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Biilled Amounts",
-      "Required": true,
-      "DataType": "decimal"
-    },
-    {
-      "Name": "Insurance Payments",
-      "Required": true,
-      "DataType": "decimal"
-    },
-    {
-      "Name": "Patient Paymnets",
-      "Required": true,
-      "DataType": "decimal"
-    },
-    {
-      "Name": "Posted Date",
+      "Name": "POS",
       "Required": false,
-      "DataType": "datetime"
-    },
-    {
-      "Name": "Claim Level Denials",
-      "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Claim Level ICD Code",
+      "Name": "TOS",
+      "Required": false,
+      "DataType": "string"
+    },
+    {
+      "Name": "TotalCharge",
+      "Required": true,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "TotalAllowed",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "CarrierPayment",
+      "Required": true,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "PatientPayment",
+      "Required": true,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "CarrierWO",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "PatientWO",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "CarrierBalance",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "PatientBalance",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "Denial Code",
       "Required": true,
       "DataType": "string"
     }

@@ -1,41 +1,41 @@
 {
-  "SchemaName": "Certus_LineLevel",
+  "SchemaName": "NWL_ClaimLevel",
   "HeaderRow": 1,
   "Columns": [
     {
-      "Name": "Encounter ID",
+      "Name": "Enc",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Accession",
-      "Required": true,
-      "DataType": "string"
-    },
-    {
-      "Name": "Insurance Name",
-      "Required": true,
-      "DataType": "string"
-    },
-    {
-      "Name": "Ref Physician Name",
+      "Name": "Acc",
       "Required": false,
       "DataType": "string"
     },
     {
-      "Name": "Organization Name",
-      "Required": false,
-      "DataType": "string"
-    },
-    {
-      "Name": "Patient ID",
-      "Required": false,
-      "DataType": "string"
-    },
-    {
-      "Name": "DOB",
+      "Name": "Payer",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "string"
+    },
+    {
+      "Name": "Loc",
+      "Required": false,
+      "DataType": "string"
+    },
+    {
+      "Name": "Proc-Referring Dr Name",
+      "Required": false,
+      "DataType": "string"
+    },
+    {
+      "Name": "Proc-Department Desc",
+      "Required": false,
+      "DataType": "string"
+    },
+    {
+      "Name": "Pat id",
+      "Required": false,
+      "DataType": "string"
     },
     {
       "Name": "DOS",
@@ -43,12 +43,12 @@
       "DataType": "datetime"
     },
     {
-      "Name": "Charge Entered Date",
+      "Name": "Entered Date",
       "Required": false,
       "DataType": "datetime"
     },
     {
-      "Name": "Billed Date",
+      "Name": "Last Billed Date",
       "Required": true,
       "DataType": "datetime"
     },
@@ -58,47 +58,52 @@
       "DataType": "string"
     },
     {
-      "Name": "CPT",
-      "Required": true,
-      "DataType": "string"
-    },
-    {
-      "Name": "Service Unit",
+      "Name": "Claim Level CPT",
       "Required": true,
       "DataType": "int"
     },
     {
-      "Name": "Mod",
-      "Required": true,
-      "DataType": "string"
-    },
-    {
-      "Name": "Biilled Amounts",
+      "Name": "Proc-Charge Amount $",
       "Required": true,
       "DataType": "decimal"
     },
     {
-      "Name": "Insurance Payments",
-      "Required": true,
-      "DataType": "decimal"
-    },
-    {
-      "Name": "Patient Paymnets",
-      "Required": true,
-      "DataType": "decimal"
-    },
-    {
-      "Name": "Posted Date",
+      "Name": "Actual Payment",
       "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "Pat Payments",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "Proc-Ins Balance",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "Proc-Pt Balance",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "Posted date",
+      "Required": true,
       "DataType": "datetime"
     },
     {
-      "Name": "Claim Level Denials",
+      "Name": "Claim Status",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Claim Level ICD Code",
+      "Name": "Combined Claim Level Denial code",
+      "Required": true,
+      "DataType": "string"
+    },
+    {
+      "Name": "Combined Claim Level ICD",
       "Required": true,
       "DataType": "string"
     }

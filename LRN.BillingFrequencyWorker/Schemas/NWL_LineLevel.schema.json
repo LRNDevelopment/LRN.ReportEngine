@@ -1,39 +1,39 @@
 {
-  "SchemaName": "Certus_LineLevel",
+  "SchemaName": "NWL_LineLevel",
   "HeaderRow": 1,
   "Columns": [
     {
-      "Name": "Encounter ID",
+      "Name": "Enc",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Accession",
+      "Name": "Acc",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Insurance Name",
+      "Name": "Payer",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Ref Physician Name",
+      "Name": "Proc-Referring Dr Name",
       "Required": false,
       "DataType": "string"
     },
     {
-      "Name": "Organization Name",
+      "Name": "Proc-Department Desc",
       "Required": false,
       "DataType": "string"
     },
     {
-      "Name": "Patient ID",
+      "Name": "Pat id",
       "Required": false,
       "DataType": "string"
     },
     {
-      "Name": "DOB",
+      "Name": "Patient Birth Date",
       "Required": true,
       "DataType": "datetime"
     },
@@ -43,12 +43,12 @@
       "DataType": "datetime"
     },
     {
-      "Name": "Charge Entered Date",
+      "Name": "Entered Date",
       "Required": false,
       "DataType": "datetime"
     },
     {
-      "Name": "Billed Date",
+      "Name": "Billed date",
       "Required": true,
       "DataType": "datetime"
     },
@@ -58,12 +58,12 @@
       "DataType": "string"
     },
     {
-      "Name": "CPT",
+      "Name": "Claim Level CPT",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Service Unit",
+      "Name": "Units",
       "Required": true,
       "DataType": "int"
     },
@@ -73,32 +73,47 @@
       "DataType": "string"
     },
     {
-      "Name": "Biilled Amounts",
+      "Name": "Proc-Charge Amount $",
       "Required": true,
       "DataType": "decimal"
     },
     {
-      "Name": "Insurance Payments",
+      "Name": "ProcTotal Payments $",
       "Required": true,
       "DataType": "decimal"
     },
     {
-      "Name": "Patient Paymnets",
+      "Name": "Pat Payments",
       "Required": true,
       "DataType": "decimal"
     },
     {
-      "Name": "Posted Date",
+      "Name": "Proc-Adjustment $",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "Proc-Ins Balance",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "Proc-Pt Balance",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "Posted date",
       "Required": false,
       "DataType": "datetime"
     },
     {
-      "Name": "Claim Level Denials",
+      "Name": "Combined Claim Level Denial code",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Claim Level ICD Code",
+      "Name": "Combined Claim Level ICD",
       "Required": true,
       "DataType": "string"
     }

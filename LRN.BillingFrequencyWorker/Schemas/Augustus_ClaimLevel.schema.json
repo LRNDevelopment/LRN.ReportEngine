@@ -1,20 +1,25 @@
 {
-  "SchemaName": "Certus_LineLevel",
+  "SchemaName": "Augustus_ClaimLevel",
   "HeaderRow": 1,
   "Columns": [
     {
-      "Name": "Encounter ID",
+      "Name": "Enc",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Accession",
+      "Name": "Accession# Without Letters",
+      "Required": false,
+      "DataType": "string"
+    },
+    {
+      "Name": "Payer",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Insurance Name",
-      "Required": true,
+      "Name": "Loc",
+      "Required": false,
       "DataType": "string"
     },
     {
@@ -28,14 +33,9 @@
       "DataType": "string"
     },
     {
-      "Name": "Patient ID",
+      "Name": "Pat id",
       "Required": false,
       "DataType": "string"
-    },
-    {
-      "Name": "DOB",
-      "Required": true,
-      "DataType": "datetime"
     },
     {
       "Name": "DOS",
@@ -43,12 +43,12 @@
       "DataType": "datetime"
     },
     {
-      "Name": "Charge Entered Date",
+      "Name": "Date",
       "Required": false,
       "DataType": "datetime"
     },
     {
-      "Name": "Billed Date",
+      "Name": "Last billed date",
       "Required": true,
       "DataType": "datetime"
     },
@@ -58,47 +58,52 @@
       "DataType": "string"
     },
     {
-      "Name": "CPT",
-      "Required": true,
-      "DataType": "string"
-    },
-    {
-      "Name": "Service Unit",
+      "Name": "Claim Level CPT",
       "Required": true,
       "DataType": "int"
     },
     {
-      "Name": "Mod",
-      "Required": true,
-      "DataType": "string"
-    },
-    {
-      "Name": "Biilled Amounts",
+      "Name": "Sum of Patient ID",
       "Required": true,
       "DataType": "decimal"
     },
     {
-      "Name": "Insurance Payments",
-      "Required": true,
+      "Name": "Ins. Payment",
+      "Required": false,
       "DataType": "decimal"
     },
     {
-      "Name": "Patient Paymnets",
-      "Required": true,
+      "Name": "Pat. Payments",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "Ins Balance",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "Pat Balance",
+      "Required": false,
       "DataType": "decimal"
     },
     {
       "Name": "Posted Date",
-      "Required": false,
+      "Required": true,
       "DataType": "datetime"
     },
     {
-      "Name": "Claim Level Denials",
+      "Name": "Claim Status",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Claim Level ICD Code",
+      "Name": "Claim Level Denial Code",
+      "Required": true,
+      "DataType": "string"
+    },
+    {
+      "Name": "ICD Claim  Level",
       "Required": true,
       "DataType": "string"
     }

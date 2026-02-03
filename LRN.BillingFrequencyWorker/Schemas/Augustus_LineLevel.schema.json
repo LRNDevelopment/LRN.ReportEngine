@@ -1,19 +1,19 @@
 {
-  "SchemaName": "Certus_LineLevel",
+  "SchemaName": "Augustus_LineLevel",
   "HeaderRow": 1,
   "Columns": [
     {
-      "Name": "Encounter ID",
+      "Name": "Enc",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Accession",
+      "Name": "Accession# Without Letters",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Insurance Name",
+      "Name": "Payer",
       "Required": true,
       "DataType": "string"
     },
@@ -28,7 +28,7 @@
       "DataType": "string"
     },
     {
-      "Name": "Patient ID",
+      "Name": "Pat id",
       "Required": false,
       "DataType": "string"
     },
@@ -43,12 +43,7 @@
       "DataType": "datetime"
     },
     {
-      "Name": "Charge Entered Date",
-      "Required": false,
-      "DataType": "datetime"
-    },
-    {
-      "Name": "Billed Date",
+      "Name": "Last billed date",
       "Required": true,
       "DataType": "datetime"
     },
@@ -63,7 +58,7 @@
       "DataType": "string"
     },
     {
-      "Name": "Service Unit",
+      "Name": "Units",
       "Required": true,
       "DataType": "int"
     },
@@ -73,18 +68,23 @@
       "DataType": "string"
     },
     {
-      "Name": "Biilled Amounts",
+      "Name": "Sum of Patient ID",
       "Required": true,
       "DataType": "decimal"
     },
     {
-      "Name": "Insurance Payments",
+      "Name": "Ins. Payment",
       "Required": true,
       "DataType": "decimal"
     },
     {
-      "Name": "Patient Paymnets",
+      "Name": "Pat. Payments",
       "Required": true,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "Denial Adj Amount",
+      "Required": false,
       "DataType": "decimal"
     },
     {
@@ -93,12 +93,12 @@
       "DataType": "datetime"
     },
     {
-      "Name": "Claim Level Denials",
+      "Name": "Claim Level Denial Code",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Claim Level ICD Code",
+      "Name": "ICD Claim  Level",
       "Required": true,
       "DataType": "string"
     }

@@ -1,0 +1,121 @@
+{
+  "SchemaName": "PCDR AL_LineLevel",
+  "HeaderRow": 1,
+  "Columns": [
+    {
+      "Name": "VisitNumber",
+      "Required": true,
+      "DataType": "string"
+    },
+    {
+      "Name": "AccessionNo",
+      "Required": true,
+      "DataType": "string"
+    },
+    {
+      "Name": "PayerName",
+      "Required": true,
+      "DataType": "string"
+    },
+    {
+      "Name": "PayerType",
+      "Required": false,
+      "DataType": "string"
+    },
+    {
+      "Name": "BillingProvider",
+      "Required": false,
+      "DataType": "string"
+    },
+    {
+      "Name": "ReferringProviderName",
+      "Required": false,
+      "DataType": "string"
+    },
+    {
+      "Name": "ClinicName",
+      "Required": false,
+      "DataType": "string"
+    },
+    {
+      "Name": "ChartNumber",
+      "Required": false,
+      "DataType": "string"
+    },
+    {
+      "Name": "BeginDOS",
+      "Required": true,
+      "DataType": "datetime"
+    },
+    {
+      "Name": "ChargeEntryDate",
+      "Required": false,
+      "DataType": "datetime"
+    },
+    {
+      "Name": "FirstBillDate",
+      "Required": true,
+      "DataType": "datetime"
+    },
+    {
+      "Name": "PanelName",
+      "Required": true,
+      "DataType": "string"
+    },
+    {
+      "Name": "Units",
+      "Required": true,
+      "DataType": "int"
+    },
+    {
+      "Name": "Modifier",
+      "Required": true,
+      "DataType": "string"
+    },
+    {
+      "Name": "BilledAmount",
+      "Required": true,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "AllowedAmount",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "InsurancePayment",
+      "Required": true,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "PatientPaidAmount",
+      "Required": true,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "InsuranceAdjustment",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "PatientAdjustment",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "InsuranceBalance",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "PatientBalance",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "CheckDate",
+      "Required": false,
+      "DataType": "datetime"
+    }
+  ]
+}

@@ -1,5 +1,9 @@
 {
+<<<<<<< Updated upstream
   "SchemaName": "Elixir_LineLevel",
+=======
+  "SchemaName": "Line Level File",
+>>>>>>> Stashed changes
   "HeaderRow": 1,
   "Columns": [
     {

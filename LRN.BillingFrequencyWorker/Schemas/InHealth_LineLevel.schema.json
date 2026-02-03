@@ -1,9 +1,9 @@
 {
-  "SchemaName": "Certus_LineLevel",
+  "SchemaName": "Line Level",
   "HeaderRow": 1,
   "Columns": [
     {
-      "Name": "Encounter ID",
+      "Name": "VisitNum",
       "Required": true,
       "DataType": "string"
     },
@@ -13,22 +13,22 @@
       "DataType": "string"
     },
     {
-      "Name": "Insurance Name",
+      "Name": "Carrier",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Ref Physician Name",
+      "Name": "ReferringProvider",
       "Required": false,
       "DataType": "string"
     },
     {
-      "Name": "Organization Name",
+      "Name": "Facility",
       "Required": false,
       "DataType": "string"
     },
     {
-      "Name": "Patient ID",
+      "Name": "ChartNum",
       "Required": false,
       "DataType": "string"
     },
@@ -38,69 +38,79 @@
       "DataType": "datetime"
     },
     {
-      "Name": "DOS",
+      "Name": "BeginDOS",
       "Required": true,
       "DataType": "datetime"
     },
     {
-      "Name": "Charge Entered Date",
-      "Required": false,
-      "DataType": "datetime"
-    },
-    {
-      "Name": "Billed Date",
+      "Name": "LastBillDate",
       "Required": true,
       "DataType": "datetime"
     },
     {
-      "Name": "Panel Name",
+      "Name": "Panel",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "CPT",
+      "Name": "Procedure",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Service Unit",
+      "Name": "Units",
       "Required": true,
       "DataType": "int"
     },
     {
-      "Name": "Mod",
+      "Name": "Modifier",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Billed Amounts",
+      "Name": "TotalCharge",
       "Required": true,
       "DataType": "decimal"
     },
     {
-      "Name": "Insurance Payments",
+      "Name": "CarrierPayment",
       "Required": true,
       "DataType": "decimal"
     },
     {
-      "Name": "Patient Paymnets",
+      "Name": "PatientPayment",
       "Required": true,
       "DataType": "decimal"
     },
     {
-      "Name": "Posted Date",
-      "Required": false,
-      "DataType": "datetime"
+      "Name": "CarrierWO",
+      "Required": true,
+      "DataType": "decimal"
     },
     {
-      "Name": "Claim Level Denials",
+      "Name": "TotalBalance",
       "Required": true,
-      "DataType": "string"
+      "DataType": "decimal"
     },
     {
-      "Name": "Claim Level ICD Code",
+      "Name": "CarrierBalance",
       "Required": true,
-      "DataType": "string"
+      "DataType": "decimal"
+    },
+    {
+      "Name": "PatientBalance",
+      "Required": true,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "TotalAllowed",
+      "Required": true,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "PatientWO",
+      "Required": true,
+      "DataType": "decimal"
     }
   ]
 }

@@ -1,5 +1,9 @@
 {
+<<<<<<< Updated upstream
   "SchemaName": "Rising Tides_LineLevel",
+=======
+  "SchemaName": "Line Level",
+>>>>>>> Stashed changes
   "HeaderRow": 1,
   "Columns": [
     {
@@ -63,7 +67,11 @@
       "DataType": "string"
     },
     {
+<<<<<<< Updated upstream
       "Name": "CPT",
+=======
+      "Name": "CPTs",
+>>>>>>> Stashed changes
       "Required": true,
       "DataType": "string"
     },
@@ -109,22 +117,43 @@
     },
     {
       "Name": "CarrierWO",
+<<<<<<< Updated upstream
       "Required": false,
+=======
+      "Required": true,
+>>>>>>> Stashed changes
       "DataType": "decimal"
     },
     {
       "Name": "PatientWO",
+<<<<<<< Updated upstream
       "Required": false,
+=======
+      "Required": true,
+>>>>>>> Stashed changes
       "DataType": "decimal"
     },
     {
       "Name": "CarrierBalance",
+<<<<<<< Updated upstream
       "Required": false,
+=======
+      "Required": true,
+>>>>>>> Stashed changes
       "DataType": "decimal"
     },
     {
       "Name": "PatientBalance",
+<<<<<<< Updated upstream
       "Required": false,
+=======
+      "Required": true,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "TotalBalance",
+      "Required": true,
+>>>>>>> Stashed changes
       "DataType": "decimal"
     },
     {

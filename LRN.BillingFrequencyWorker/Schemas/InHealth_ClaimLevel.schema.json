@@ -1,9 +1,5 @@
 {
-<<<<<<< Updated upstream
-  "SchemaName": "Rising Tides_ClaimLevel",
-=======
-  "SchemaName": "Master",
->>>>>>> Stashed changes
+  "SchemaName": "Claim Level",
   "HeaderRow": 1,
   "Columns": [
     {
@@ -12,11 +8,7 @@
       "DataType": "string"
     },
     {
-<<<<<<< Updated upstream
       "Name": "Accession",
-=======
-      "Name": "Specimen ID",
->>>>>>> Stashed changes
       "Required": false,
       "DataType": "string"
     },
@@ -26,23 +18,18 @@
       "DataType": "string"
     },
     {
-      "Name": "FinancialClass",
-      "Required": false,
-      "DataType": "string"
-    },
-    {
-      "Name": "Provider",
-      "Required": false,
+      "Name": "Facility",
+      "Required": true,
       "DataType": "string"
     },
     {
       "Name": "ReferringProvider",
-      "Required": false,
+      "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Facility",
-      "Required": false,
+      "Name": "Panel",
+      "Required": true,
       "DataType": "string"
     },
     {
@@ -56,43 +43,18 @@
       "DataType": "datetime"
     },
     {
-      "Name": "DOE",
-      "Required": false,
-      "DataType": "datetime"
-    },
-    {
       "Name": "LastBillDate",
       "Required": true,
       "DataType": "datetime"
     },
     {
-      "Name": "Panel",
+      "Name": "Claim Level CPT",
       "Required": true,
-      "DataType": "string"
-    },
-    {
-      "Name": "CPTs",
-      "Required": true,
-      "DataType": "int"
-    },
-    {
-      "Name": "POS",
-      "Required": false,
-      "DataType": "string"
-    },
-    {
-      "Name": "TOS",
-      "Required": false,
       "DataType": "string"
     },
     {
       "Name": "TotalCharge",
       "Required": true,
-      "DataType": "decimal"
-    },
-    {
-      "Name": "TotalAllowed",
-      "Required": false,
       "DataType": "decimal"
     },
     {
@@ -106,48 +68,44 @@
       "DataType": "decimal"
     },
     {
+      "Name": "TotalWO",
+      "Required": false,
+      "DataType": "decimal"
+    },
+    {
       "Name": "CarrierWO",
       "Required": false,
       "DataType": "decimal"
     },
     {
-      "Name": "PatientWO",
-      "Required": false,
+      "Name": "TotalBalance",
+      "Required": true,
       "DataType": "decimal"
     },
     {
       "Name": "CarrierBalance",
-      "Required": false,
+      "Required": true,
       "DataType": "decimal"
     },
     {
       "Name": "PatientBalance",
-      "Required": false,
+      "Required": true,
       "DataType": "decimal"
     },
     {
-      "Name": "Deposit Date",
+      "Name": "TotalAllowed",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "decimal"
     },
     {
-<<<<<<< Updated upstream
-      "Name": "Claim Status",
+      "Name": "PatientWO",
       "Required": true,
-      "DataType": "string"
+      "DataType": "decimal"
     },
     {
-      "Name": "Claim Level Denial Code",
+      "Name": "TotalPayment",
       "Required": true,
-      "DataType": "string"
-    },
-    {
-      "Name": "PrimaryDiagnosis",
-=======
-      "Name": "Denial Code",
->>>>>>> Stashed changes
-      "Required": true,
-      "DataType": "string"
+      "DataType": "decimal"
     }
   ]
 }

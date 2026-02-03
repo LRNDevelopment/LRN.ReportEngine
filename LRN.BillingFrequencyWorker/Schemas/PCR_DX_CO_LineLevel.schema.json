@@ -1,45 +1,82 @@
 {
+<<<<<<< Updated upstream
   "SchemaName": "PCR DX CO_LineLevel",
   "HeaderRow": 1,
   "Columns": [
     {
       "Name": "VisitNumber",
+=======
+  "SchemaName": "Line Level",
+  "HeaderRow": 1,
+  "Columns": [
+    {
+      "Name": "VisitNum",
+>>>>>>> Stashed changes
       "Required": true,
       "DataType": "string"
     },
     {
+<<<<<<< Updated upstream
       "Name": "AccessionNo",
+=======
+      "Name": "Accession",
+>>>>>>> Stashed changes
       "Required": true,
       "DataType": "string"
     },
     {
+<<<<<<< Updated upstream
       "Name": "PayerName",
+=======
+      "Name": "Carrier",
+>>>>>>> Stashed changes
       "Required": true,
       "DataType": "string"
     },
     {
+<<<<<<< Updated upstream
       "Name": "PayerType",
+=======
+      "Name": "FinancialClass",
+>>>>>>> Stashed changes
       "Required": false,
       "DataType": "string"
     },
     {
+<<<<<<< Updated upstream
       "Name": "BillingProvider",
+=======
+      "Name": "Provider",
+>>>>>>> Stashed changes
       "Required": false,
       "DataType": "string"
     },
     {
+<<<<<<< Updated upstream
       "Name": "ReferringProviderName",
+=======
+      "Name": "ReferringProvider",
+>>>>>>> Stashed changes
       "Required": false,
       "DataType": "string"
     },
     {
+<<<<<<< Updated upstream
       "Name": "ClinicName",
+=======
+      "Name": "Facility",
+>>>>>>> Stashed changes
       "Required": false,
       "DataType": "string"
     },
     {
+<<<<<<< Updated upstream
       "Name": "ChartNumber",
       "Required": false,
+=======
+      "Name": "ChartNum",
+      "Required": true,
+>>>>>>> Stashed changes
       "DataType": "string"
     },
     {
@@ -48,22 +85,39 @@
       "DataType": "datetime"
     },
     {
+<<<<<<< Updated upstream
       "Name": "ChargeEntryDate",
       "Required": false,
       "DataType": "datetime"
     },
     {
       "Name": "FirstBillDate",
+=======
+      "Name": "DOE",
+>>>>>>> Stashed changes
       "Required": true,
       "DataType": "datetime"
     },
     {
+<<<<<<< Updated upstream
       "Name": "PanelName",
+=======
+      "Name": "LastBillDate",
+      "Required": true,
+      "DataType": "datetime"
+    },
+    {
+      "Name": "Panel",
+>>>>>>> Stashed changes
       "Required": true,
       "DataType": "string"
     },
     {
+<<<<<<< Updated upstream
       "Name": "CPTCode",
+=======
+      "Name": "Procedure",
+>>>>>>> Stashed changes
       "Required": true,
       "DataType": "string"
     },
@@ -78,26 +132,43 @@
       "DataType": "string"
     },
     {
+<<<<<<< Updated upstream
       "Name": "BilledAmount",
+=======
+      "Name": "TotalCharge",
+>>>>>>> Stashed changes
       "Required": true,
       "DataType": "decimal"
     },
     {
+<<<<<<< Updated upstream
       "Name": "AllowedAmount",
+=======
+      "Name": "CarrierPayment",
+>>>>>>> Stashed changes
       "Required": false,
       "DataType": "decimal"
     },
     {
+<<<<<<< Updated upstream
       "Name": "InsurancePayment",
+=======
+      "Name": "PatientPayment",
+>>>>>>> Stashed changes
       "Required": true,
       "DataType": "decimal"
     },
     {
+<<<<<<< Updated upstream
       "Name": "PatientPaidAmount",
+=======
+      "Name": "CarrierWO",
+>>>>>>> Stashed changes
       "Required": true,
       "DataType": "decimal"
     },
     {
+<<<<<<< Updated upstream
       "Name": "InsuranceAdjustment",
       "Required": false,
       "DataType": "decimal"
@@ -110,10 +181,20 @@
     {
       "Name": "InsuranceBalance",
       "Required": false,
+=======
+      "Name": "TotalBalance",
+      "Required": true,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "CarrierBalance",
+      "Required": true,
+>>>>>>> Stashed changes
       "DataType": "decimal"
     },
     {
       "Name": "PatientBalance",
+<<<<<<< Updated upstream
       "Required": false,
       "DataType": "decimal"
     },
@@ -121,6 +202,20 @@
       "Name": "CheckDate",
       "Required": false,
       "DataType": "datetime"
+=======
+      "Required": true,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "TotalAllowed",
+      "Required": true,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "PatientWO",
+      "Required": true,
+      "DataType": "decimal"
+>>>>>>> Stashed changes
     }
   ]
 }

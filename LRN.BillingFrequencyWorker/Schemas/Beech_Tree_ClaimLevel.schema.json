@@ -1,5 +1,9 @@
 {
+<<<<<<< Updated upstream
   "SchemaName": "Beech Tree_ClaimLevel",
+=======
+  "SchemaName": "Line Level",
+>>>>>>> Stashed changes
   "HeaderRow": 1,
   "Columns": [
     {
@@ -8,8 +12,13 @@
       "DataType": "string"
     },
     {
+<<<<<<< Updated upstream
       "Name": "Accession",
       "Required": false,
+=======
+      "Name": "Specimen ID",
+      "Required": true,
+>>>>>>> Stashed changes
       "DataType": "string"
     },
     {
@@ -58,13 +67,18 @@
       "DataType": "datetime"
     },
     {
+<<<<<<< Updated upstream
       "Name": "Panel",
+=======
+      "Name": "Panel Group",
+>>>>>>> Stashed changes
       "Required": true,
       "DataType": "string"
     },
     {
       "Name": "CPTs",
       "Required": true,
+<<<<<<< Updated upstream
       "DataType": "int"
     },
     {
@@ -75,6 +89,18 @@
     {
       "Name": "TOS",
       "Required": false,
+=======
+      "DataType": "string"
+    },
+    {
+      "Name": "PrimaryDiagnosis",
+      "Required": true,
+      "DataType": "int"
+    },
+    {
+      "Name": "Modifier",
+      "Required": true,
+>>>>>>> Stashed changes
       "DataType": "string"
     },
     {
@@ -89,12 +115,20 @@
     },
     {
       "Name": "CarrierPayment",
+<<<<<<< Updated upstream
       "Required": false,
+=======
+      "Required": true,
+>>>>>>> Stashed changes
       "DataType": "decimal"
     },
     {
       "Name": "PatientPayment",
+<<<<<<< Updated upstream
       "Required": false,
+=======
+      "Required": true,
+>>>>>>> Stashed changes
       "DataType": "decimal"
     },
     {
@@ -119,6 +153,7 @@
     },
     {
       "Name": "Posted Date",
+<<<<<<< Updated upstream
       "Required": true,
       "DataType": "datetime"
     },
@@ -136,6 +171,15 @@
       "Name": "PrimaryDiagnosis",
       "Required": true,
       "DataType": "string"
+=======
+      "Required": false,
+      "DataType": "datetime"
+    },
+    {
+      "Name": "Denial Code",
+      "Required": true,
+      "DataType": "string"
+>>>>>>> Stashed changes
     }
   ]
 }

@@ -1,5 +1,9 @@
 {
+<<<<<<< Updated upstream
   "SchemaName": "Elixir_ClaimLevel",
+=======
+  "SchemaName": "Claim Level File",
+>>>>>>> Stashed changes
   "HeaderRow": 1,
   "Columns": [
     {

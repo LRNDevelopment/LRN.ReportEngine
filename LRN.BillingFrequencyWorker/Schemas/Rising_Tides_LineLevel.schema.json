@@ -1,9 +1,5 @@
 {
-<<<<<<< Updated upstream
-  "SchemaName": "Rising Tides_LineLevel",
-=======
   "SchemaName": "Line Level",
->>>>>>> Stashed changes
   "HeaderRow": 1,
   "Columns": [
     {
@@ -49,17 +45,17 @@
     {
       "Name": "BeginDOS",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "DOE",
       "Required": false,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "LastBillDate",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "Panel Group",
@@ -67,11 +63,7 @@
       "DataType": "string"
     },
     {
-<<<<<<< Updated upstream
-      "Name": "CPT",
-=======
       "Name": "CPTs",
->>>>>>> Stashed changes
       "Required": true,
       "DataType": "string"
     },
@@ -117,43 +109,27 @@
     },
     {
       "Name": "CarrierWO",
-<<<<<<< Updated upstream
-      "Required": false,
-=======
       "Required": true,
->>>>>>> Stashed changes
       "DataType": "decimal"
     },
     {
       "Name": "PatientWO",
-<<<<<<< Updated upstream
-      "Required": false,
-=======
       "Required": true,
->>>>>>> Stashed changes
       "DataType": "decimal"
     },
     {
       "Name": "CarrierBalance",
-<<<<<<< Updated upstream
-      "Required": false,
-=======
       "Required": true,
->>>>>>> Stashed changes
       "DataType": "decimal"
     },
     {
       "Name": "PatientBalance",
-<<<<<<< Updated upstream
-      "Required": false,
-=======
       "Required": true,
       "DataType": "decimal"
     },
     {
       "Name": "TotalBalance",
       "Required": true,
->>>>>>> Stashed changes
       "DataType": "decimal"
     },
     {

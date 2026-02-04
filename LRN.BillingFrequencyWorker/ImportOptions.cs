@@ -63,7 +63,6 @@ public sealed class SharePointOptions
     // OPTIONAL: move processed file to a processed folder
     public bool MoveToProcessed { get; set; } = false;
     public string? ProcessedFolderPath { get; set; }
-	public string? SharedFolderUrl { get; set; }
 }
 
 public sealed class LabFileMap

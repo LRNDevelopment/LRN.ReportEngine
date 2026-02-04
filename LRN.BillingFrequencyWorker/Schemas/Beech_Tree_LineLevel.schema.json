@@ -1,9 +1,5 @@
 {
-<<<<<<< Updated upstream
-  "SchemaName": "Beech Tree_LineLevel",
-=======
   "SchemaName": "Line Level",
->>>>>>> Stashed changes
   "HeaderRow": 1,
   "Columns": [
     {
@@ -12,14 +8,6 @@
       "DataType": "string"
     },
     {
-<<<<<<< Updated upstream
-      "Name": "Accession No",
-      "Required": true,
-      "DataType": "string"
-    },
-    {
-=======
->>>>>>> Stashed changes
       "Name": "Carrier",
       "Required": true,
       "DataType": "string"
@@ -52,17 +40,17 @@
     {
       "Name": "BeginDOS",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "DOE",
       "Required": false,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "LastBillDate",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "Panel Group",
@@ -70,20 +58,12 @@
       "DataType": "string"
     },
     {
-<<<<<<< Updated upstream
-      "Name": "CPT",
-=======
       "Name": "CPTs",
->>>>>>> Stashed changes
       "Required": true,
       "DataType": "string"
     },
     {
-<<<<<<< Updated upstream
-      "Name": "Units",
-=======
       "Name": "PrimaryDiagnosis",
->>>>>>> Stashed changes
       "Required": true,
       "DataType": "int"
     },
@@ -93,19 +73,6 @@
       "DataType": "string"
     },
     {
-<<<<<<< Updated upstream
-      "Name": "POS",
-      "Required": false,
-      "DataType": "string"
-    },
-    {
-      "Name": "TOS",
-      "Required": false,
-      "DataType": "string"
-    },
-    {
-=======
->>>>>>> Stashed changes
       "Name": "TotalCharge",
       "Required": true,
       "DataType": "decimal"
@@ -146,13 +113,9 @@
       "DataType": "decimal"
     },
     {
-<<<<<<< Updated upstream
-      "Name": "Deposit Date",
-=======
       "Name": "Posted Date",
->>>>>>> Stashed changes
       "Required": false,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "Denial Code",

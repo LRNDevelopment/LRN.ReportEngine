@@ -1,9 +1,5 @@
 {
-<<<<<<< Updated upstream
-  "SchemaName": "Elixir_LineLevel",
-=======
   "SchemaName": "Line Level File",
->>>>>>> Stashed changes
   "HeaderRow": 1,
   "Columns": [
     {
@@ -59,12 +55,12 @@
     {
       "Name": "Service From Date",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "Primary Insurance Billed Date",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "Panel Name",
@@ -134,7 +130,7 @@
     {
       "Name": "Deposit Date",
       "Required": false,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "Claim Level Denial Code",

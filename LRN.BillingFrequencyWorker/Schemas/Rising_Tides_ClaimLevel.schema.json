@@ -1,9 +1,5 @@
 {
-<<<<<<< Updated upstream
-  "SchemaName": "Rising Tides_ClaimLevel",
-=======
   "SchemaName": "Master",
->>>>>>> Stashed changes
   "HeaderRow": 1,
   "Columns": [
     {
@@ -12,11 +8,7 @@
       "DataType": "string"
     },
     {
-<<<<<<< Updated upstream
-      "Name": "Accession",
-=======
       "Name": "Specimen ID",
->>>>>>> Stashed changes
       "Required": false,
       "DataType": "string"
     },
@@ -53,17 +45,17 @@
     {
       "Name": "BeginDOS",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "DOE",
       "Required": false,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "LastBillDate",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "Panel",
@@ -128,24 +120,10 @@
     {
       "Name": "Deposit Date",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
-<<<<<<< Updated upstream
-      "Name": "Claim Status",
-      "Required": true,
-      "DataType": "string"
-    },
-    {
-      "Name": "Claim Level Denial Code",
-      "Required": true,
-      "DataType": "string"
-    },
-    {
-      "Name": "PrimaryDiagnosis",
-=======
       "Name": "Denial Code",
->>>>>>> Stashed changes
       "Required": true,
       "DataType": "string"
     }

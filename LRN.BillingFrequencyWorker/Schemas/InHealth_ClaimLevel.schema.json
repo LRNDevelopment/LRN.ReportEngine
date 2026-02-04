@@ -40,12 +40,12 @@
     {
       "Name": "BeginDOS",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "LastBillDate",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "Claim Level CPT",

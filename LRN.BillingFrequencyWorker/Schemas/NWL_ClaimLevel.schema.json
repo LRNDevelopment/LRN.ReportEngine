@@ -40,17 +40,17 @@
     {
       "Name": "DOS",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "Entered Date",
       "Required": false,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "Last Billed Date",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "Panel Name",
@@ -90,7 +90,7 @@
     {
       "Name": "Posted date",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "Claim Status",

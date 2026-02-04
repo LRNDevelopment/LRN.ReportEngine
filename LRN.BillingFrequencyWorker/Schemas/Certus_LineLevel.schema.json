@@ -1,106 +1,58 @@
 {
-  "SchemaName": "Certus_LineLevel",
+  "SchemaName": "LineLevel",
   "HeaderRow": 1,
   "Columns": [
     {
-      "Name": "Encounter ID",
+      "Name": "ChartNumber",
       "Required": true,
-      "DataType": "string"
+      "DataType": "string",
+      "Aliases": [
+        "Chart Number",
+        "Chart #",
+        "PatientId",
+        "Patient ID"
+      ]
     },
     {
-      "Name": "Accession",
+      "Name": "VisitNumber",
       "Required": true,
-      "DataType": "string"
+      "DataType": "string",
+      "Aliases": [
+        "Visit #",
+        "BillingNumber",
+        "Billing #"
+      ]
     },
     {
-      "Name": "Insurance Name",
+      "Name": "PanelCarrier",
       "Required": true,
-      "DataType": "string"
+      "DataType": "string",
+      "Aliases": [
+        "Payer",
+        "Carrier",
+        "PayerName"
+      ]
     },
     {
-      "Name": "Ref Physician Name",
-      "Required": false,
-      "DataType": "string"
-    },
-    {
-      "Name": "Organization Name",
-      "Required": false,
-      "DataType": "string"
-    },
-    {
-      "Name": "Patient ID",
-      "Required": false,
-      "DataType": "string"
-    },
-    {
-      "Name": "DOB",
+      "Name": "CPTCode",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "string",
+      "Aliases": [
+        "CPT",
+        "CPT Code",
+        "Panel"
+      ]
     },
     {
-      "Name": "DOS",
+      "Name": "BeginDOS",
       "Required": true,
-      "DataType": "datetime"
-    },
-    {
-      "Name": "Charge Entered Date",
-      "Required": false,
-      "DataType": "datetime"
-    },
-    {
-      "Name": "Billed Date",
-      "Required": true,
-      "DataType": "datetime"
-    },
-    {
-      "Name": "Panel Name",
-      "Required": true,
-      "DataType": "string"
-    },
-    {
-      "Name": "CPT",
-      "Required": true,
-      "DataType": "string"
-    },
-    {
-      "Name": "Service Unit",
-      "Required": true,
-      "DataType": "int"
-    },
-    {
-      "Name": "Mod",
-      "Required": true,
-      "DataType": "string"
-    },
-    {
-      "Name": "Billed Amounts",
-      "Required": true,
-      "DataType": "decimal"
-    },
-    {
-      "Name": "Insurance Payments",
-      "Required": true,
-      "DataType": "decimal"
-    },
-    {
-      "Name": "Patient Paymnets",
-      "Required": true,
-      "DataType": "decimal"
-    },
-    {
-      "Name": "Posted Date",
-      "Required": false,
-      "DataType": "datetime"
-    },
-    {
-      "Name": "Claim Level Denials",
-      "Required": true,
-      "DataType": "string"
-    },
-    {
-      "Name": "Claim Level ICD Code",
-      "Required": true,
-      "DataType": "string"
+      "DataType": "datetime",
+      "Aliases": [
+        "DateOfService",
+        "DOS",
+        "Date Of Service",
+        "Begin DOS"
+      ]
     }
   ]
 }

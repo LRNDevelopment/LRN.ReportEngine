@@ -1,9 +1,5 @@
 {
-<<<<<<< Updated upstream
-  "SchemaName": "Elixir_ClaimLevel",
-=======
   "SchemaName": "Claim Level File",
->>>>>>> Stashed changes
   "HeaderRow": 1,
   "Columns": [
     {
@@ -74,17 +70,17 @@
     {
       "Name": "Service From Date",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "DOE",
       "Required": false,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "Primary Insurance Billed Date",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "Panel",
@@ -144,7 +140,7 @@
     {
       "Name": "Deposit Date",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "Claim Status",

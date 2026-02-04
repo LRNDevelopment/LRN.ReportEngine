@@ -1,36 +1,19 @@
 {
-<<<<<<< Updated upstream
-  "SchemaName": "PCDR AL_LineLevel",
-  "HeaderRow": 1,
-  "Columns": [
-    {
-      "Name": "VisitNumber",
-=======
   "SchemaName": "Line Level",
   "HeaderRow": 1,
   "Columns": [
     {
       "Name": "VisitNum",
->>>>>>> Stashed changes
       "Required": true,
       "DataType": "string"
     },
     {
-<<<<<<< Updated upstream
-      "Name": "AccessionNo",
-      "Required": true,
-      "DataType": "string"
-    },
-    {
-      "Name": "PayerName",
-=======
       "Name": "Accession",
       "Required": false,
       "DataType": "string"
     },
     {
       "Name": "Carrier",
->>>>>>> Stashed changes
       "Required": true,
       "DataType": "string"
     },
@@ -62,28 +45,20 @@
     {
       "Name": "BeginDOS",
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
       "Name": "ChargeEntryDate",
       "Required": false,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
-<<<<<<< Updated upstream
-      "Name": "FirstBillDate",
-=======
       "Name": "LastBillDate",
->>>>>>> Stashed changes
       "Required": true,
-      "DataType": "datetime"
+      "DataType": "date"
     },
     {
-<<<<<<< Updated upstream
-      "Name": "PanelName",
-=======
       "Name": "Panel",
->>>>>>> Stashed changes
       "Required": true,
       "DataType": "string"
     },
@@ -98,11 +73,7 @@
       "DataType": "string"
     },
     {
-<<<<<<< Updated upstream
-      "Name": "BilledAmount",
-=======
       "Name": "TotalCharge",
->>>>>>> Stashed changes
       "Required": true,
       "DataType": "decimal"
     },
@@ -112,20 +83,12 @@
       "DataType": "decimal"
     },
     {
-<<<<<<< Updated upstream
-      "Name": "InsurancePayment",
-=======
       "Name": "CarrierPayment",
->>>>>>> Stashed changes
       "Required": true,
       "DataType": "decimal"
     },
     {
-<<<<<<< Updated upstream
-      "Name": "PatientPaidAmount",
-=======
       "Name": "PatientPayment",
->>>>>>> Stashed changes
       "Required": true,
       "DataType": "decimal"
     },
@@ -152,7 +115,7 @@
     {
       "Name": "CheckDate",
       "Required": false,
-      "DataType": "datetime"
+      "DataType": "date"
     }
   ]
 }

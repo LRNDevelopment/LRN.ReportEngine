@@ -29,10 +29,10 @@ public static class CsvLineLevelReader
             throw new InvalidOperationException($"Header row not found in CSV: {csvPath}");
 
         int cChart = FindCol(header, "ChartNumber", "PatientId", "Patient ID", "Chart #", "Chart Number");
-        int cPay = FindCol(header, "PanelCarrier", "Payer", "Carrier", "PayerName", "Panel Carrier");
+        int cPay = FindCol(header, "PanelCarrier", "Payer", "Carrier", "PayerName", "PayerName_Raw", "Insurance Name", "Panel Carrier");
         int cCpt = FindCol(header, "CPTCode", "CPT", "Panel", "CPT Code");
-        int cVisit = FindCol(header, "VisitNumber", "BillingNumber", "Billing #", "Visit #", "VisitNumber");
-        int cDos = FindCol(header, "BeginDOS", "DateOfService", "DOS", "Date Of Service", "Begin DOS");
+        int cVisit = FindCol(header, "VisitNumber", "BillingNumber", "Billing #", "Visit #", "VisitNumber", "ClaimID", "VisitNum");
+        int cDos = FindCol(header, "BeginDOS", "DateOfService", "DateofService", "DOS", "Date Of Service", "Begin DOS", "Service From Date");
 
         if (cChart < 0 || cVisit < 0 || cDos < 0)
             throw new InvalidOperationException($"Missing required columns in CSV header. Chart={cChart}, Visit={cVisit}, DOS={cDos}");

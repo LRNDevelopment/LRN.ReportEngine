@@ -37,6 +37,16 @@ public sealed class ImportOptions
     public string LineLevelSchemaJsonPath { get; set; } = "Schemas/LineLevel.schema.json";
     public string ClaimLevelSchemaJsonPath { get; set; } = "Schemas/ClaimLevel.schema.json";
 
+    // COMMON schema json paths for standardized CSV output
+    public string CommonLineLevelSchemaJsonPath { get; set; } = "Schemas/LineLevel.schema.json";
+    public string CommonClaimLevelSchemaJsonPath { get; set; } = "Schemas/ClaimLevel.schema.json";
+
+    // Local folder for filestatus_*.csv
+    public string FileStatusLogLocalFolder { get; set; } = "";
+
+    // Keep RAW exports
+    public bool KeepRawCsvExports { get; set; } = false;
+
     public SharePointOptions SharePoint { get; set; } = new();
 
     public List<LabFileMap> Labs { get; set; } = new();
@@ -63,6 +73,10 @@ public sealed class SharePointOptions
     // OPTIONAL: move processed file to a processed folder
     public bool MoveToProcessed { get; set; } = false;
     public string? ProcessedFolderPath { get; set; }
+	public string? SharedFolderUrl { get; set; }
+
+    // Where to upload filestatus_*.csv (path under drive root). Default: "Data Analysis"
+    public string FileStatusLogUploadFolderPath { get; set; } = "Data Analysis";
 }
 
 public sealed class LabFileMap

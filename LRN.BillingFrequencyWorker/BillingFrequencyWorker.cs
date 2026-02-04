@@ -1,5 +1,6 @@
 using Common.Logging;
 using LRN.ExcelValidator.Services;
+using LRN.ExcelValidator.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,6 +16,10 @@ public sealed class BillingFrequencyWorker : BackgroundService
     private readonly SharePointDownloader _sp;
     private readonly BillingFrequencyFileStatusStore _status;
     private readonly IExcelSchemaValidator _schemaValidator;
+    private readonly IColumnSchemaLoader _schemaLoader;
+
+    private ColumnSchema? _commonLineSchema;
+    private ColumnSchema? _commonClaimSchema;
 
     public BillingFrequencyWorker(
         ILogger<BillingFrequencyWorker> logger,
@@ -23,7 +28,8 @@ public sealed class BillingFrequencyWorker : BackgroundService
         Microsoft.Extensions.Configuration.IConfiguration config,
         SharePointDownloader sp,
         BillingFrequencyFileStatusStore status,
-        IExcelSchemaValidator schemaValidator)
+        IExcelSchemaValidator schemaValidator,
+        IColumnSchemaLoader schemaLoader)
     {
         _logger = logger;
         _fileLog = fileLog;
@@ -32,6 +38,7 @@ public sealed class BillingFrequencyWorker : BackgroundService
         _sp = sp;
         _status = status;
         _schemaValidator = schemaValidator;
+        _schemaLoader = schemaLoader;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -95,6 +102,10 @@ public sealed class BillingFrequencyWorker : BackgroundService
     private async Task ProcessSharePointOnceAsync(CancellationToken ct)
     {
         var currentYear = DateTime.Now.Year;
+
+        // Load COMMON schemas once (used for standardized CSV output)
+        _commonLineSchema ??= _schemaLoader.LoadFromFile(ResolvePath(_opt.CommonLineLevelSchemaJsonPath));
+        _commonClaimSchema ??= _schemaLoader.LoadFromFile(ResolvePath(_opt.CommonClaimLevelSchemaJsonPath));
 
         foreach (var lab in _opt.Labs)
         {
@@ -169,6 +180,8 @@ public sealed class BillingFrequencyWorker : BackgroundService
                         errorLogInfo: msg);
 
                     // Move the downloaded XLSX to ErrorFolder with error txt (so we don't keep retrying)
+                    await TryWriteAndUploadFileStatusLogAsync(lab, selected, status: "Failed", outputLocation: _opt.ErrorFolder, logMessage: msg, ct: ct);
+
                     MoveToErrorFolder(stagingPath, msg);
 
                     continue;
@@ -197,7 +210,12 @@ public sealed class BillingFrequencyWorker : BackgroundService
                 var claimOutPath = Path.Combine(claimDir, $"{baseName}_ClaimLevel.csv");
                 var lineOutPath = Path.Combine(lineDir, $"{baseName}_LineLevel.csv");
 
-                await _status.UpsertStatusAsync(
+                
+
+// RAW intermediate exports (Excel -> CSV). Final outputs are standardized using COMMON schema.
+var lineRawPath = Path.Combine(_opt.WatchFolder, $"{lab.LabId}_{baseName}_LineLevel_RAW.csv");
+var claimRawPath = Path.Combine(_opt.WatchFolder, $"{lab.LabId}_{baseName}_ClaimLevel_RAW.csv");
+await _status.UpsertStatusAsync(
                     selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey,
                     selected.Name, selected.SharePointPath, selected.LastModifiedUtc,
                     status: "IN_PROGRESS",
@@ -208,18 +226,50 @@ public sealed class BillingFrequencyWorker : BackgroundService
                 // Export to CSV (fast, no formatting)
                 var sw = Stopwatch.StartNew();
 
-                // LineLevel
-                await ExcelCsvExporter.ExportSingleSheetToCsvAsync(stagingPath, _opt.SheetName, lineOutPath, ct);
-_logger.LogInformation("Lab {LabId}: LineLevel CSV export took {Ms} ms", lab.LabId, sw.ElapsedMilliseconds);
-                _fileLog.Info($"Lab {lab.LabId}: LineLevel CSV export took {sw.ElapsedMilliseconds} ms -> {lineOutPath}");
+                // LineLevel RAW export (from Excel)
+await ExcelCsvExporter.ExportSingleSheetToCsvAsync(stagingPath, _opt.SheetName, lineRawPath, ct);
+_logger.LogInformation("Lab {LabId}: LineLevel RAW CSV export done -> {Path}", lab.LabId, lineRawPath);
+_fileLog.Info($"Lab {lab.LabId}: LineLevel RAW CSV export -> {lineRawPath}");
 
-                // ClaimLevel
-                sw.Restart();
-                await ExcelCsvExporter.ExportSingleSheetToCsvAsync(stagingPath, _opt.ClaimSheetName, claimOutPath, ct);
-_logger.LogInformation("Lab {LabId}: ClaimLevel CSV export took {Ms} ms", lab.LabId, sw.ElapsedMilliseconds);
-                _fileLog.Info($"Lab {lab.LabId}: ClaimLevel CSV export took {sw.ElapsedMilliseconds} ms -> {claimOutPath}");
+// Standardize LineLevel using COMMON schema
+StandardCsvExporter.Generate(
+    sourceCsvPath: lineRawPath,
+    headerRow: _commonLineSchema!.HeaderRow,
+    outputCsvPath: lineOutPath,
+    commonSchema: _commonLineSchema!,
+    labId: lab.LabId,
+    labName: lab.LabName,
+    sourceFileName: selected.Name,
+    ingestedOnLocal: DateTime.Now);
+_logger.LogInformation("Lab {LabId}: LineLevel STANDARD CSV generated -> {Path}", lab.LabId, lineOutPath);
+_fileLog.Info($"Lab {lab.LabId}: LineLevel STANDARD CSV -> {lineOutPath}");
 
-                // Optional: Billing frequency processing (kept separate & toggleable)
+// ClaimLevel RAW export (from Excel)
+await ExcelCsvExporter.ExportSingleSheetToCsvAsync(stagingPath, _opt.ClaimSheetName, claimRawPath, ct);
+_logger.LogInformation("Lab {LabId}: ClaimLevel RAW CSV export done -> {Path}", lab.LabId, claimRawPath);
+_fileLog.Info($"Lab {lab.LabId}: ClaimLevel RAW CSV export -> {claimRawPath}");
+
+// Standardize ClaimLevel using COMMON schema
+StandardCsvExporter.Generate(
+    sourceCsvPath: claimRawPath,
+    headerRow: _commonClaimSchema!.HeaderRow,
+    outputCsvPath: claimOutPath,
+    commonSchema: _commonClaimSchema!,
+    labId: lab.LabId,
+    labName: lab.LabName,
+    sourceFileName: selected.Name,
+    ingestedOnLocal: DateTime.Now);
+_logger.LogInformation("Lab {LabId}: ClaimLevel STANDARD CSV generated -> {Path}", lab.LabId, claimOutPath);
+_fileLog.Info($"Lab {lab.LabId}: ClaimLevel STANDARD CSV -> {claimOutPath}");
+
+// Cleanup RAW CSVs unless configured to keep
+if (!_opt.KeepRawCsvExports)
+{
+    TryDelete(lineRawPath);
+    TryDelete(claimRawPath);
+}
+
+// Optional: Billing frequency processing (kept separate & toggleable)
                 if (_opt.EnableBillingFrequency)
                 {
                     if (string.IsNullOrWhiteSpace(_connStr))
@@ -240,6 +290,9 @@ _logger.LogInformation("Lab {LabId}: ClaimLevel CSV export took {Ms} ms", lab.La
 
                     _fileLog.Info($"Lab {lab.LabId}: Billing frequency loaded to { _opt.DestinationTable }.");
                 }
+
+                // Write + upload file status log (CSV) to SharePoint Data Analysis root
+                await TryWriteAndUploadFileStatusLogAsync(lab, selected, status: "Completed", outputLocation: claimOutPath, logMessage: "imported", ct: ct);
 
                 // Mark PROCESSED
                 await _status.UpsertStatusAsync(
@@ -284,6 +337,9 @@ _logger.LogInformation("Lab {LabId}: ClaimLevel CSV export took {Ms} ms", lab.La
                         ct: ct,
                         errorLogInfo: ex.ToString());
                 }
+
+                await TryWriteAndUploadFileStatusLogAsync(lab, selected, status: "Failed", outputLocation: _opt.ErrorFolder, logMessage: ex.Message, ct: ct);
+
             }
         }
     }
@@ -333,6 +389,57 @@ _logger.LogInformation("Lab {LabId}: ClaimLevel CSV export took {Ms} ms", lab.La
             _fileLog.Error("Failed to move file to error folder.", ex);
         }
     }
+
+
+
+private async Task TryWriteAndUploadFileStatusLogAsync(
+    LabFileMap lab,
+    SharePointDownloader.SelectedFile? selected,
+    string status,
+    string outputLocation,
+    string logMessage,
+    CancellationToken ct)
+{
+    try
+    {
+        var localFolder = string.IsNullOrWhiteSpace(_opt.FileStatusLogLocalFolder)
+            ? Path.Combine(_opt.ReportOutputsRoot, "FileStatusLogs")
+            : _opt.FileStatusLogLocalFolder;
+
+        localFolder = ResolvePath(localFolder);
+
+        var importedLocal = DateTime.Now;
+        var fileName = selected?.Name ?? "";
+
+        var localLogPath = FileStatusLogCsv.Write(
+            folder: localFolder,
+            labId: lab.LabId,
+            labName: lab.LabName,
+            importedLocal: importedLocal,
+            fileName: fileName,
+            status: status,
+            outputLocation: outputLocation,
+            logMessage: logMessage);
+
+        _fileLog.Info($"Lab {lab.LabId}: file status log written: {localLogPath}");
+
+        if (_opt.SharePoint.Enabled && selected != null)
+        {
+            await _sp.UploadFileToFolderPathAsync(
+                driveId: selected.DriveId,
+                folderPath: _opt.SharePoint.FileStatusLogUploadFolderPath,
+                localFilePath: localLogPath,
+                uploadFileName: Path.GetFileName(localLogPath),
+                ct: ct);
+
+            _fileLog.Info($"Lab {lab.LabId}: file status log uploaded to SharePoint folder '{_opt.SharePoint.FileStatusLogUploadFolderPath}'.");
+        }
+    }
+    catch (Exception ex)
+    {
+        _fileLog.Error("Failed to write/upload file status log.", ex);
+    }
+}
 
     private static (string MonthFolder, string DateFolder) ParseMonthAndDateFolder(string sharePointPath)
     {

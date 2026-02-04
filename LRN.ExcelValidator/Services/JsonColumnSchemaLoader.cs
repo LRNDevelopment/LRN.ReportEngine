@@ -36,6 +36,7 @@ public sealed class JsonColumnSchemaLoader : IColumnSchemaLoader
             c.Name ??= "";
             c.DataType ??= "string";
             c.Aliases ??= new();
+            if (string.IsNullOrWhiteSpace(c.Calculation)) c.Calculation = null;
         }
 
         return schema;

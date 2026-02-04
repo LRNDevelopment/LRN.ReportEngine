@@ -17,6 +17,9 @@ public sealed class ColumnSpec
 
     // Alternative header names accepted for this column
     public List<string> Aliases { get; set; } = new();
+
+    // Optional calculated expression, e.g. "A + B" (A/B are common schema column names)
+    public string? Calculation { get; set; }
 }
 
 public sealed class SchemaValidationResult

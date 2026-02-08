@@ -83,7 +83,7 @@
       "DataType": "date"
     },
     {
-      "Name": "Panel",
+      "Name": "Panel Name",
       "Required": true,
       "DataType": "string"
     },

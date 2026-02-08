@@ -58,7 +58,7 @@
       "DataType": "date"
     },
     {
-      "Name": "Panel",
+      "Name": "Panel Group",
       "Required": true,
       "DataType": "string"
     },
@@ -118,7 +118,7 @@
       "DataType": "decimal"
     },
     {
-      "Name": "Deposit Date",
+      "Name": "Posted Date",
       "Required": true,
       "DataType": "date"
     },

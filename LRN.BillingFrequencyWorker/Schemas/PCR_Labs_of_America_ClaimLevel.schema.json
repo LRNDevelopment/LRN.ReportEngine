@@ -58,7 +58,7 @@
       "DataType": "date"
     },
     {
-      "Name": "Panel",
+      "Name": "Panel Group",
       "Required": true,
       "DataType": "string"
     },
@@ -118,17 +118,17 @@
       "DataType": "decimal"
     },
     {
-      "Name": "Deposit Date",
+      "Name": "Posted Date",
       "Required": true,
       "DataType": "date"
     },
     {
-      "Name": "Claim Status",
+      "Name": "Payment Status",
       "Required": true,
       "DataType": "string"
     },
     {
-      "Name": "Claim Level Denial Code",
+      "Name": "Denial Code",
       "Required": true,
       "DataType": "string"
     },

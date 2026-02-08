@@ -63,7 +63,7 @@
       "DataType": "int"
     },
     {
-      "Name": "Sum of Patient ID",
+      "Name": "Charge amount",
       "Required": true,
       "DataType": "decimal"
     },

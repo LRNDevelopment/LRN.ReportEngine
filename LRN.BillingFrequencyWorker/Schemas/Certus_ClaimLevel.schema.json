@@ -68,7 +68,7 @@
       "DataType": "decimal"
     },
     {
-      "Name": "Patient Payments",
+      "Name": "Patient Paymnets",
       "Required": false,
       "DataType": "decimal"
     },

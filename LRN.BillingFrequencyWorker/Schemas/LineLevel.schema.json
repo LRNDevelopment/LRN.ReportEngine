@@ -92,7 +92,7 @@
 				"ClinicName",
 				"Organization Name",
 				"Proc-Department Desc",
-				"Patient ID"
+				"Facility"
 			]
 		},
 		{
@@ -166,7 +166,7 @@
 				"PanelName",
 				"Panel Name",
 				"Panel Group",
-				"Patient ID"
+				"Panel"
 			]
 		},
 		{
@@ -175,7 +175,8 @@
 			"Aliases": [
 				"CPT",
 				"Claim Level CPT",
-				"CPTCode"
+				"CPTCode",
+				"Procedure"
 			]
 		},
 		{
@@ -327,7 +328,8 @@
 				"Claim Level Denial Code",
 				"Combined Claim Level Denial code",
 				"Claim Level Denials",
-				"Denial Code"
+				"Denial Code",
+				"Denail Code"
 			]
 		},
 		{

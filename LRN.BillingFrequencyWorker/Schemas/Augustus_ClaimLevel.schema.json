@@ -69,22 +69,32 @@
     },
     {
       "Name": "Ins. Payment",
-      "Required": false,
+      "Required": true,
       "DataType": "decimal"
     },
     {
       "Name": "Pat. Payments",
-      "Required": false,
+      "Required": true,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "adj_amount",
+      "Required": true,
+      "DataType": "decimal"
+    },
+    {
+      "Name": "Balance amount",
+      "Required": true,
       "DataType": "decimal"
     },
     {
       "Name": "Ins Balance",
-      "Required": false,
+      "Required": true,
       "DataType": "decimal"
     },
     {
       "Name": "Pat Balance",
-      "Required": false,
+      "Required": true,
       "DataType": "decimal"
     },
     {

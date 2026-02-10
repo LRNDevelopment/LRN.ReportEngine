@@ -122,19 +122,19 @@ public sealed class SharePointDownloader
         await remote.CopyToAsync(local, ct);
     }
 
-	public async Task DownoadFileForPayerPloicyAsync(string driveId, string itemId, string localPath, CancellationToken ct)
-	{
-		var url = $"https://graph.microsoft.com/v1.0/drives/{driveId}/items/{itemId}/content";
+    public async Task DownoadFileForPayerPloicyAsync(string driveId, string itemId, string localPath, CancellationToken ct)
+    {
+        var url = $"https://graph.microsoft.com/v1.0/drives/{driveId}/items/{itemId}/content";
 
-		using var resp = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
-		resp.EnsureSuccessStatusCode();
+        using var resp = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+        resp.EnsureSuccessStatusCode();
 
-		await using var remote = await resp.Content.ReadAsStreamAsync(ct);
-		await using var local = new FileStream(localPath, FileMode.Create, FileAccess.Write, FileShare.None);
-		await remote.CopyToAsync(local, ct);
-	}
+        await using var remote = await resp.Content.ReadAsStreamAsync(ct);
+        await using var local = new FileStream(localPath, FileMode.Create, FileAccess.Write, FileShare.None);
+        await remote.CopyToAsync(local, ct);
+    }
 
-	
+
     public async Task<string?> TryResolveProcessedFolderIdAsync(CancellationToken ct)
     {
         var sp = _opt.SharePoint;
@@ -189,50 +189,50 @@ public sealed class SharePointDownloader
         _rootFolderId = null;
     }
 
-    
 
-/// <summary>
-/// Upload a local file to a folder path under the drive root (small file upload).
-/// folderPath example: "Data Analysis" or "Data Analysis/Logs"
-/// </summary>
-public async Task UploadFileToFolderPathAsync(string driveId, string folderPath, string localFilePath, string? uploadFileName, CancellationToken ct)
-{
-    if (string.IsNullOrWhiteSpace(driveId))
-        throw new ArgumentException("driveId is empty", nameof(driveId));
-    if (!File.Exists(localFilePath))
-        throw new FileNotFoundException("Local file not found", localFilePath);
 
-    await EnsureGraphAuthAsync(ct);
-
-    var fileName = string.IsNullOrWhiteSpace(uploadFileName) ? Path.GetFileName(localFilePath) : uploadFileName!;
-    folderPath ??= "";
-
-    var combined = string.IsNullOrWhiteSpace(folderPath)
-        ? fileName
-        : folderPath.Trim().Trim('/').Trim('\\') + "/" + fileName;
-
-    var encodedPath = EncodeGraphPath(combined);
-
-    var url = $"https://graph.microsoft.com/v1.0/drives/{driveId}/root:/{encodedPath}:/content";
-
-    await using var fs = new FileStream(localFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-    using var req = new HttpRequestMessage(HttpMethod.Put, url)
+    /// <summary>
+    /// Upload a local file to a folder path under the drive root (small file upload).
+    /// folderPath example: "Data Analysis" or "Data Analysis/Logs"
+    /// </summary>
+    public async Task UploadFileToFolderPathAsync(string driveId, string folderPath, string localFilePath, string? uploadFileName, CancellationToken ct)
     {
-        Content = new StreamContent(fs)
-    };
-    req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        if (string.IsNullOrWhiteSpace(driveId))
+            throw new ArgumentException("driveId is empty", nameof(driveId));
+        if (!File.Exists(localFilePath))
+            throw new FileNotFoundException("Local file not found", localFilePath);
 
-    using var resp = await _http.SendAsync(req, ct);
-    resp.EnsureSuccessStatusCode();
-}
+        await EnsureGraphAuthAsync(ct);
 
-private static string EncodeGraphPath(string path)
-{
-    var parts = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
-    return string.Join("/", parts.Select(Uri.EscapeDataString));
-}
+        var fileName = string.IsNullOrWhiteSpace(uploadFileName) ? Path.GetFileName(localFilePath) : uploadFileName!;
+        folderPath ??= "";
+        folderPath = folderPath + "/ImportLog/" + DateTime.Now.ToString("MMMM");
+        var combined = string.IsNullOrWhiteSpace(folderPath)
+            ? fileName
+            : folderPath.Trim().Trim('/').Trim('\\') + "/" + fileName;
 
-private async Task EnsureGraphAuthAsync(CancellationToken ct)
+        var encodedPath = EncodeGraphPath(combined);
+
+        var url = $"https://graph.microsoft.com/v1.0/drives/{driveId}/root:/{encodedPath}:/content";
+
+        await using var fs = new FileStream(localFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var req = new HttpRequestMessage(HttpMethod.Put, url)
+        {
+            Content = new StreamContent(fs)
+        };
+        req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+
+        using var resp = await _http.SendAsync(req, ct);
+        resp.EnsureSuccessStatusCode();
+    }
+
+    private static string EncodeGraphPath(string path)
+    {
+        var parts = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        return string.Join("/", parts.Select(Uri.EscapeDataString));
+    }
+
+    private async Task EnsureGraphAuthAsync(CancellationToken ct)
     {
         var sp = _opt.SharePoint;
 

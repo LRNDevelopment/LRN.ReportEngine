@@ -112,7 +112,9 @@
 				"ClinicName",
 				"Organization Name",
 				"Proc-Department Desc",
-				"Patient ID"
+				"Patient ID",
+				"Facility",
+				"Facility Name"
 			]
 		},
 		{
@@ -165,7 +167,8 @@
 				"ChargeEntryDate",
 				"Entered Date",
 				"Charge Entered Date",
-				"DOE"
+				"DOE",
+				"Date"
 			]
 		},
 		{
@@ -186,7 +189,7 @@
 				"PanelName",
 				"Panel Name",
 				"Panel Group",
-				"Patient ID"
+				"Panel"
 			]
 		},
 		{
@@ -194,7 +197,8 @@
 			"DataType": "string",
 			"Aliases": [
 				"Claim Level CPT",
-				"CPTs"
+				"CPTs",
+				"CPT"
 			]
 		},
 		{
@@ -266,7 +270,8 @@
 				"InsuranceAdjustment",
 				"CarrierWO",
 				"Denial Adj Amount",
-				"Proc-Adjustment $"
+				"Proc-Adjustment $",
+				"adj_amount"
 			]
 		},
 		{
@@ -289,7 +294,8 @@
 				"InsuranceBalance",
 				"CarrierBalance",
 				"Proc-Ins Balance",
-				"CarrierBalance"
+				"CarrierBalance",
+				"Ins Balance"
 			]
 		},
 		{
@@ -297,7 +303,8 @@
 			"DataType": "decimal",
 			"Aliases": [
 				"PatientBalance",
-				"Proc-Pt Balance"
+				"Proc-Pt Balance",
+				"Pat Balance"
 			]
 		},
 		{

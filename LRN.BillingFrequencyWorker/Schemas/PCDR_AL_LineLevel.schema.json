@@ -73,6 +73,11 @@
       "DataType": "string"
     },
     {
+      "Name": "Procedure",
+      "Required": true,
+      "DataType": "string"
+    },
+    {
       "Name": "TotalCharge",
       "Required": true,
       "DataType": "decimal"

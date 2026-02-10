@@ -138,21 +138,28 @@ public static class ExcelCsvExporter
         return val switch
         {
             DateTime dt => dt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
-            double d => d.ToString(CultureInfo.InvariantCulture),
-            float f => f.ToString(CultureInfo.InvariantCulture),
-            decimal m => m.ToString(CultureInfo.InvariantCulture),
+            double d => d.ToString("0.00"),
+            float f => f.ToString("0.00"),
+            decimal m => m.ToString("0.00"),
             bool b => b ? "true" : "false",
             _ => Convert.ToString(val, CultureInfo.InvariantCulture) ?? ""
         };
     }
 
-    private static string CsvEscape(string s)
+    private static string CsvEscape(string value)
     {
-        // Escape for CSV (RFC4180-ish)
-        bool mustQuote = s.Contains(',') || s.Contains('"') || s.Contains('\n') || s.Contains('\r');
-        if (s.Contains('"'))
-            s = s.Replace("\"", "\"\"");
+		if (string.IsNullOrEmpty(value))
+			return "";
 
-        return mustQuote ? $"\"{s}\"" : s;
-    }
+		bool mustQuote =
+			value.Contains(',')
+			|| value.Contains('"')
+			|| value.Contains('\n')
+			|| value.Contains('\r');
+
+		if (value.Contains('"'))
+			value = value.Replace("\"", "\"\"");
+
+		return mustQuote ? $"\"{value}\"" : value;
+	}
 }

@@ -23,11 +23,6 @@
       "DataType": "string"
     },
     {
-      "Name": "Facility",
-      "Required": false,
-      "DataType": "string"
-    },
-    {
       "Name": "ChartNum",
       "Required": false,
       "DataType": "string"
@@ -64,6 +59,11 @@
     },
     {
       "Name": "Modifier",
+      "Required": true,
+      "DataType": "string"
+    },
+    {
+      "Name": "Account Name",
       "Required": true,
       "DataType": "string"
     },

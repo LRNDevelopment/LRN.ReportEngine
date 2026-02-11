@@ -68,8 +68,7 @@
 			"DataType": "string",
 			"Aliases": [
 				"BillingProvider",
-				"Rendering Physician Last Name",
-				"RenderingPhysician First Name",
+				"Referral Name",
 				"Provider"
 			]
 		},
@@ -80,19 +79,21 @@
 				"ReferringProvider",
 				"Ref Physician Name",
 				"Proc-Referring Dr Name",
-				"Ordering Physician Last Name",
-				"Ordering Physician First Name",
+				"Physician Name",
 				"ReferringProviderName"
 			]
 		},
 		{
-			"Name": "ClinicName",
+			"Name": "Clinic Name",
 			"DataType": "string",
 			"Aliases": [
 				"ClinicName",
+				"Clinic  Name",
 				"Organization Name",
 				"Proc-Department Desc",
-				"Facility"
+				"Facility",
+				"Account Name",
+				"Facility Name"
 			]
 		},
 		{

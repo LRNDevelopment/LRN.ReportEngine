@@ -3,6 +3,7 @@ using Microsoft.VisualBasic.FileIO;
 using LRN.ExcelValidator.Models;
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 
 public static class StandardCsvExporter
 {
@@ -22,7 +23,8 @@ public static class StandardCsvExporter
         int labId,
         string labName,
         string sourceFileName,
-        DateTime ingestedOnLocal)
+        DateTime ingestedOnLocal,
+        ColumnSchema? labSchema = null)
     {
         if (!File.Exists(sourceCsvPath))
             throw new FileNotFoundException("Source CSV not found", sourceCsvPath);
@@ -64,6 +66,10 @@ public static class StandardCsvExporter
                 headerNorm[hn] = i;
         }
 
+        // Lab-level overrides: prefer lab schema headers when multiple aliases exist,
+        // and support composite expressions like "[Last], [First] {Referral Name}".
+        var labOv = BuildLabOverrides(labSchema);
+
         // For calculations: resolve by COMMON column name
         var schemaByName = commonSchema.Columns
             .Where(c => !string.IsNullOrWhiteSpace(c.Name))
@@ -93,7 +99,7 @@ public static class StandardCsvExporter
                 if (!string.IsNullOrWhiteSpace(col.Calculation))
                     continue;
 
-                extracted[col.Name] = ReadByAliases(col, row, headerExact, headerNorm);
+                extracted[col.Name] = ReadValueForCommonColumn(col, row, headerExact, headerNorm, labOv);
             }
 
             // Dates for day calculations
@@ -144,11 +150,11 @@ public static class StandardCsvExporter
 
                 // Calculation columns
                 else if (!string.IsNullOrWhiteSpace(col.Calculation))
-                    val = EvaluateCalculation(col.Calculation!, extracted, schemaByName, row, headerExact, headerNorm);
+                    val = EvaluateCalculation(col.Calculation!, extracted, schemaByName, row, headerExact, headerNorm, labOv);
 
                 // Standard extracted columns
                 else
-                    val = extracted.TryGetValue(col.Name, out var raw) ? raw : ReadByAliases(col, row, headerExact, headerNorm);
+                    val = extracted.TryGetValue(col.Name, out var raw) ? raw : ReadValueForCommonColumn(col, row, headerExact, headerNorm, labOv);
 
                 // Normalize date fields based on schema datatype
                 if (IsDateType(col.DataType))
@@ -161,13 +167,300 @@ public static class StandardCsvExporter
         }
     }
 
-    private static string ReadByAliases(ColumnSpec col, string[] row, Dictionary<string, int> headerExact, Dictionary<string, int> headerNorm)
+    
+    // ---------------- Lab schema overrides ----------------
+    // Lab schema is used to:
+    // 1) Prefer certain source headers when multiple COMMON aliases exist (e.g., CPT vs Procedure).
+    // 2) Support simple composite expressions in lab schema Name, like:
+    //    "[Last Name], [First Name] {Referral Name}"
+    //    -> Output COMMON column "Referral Name" = "Last Name, First Name"
+
+    private sealed class LabOverrides
+    {
+        public HashSet<string> PreferredExact { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> PreferredNorm { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, CompositeTemplate> CompositeByName { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, CompositeTemplate> CompositeByNorm { get; } = new(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private readonly record struct CompositeSegment(bool IsColumn, string Text);
+
+    private sealed class CompositeTemplate
+    {
+        public string TargetName { get; init; } = "";
+        public List<CompositeSegment> Segments { get; init; } = new();
+    }
+
+    private static LabOverrides BuildLabOverrides(ColumnSchema? labSchema)
+    {
+        var ov = new LabOverrides();
+
+        if (labSchema?.Columns == null)
+            return ov;
+
+        foreach (var c in labSchema.Columns)
+        {
+            if (c == null) continue;
+
+            var rawName = (c.Name ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(rawName)) continue;
+
+            // Composite mapping: "[A], [B] {Target}"
+            if (TryParseComposite(rawName, out var tpl))
+            {
+                if (!string.IsNullOrWhiteSpace(tpl.TargetName))
+                {
+                    ov.CompositeByName[tpl.TargetName] = tpl;
+
+                    var tn = NormKey(tpl.TargetName);
+                    if (!string.IsNullOrWhiteSpace(tn))
+                        ov.CompositeByNorm[tn] = tpl;
+                }
+
+                // Treat referenced headers as preferred too
+                foreach (var seg in tpl.Segments.Where(s => s.IsColumn))
+                {
+                    var h = (seg.Text ?? "").Trim();
+                    if (string.IsNullOrWhiteSpace(h)) continue;
+
+                    ov.PreferredExact.Add(h);
+
+                    var hn = NormKey(h);
+                    if (!string.IsNullOrWhiteSpace(hn))
+                        ov.PreferredNorm.Add(hn);
+                }
+
+                continue;
+            }
+
+            // Simple preferred header
+            ov.PreferredExact.Add(rawName);
+            var norm = NormKey(rawName);
+            if (!string.IsNullOrWhiteSpace(norm))
+                ov.PreferredNorm.Add(norm);
+
+            // Some lab schemas may also include Aliases on their column specs
+            if (c.Aliases != null)
+            {
+                foreach (var a in c.Aliases)
+                {
+                    var aa = (a ?? "").Trim();
+                    if (string.IsNullOrWhiteSpace(aa)) continue;
+
+                    ov.PreferredExact.Add(aa);
+
+                    var an = NormKey(aa);
+                    if (!string.IsNullOrWhiteSpace(an))
+                        ov.PreferredNorm.Add(an);
+                }
+            }
+        }
+
+        return ov;
+    }
+
+    private static bool TryParseComposite(string raw, out CompositeTemplate template)
+    {
+        template = new CompositeTemplate();
+
+        // Expect trailing "{Target}" (but allow whitespace after)
+        var m = Regex.Match(raw, @"\{([^{}]+)\}\s*$");
+        if (!m.Success)
+            return false;
+
+        var target = (m.Groups[1].Value ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(target))
+            return false;
+
+        var expr = raw.Substring(0, m.Index).TrimEnd();
+        if (string.IsNullOrWhiteSpace(expr))
+            return false;
+
+        var segs = new List<CompositeSegment>();
+        int pos = 0;
+
+        foreach (Match bm in Regex.Matches(expr, @"\[(?<col>[^\]]+)\]"))
+        {
+            if (bm.Index > pos)
+            {
+                segs.Add(new CompositeSegment(false, expr.Substring(pos, bm.Index - pos)));
+            }
+
+            var col = (bm.Groups["col"].Value ?? "").Trim();
+            segs.Add(new CompositeSegment(true, col));
+
+            pos = bm.Index + bm.Length;
+        }
+
+        if (pos < expr.Length)
+            segs.Add(new CompositeSegment(false, expr.Substring(pos)));
+
+        // Must contain at least one [col]
+        if (!segs.Any(s => s.IsColumn))
+            return false;
+
+        template = new CompositeTemplate
+        {
+            TargetName = target,
+            Segments = segs
+        };
+
+        return true;
+    }
+
+    private static string ReadValueForCommonColumn(
+        ColumnSpec col,
+        string[] row,
+        Dictionary<string, int> headerExact,
+        Dictionary<string, int> headerNorm,
+        LabOverrides labOv)
+    {
+        // Composite overrides by column name (exact or normalized)
+        if (labOv.CompositeByName.TryGetValue(col.Name, out var tpl))
+            return EvaluateComposite(tpl, row, headerExact, headerNorm);
+
+        var nn = NormKey(col.Name);
+        if (!string.IsNullOrWhiteSpace(nn) && labOv.CompositeByNorm.TryGetValue(nn, out tpl))
+            return EvaluateComposite(tpl, row, headerExact, headerNorm);
+
+        return ReadByAliases(col, row, headerExact, headerNorm, labOv);
+    }
+
+    private static string EvaluateComposite(
+        CompositeTemplate tpl,
+        string[] row,
+        Dictionary<string, int> headerExact,
+        Dictionary<string, int> headerNorm)
+    {
+        // Pre-evaluate all column segments
+        var segVals = new List<(CompositeSegment Seg, string Val)>(tpl.Segments.Count);
+        foreach (var seg in tpl.Segments)
+        {
+            if (!seg.IsColumn)
+            {
+                segVals.Add((seg, seg.Text ?? ""));
+                continue;
+            }
+
+            var v = ReadHeaderValue(seg.Text, row, headerExact, headerNorm);
+            segVals.Add((seg, v));
+        }
+
+        var nonEmptyRefIdx = segVals
+            .Select((x, i) => (x, i))
+            .Where(t => t.x.Seg.IsColumn && !string.IsNullOrWhiteSpace(t.x.Val))
+            .Select(t => t.i)
+            .ToList();
+
+        if (nonEmptyRefIdx.Count == 0)
+            return "";
+
+        int first = nonEmptyRefIdx.First();
+        int last = nonEmptyRefIdx.Last();
+
+        var sb = new StringBuilder();
+        bool hasAny = false;
+
+        for (int i = 0; i < segVals.Count; i++)
+        {
+            var (seg, val) = segVals[i];
+
+            if (seg.IsColumn)
+            {
+                if (string.IsNullOrWhiteSpace(val))
+                    continue;
+
+                sb.Append(val);
+                hasAny = true;
+                continue;
+            }
+
+            // literal segment
+            var lit = val ?? "";
+            if (string.IsNullOrEmpty(lit))
+                continue;
+
+            // Keep prefix/suffix literals only if they contain letters/digits (e.g., "Dr ")
+            bool hasAlphaNum = lit.Any(ch => char.IsLetterOrDigit(ch));
+
+            if (i < first)
+            {
+                if (hasAlphaNum)
+                    sb.Append(lit);
+                continue;
+            }
+
+            if (i > last)
+            {
+                if (hasAlphaNum)
+                    sb.Append(lit);
+                continue;
+            }
+
+            // Between two non-empty values -> keep separators exactly
+            if (hasAny)
+                sb.Append(lit);
+        }
+
+        return sb.ToString().Trim();
+    }
+
+    private static string ReadHeaderValue(
+        string headerName,
+        string[] row,
+        Dictionary<string, int> headerExact,
+        Dictionary<string, int> headerNorm)
+    {
+        var key = (headerName ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(key)) return "";
+
+        if (headerExact.TryGetValue(key, out int idx))
+            return Get(row, idx);
+
+        var kn = NormKey(key);
+        if (!string.IsNullOrWhiteSpace(kn) && headerNorm.TryGetValue(kn, out idx))
+            return Get(row, idx);
+
+        return "";
+    }
+
+private static string ReadByAliases(ColumnSpec col, string[] row, Dictionary<string, int> headerExact, Dictionary<string, int> headerNorm,
+        LabOverrides labOv)
     {
         var candidates = (col.Aliases ?? new List<string>())
             .Where(a => !string.IsNullOrWhiteSpace(a))
-            .Concat(new[] { col.Name });
+            .Concat(new[] { col.Name })
+            .Select(a => (a ?? "").Trim())
+            .Where(a => !string.IsNullOrWhiteSpace(a))
+            .ToList();
 
-        foreach (var cand in candidates)
+        // Prefer headers explicitly present in the LAB schema when multiple COMMON aliases exist.
+        var ordered = new List<string>(candidates.Count);
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // Preferred first (stable order)
+        foreach (var c in candidates)
+        {
+            var cn = NormKey(c);
+            var isPref = labOv.PreferredExact.Contains(c) || (!string.IsNullOrWhiteSpace(cn) && labOv.PreferredNorm.Contains(cn));
+            if (!isPref) continue;
+
+            if (seen.Add(c))
+                ordered.Add(c);
+        }
+
+        // Then the remaining candidates
+        foreach (var c in candidates)
+        {
+            var cn = NormKey(c);
+            var isPref = labOv.PreferredExact.Contains(c) || (!string.IsNullOrWhiteSpace(cn) && labOv.PreferredNorm.Contains(cn));
+            if (isPref) continue;
+
+            if (seen.Add(c))
+                ordered.Add(c);
+        }
+
+        foreach (var cand in ordered)
         {
             var c = (cand ?? "").Trim();
             if (string.IsNullOrWhiteSpace(c)) continue;
@@ -189,7 +482,8 @@ public static class StandardCsvExporter
         Dictionary<string, ColumnSpec> schemaByName,
         string[] row,
         Dictionary<string, int> headerExact,
-        Dictionary<string, int> headerNorm)
+        Dictionary<string, int> headerNorm,
+        LabOverrides labOv)
     {
         decimal sum = 0m;
         bool hadAny = false;
@@ -204,7 +498,7 @@ public static class StandardCsvExporter
             if (schemaByName.TryGetValue(key, out var refCol))
             {
                 if (!extracted.TryGetValue(refCol.Name, out raw))
-                    raw = ReadByAliases(refCol, row, headerExact, headerNorm);
+                    raw = ReadValueForCommonColumn(refCol, row, headerExact, headerNorm, labOv);
             }
             else
             {

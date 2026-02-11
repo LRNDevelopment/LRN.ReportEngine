@@ -187,6 +187,31 @@ public sealed class BillingFrequencyWorker : BackgroundService
                     continue;
                 }
 
+
+                // Load lab schemas (used for preferred alias selection + composite mappings during standardization)
+                ColumnSchema? labLineSchema = null;
+                ColumnSchema? labClaimSchema = null;
+
+                try
+                {
+                    labLineSchema = _schemaLoader.LoadFromFile(lineSchemaPath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Lab {LabId}: failed to load LineLevel schema {Path}. Proceeding without lab overrides.", lab.LabId, lineSchemaPath);
+                    _fileLog.Info($"Lab {lab.LabId}: failed to load LineLevel schema '{lineSchemaPath}'. Proceeding without lab overrides. {ex.Message}");
+                }
+
+                try
+                {
+                    labClaimSchema = _schemaLoader.LoadFromFile(claimSchemaPath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Lab {LabId}: failed to load ClaimLevel schema {Path}. Proceeding without lab overrides.", lab.LabId, claimSchemaPath);
+                    _fileLog.Info($"Lab {lab.LabId}: failed to load ClaimLevel schema '{claimSchemaPath}'. Proceeding without lab overrides. {ex.Message}");
+                }
+
                 // Determine output folders from SharePoint path
                 var (monthFolder, dateFolder) = ParseMonthAndDateFolder(selected.SharePointPath);
 
@@ -240,7 +265,8 @@ StandardCsvExporter.Generate(
     labId: lab.LabId,
     labName: lab.LabName,
     sourceFileName: selected.Name,
-    ingestedOnLocal: DateTime.Now);
+    ingestedOnLocal: DateTime.Now,
+    labSchema: labLineSchema);
 _logger.LogInformation("Lab {LabId}: LineLevel STANDARD CSV generated -> {Path}", lab.LabId, lineOutPath);
 _fileLog.Info($"Lab {lab.LabId}: LineLevel STANDARD CSV -> {lineOutPath}");
 
@@ -258,7 +284,8 @@ StandardCsvExporter.Generate(
     labId: lab.LabId,
     labName: lab.LabName,
     sourceFileName: selected.Name,
-    ingestedOnLocal: DateTime.Now);
+    ingestedOnLocal: DateTime.Now,
+    labSchema: labClaimSchema);
 _logger.LogInformation("Lab {LabId}: ClaimLevel STANDARD CSV generated -> {Path}", lab.LabId, claimOutPath);
 _fileLog.Info($"Lab {lab.LabId}: ClaimLevel STANDARD CSV -> {claimOutPath}");
 

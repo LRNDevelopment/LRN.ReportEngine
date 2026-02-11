@@ -23,28 +23,18 @@
 			"DataType": "string"
 		},
 		{
-			"Name": "Rendering Physician LastName",
+			"Name": "[Rendering Physician Last Name], [RenderingPhysician First Name] {Referral Name}",
 			"Required": false,
 			"DataType": "string"
 		},
 		{
-			"Name": "Rendering Physician FirstName",
+			"Name": "[Ordering Physician Last Name], [Ordering Physician First Name] {Physician Name}",
 			"Required": false,
 			"DataType": "string"
 		},
 		{
-			"Name": "Ordering Physician LastName",
-			"Required": false,
-			"DataType": "string"
-		},
-		{
-			"Name": "Ordering Physician First Name",
-			"Required": false,
-			"DataType": "string"
-		},
-		{
-			"Name": "Facility NameFacility Name",
-			"Required": false,
+			"Name": "Facility Name",
+			"Required": true,
 			"DataType": "string"
 		},
 		{

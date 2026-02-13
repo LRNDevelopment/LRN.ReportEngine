@@ -119,6 +119,33 @@ public static class StandardCsvExporter
                 else if (daysToDos.Value >= 181) rolling = "YTD";
             }
 
+
+            // Derived pay status (uses your rule table). This is written into output column "Pay Status"
+            // (or "Claim Status" if that column exists with a space).
+            var insurancePayment = ParseDecimal(extracted.TryGetValue("InsurancePayment", out var ipRaw) ? ipRaw : "");
+            var patientPayment = ParseDecimal(extracted.TryGetValue("PatientPayment", out var ppRaw) ? ppRaw : "");
+            var totalPayments = insurancePayment + patientPayment;
+
+            var insuranceAdjustments = ParseDecimal(extracted.TryGetValue("InsuranceAdjustments", out var iaRaw) ? iaRaw : "");
+            var patientAdjustments = ParseDecimal(extracted.TryGetValue("PatientAdjustments", out var paRaw) ? paRaw : "");
+            var totalAdjustments = insuranceAdjustments + patientAdjustments;
+
+            var carrierBalance = ParseDecimal(extracted.TryGetValue("InsuranceBalance", out var cbRaw) ? cbRaw : "");
+            var chargeAmount = ParseDecimal(extracted.TryGetValue("ChargeAmount", out var chRaw) ? chRaw : "");
+            var denialCode = extracted.TryGetValue("DenialCode", out var dcRaw) ? dcRaw : "";
+
+            var patientBalance = ParseDecimal(extracted.TryGetValue("PatientBalance", out var pbRaw) ? pbRaw : "");
+
+            var payStatus = ComputePayStatus(
+                totalPayments: totalPayments,
+                carrierBalance: carrierBalance,
+                totalAdjustments: totalAdjustments,
+                chargeAmount: chargeAmount,
+                denialCode: denialCode,
+                carrierPayment: insurancePayment,
+                patientBalance: patientBalance
+            );
+
             var outFields = new List<string>(commonSchema.Columns.Count);
 
             foreach (var col in commonSchema.Columns)
@@ -147,6 +174,11 @@ public static class StandardCsvExporter
                     val = daysToBill?.ToString(CultureInfo.InvariantCulture) ?? "";
                 else if (col.Name.Equals("DaystoPost", StringComparison.OrdinalIgnoreCase))
                     val = daysToPost?.ToString(CultureInfo.InvariantCulture) ?? "";
+
+
+                // Derived status
+                else if (IsPayStatusColumn(col.Name))
+                    val = payStatus;
 
                 // Calculation columns
                 else if (!string.IsNullOrWhiteSpace(col.Calculation))
@@ -315,15 +347,60 @@ public static class StandardCsvExporter
         Dictionary<string, int> headerNorm,
         LabOverrides labOv)
     {
-        // Composite overrides by column name (exact or normalized)
-        if (labOv.CompositeByName.TryGetValue(col.Name, out var tpl))
-            return EvaluateComposite(tpl, row, headerExact, headerNorm);
-
-        var nn = NormKey(col.Name);
-        if (!string.IsNullOrWhiteSpace(nn) && labOv.CompositeByNorm.TryGetValue(nn, out tpl))
+        // Composite overrides: match by COMMON column name OR by COMMON aliases.
+        // Example:
+        //  COMMON BillingProvider has alias "Referral Name"
+        //  LAB schema: "[Last], [First] {Referral Name}"
+        //  => populate BillingProvider using the composite.
+        if (TryGetCompositeForCommonColumn(col, labOv, out var tpl))
             return EvaluateComposite(tpl, row, headerExact, headerNorm);
 
         return ReadByAliases(col, row, headerExact, headerNorm, labOv);
+    }
+
+    private static bool TryGetCompositeForCommonColumn(
+        ColumnSpec col,
+        LabOverrides labOv,
+        out CompositeTemplate tpl)
+    {
+        // 1) exact match by COMMON name
+        if (labOv.CompositeByName.TryGetValue(col.Name, out tpl))
+            return true;
+
+        // 2) exact match by COMMON aliases
+        if (col.Aliases != null)
+        {
+            foreach (var a in col.Aliases)
+            {
+                var aa = (a ?? "").Trim();
+                if (string.IsNullOrWhiteSpace(aa)) continue;
+
+                if (labOv.CompositeByName.TryGetValue(aa, out tpl))
+                    return true;
+            }
+        }
+
+        // 3) normalized match by COMMON name
+        var nn = NormKey(col.Name);
+        if (!string.IsNullOrWhiteSpace(nn) && labOv.CompositeByNorm.TryGetValue(nn, out tpl))
+            return true;
+
+        // 4) normalized match by COMMON aliases
+        if (col.Aliases != null)
+        {
+            foreach (var a in col.Aliases)
+            {
+                var aa = (a ?? "").Trim();
+                if (string.IsNullOrWhiteSpace(aa)) continue;
+
+                var an = NormKey(aa);
+                if (!string.IsNullOrWhiteSpace(an) && labOv.CompositeByNorm.TryGetValue(an, out tpl))
+                    return true;
+            }
+        }
+
+        tpl = null!;
+        return false;
     }
 
     private static string EvaluateComposite(
@@ -538,6 +615,69 @@ private static string ReadByAliases(ColumnSpec col, string[] row, Dictionary<str
         || name.Equals("DaystoBill", StringComparison.OrdinalIgnoreCase)
         || name.Equals("DaystoPost", StringComparison.OrdinalIgnoreCase);
 
+
+    private static bool IsPayStatusColumn(string name)
+    {
+        // Only treat columns explicitly named with a SPACE as derived status columns,
+        // so we do NOT override the existing raw "ClaimStatus" field.
+        var n = Regex.Replace((name ?? "").Trim(), @"\s+", " ");
+        return n.Equals("Pay Status", StringComparison.OrdinalIgnoreCase)
+            || n.Equals("Claim Status", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string ComputePayStatus(
+        decimal totalPayments,
+        decimal carrierBalance,
+        decimal totalAdjustments,
+        decimal chargeAmount,
+        string denialCode,
+        decimal carrierPayment,
+        decimal patientBalance)
+    {
+        static bool IsBlank(string s) => string.IsNullOrWhiteSpace(s);
+        static bool IsZero(decimal d) => Math.Abs(d) < 0.01m; // currency tolerance
+        static bool Eq(decimal a, decimal b) => Math.Abs(a - b) < 0.01m;
+        static bool Gt(decimal a, decimal b) => a - b > 0.01m;
+        static bool Ge(decimal a, decimal b) => a - b > -0.01m;
+
+        var hasDenialCode = !IsBlank(denialCode);
+
+        // Paid: Total Payment > 0
+        if (Gt(totalPayments, 0m))
+            return "Paid";
+
+        // Adjusted: Total Payment = 0 AND Carrier Balance <= 0 AND Total Adjustment >= Charge Amount AND Denial Code = Code or Blank
+        if (IsZero(totalPayments) && carrierBalance <= 0.01m && Ge(totalAdjustments, chargeAmount))
+            return "Adjusted";
+
+        // Partially Adjusted: Total Payment = 0 AND Carrier Balance > 0 AND Total Adjustment > 0 AND Denial Code = Blank
+        if (IsZero(totalPayments) && Gt(carrierBalance, 0m) && Gt(totalAdjustments, 0m) && !hasDenialCode)
+            return "Partially Adjusted";
+
+        // No Response: Charge Amount = Carrier Balance AND Denial Code = Blank
+        if (Eq(chargeAmount, carrierBalance) && !hasDenialCode)
+            return "No Response";
+
+        // No Response: Total Payment = 0 AND Total Adjustments = 0 AND Carrier Balance = 0 AND Denial Code = Blank
+        if (IsZero(totalPayments) && IsZero(totalAdjustments) && IsZero(carrierBalance) && !hasDenialCode)
+            return "No Response";
+
+        // Denied: Total Payment = 0 AND Carrier Balance > 0 AND Denial Code = Code
+        if (IsZero(totalPayments) && Gt(carrierBalance, 0m) && hasDenialCode)
+            return "Denied";
+
+        // Denied: Total Payment = 0 AND Total Adjustments = 0 AND Carrier Balance = 0 AND Denial Code = Code
+        if (IsZero(totalPayments) && IsZero(totalAdjustments) && IsZero(carrierBalance) && hasDenialCode)
+            return "Denied";
+
+        // Patient Responsibility: Carrier Payment = 0 AND Patient Balance > 0
+        if (IsZero(carrierPayment) && Gt(patientBalance, 0m))
+            return "Patient Responsibility";
+
+        return "";
+    }
+
+
     private static string NormalizeDate(string raw)
     {
         var dt = ParseDateMaybe(raw);
@@ -609,7 +749,15 @@ private static string ReadByAliases(ColumnSpec col, string[] row, Dictionary<str
     {
         if (string.IsNullOrWhiteSpace(s)) return "";
         s = s.Trim().ToLowerInvariant();
-        return s.Replace(" ", "").Replace("_", "").Replace("-", "").Replace("/", "").Replace("\\", "");
+
+        // Keep only letters/digits so headers match even with spaces/punctuation differences.
+        var sb = new StringBuilder(s.Length);
+        foreach (var ch in s)
+        {
+            if (char.IsLetterOrDigit(ch))
+                sb.Append(ch);
+        }
+        return sb.ToString();
     }
 
     private static string Escape(string? s)

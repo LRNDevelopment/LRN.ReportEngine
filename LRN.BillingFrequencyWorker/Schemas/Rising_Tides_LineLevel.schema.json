@@ -38,6 +38,11 @@
       "DataType": "string"
     },
     {
+      "Name": "Clinic Name",
+      "Required": false,
+      "DataType": "string"
+    },
+    {
       "Name": "ChartNum",
       "Required": false,
       "DataType": "string"

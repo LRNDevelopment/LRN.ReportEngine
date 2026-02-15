@@ -45,15 +45,26 @@
       "DataType": "string"
     },
     {
-      "Name": "PayerName",
+      "Name": "PayerName_Raw",
       "DataType": "string",
       "Aliases": [
         "PayerName",
         "Primary Payer",
         "Payer",
         "Insurance Name",
-        "Carrier"
+        "Carrier",
+        "Payer Name",
+        "Payer_Name_Raw",
+        "PayerName_Raw"
       ]
+    },
+    {
+      "Name": "PayerName",
+      "DataType": "string"
+    },
+    {
+      "Name": "Global_Payer_ID",
+      "DataType": "string"
     },
     {
       "Name": "PayerType",
@@ -68,7 +79,6 @@
       "DataType": "string",
       "Aliases": [
         "BillingProvider",
-        "Referral Name",
         "Rendering Physician Last Name",
         "RenderingPhysician First Name",
         "Provider"
@@ -79,7 +89,6 @@
       "DataType": "string",
       "Aliases": [
         "ReferringProvider",
-        "Physician Name",
         "Ref Physician Name",
         "Proc-Referring Dr Name",
         "Ordering Physician Last Name",
@@ -94,7 +103,9 @@
         "ClinicName",
         "Organization Name",
         "Proc-Department Desc",
-        "Facility"
+        "Facility Name",
+        "Account Name",
+        "Clinic Name"
       ]
     },
     {
@@ -102,14 +113,6 @@
       "DataType": "string",
       "Aliases": [
         "SaleRepName"
-      ]
-    },
-    {
-      "Name": "ProviderName",
-      "DataType": "string",
-      "Aliases": [
-        "Facility Name",
-        "Facility"
       ]
     },
     {
@@ -225,12 +228,20 @@
       ]
     },
     {
+      "Name": "ChargeAmountPerUnit",
+      "DataType": "decimal"
+    },
+    {
       "Name": "AllowedAmount",
       "DataType": "decimal",
       "Aliases": [
         "TotalAllowed",
         "AllowedAmount"
       ]
+    },
+    {
+      "Name": "AllowedAmountPerUnit",
+      "DataType": "decimal"
     },
     {
       "Name": "InsurancePayment",
@@ -241,6 +252,10 @@
         "Ins. Payment",
         "ProcTotal Payments $"
       ]
+    },
+    {
+      "Name": "InsurancePaymentPerUnit",
+      "DataType": "decimal"
     },
     {
       "Name": "PatientPayment",
@@ -266,7 +281,8 @@
         "InsuranceAdjustment",
         "CarrierWO",
         "Denial Adj Amount",
-        "Proc-Adjustment $"
+        "Proc-Adjustment $",
+        "Denial Adj Amount"
       ]
     },
     {
@@ -289,7 +305,7 @@
         "InsuranceBalance",
         "CarrierBalance",
         "Proc-Ins Balance",
-        "CarrierBalance"
+        "Balance amount"
       ]
     },
     {
@@ -299,6 +315,10 @@
         "PatientBalance",
         "Proc-Pt Balance"
       ]
+    },
+    {
+      "Name": "PatientBalancePerUnit",
+      "DataType": "decimal"
     },
     {
       "Name": "TotalBalance",

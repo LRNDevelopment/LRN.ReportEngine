@@ -64,15 +64,26 @@
       ]
     },
     {
-      "Name": "PayerName",
+      "Name": "PayerName_Raw",
       "DataType": "string",
       "Aliases": [
         "PayerName",
         "Primary Payer",
         "Payer",
         "Insurance Name",
-        "Carrier"
+        "Carrier",
+        "Payer Name",
+        "Payer_Name_Raw",
+        "PayerName_Raw"
       ]
+    },
+    {
+      "Name": "PayerName",
+      "DataType": "string"
+    },
+    {
+      "Name": "Global_Payer_ID",
+      "DataType": "string"
     },
     {
       "Name": "PayerType",
@@ -87,7 +98,6 @@
       "DataType": "string",
       "Aliases": [
         "BillingProvider",
-        "Referral Name",
         "Rendering Physician Last Name",
         "RenderingPhysician First Name",
         "Provider",
@@ -99,7 +109,6 @@
       "DataType": "string",
       "Aliases": [
         "ReferringProvider",
-        "Physician Name",
         "Ref Physician Name",
         "Proc-Referring Dr Name",
         "Ordering Physician Last Name",
@@ -112,11 +121,11 @@
       "DataType": "string",
       "Aliases": [
         "ClinicName",
+        "Clinic Name",
         "Organization Name",
         "Proc-Department Desc",
-        "Patient ID",
-        "Facility",
-        "Facility Name"
+        "Facility Name",
+        "Account Name"
       ]
     },
     {
@@ -126,14 +135,7 @@
         "SaleRepName"
       ]
     },
-    {
-      "Name": "ProviderName",
-      "DataType": "string",
-      "Aliases": [
-        "Facility Name",
-        "Facility"
-      ]
-    },
+    
     {
       "Name": "PatientID",
       "DataType": "string",

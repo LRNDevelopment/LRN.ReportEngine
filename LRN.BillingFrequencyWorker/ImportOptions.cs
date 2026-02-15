@@ -41,6 +41,9 @@ public sealed class ImportOptions
     public string CommonLineLevelSchemaJsonPath { get; set; } = "Schemas/LineLevel.schema.json";
     public string CommonClaimLevelSchemaJsonPath { get; set; } = "Schemas/ClaimLevel.schema.json";
 
+    // Consolidated Lab Insurance Master (CSV) for payer normalization
+    public string InsuranceMasterCsvPath { get; set; } = "";
+
     // Local folder for filestatus_*.csv
     public string FileStatusLogLocalFolder { get; set; } = "";
 

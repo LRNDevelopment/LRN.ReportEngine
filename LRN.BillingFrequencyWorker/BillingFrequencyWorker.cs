@@ -21,7 +21,9 @@ public sealed class BillingFrequencyWorker : BackgroundService
     private ColumnSchema? _commonLineSchema;
     private ColumnSchema? _commonClaimSchema;
 
-    public BillingFrequencyWorker(
+    
+    private Dictionary<string, StandardCsvExporter.InsuranceMasterEntry>? _insuranceMaster;
+public BillingFrequencyWorker(
         ILogger<BillingFrequencyWorker> logger,
         ILoggerService fileLog,
         IOptions<ImportOptions> options,
@@ -107,6 +109,26 @@ public sealed class BillingFrequencyWorker : BackgroundService
         _commonLineSchema ??= _schemaLoader.LoadFromFile(ResolvePath(_opt.CommonLineLevelSchemaJsonPath));
         _commonClaimSchema ??= _schemaLoader.LoadFromFile(ResolvePath(_opt.CommonClaimLevelSchemaJsonPath));
 
+// Load Insurance Master once (required for Global_Payer_ID and normalized PayerName)
+if (_insuranceMaster == null)
+{
+    var insPath = ResolvePath(_opt.InsuranceMasterCsvPath);
+    if (!string.IsNullOrWhiteSpace(insPath))
+    {
+        _insuranceMaster = StandardCsvExporter.LoadInsuranceMaster(insPath);
+        _logger.LogInformation("Loaded Insurance Master: {Count} payer rows from {Path}", _insuranceMaster.Count, insPath);
+        _fileLog.Info($"Loaded Insurance Master: {_insuranceMaster.Count} payer rows from {insPath}");
+    }
+    else
+    {
+        _logger.LogWarning("InsuranceMasterCsvPath not configured. Global_Payer_ID and PayerName normalization will be blank.");
+        _fileLog.Warn("InsuranceMasterCsvPath not configured. Global_Payer_ID and PayerName normalization will be blank.");
+        _insuranceMaster = new Dictionary<string, StandardCsvExporter.InsuranceMasterEntry>(StringComparer.OrdinalIgnoreCase);
+    }
+}
+
+
+
         foreach (var lab in _opt.Labs)
         {
             ct.ThrowIfCancellationRequested();
@@ -187,10 +209,6 @@ public sealed class BillingFrequencyWorker : BackgroundService
                     continue;
                 }
 
-                // Load LAB schemas too (used for mapping preference + composite column rules)
-                var labLineSchema = _schemaLoader.LoadFromFile(lineSchemaPath);
-                var labClaimSchema = _schemaLoader.LoadFromFile(claimSchemaPath);
-
                 // Determine output folders from SharePoint path
                 var (monthFolder, dateFolder) = ParseMonthAndDateFolder(selected.SharePointPath);
 
@@ -227,7 +245,13 @@ await _status.UpsertStatusAsync(
                     processedAtUtc: null,
                     ct: ct);
 
-                // Export to CSV (fast, no formatting)
+                
+
+// Load LAB schemas for preferred header mapping / composite expressions during standardization
+var labLineSchema = _schemaLoader.LoadFromFile(lineSchemaPath);
+var labClaimSchema = _schemaLoader.LoadFromFile(claimSchemaPath);
+
+// Export to CSV (fast, no formatting)
                 var sw = Stopwatch.StartNew();
 
                 // LineLevel RAW export (from Excel)
@@ -238,14 +262,16 @@ _fileLog.Info($"Lab {lab.LabId}: LineLevel RAW CSV export -> {lineRawPath}");
 // Standardize LineLevel using COMMON schema
 StandardCsvExporter.Generate(
     sourceCsvPath: lineRawPath,
-    headerRow: labLineSchema.HeaderRow,
+    headerRow: _commonLineSchema!.HeaderRow,
     outputCsvPath: lineOutPath,
     commonSchema: _commonLineSchema!,
     labId: lab.LabId,
     labName: lab.LabName,
     sourceFileName: selected.Name,
     ingestedOnLocal: DateTime.Now,
-    labSchema: labLineSchema);
+    labSchema: labLineSchema,
+    insuranceMaster: _insuranceMaster);
+
 _logger.LogInformation("Lab {LabId}: LineLevel STANDARD CSV generated -> {Path}", lab.LabId, lineOutPath);
 _fileLog.Info($"Lab {lab.LabId}: LineLevel STANDARD CSV -> {lineOutPath}");
 
@@ -257,14 +283,16 @@ _fileLog.Info($"Lab {lab.LabId}: ClaimLevel RAW CSV export -> {claimRawPath}");
 // Standardize ClaimLevel using COMMON schema
 StandardCsvExporter.Generate(
     sourceCsvPath: claimRawPath,
-    headerRow: labClaimSchema.HeaderRow,
+    headerRow: _commonClaimSchema!.HeaderRow,
     outputCsvPath: claimOutPath,
     commonSchema: _commonClaimSchema!,
     labId: lab.LabId,
     labName: lab.LabName,
     sourceFileName: selected.Name,
     ingestedOnLocal: DateTime.Now,
-    labSchema: labClaimSchema);
+    labSchema: labClaimSchema,
+    insuranceMaster: _insuranceMaster);
+
 _logger.LogInformation("Lab {LabId}: ClaimLevel STANDARD CSV generated -> {Path}", lab.LabId, claimOutPath);
 _fileLog.Info($"Lab {lab.LabId}: ClaimLevel STANDARD CSV -> {claimOutPath}");
 

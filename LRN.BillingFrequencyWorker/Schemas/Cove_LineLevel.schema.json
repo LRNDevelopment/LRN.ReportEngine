@@ -23,6 +23,11 @@
 			"DataType": "string"
 		},
 		{
+			"Name": "Facility Name",
+			"Required": false,
+			"DataType": "string"
+		},
+		{
 			"Name": "Facility",
 			"Required": false,
 			"DataType": "string"

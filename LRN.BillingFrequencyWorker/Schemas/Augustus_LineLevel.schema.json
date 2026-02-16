@@ -91,7 +91,7 @@
 			"Name": "Balance amount",
 			"Required": true,
 			"DataType": "decimal"
-		}
+		},
 		{
 			"Name": "Posted Date",
 			"Required": false,

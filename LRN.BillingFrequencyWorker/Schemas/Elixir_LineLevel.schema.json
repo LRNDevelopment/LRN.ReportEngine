@@ -128,7 +128,7 @@
 			"DataType": "string"
 		},
 		{
-			"Name": "Claim Level ICD",
+			"Name": "ICD",
 			"Required": true,
 			"DataType": "string"
 		}

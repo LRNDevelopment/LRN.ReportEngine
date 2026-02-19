@@ -78,6 +78,11 @@
       "DataType": "string"
     },
     {
+      "Name": "Line Level ICD",
+      "Required": true,
+      "DataType": "string"
+    },
+    {
       "Name": "TotalCharge",
       "Required": true,
       "DataType": "decimal"

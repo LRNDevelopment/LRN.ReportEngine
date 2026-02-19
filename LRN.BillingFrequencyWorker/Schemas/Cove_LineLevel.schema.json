@@ -121,6 +121,11 @@
 			"Name": "Payment %",
 			"Required": false,
 			"DataType": "string"
+		},
+		{
+			"Name": "Line Level ICD",
+			"Required": false,
+			"DataType": "string"
 		}
 	]
 }

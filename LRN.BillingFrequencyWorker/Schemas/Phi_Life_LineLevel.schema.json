@@ -93,6 +93,11 @@
       "DataType": "string"
     },
     {
+      "Name": "PrimaryDiagnosis",
+      "Required": false,
+      "DataType": "string"
+    },
+    {
       "Name": "TotalCharge",
       "Required": true,
       "DataType": "decimal"

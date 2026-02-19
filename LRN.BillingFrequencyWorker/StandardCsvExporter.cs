@@ -10,7 +10,7 @@ using System.Linq;
 public static class StandardCsvExporter
 {
 
-	public sealed record InsuranceMasterEntry(string GlobalPayerId, string PayerNameNormalized);
+	public sealed record InsuranceMasterEntry(string GlobalPayerId, string PayerNameNormalized, string payercode, string payercommoncode, string payerGroupCode);
 
 	/// <summary>
 	/// Loads the Consolidated Lab Insurance Master CSV into a lookup keyed by normalized Payer_Name_Raw.
@@ -47,6 +47,9 @@ public static class StandardCsvExporter
 		int idxRaw = idxByNorm.TryGetValue(NormKey("Payer_Name_Raw"), out var iRaw) ? iRaw : -1;
 		int idxNorm = idxByNorm.TryGetValue(NormKey("Payer_Name_Normalized"), out var iNorm) ? iNorm : -1;
 		int idxGpid = idxByNorm.TryGetValue(NormKey("Global_Payer_ID"), out var iG) ? iG : -1;
+		int idxPc = idxByNorm.TryGetValue(NormKey("Payer_Code"), out var PC) ? PC : -1;
+		int idxPCC = idxByNorm.TryGetValue(NormKey("Payer_Common_Code"), out var PCC) ? PCC : -1;
+		int idPyGrCd = idxByNorm.TryGetValue(NormKey("Payer_Group_Code"), out var PyGrCode) ? PyGrCode : -1;
 
 		if (idxRaw < 0)
 			throw new InvalidOperationException("Insurance master CSV missing required column: Payer_Name_Raw");
@@ -66,10 +69,13 @@ public static class StandardCsvExporter
 
 			var normalized = idxNorm >= 0 && idxNorm < row.Length ? (row[idxNorm] ?? "").Trim() : "";
 			var gpid = idxGpid >= 0 && idxGpid < row.Length ? (row[idxGpid] ?? "").Trim() : "";
+			var payCode = idxPc >= 0 && idxPc < row.Length ? (row[idxPc] ?? "").Trim() : "";
+			var paycmcode = idxPCC >= 0 && idxPCC < row.Length ? (row[idxPCC] ?? "").Trim() : "";
+			var pygrCode = idPyGrCd >= 0 && idPyGrCd < row.Length ? (row[idPyGrCd] ?? "").Trim() : "";
 
 			// First win
 			if (!map.ContainsKey(key))
-				map[key] = new InsuranceMasterEntry(gpid, normalized);
+				map[key] = new InsuranceMasterEntry(gpid, normalized, payCode, paycmcode, pygrCode);
 		}
 
 		return map;
@@ -194,7 +200,11 @@ public static class StandardCsvExporter
 					{
 						// Fill normalized payer name & global payer id if those columns exist in the COMMON schema
 						extracted["PayerName"] = ins.PayerNameNormalized ?? "";
+						extracted["Payer_Code"] = ins.payercode ?? "";
+						extracted["Payer_Common_Code"] = ins.payercommoncode ?? "";
+						extracted["Payer_Group_Code"] = ins.payerGroupCode ?? "";
 						extracted["Global_Payer_ID"] = ins.GlobalPayerId ?? "";
+
 					}
 				}
 			}
@@ -209,6 +219,7 @@ public static class StandardCsvExporter
 				extracted["AllowedAmountPerUnit"] = DividePerUnit(extracted, "AllowedAmount", unitsVal);
 				extracted["InsurancePaymentPerUnit"] = DividePerUnit(extracted, "InsurancePayment", unitsVal);
 				extracted["PatientBalancePerUnit"] = DividePerUnit(extracted, "PatientBalance", unitsVal);
+				extracted["PatientPaymentPerUnit"] = DividePerUnit(extracted, "PatientPayment", unitsVal);
 			}
 			else
 			{
@@ -216,6 +227,7 @@ public static class StandardCsvExporter
 				extracted["AllowedAmountPerUnit"] = "";
 				extracted["InsurancePaymentPerUnit"] = "";
 				extracted["PatientBalancePerUnit"] = "";
+				extracted["PatientPaymentPerUnit"] = "";
 			}
 
 			// --- Pay Status (derived) ---
@@ -717,17 +729,23 @@ public static class StandardCsvExporter
 		// Carrier Payment -> InsurancePayment
 		// Patient Balance -> PatientBalance
 
-		decimal totalPayment = ParseDecimal(extracted.TryGetValue("TotalPayments", out var tp) ? tp : "");
-		decimal carrierBal = ParseDecimal(extracted.TryGetValue("InsuranceBalance", out var cb) ? cb : "");
-		decimal totalAdj = ParseDecimal(extracted.TryGetValue("TotalAdjustments", out var ta) ? ta : "");
-		decimal chargeAmt = ParseDecimal(extracted.TryGetValue("ChargeAmount", out var ca) ? ca : "");
 		decimal carrierPay = ParseDecimal(extracted.TryGetValue("InsurancePayment", out var ip) ? ip : "");
+		decimal PatPayemnt = ParseDecimal(extracted.TryGetValue("PatientPayment", out var tp) ? tp : "");
+		decimal totalPayment = carrierPay + PatPayemnt;
+		decimal carrierBal = ParseDecimal(extracted.TryGetValue("InsuranceBalance", out var cb) ? cb : "");
+
+		decimal PatAdj = ParseDecimal(extracted.TryGetValue("PatientAdjustments", out var pa) ? pa : "");
+		decimal InsAdj = ParseDecimal(extracted.TryGetValue("InsuranceAdjustments", out var ia) ? ia : "");
+
+		decimal totalAdj = PatAdj+ InsAdj;
+		decimal chargeAmt = ParseDecimal(extracted.TryGetValue("ChargeAmount", out var ca) ? ca : "");
+
 		decimal patientBal = ParseDecimal(extracted.TryGetValue("PatientBalance", out var pb) ? pb : "");
 
 		var denial = (extracted.TryGetValue("DenialCode", out var dc) ? dc : "") ?? "";
 		bool hasDenial = !string.IsNullOrWhiteSpace(denial);
 
-		const decimal EPS = 0.01m;
+		const decimal EPS = 0.00m;
 
 		// Paid
 		if (totalPayment > EPS)
@@ -745,11 +763,11 @@ public static class StandardCsvExporter
 			return "Denied";
 
 		// Adjusted
-		if (Math.Abs(totalPayment) <= EPS && carrierBal <= EPS && totalAdj + EPS >= chargeAmt)
+		if (Math.Abs(totalPayment) <= EPS && carrierBal <= EPS && totalAdj >= chargeAmt)
 			return "Adjusted";
 
 		// Partially Adjusted
-		if (Math.Abs(totalPayment) <= EPS && carrierBal > EPS && totalAdj > EPS && !hasDenial)
+		if (Math.Abs(totalPayment) == EPS && carrierBal > EPS && totalAdj > EPS && !hasDenial)
 			return "Partially Adjusted";
 
 		// No Response

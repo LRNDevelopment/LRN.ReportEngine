@@ -73,7 +73,7 @@
 			"DataType": "string"
 		},
 		{
-			"Name": "Claim Amount",
+			"Name": "Billed Amounts",
 			"Required": true,
 			"DataType": "decimal"
 		},
@@ -98,7 +98,7 @@
 			"DataType": "string"
 		},
 		{
-			"Name": "Claim Level ICD Code",
+			"Name": "ICD Codes",
 			"Required": true,
 			"DataType": "string"
 		}

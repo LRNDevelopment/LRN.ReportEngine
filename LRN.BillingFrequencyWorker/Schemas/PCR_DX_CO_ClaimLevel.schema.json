@@ -63,6 +63,11 @@
       "DataType": "string"
     },
     {
+      "Name": "Claim Level ICD",
+      "Required": true,
+      "DataType": "string"
+    },
+    {
       "Name": "Claim Level CPT",
       "Required": true,
       "DataType": "int"

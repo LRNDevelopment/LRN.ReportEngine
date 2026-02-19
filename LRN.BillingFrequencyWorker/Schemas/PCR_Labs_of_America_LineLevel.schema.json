@@ -136,6 +136,11 @@
       "Name": "Denial Code",
       "Required": true,
       "DataType": "string"
+    },
+    {
+      "Name": "PrimaryDiagnosis",
+      "Required": true,
+      "DataType": "string"
     }
   ]
 }

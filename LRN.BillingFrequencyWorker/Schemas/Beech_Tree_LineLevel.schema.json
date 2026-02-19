@@ -65,7 +65,7 @@
     {
       "Name": "PrimaryDiagnosis",
       "Required": true,
-      "DataType": "int"
+      "DataType": "string"
     },
     {
       "Name": "Modifier",

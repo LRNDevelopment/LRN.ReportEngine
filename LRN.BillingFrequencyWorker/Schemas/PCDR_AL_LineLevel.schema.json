@@ -73,6 +73,11 @@
       "DataType": "string"
     },
     {
+      "Name": "ICD",
+      "Required": true,
+      "DataType": "string"
+    },
+    {
       "Name": "Procedure",
       "Required": true,
       "DataType": "string"

@@ -113,7 +113,7 @@
       "DataType": "string"
     },
     {
-      "Name": "Combined Claim Level ICD",
+      "Name": "ICD",
       "Required": true,
       "DataType": "string"
     }

@@ -111,6 +111,11 @@
       "Name": "TotalPayment",
       "Required": true,
       "DataType": "decimal"
+    },
+    {
+      "Name": "Claim Level ICD",
+      "Required": true,
+      "DataType": "string"
     }
   ]
 }

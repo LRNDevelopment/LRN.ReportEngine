@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-LRN.BillingFrequencyWorker-d383e787-7e5e-40ad-914b-0722dd3a2553</UserSecretsId>
     <EnableDefaultContentItems>false</EnableDefaultContentItems>
   </PropertyGroup>
 
@@ -11,28 +12,28 @@
     <Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="appsettings.Development.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="log4net.config" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Schemas\*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\LRN.CommonLogger\LRN.CommonLogger.csproj" />
+    <ProjectReference Include="..\LRN.ExcelValidator\LRN.ExcelValidator.csproj" />
+    <ProjectReference Include="..\LRN.SharePointClient\LRN.SharePointClient.csproj" />
     <ProjectReference Include="..\LRN.Shared\LRN.Shared.csproj" />
   </ItemGroup>
 
-  <!--
-    This worker is intentionally CSV-only (it reads the generated LineLevel CSV).
-    If you still have legacy Excel/Schema exporter files sitting in this project folder
-    (BillingExcelReader.cs, ExcelCsvExporter.cs, StandardCsvExporter.cs), they should NOT compile here.
-  -->
   <ItemGroup>
-    <Compile Remove="BillingExcelReader.cs" />
-    <Compile Remove="ExcelCsvExporter.cs" />
-    <Compile Remove="StandardCsvExporter.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="Azure.Core" Version="1.50.0" />
+    <PackageReference Include="Azure.Identity" Version="1.17.1" />
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="ExcelDataReader" Version="3.6.0" />
+    <PackageReference Include="ExcelDataReader.DataSet" Version="3.6.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging.EventLog" Version="8.0.1" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+<PackageReference Include="Microsoft.Extensions.Logging.EventLog" Version="8.0.1" />
+<PackageReference Include="Microsoft.Graph" Version="5.101.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
   </ItemGroup>
 
 </Project>

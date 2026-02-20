@@ -1,11 +1,12 @@
 using Common.Logging;
+using LRN.ExcelValidator.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 Host.CreateDefaultBuilder(args)
     .UseContentRoot(AppContext.BaseDirectory) // important for Windows Service + finding appsettings.json
-    .UseWindowsService(o => o.ServiceName = "LRN.BillingFrequencyProcessorWorker")
+    .UseWindowsService(o => o.ServiceName = "LRN.MasterFileProcessorWorker")
     .ConfigureLogging((context, logging) =>
     {
         logging.ClearProviders();
@@ -26,17 +27,20 @@ Host.CreateDefaultBuilder(args)
     })
     .ConfigureServices((context, services) =>
     {
-        // Backward compatible:
-        // - NEW section name: "BillingFrequencyProcessor"
-        // - OLD section name: "BillingFrequency"
-        var sec = context.Configuration.GetSection("BillingFrequencyProcessor");
+        var sec = context.Configuration.GetSection("MasterFileProcessor");
         if (!sec.Exists()) sec = context.Configuration.GetSection("BillingFrequency");
         services.Configure<ImportOptions>(sec);
+
+        services.AddHttpClient<SharePointDownloader>();
+        services.AddSingleton<MasterFileProcessorFileStatusStore>();
 
         // File logger (log4net) - logs only what you explicitly write via ILoggerService
         services.AddSingleton<ILoggerService, LogManagerService>();
 
-        services.AddHostedService<BillingFrequencyWorker>();
+        // Global schema validator library
+        services.AddExcelValidator();
+
+        services.AddHostedService<MasterFileProcessorWorker>();
     })
     .Build()
     .Run();

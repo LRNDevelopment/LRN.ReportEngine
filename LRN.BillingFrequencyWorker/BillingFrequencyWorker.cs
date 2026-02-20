@@ -1,521 +1,186 @@
 using Common.Logging;
-using LRN.ExcelValidator.Services;
-using LRN.ExcelValidator.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
+using System.Globalization;
+using System.Data;
 
 public sealed class BillingFrequencyWorker : BackgroundService
 {
-    private readonly ILogger<BillingFrequencyWorker> _logger;   // console/eventlog
-    private readonly ILoggerService _fileLog;                   // log4net file (only what we write)
+    private readonly ILogger<BillingFrequencyWorker> _logger;
+    private readonly ILoggerService _fileLog;
     private readonly ImportOptions _opt;
     private readonly string _connStr;
-    private readonly SharePointDownloader _sp;
-    private readonly BillingFrequencyFileStatusStore _status;
-    private readonly IExcelSchemaValidator _schemaValidator;
-    private readonly IColumnSchemaLoader _schemaLoader;
 
-    private ColumnSchema? _commonLineSchema;
-    private ColumnSchema? _commonClaimSchema;
+    private readonly string _statePath;
+    private BillingFrequencyProcessedState _state = new();
 
-    
-    private Dictionary<string, StandardCsvExporter.InsuranceMasterEntry>? _insuranceMaster;
-public BillingFrequencyWorker(
+    public BillingFrequencyWorker(
         ILogger<BillingFrequencyWorker> logger,
         ILoggerService fileLog,
         IOptions<ImportOptions> options,
-        Microsoft.Extensions.Configuration.IConfiguration config,
-        SharePointDownloader sp,
-        BillingFrequencyFileStatusStore status,
-        IExcelSchemaValidator schemaValidator,
-        IColumnSchemaLoader schemaLoader)
+        Microsoft.Extensions.Configuration.IConfiguration config)
     {
         _logger = logger;
         _fileLog = fileLog;
         _opt = options.Value;
         _connStr = config.GetConnectionString("DefaultConnection") ?? "";
-        _sp = sp;
-        _status = status;
-        _schemaValidator = schemaValidator;
-        _schemaLoader = schemaLoader;
+
+        // Persist last processed per lab so we don't repeatedly reload the same file
+        _statePath = Path.Combine(AppContext.BaseDirectory, "state", "billing_frequency_state.json");
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         EnsureFolders();
+        _state = BillingFrequencyProcessedState.Load(_statePath);
 
-        _logger.LogInformation("Worker started. SharePoint.Enabled={Enabled}. EnableBillingFrequency={BillingFreq}",
-            _opt.SharePoint.Enabled, _opt.EnableBillingFrequency);
+        _logger.LogInformation("Worker started. EnableBillingFrequency={Enabled}. PollSeconds={PollSeconds}.",
+            _opt.EnableBillingFrequency, _opt.PollSeconds);
 
-        _fileLog.Info($"Worker started. SharePoint.Enabled={_opt.SharePoint.Enabled}, EnableBillingFrequency={_opt.EnableBillingFrequency}");
+        _fileLog.Info($"Worker started. EnableBillingFrequency={_opt.EnableBillingFrequency}, PollSeconds={_opt.PollSeconds}.");
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                if (_opt.SharePoint.Enabled)
+                if (!_opt.EnableBillingFrequency)
                 {
-                    await ProcessSharePointOnceAsync(stoppingToken);
+                    _logger.LogWarning("EnableBillingFrequency=false. Nothing to do.");
+                    _fileLog.Warn("EnableBillingFrequency=false. Nothing to do.");
                 }
                 else
                 {
-                    _logger.LogWarning("SharePoint is disabled. Nothing to do.");
-                    _fileLog.Warn("SharePoint is disabled. Nothing to do.");
+                    await ProcessOnceAsync(stoppingToken);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                // graceful shutdown
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Top-level worker loop error.");
-                _fileLog.Error("Top-level worker loop error.", ex);
-            }
-
-            try
-            {
-                await Task.Delay(TimeSpan.FromSeconds(Math.Max(10, _opt.PollSeconds)), stoppingToken);
-            }
-            catch (OperationCanceledException) { }
-        }
-    }
-
-    private void EnsureFolders()
-    {
-        if (string.IsNullOrWhiteSpace(_opt.WatchFolder))
-            _opt.WatchFolder = Path.Combine(AppContext.BaseDirectory, "input");
-
-        if (string.IsNullOrWhiteSpace(_opt.ErrorFolder))
-            _opt.ErrorFolder = Path.Combine(AppContext.BaseDirectory, "error");
-
-        if (string.IsNullOrWhiteSpace(_opt.ReportOutputsRoot))
-            _opt.ReportOutputsRoot = Path.Combine(AppContext.BaseDirectory, "LabReportOutputs");
-
-        Directory.CreateDirectory(_opt.WatchFolder);
-        Directory.CreateDirectory(_opt.ErrorFolder);
-        Directory.CreateDirectory(_opt.ReportOutputsRoot);
-        Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "logs"));
-    }
-
-    private async Task ProcessSharePointOnceAsync(CancellationToken ct)
-    {
-        var currentYear = DateTime.Now.Year;
-
-        // Load COMMON schemas once (used for standardized CSV output)
-        _commonLineSchema ??= _schemaLoader.LoadFromFile(ResolvePath(_opt.CommonLineLevelSchemaJsonPath));
-        _commonClaimSchema ??= _schemaLoader.LoadFromFile(ResolvePath(_opt.CommonClaimLevelSchemaJsonPath));
-
-// Load Insurance Master once (required for Global_Payer_ID and normalized PayerName)
-if (_insuranceMaster == null)
-{
-    var insPath = ResolvePath(_opt.InsuranceMasterCsvPath);
-    if (!string.IsNullOrWhiteSpace(insPath))
-    {
-        _insuranceMaster = StandardCsvExporter.LoadInsuranceMaster(insPath);
-        _logger.LogInformation("Loaded Insurance Master: {Count} payer rows from {Path}", _insuranceMaster.Count, insPath);
-        _fileLog.Info($"Loaded Insurance Master: {_insuranceMaster.Count} payer rows from {insPath}");
-    }
-    else
-    {
-        _logger.LogWarning("InsuranceMasterCsvPath not configured. Global_Payer_ID and PayerName normalization will be blank.");
-        _fileLog.Warn("InsuranceMasterCsvPath not configured. Global_Payer_ID and PayerName normalization will be blank.");
-        _insuranceMaster = new Dictionary<string, StandardCsvExporter.InsuranceMasterEntry>(StringComparer.OrdinalIgnoreCase);
-    }
-}
-
-
-
-        foreach (var lab in _opt.Labs)
-        {
-            ct.ThrowIfCancellationRequested();
-
-            SharePointDownloader.SelectedFile? selected = null;
-
-            try
-            {
-                selected = await _sp.TryGetLatestFileForLabAsync(lab, currentYear, ct);
-                if (selected == null)
-                {
-                    _logger.LogInformation("Lab {LabId}: no eligible SharePoint file found.", lab.LabId);
-                    _fileLog.Info($"Lab {lab.LabId}: no eligible SharePoint file found.");
-                    continue;
-                }
-
-                // Skip if already processed
-                if (await _status.IsProcessedAsync(selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey, ct))
-                {
-                    _logger.LogInformation("Lab {LabId}: already processed, skipping: {File}", lab.LabId, selected.Name);
-                    _fileLog.Info($"Lab {lab.LabId}: already processed, skipping: {selected.Name}");
-                    continue;
-                }
-
-                await _status.UpsertStatusAsync(
-                    selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey,
-                    selected.Name, selected.SharePointPath, selected.LastModifiedUtc,
-                    status: "IN_PROGRESS",
-                    statusMessage: "Downloading from SharePoint",
-                    processedAtUtc: null,
-                    ct: ct);
-
-                // Download to staging
-                var stagingFileName = $"{GetLabFolderName(lab)}_{selected.Name}";
-                stagingFileName = SanitizeFileName(stagingFileName);
-                var stagingPath = Path.Combine(_opt.WatchFolder, stagingFileName);
-
-                _logger.LogInformation("Lab {LabId}: downloading {SpPath} -> {Local}", lab.LabId, selected.SharePointPath, stagingPath);
-                _fileLog.Info($"Lab {lab.LabId}: downloading {selected.SharePointPath} -> {stagingPath}");
-
-                await _sp.DownloadFileAsync(selected.DriveId, selected.ItemId, stagingPath, ct);
-
-                // Validate download looks like XLSX
-                XlsxFileValidator.ValidateDownloadedXlsxOrThrow(stagingPath);
-
-                // -------- Column validation (NEW) --------
-                var lineSchemaPath = ResolvePath(!string.IsNullOrWhiteSpace(lab.LineLevelSchemaJsonPath)
-                    ? lab.LineLevelSchemaJsonPath!
-                    : _opt.LineLevelSchemaJsonPath);
-                var claimSchemaPath = ResolvePath(!string.IsNullOrWhiteSpace(lab.ClaimLevelSchemaJsonPath)
-                    ? lab.ClaimLevelSchemaJsonPath!
-                    : _opt.ClaimLevelSchemaJsonPath);
-
-                var lineValidation = _schemaValidator.Validate(stagingPath, _opt.SheetName, lineSchemaPath);
-                var claimValidation = _schemaValidator.Validate(stagingPath, _opt.ClaimSheetName, claimSchemaPath);
-
-                if (!lineValidation.IsValid || !claimValidation.IsValid)
-                {
-                    var msg = BuildSchemaErrorMessage(lineValidation, claimValidation, _opt.SheetName, _opt.ClaimSheetName);
-
-                    _logger.LogError("Lab {LabId}: schema validation failed for file {File}. {Msg}", lab.LabId, selected.Name, msg);
-                    _fileLog.Error($"Lab {lab.LabId}: schema validation failed for {selected.Name}. {msg}");
-
-                    await _status.UpsertStatusAsync(
-                        selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey,
-                        selected.Name, selected.SharePointPath, selected.LastModifiedUtc,
-                        status: "ERROR",
-                        statusMessage: msg,
-                        processedAtUtc: null,
-                        ct: ct,
-                        errorLogInfo: msg);
-
-                    // Move the downloaded XLSX to ErrorFolder with error txt (so we don't keep retrying)
-                    await TryWriteAndUploadFileStatusLogAsync(lab, selected, status: "Failed", outputLocation: _opt.ErrorFolder, logMessage: msg, ct: ct);
-
-                    MoveToErrorFolder(stagingPath, msg);
-
-                    continue;
-                }
-
-                // Determine output folders from SharePoint path
-                var (monthFolder, dateFolder) = ParseMonthAndDateFolder(selected.SharePointPath);
-
-                var baseOut = Path.Combine(
-                    _opt.ReportOutputsRoot,
-                    "Masters",
-                    GetLabFolderName(lab),
-                    "Master",
-                    monthFolder,
-                    dateFolder);
-
-                var claimDir = Path.Combine(baseOut, "ClaimLevel");
-                var lineDir = Path.Combine(baseOut, "LineLevel");
-
-                Directory.CreateDirectory(claimDir);
-                Directory.CreateDirectory(lineDir);
-
-                var baseName = SanitizeFileName(Path.GetFileNameWithoutExtension(selected.Name));
-
-                // CSV outputs
-                var claimOutPath = Path.Combine(claimDir, $"{baseName}_ClaimLevel.csv");
-                var lineOutPath = Path.Combine(lineDir, $"{baseName}_LineLevel.csv");
-
-                
-
-// RAW intermediate exports (Excel -> CSV). Final outputs are standardized using COMMON schema.
-var lineRawPath = Path.Combine(_opt.WatchFolder, $"{lab.LabId}_{baseName}_LineLevel_RAW.csv");
-var claimRawPath = Path.Combine(_opt.WatchFolder, $"{lab.LabId}_{baseName}_ClaimLevel_RAW.csv");
-await _status.UpsertStatusAsync(
-                    selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey,
-                    selected.Name, selected.SharePointPath, selected.LastModifiedUtc,
-                    status: "IN_PROGRESS",
-                    statusMessage: $"Exporting ClaimLevel + LineLevel to CSV. Output={baseOut}",
-                    processedAtUtc: null,
-                    ct: ct);
-
-                
-
-// Load LAB schemas for preferred header mapping / composite expressions during standardization
-var labLineSchema = _schemaLoader.LoadFromFile(lineSchemaPath);
-var labClaimSchema = _schemaLoader.LoadFromFile(claimSchemaPath);
-
-// Export to CSV (fast, no formatting)
-                var sw = Stopwatch.StartNew();
-
-                // LineLevel RAW export (from Excel)
-await ExcelCsvExporter.ExportSingleSheetToCsvAsync(stagingPath, _opt.SheetName, lineRawPath, ct);
-_logger.LogInformation("Lab {LabId}: LineLevel RAW CSV export done -> {Path}", lab.LabId, lineRawPath);
-_fileLog.Info($"Lab {lab.LabId}: LineLevel RAW CSV export -> {lineRawPath}");
-
-// Standardize LineLevel using COMMON schema
-StandardCsvExporter.Generate(
-    sourceCsvPath: lineRawPath,
-    headerRow: _commonLineSchema!.HeaderRow,
-    outputCsvPath: lineOutPath,
-    commonSchema: _commonLineSchema!,
-    labId: lab.LabId,
-    labName: lab.LabName,
-    sourceFileName: selected.Name,
-    ingestedOnLocal: DateTime.Now,
-    labSchema: labLineSchema,
-    insuranceMaster: _insuranceMaster);
-
-_logger.LogInformation("Lab {LabId}: LineLevel STANDARD CSV generated -> {Path}", lab.LabId, lineOutPath);
-_fileLog.Info($"Lab {lab.LabId}: LineLevel STANDARD CSV -> {lineOutPath}");
-
-// ClaimLevel RAW export (from Excel)
-await ExcelCsvExporter.ExportSingleSheetToCsvAsync(stagingPath, _opt.ClaimSheetName, claimRawPath, ct);
-_logger.LogInformation("Lab {LabId}: ClaimLevel RAW CSV export done -> {Path}", lab.LabId, claimRawPath);
-_fileLog.Info($"Lab {lab.LabId}: ClaimLevel RAW CSV export -> {claimRawPath}");
-
-// Standardize ClaimLevel using COMMON schema
-StandardCsvExporter.Generate(
-    sourceCsvPath: claimRawPath,
-    headerRow: _commonClaimSchema!.HeaderRow,
-    outputCsvPath: claimOutPath,
-    commonSchema: _commonClaimSchema!,
-    labId: lab.LabId,
-    labName: lab.LabName,
-    sourceFileName: selected.Name,
-    ingestedOnLocal: DateTime.Now,
-    labSchema: labClaimSchema,
-    insuranceMaster: _insuranceMaster);
-
-_logger.LogInformation("Lab {LabId}: ClaimLevel STANDARD CSV generated -> {Path}", lab.LabId, claimOutPath);
-_fileLog.Info($"Lab {lab.LabId}: ClaimLevel STANDARD CSV -> {claimOutPath}");
-
-// Cleanup RAW CSVs unless configured to keep
-if (!_opt.KeepRawCsvExports)
-{
-    TryDelete(lineRawPath);
-    TryDelete(claimRawPath);
-}
-
-// Optional: Billing frequency processing (kept separate & toggleable)
-                if (_opt.EnableBillingFrequency)
-                {
-                    if (string.IsNullOrWhiteSpace(_connStr))
-                        throw new InvalidOperationException("EnableBillingFrequency=true but DefaultConnection is missing.");
-
-                    await _status.UpsertStatusAsync(
-                        selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey,
-                        selected.Name, selected.SharePointPath, selected.LastModifiedUtc,
-                        status: "IN_PROGRESS",
-                        statusMessage: "Calculating billing frequency and loading into SQL.",
-                        processedAtUtc: null,
-                        ct: ct);
-
-                    var rows = CsvLineLevelReader.ReadLineLevelRows(lineOutPath, headerRow: _opt.HeaderRow);
-                    var countsDt = BillingGrouper.BuildBillingCounts(rows, lab.LabId);
-
-                    await BillingSqlLoader.ReplaceLabDataAsync(_connStr, _opt.DestinationTable, lab.LabId, countsDt, ct);
-
-                    _fileLog.Info($"Lab {lab.LabId}: Billing frequency loaded to { _opt.DestinationTable }.");
-                }
-
-                // Write + upload file status log (CSV) to SharePoint Data Analysis root
-                await TryWriteAndUploadFileStatusLogAsync(lab, selected, status: "Completed", outputLocation: claimOutPath, logMessage: "imported", ct: ct);
-
-                // Mark PROCESSED
-                await _status.UpsertStatusAsync(
-                    selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey,
-                    selected.Name, selected.SharePointPath, selected.LastModifiedUtc,
-                    status: "PROCESSED",
-                    statusMessage: $"Saved LineLevel='{lineOutPath}', ClaimLevel='{claimOutPath}'. BillingFrequency={( _opt.EnableBillingFrequency ? "DONE" : "SKIPPED")}.",
-                    processedAtUtc: DateTimeOffset.UtcNow,
-                    ct: ct);
-
-                _fileLog.Info($"Lab {lab.LabId}: PROCESSED {selected.Name}.");
-
-                // Optional SharePoint move (still supported by config)
-                var processedFolderId = await _sp.TryResolveProcessedFolderIdAsync(ct);
-                if (!string.IsNullOrWhiteSpace(processedFolderId))
-                {
-                    await _sp.MoveItemAsync(selected.DriveId, selected.ItemId, processedFolderId!, ct);
-                    _fileLog.Info($"Lab {lab.LabId}: moved SharePoint file to processed folder.");
-                }
-
-                // Cleanup staging file
-                if (!_opt.KeepDownloadedFiles)
-                    TryDelete(stagingPath);
-            }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
                 throw;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lab {LabId}: error processing SharePoint file.", lab.LabId);
-                _fileLog.Error($"Lab {lab.LabId}: error processing SharePoint file.", ex);
+                _logger.LogError(ex, "Billing frequency worker error.");
+                _fileLog.Error("Billing frequency worker error.", ex);
+            }
 
-                if (selected != null)
+            await Task.Delay(TimeSpan.FromSeconds(Math.Max(5, _opt.PollSeconds)), stoppingToken);
+        }
+    }
+
+    private async Task ProcessOnceAsync(CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(_connStr))
+            throw new InvalidOperationException("DefaultConnection is missing.");
+
+        var outputRoot = ResolvePath(Path.Combine(_opt.ReportOutputsRoot ?? "", "Output"));
+        if (string.IsNullOrWhiteSpace(outputRoot) || !Directory.Exists(outputRoot))
+        {
+            _logger.LogWarning("Output root folder not found: {Path}", outputRoot);
+            _fileLog.Warn($"Output root folder not found: {outputRoot}");
+            return;
+        }
+
+        foreach (var lab in _opt.Labs)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            try
+            {
+                var labPrefix = GetLabOutputPrefix(lab); // e.g. Cove
+                var latestLineFile = FindLatestFile(outputRoot, $"{labPrefix}_LineLevel.csv");
+
+                if (latestLineFile == null)
                 {
-                    await _status.UpsertStatusAsync(
-                        selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey,
-                        selected.Name, selected.SharePointPath, selected.LastModifiedUtc,
-                        status: "ERROR",
-                        statusMessage: ex.Message,
-                        processedAtUtc: null,
-                        ct: ct,
-                        errorLogInfo: ex.ToString());
+                    _logger.LogInformation("Lab {LabId}: no LineLevel CSV found under {Root}.", lab.LabId, outputRoot);
+                    continue;
                 }
 
-                await TryWriteAndUploadFileStatusLogAsync(lab, selected, status: "Failed", outputLocation: _opt.ErrorFolder, logMessage: ex.Message, ct: ct);
+                var lastWriteUtc = File.GetLastWriteTimeUtc(latestLineFile);
 
+                if (_state.IsProcessed(lab.LabId, latestLineFile, lastWriteUtc))
+                {
+                    _logger.LogInformation("Lab {LabId}: latest LineLevel already processed: {File}", lab.LabId, latestLineFile);
+                    continue;
+                }
+
+                _logger.LogInformation("Lab {LabId}: processing billing frequency from {File}", lab.LabId, latestLineFile);
+                _fileLog.Info($"Lab {lab.LabId}: processing billing frequency from {latestLineFile}");
+
+                // 1) Read standardized LineLevel CSV and build billing counts
+                var rows = CsvLineLevelReader.ReadLineLevelRows(latestLineFile, headerRow: _opt.HeaderRow);
+                var countsDt = BillingGrouper.BuildBillingCounts(rows, lab.LabId);
+
+                // 2) Load to SQL (replace lab slice)
+                await BillingSqlLoader.ReplaceLabDataAsync(_connStr, _opt.DestinationTable, lab.LabId, countsDt, ct);
+
+                // 3) Write a BillingFrequency CSV next to the LineLevel file by default
+                var outputFolder = Path.GetDirectoryName(latestLineFile) ?? outputRoot;
+                var outPath = Path.Combine(outputFolder, $"{labPrefix}_BillingFrequency.csv");
+
+                BillingFrequencyCsvWriter.Write(countsDt, outPath);
+
+                _logger.LogInformation("Lab {LabId}: billing frequency written to {OutPath}", lab.LabId, outPath);
+                _fileLog.Info($"Lab {lab.LabId}: billing frequency written -> {outPath}");
+
+                _state.MarkProcessed(lab.LabId, latestLineFile, lastWriteUtc, outPath);
+                BillingFrequencyProcessedState.Save(_statePath, _state);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lab {LabId}: error building billing frequency.", lab.LabId);
+                _fileLog.Error($"Lab {lab.LabId}: error building billing frequency.", ex);
             }
         }
     }
 
-    private static string BuildSchemaErrorMessage(
-        LRN.ExcelValidator.Models.SchemaValidationResult lineValidation,
-        LRN.ExcelValidator.Models.SchemaValidationResult claimValidation,
-        string lineCandidates,
-        string claimCandidates)
-    {
-        var parts = new List<string>();
-
-        if (lineValidation.SheetUsed == null)
-            parts.Add($"LineLevel sheet not found. Candidates: {lineCandidates}");
-        else if (lineValidation.MissingRequiredColumns.Count > 0)
-            parts.Add($"LineLevel missing columns: {string.Join(", ", lineValidation.MissingRequiredColumns)} (sheet='{lineValidation.SheetUsed}')");
-
-        if (claimValidation.SheetUsed == null)
-            parts.Add($"ClaimLevel sheet not found. Candidates: {claimCandidates}");
-        else if (claimValidation.MissingRequiredColumns.Count > 0)
-            parts.Add($"ClaimLevel missing columns: {string.Join(", ", claimValidation.MissingRequiredColumns)} (sheet='{claimValidation.SheetUsed}')");
-
-        return string.Join(" | ", parts);
-    }
-
-    private void MoveToErrorFolder(string stagingPath, string msg)
+    private static string? FindLatestFile(string root, string exactFileName)
     {
         try
         {
-            Directory.CreateDirectory(_opt.ErrorFolder);
+            // Search all date folders under Output (YYYY/MM.MMM/MM.dd.yyyy)
+            var files = Directory.EnumerateFiles(root, exactFileName, SearchOption.AllDirectories);
 
-            var name = Path.GetFileNameWithoutExtension(stagingPath);
-            var ext = Path.GetExtension(stagingPath);
-            var ts = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string? best = null;
+            DateTime bestWrite = DateTime.MinValue;
 
-            var destXlsx = Path.Combine(_opt.ErrorFolder, $"{name}_{ts}{ext}");
-            if (File.Exists(destXlsx)) File.Delete(destXlsx);
-            File.Move(stagingPath, destXlsx);
-
-            var destTxt = Path.Combine(_opt.ErrorFolder, $"{name}_{ts}.error.txt");
-            File.WriteAllText(destTxt, msg);
-
-            _fileLog.Warn($"Moved file to error folder: {destXlsx}");
-        }
-        catch (Exception ex)
-        {
-            _fileLog.Error("Failed to move file to error folder.", ex);
-        }
-    }
-
-
-
-private async Task TryWriteAndUploadFileStatusLogAsync(
-    LabFileMap lab,
-    SharePointDownloader.SelectedFile? selected,
-    string status,
-    string outputLocation,
-    string logMessage,
-    CancellationToken ct)
-{
-    try
-    {
-        var localFolder = string.IsNullOrWhiteSpace(_opt.FileStatusLogLocalFolder)
-            ? Path.Combine(_opt.ReportOutputsRoot, "FileStatusLogs")
-            : _opt.FileStatusLogLocalFolder;
-
-        localFolder = ResolvePath(localFolder);
-
-        var importedLocal = DateTime.Now;
-        var fileName = selected?.Name ?? "";
-
-        var localLogPath = FileStatusLogCsv.Write(
-            folder: localFolder,
-            labId: lab.LabId,
-            labName: lab.LabName,
-            importedLocal: importedLocal,
-            fileName: fileName,
-            status: status,
-            outputLocation: outputLocation,
-            logMessage: logMessage);
-
-        _fileLog.Info($"Lab {lab.LabId}: file status log written: {localLogPath}");
-
-        if (_opt.SharePoint.Enabled && selected != null)
-        {
-            await _sp.UploadFileToFolderPathAsync(
-                driveId: selected.DriveId,
-                folderPath: _opt.SharePoint.FileStatusLogUploadFolderPath,
-                localFilePath: localLogPath,
-                uploadFileName: Path.GetFileName(localLogPath),
-                ct: ct);
-
-            _fileLog.Info($"Lab {lab.LabId}: file status log uploaded to SharePoint folder '{_opt.SharePoint.FileStatusLogUploadFolderPath}'.");
-        }
-    }
-    catch (Exception ex)
-    {
-        _fileLog.Error("Failed to write/upload file status log.", ex);
-    }
-}
-
-    private static (string MonthFolder, string DateFolder) ParseMonthAndDateFolder(string sharePointPath)
-    {
-        // Expected: .../<Year>/<Month>/<DateRange>/<File>
-        var parts = sharePointPath.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-        // try to locate a 4-digit year segment
-        int yearIndex = -1;
-        for (int i = 0; i < parts.Length; i++)
-        {
-            if (Regex.IsMatch(parts[i], @"^\d{4}$"))
+            foreach (var f in files)
             {
-                yearIndex = i;
-                break;
+                var t = File.GetLastWriteTimeUtc(f);
+                if (t > bestWrite)
+                {
+                    bestWrite = t;
+                    best = f;
+                }
             }
-        }
 
-        if (yearIndex >= 0 && yearIndex + 2 < parts.Length)
+            return best;
+        }
+        catch
         {
-            return (parts[yearIndex + 1], parts[yearIndex + 2]);
+            return null;
         }
-
-        // fallback: assume last segments
-        if (parts.Length >= 3)
-            return (parts[^3], parts[^2]);
-
-        return ("UnknownMonth", "UnknownDate");
     }
 
-    private static string GetLabFolderName(LabFileMap lab)
+    private void EnsureFolders()
     {
-        if (!string.IsNullOrWhiteSpace(lab.LabName))
-            return SanitizePathSegment(lab.LabName);
-
-        return SanitizePathSegment(lab.LabId.ToString());
+        try
+        {
+            Directory.CreateDirectory(ResolvePath(_opt.ReportOutputsRoot));
+            Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "state"));
+            Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "logs"));
+        }
+        catch { }
     }
 
-    private static string SanitizePathSegment(string input)
+    private static string GetLabOutputPrefix(LabFileMap lab)
     {
-        foreach (var c in Path.GetInvalidFileNameChars())
-            input = input.Replace(c, '_');
-        return input.Trim();
+        var name = !string.IsNullOrWhiteSpace(lab.LabName)
+            ? lab.LabName.Trim()
+            : lab.LabId.ToString(CultureInfo.InvariantCulture);
+
+        name = name.Replace(' ', '_');
+        return SanitizeFileName(name);
     }
 
     private static string SanitizeFileName(string input)
@@ -523,16 +188,6 @@ private async Task TryWriteAndUploadFileStatusLogAsync(
         foreach (var c in Path.GetInvalidFileNameChars())
             input = input.Replace(c, '_');
         return input.Trim();
-    }
-
-    private static void TryDelete(string path)
-    {
-        try
-        {
-            if (File.Exists(path))
-                File.Delete(path);
-        }
-        catch { }
     }
 
     private static string ResolvePath(string path)

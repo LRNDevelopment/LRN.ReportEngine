@@ -83,7 +83,7 @@
       "DataType": "decimal"
     },
     {
-      "Name": "TotalBalance",
+      "Name": "Total Balance",
       "Required": true,
       "DataType": "decimal"
     },
@@ -104,11 +104,6 @@
     },
     {
       "Name": "PatientWO",
-      "Required": true,
-      "DataType": "decimal"
-    },
-    {
-      "Name": "TotalPayment",
       "Required": true,
       "DataType": "decimal"
     },

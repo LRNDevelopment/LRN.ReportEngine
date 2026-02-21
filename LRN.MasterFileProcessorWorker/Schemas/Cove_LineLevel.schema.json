@@ -93,11 +93,6 @@
 			"DataType": "decimal"
 		},
 		{
-			"Name": "TotalBalance",
-			"Required": false,
-			"DataType": "decimal"
-		},
-		{
 			"Name": "CarrierBalance",
 			"Required": false,
 			"DataType": "decimal"

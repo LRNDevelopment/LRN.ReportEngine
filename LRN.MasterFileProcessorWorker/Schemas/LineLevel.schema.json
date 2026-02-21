@@ -337,7 +337,7 @@
 			"DataType": "decimal"
 		},
 		{
-			"Name": "TotalBalance",
+			"Name": "Total Balance",
 			"DataType": "decimal",
 			"Calculation": "PatientBalance + InsuranceBalance"
 		},

@@ -4,14 +4,17 @@ using LRN.ExcelValidator.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Globalization;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 public sealed class MasterFileProcessorWorker : BackgroundService
 {
 	private readonly ILogger<MasterFileProcessorWorker> _logger;   // console/eventlog
-	private readonly ILoggerService _fileLog;                   // log4net file (only what we write)
+	private readonly ILoggerService _fileLog;                      // log4net file (only what we write)
 	private readonly ImportOptions _opt;
 	private readonly SharePointDownloader _sp;
 	private readonly MasterFileProcessorFileStatusStore _status;
@@ -21,16 +24,16 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 	private ColumnSchema? _commonLineSchema;
 	private ColumnSchema? _commonClaimSchema;
 
-
 	private Dictionary<string, StandardCsvExporter.InsuranceMasterEntry>? _insuranceMaster;
+
 	public MasterFileProcessorWorker(
-			ILogger<MasterFileProcessorWorker> logger,
-			ILoggerService fileLog,
-			IOptions<ImportOptions> options,
-			SharePointDownloader sp,
-			MasterFileProcessorFileStatusStore status,
-			IExcelSchemaValidator schemaValidator,
-			IColumnSchemaLoader schemaLoader)
+		ILogger<MasterFileProcessorWorker> logger,
+		ILoggerService fileLog,
+		IOptions<ImportOptions> options,
+		SharePointDownloader sp,
+		MasterFileProcessorFileStatusStore status,
+		IExcelSchemaValidator schemaValidator,
+		IColumnSchemaLoader schemaLoader)
 	{
 		_logger = logger;
 		_fileLog = fileLog;
@@ -45,9 +48,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 	{
 		EnsureFolders();
 
-		_logger.LogInformation("Worker started. SharePoint.Enabled={Enabled}",
-			_opt.SharePoint.Enabled);
-
+		_logger.LogInformation("Worker started. SharePoint.Enabled={Enabled}", _opt.SharePoint.Enabled);
 		_fileLog.Info($"Worker started. SharePoint.Enabled={_opt.SharePoint.Enabled}");
 
 		while (!stoppingToken.IsCancellationRequested)
@@ -76,7 +77,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 			try
 			{
-				await Task.Delay(TimeSpan.FromSeconds(Math.Max(10, _opt.PollSeconds)), stoppingToken);
+				await Task.Delay(TimeSpan.FromMinutes(Math.Max(10, _opt.PollSeconds)), stoppingToken);
 			}
 			catch (OperationCanceledException) { }
 		}
@@ -85,7 +86,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 	private void EnsureFolders()
 	{
 		if (string.IsNullOrWhiteSpace(_opt.WatchFolder))
-			_opt.WatchFolder = Path.Combine(AppContext.BaseDirectory, "input");
+			_opt.WatchFolder = Path.Combine(AppContext.BaseDirectory, "LRN-Input");
 
 		if (string.IsNullOrWhiteSpace(_opt.ErrorFolder))
 			_opt.ErrorFolder = Path.Combine(AppContext.BaseDirectory, "error");
@@ -102,7 +103,6 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 	private async Task ProcessSharePointOnceAsync(CancellationToken ct)
 	{
 		var runLocalNow = DateTime.Now;
-		var currentYear = runLocalNow.Year;
 
 		// Daily master processor log (local)
 		var masterLogFolder = Path.Combine(_opt.ReportOutputsRoot, "Logs", "Master File Processor");
@@ -129,7 +129,16 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 			}
 		}
 
-
+		// Resolve driveId once (needed for status log upload even when selected is null)
+		string? siteDriveId = null;
+		try
+		{
+			siteDriveId = await _sp.TryGetDriveIdAsync(ct);
+		}
+		catch (Exception ex)
+		{
+			_fileLog.Error("Failed to resolve SharePoint driveId.", ex);
+		}
 
 		foreach (var lab in _opt.Labs)
 		{
@@ -139,13 +148,14 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 			try
 			{
-				selected = await _sp.TryGetLatestFileForLabAsync(lab, currentYear, ct);
+				// NOTE: your downloader already checks latest folder first and falls back to previous
+				selected = await _sp.TryGetLatestFileForLabAsync(lab, runLocalNow.Year, ct);
+
 				if (selected == null)
 				{
 					_logger.LogInformation("Lab {LabId}: no eligible SharePoint file found.", lab.LabId);
 					_fileLog.Info($"Lab {lab.LabId}: no eligible SharePoint file found.");
 
-					// Daily master processor log row (client requirement)
 					MasterProcessorLogCsv.Append(
 						folder: masterLogFolder,
 						localNow: runLocalNow,
@@ -157,6 +167,9 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						message: "no eligible SharePoint file found",
 						claimOutput: "",
 						lineOutput: "");
+
+					// Also write status log locally + upload if enabled
+					await TryWriteAndUploadFileStatusLogAsync(lab, selected, siteDriveId, status: "Skipped", outputLocation: "", logMessage: "no eligible SharePoint file found", ct: ct);
 					continue;
 				}
 
@@ -177,6 +190,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						message: "already processed (etag unchanged)",
 						claimOutput: "",
 						lineOutput: "");
+
+					await TryWriteAndUploadFileStatusLogAsync(lab, selected, siteDriveId, status: "Skipped", outputLocation: "", logMessage: "already processed (etag unchanged)", ct: ct);
 					continue;
 				}
 
@@ -188,10 +203,35 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					processedAtUtc: null,
 					ct: ct);
 
-				// Download to staging
-				var stagingFileName = $"{GetLabFolderName(lab)}_{selected.Name}";
-				stagingFileName = SanitizeFileName(stagingFileName);
-				var stagingPath = Path.Combine(_opt.WatchFolder, stagingFileName);
+				// --------------------------------------------------------------------
+				// NEW PATH LOGIC (matches SharePoint input structure)
+				// SharePoint input example:
+				// Data Analysis/Beech Tree/2026/02.February/02.06.2026 - 02.12.2026/Beech Tree_Production Report.xlsx
+				// We extract:
+				//   monthFolder = "02.February"
+				//   weekFolder  = "02.06.2026 - 02.12.2026"
+				// --------------------------------------------------------------------
+				var (monthFolder, weekFolder) = ParseMonthAndDateFolder(selected.SharePointPath);
+
+				// Lab prefix (Beech_Tree style) used for local folder + file names
+				var labPrefix = GetLabOutputPrefix(lab); // e.g. Beech_Tree
+
+				// PROCESSED OUTPUTS (Claim/Line) go under WatchFolder (LRN-Input):
+				// D:\LRN\Automation\LRN-Input\Beech_Tree\02.February\02.06.2026 - 02.12.2026\Beech_Tree_LineLevel.csv
+				var processedOutFolder = Path.Combine(_opt.WatchFolder, labPrefix, monthFolder, weekFolder);
+				Directory.CreateDirectory(processedOutFolder);
+
+				var claimOutPath = Path.Combine(processedOutFolder, $"{labPrefix}_ClaimLevel.csv");
+				var lineOutPath = Path.Combine(processedOutFolder, $"{labPrefix}_LineLevel.csv");
+
+				// RAW ROOT (no lab folder):
+				// D:\LRN\Automation\LRN-RAWFILE\02.February\02.06.2026 - 02.12.2026\
+				var rawRoot = Path.Combine(_opt.ReportOutputsRoot, "LRN-RAWFILE", monthFolder, weekFolder);
+				Directory.CreateDirectory(rawRoot);
+
+				// Download XLSX into RAW ROOT
+				var stagingFileName = $"{labPrefix}_{SanitizeFileName(selected.Name)}";
+				var stagingPath = Path.Combine(rawRoot, stagingFileName);
 
 				_logger.LogInformation("Lab {LabId}: downloading {SpPath} -> {Local}", lab.LabId, selected.SharePointPath, stagingPath);
 				_fileLog.Info($"Lab {lab.LabId}: downloading {selected.SharePointPath} -> {stagingPath}");
@@ -201,10 +241,11 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				// Validate download looks like XLSX
 				XlsxFileValidator.ValidateDownloadedXlsxOrThrow(stagingPath);
 
-				// -------- Column validation (NEW) --------
+				// -------- Column validation --------
 				var lineSchemaPath = ResolvePath(!string.IsNullOrWhiteSpace(lab.LineLevelSchemaJsonPath)
 					? lab.LineLevelSchemaJsonPath!
 					: _opt.LineLevelSchemaJsonPath);
+
 				var claimSchemaPath = ResolvePath(!string.IsNullOrWhiteSpace(lab.ClaimLevelSchemaJsonPath)
 					? lab.ClaimLevelSchemaJsonPath!
 					: _opt.ClaimLevelSchemaJsonPath);
@@ -228,54 +269,29 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						ct: ct,
 						errorLogInfo: msg);
 
-					// Move the downloaded XLSX to ErrorFolder with error txt (so we don't keep retrying)
-					await TryWriteAndUploadFileStatusLogAsync(lab, selected, status: "Failed", outputLocation: _opt.ErrorFolder, logMessage: msg, ct: ct);
+					await TryWriteAndUploadFileStatusLogAsync(lab, selected, siteDriveId, status: "Failed", outputLocation: _opt.ErrorFolder, logMessage: msg, ct: ct);
 
 					MoveToErrorFolder(stagingPath, msg);
-
 					continue;
 				}
-
-				// Output folder structure (client requirement):
-				//   {ReportOutputsRoot}\Output\YYYY\MM.MMM\MM.dd.yyyy\{Lab}_ClaimLevel.csv
-				//   {ReportOutputsRoot}\Output\YYYY\MM.MMM\MM.dd.yyyy\{Lab}_LineLevel.csv
-				// NOTE: No separate ClaimLevel/LineLevel subfolders on server.
-				var outYear = runLocalNow.ToString("yyyy", CultureInfo.InvariantCulture);
-				var outMonth = runLocalNow.ToString("MM.MMM", CultureInfo.InvariantCulture); // e.g. 02.Feb
-				var outDay = runLocalNow.ToString("MM.dd.yyyy", CultureInfo.InvariantCulture); // e.g. 02.18.2026
-
-				var baseOut = Path.Combine(_opt.ReportOutputsRoot, "Output", outYear, outMonth, outDay);
-				Directory.CreateDirectory(baseOut);
-
-				var labPrefix = GetLabOutputPrefix(lab); // e.g. Cove
-
-				// CSV outputs (standardized)
-				var claimOutPath = Path.Combine(baseOut, $"{labPrefix}_ClaimLevel.csv");
-				var lineOutPath = Path.Combine(baseOut, $"{labPrefix}_LineLevel.csv");
-
-				// For RAW intermediate exports, keep uniqueness by including source base name.
-				var baseName = SanitizeFileName(Path.GetFileNameWithoutExtension(selected.Name));
-
-
-
-				// RAW intermediate exports (Excel -> CSV). Final outputs are standardized using COMMON schema.
-				var lineRawPath = Path.Combine(_opt.WatchFolder, $"{lab.LabId}_{baseName}_LineLevel_RAW.csv");
-				var claimRawPath = Path.Combine(_opt.WatchFolder, $"{lab.LabId}_{baseName}_ClaimLevel_RAW.csv");
-				await _status.UpsertStatusAsync(
-									selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey,
-									selected.Name, selected.SharePointPath, selected.LastModifiedUtc,
-									status: "IN_PROGRESS",
-									statusMessage: $"Exporting ClaimLevel + LineLevel to CSV. Output={baseOut}",
-									processedAtUtc: null,
-									ct: ct);
-
-
 
 				// Load LAB schemas for preferred header mapping / composite expressions during standardization
 				var labLineSchema = _schemaLoader.LoadFromFile(lineSchemaPath);
 				var labClaimSchema = _schemaLoader.LoadFromFile(claimSchemaPath);
 
-				// Export to CSV (fast, no formatting)
+				// RAW intermediate exports (Excel -> CSV) stored under RAW ROOT (no lab folder)
+				var baseName = SanitizeFileName(Path.GetFileNameWithoutExtension(selected.Name));
+				var lineRawPath = Path.Combine(rawRoot, $"{labPrefix}_{baseName}_LineLevel_RAW.csv");
+				var claimRawPath = Path.Combine(rawRoot, $"{labPrefix}_{baseName}_ClaimLevel_RAW.csv");
+
+				await _status.UpsertStatusAsync(
+					selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey,
+					selected.Name, selected.SharePointPath, selected.LastModifiedUtc,
+					status: "IN_PROGRESS",
+					statusMessage: $"Exporting ClaimLevel + LineLevel to CSV. Output={processedOutFolder}",
+					processedAtUtc: null,
+					ct: ct);
+
 				var sw = Stopwatch.StartNew();
 
 				// LineLevel RAW export (from Excel)
@@ -283,7 +299,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				_logger.LogInformation("Lab {LabId}: LineLevel RAW CSV export done -> {Path}", lab.LabId, lineRawPath);
 				_fileLog.Info($"Lab {lab.LabId}: LineLevel RAW CSV export -> {lineRawPath}");
 
-				// Standardize LineLevel using COMMON schema
+				// Standardize LineLevel using COMMON schema -> processed output folder
 				StandardCsvExporter.Generate(
 					sourceCsvPath: lineRawPath,
 					headerRow: _commonLineSchema!.HeaderRow,
@@ -304,7 +320,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				_logger.LogInformation("Lab {LabId}: ClaimLevel RAW CSV export done -> {Path}", lab.LabId, claimRawPath);
 				_fileLog.Info($"Lab {lab.LabId}: ClaimLevel RAW CSV export -> {claimRawPath}");
 
-				// Standardize ClaimLevel using COMMON schema
+				// Standardize ClaimLevel using COMMON schema -> processed output folder
 				StandardCsvExporter.Generate(
 					sourceCsvPath: claimRawPath,
 					headerRow: _commonClaimSchema!.HeaderRow,
@@ -320,6 +336,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				_logger.LogInformation("Lab {LabId}: ClaimLevel STANDARD CSV generated -> {Path}", lab.LabId, claimOutPath);
 				_fileLog.Info($"Lab {lab.LabId}: ClaimLevel STANDARD CSV -> {claimOutPath}");
 
+				sw.Stop();
+
 				// Cleanup RAW CSVs unless configured to keep
 				if (!_opt.KeepRawCsvExports)
 				{
@@ -327,8 +345,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					TryDelete(claimRawPath);
 				}
 
-				// Write + upload file status log (CSV) to SharePoint Data Analysis root
-				await TryWriteAndUploadFileStatusLogAsync(lab, selected, status: "Completed", outputLocation: claimOutPath, logMessage: "imported", ct: ct);
+				// Write + upload file status log (CSV)
+				await TryWriteAndUploadFileStatusLogAsync(lab, selected, siteDriveId, status: "Completed", outputLocation: processedOutFolder, logMessage: "imported", ct: ct);
 
 				// Upload standardized outputs to SharePoint output folder (client requirement)
 				var outputUploadResult = await TryUploadOutputsAsync(lab, selected, runLocalNow, claimOutPath, lineOutPath, ct);
@@ -338,8 +356,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey,
 					selected.Name, selected.SharePointPath, selected.LastModifiedUtc,
 					status: "PROCESSED",
-					statusMessage: $"Saved LineLevel = '{lineOutPath}', ClaimLevel = '{claimOutPath}'.OutputUpload ={outputUploadResult}.",
-
+					statusMessage: $"Saved LineLevel='{lineOutPath}', ClaimLevel='{claimOutPath}'. OutputUpload={outputUploadResult}.",
 					processedAtUtc: DateTimeOffset.UtcNow,
 					ct: ct);
 
@@ -358,6 +375,25 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				_fileLog.Info($"Lab {lab.LabId}: PROCESSED {selected.Name}.");
 
+				// Archive RAW XLSX after success:
+				// D:\LRN\Automation\LRN-RAWFILE\Archive\02.February\02.06.2026 - 02.12.2026\<file>.xlsx
+				try
+				{
+					var archiveFolder = Path.Combine(_opt.ReportOutputsRoot, "LRN-RAWFILE", "Archive", monthFolder, weekFolder);
+					Directory.CreateDirectory(archiveFolder);
+
+					var dest = Path.Combine(archiveFolder, Path.GetFileName(stagingPath));
+
+					if (File.Exists(stagingPath))
+						File.Move(stagingPath, dest, overwrite: true);
+
+					_fileLog.Info($"Archived raw XLSX: {dest}");
+				}
+				catch (Exception ex)
+				{
+					_fileLog.Error("Failed to archive raw XLSX.", ex);
+				}
+
 				// Optional SharePoint move (still supported by config)
 				var processedFolderId = await _sp.TryResolveProcessedFolderIdAsync(ct);
 				if (!string.IsNullOrWhiteSpace(processedFolderId))
@@ -365,10 +401,6 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					await _sp.MoveItemAsync(selected.DriveId, selected.ItemId, processedFolderId!, ct);
 					_fileLog.Info($"Lab {lab.LabId}: moved SharePoint file to processed folder.");
 				}
-
-				// Cleanup staging file
-				if (!_opt.KeepDownloadedFiles)
-					TryDelete(stagingPath);
 			}
 			catch (OperationCanceledException) when (ct.IsCancellationRequested)
 			{
@@ -391,9 +423,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						errorLogInfo: ex.ToString());
 				}
 
-				await TryWriteAndUploadFileStatusLogAsync(lab, selected, status: "Failed", outputLocation: _opt.ErrorFolder, logMessage: ex.Message, ct: ct);
+				await TryWriteAndUploadFileStatusLogAsync(lab, selected, siteDriveId, status: "Failed", outputLocation: _opt.ErrorFolder, logMessage: ex.Message, ct: ct);
 
-				// Daily master processor log row (client requirement)
 				MasterProcessorLogCsv.Append(
 					folder: masterLogFolder,
 					localNow: runLocalNow,
@@ -405,7 +436,6 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					message: ex.Message,
 					claimOutput: "",
 					lineOutput: "");
-
 			}
 		}
 
@@ -442,7 +472,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 			var name = Path.GetFileNameWithoutExtension(stagingPath);
 			var ext = Path.GetExtension(stagingPath);
-			var ts = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+			var ts = DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
 
 			var destXlsx = Path.Combine(_opt.ErrorFolder, $"{name}_{ts}{ext}");
 			if (File.Exists(destXlsx)) File.Delete(destXlsx);
@@ -459,11 +489,10 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		}
 	}
 
-
-
 	private async Task TryWriteAndUploadFileStatusLogAsync(
 		LabFileMap lab,
 		SharePointDownloader.SelectedFile? selected,
+		string? siteDriveId,
 		string status,
 		string outputLocation,
 		string logMessage,
@@ -492,17 +521,31 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 			_fileLog.Info($"Lab {lab.LabId}: file status log written: {localLogPath}");
 
-			if (_opt.SharePoint.Enabled && selected != null && !string.IsNullOrWhiteSpace(_opt.SharePoint.FileStatusLogUploadFolderPath))
+			// FIX: Upload even if selected == null; use site driveId (resolved once)
+			if (_opt.SharePoint.Enabled && !string.IsNullOrWhiteSpace(_opt.SharePoint.FileStatusLogUploadFolderPath))
 			{
-				// If the configured path points to the ImportLogs root, append the month folder (client style).
+				var driveId = siteDriveId;
+				if (string.IsNullOrWhiteSpace(driveId))
+				{
+					driveId = await _sp.TryGetDriveIdAsync(ct);
+				}
+
+				if (string.IsNullOrWhiteSpace(driveId))
+				{
+					_fileLog.Warn("File status log upload skipped: unable to resolve SharePoint driveId.");
+					return;
+				}
+
 				var spFolder = _opt.SharePoint.FileStatusLogUploadFolderPath.Trim().Trim('/');
+
+				// If configured as ImportLogs root, expand to year/month folder path
 				if (spFolder.EndsWith("ImportLogs", StringComparison.OrdinalIgnoreCase))
 				{
 					spFolder = FileStatusLogCsv.GetSharePointFolderPath(importedLocal);
 				}
 
 				await _sp.UploadFileToFolderPathAsync(
-					driveId: selected.DriveId,
+					driveId: driveId!,
 					folderPath: spFolder,
 					localFilePath: localLogPath,
 					uploadFileName: Path.GetFileName(localLogPath),
@@ -518,12 +561,12 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 	}
 
 	private async Task<string> TryUploadOutputsAsync(
-	LabFileMap lab,
-	SharePointDownloader.SelectedFile selected,
-	DateTime runLocalNow,
-	string claimOutPath,
-	string lineOutPath,
-	CancellationToken ct)
+		LabFileMap lab,
+		SharePointDownloader.SelectedFile selected,
+		DateTime runLocalNow,
+		string claimOutPath,
+		string lineOutPath,
+		CancellationToken ct)
 	{
 		try
 		{
@@ -534,15 +577,15 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 			if (string.IsNullOrWhiteSpace(sp.OutputUploadFolderPath))
 				return "SKIPPED (OutputUploadFolderPath empty)";
 
-			// Year stays as current run year (or you can also take from SP path if you want later)
-			var year = runLocalNow.ToString("yyyy", CultureInfo.InvariantCulture);
+			// Prefer year from SharePoint path; fallback to run year
+			var year = TryParseYearFromSharePointPath(selected.SharePointPath)
+				?? runLocalNow.ToString("yyyy", CultureInfo.InvariantCulture);
 
-			// ✅ IMPORTANT: Parse from SharePoint FULL path (NOT selected.Name)
-			// Example SP path:
-			// Data Analysis/Beech Tree/2026/02.February/02.06.2026 - 02.12.2026/Beech Tree_Production Report.xlsx
+			// Parse from SharePoint FULL path:
+			// Data Analysis/Beech Tree/2026/02.February/02.06.2026 - 02.12.2026/<file>.xlsx
 			var (monthFolder, weekFolder) = ParseMonthAndDateFolder(selected.SharePointPath);
 
-			// ✅ Use the extracted "02.06.2026 - 02.12.2026" as Weekfolder
+			// Use extracted weekFolder as requested
 			var destFolder = CombineSpPath(sp.OutputUploadFolderPath, lab.LabName, year, monthFolder, weekFolder);
 
 			await _sp.UploadFileToFolderPathAsync(
@@ -569,11 +612,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		}
 	}
 
-
-	private async Task TryUploadMasterProcessorLogAsync(
-		DateTime runLocalNow,
-		string masterLogFolder,
-		CancellationToken ct)
+	private async Task TryUploadMasterProcessorLogAsync(DateTime runLocalNow, string masterLogFolder, CancellationToken ct)
 	{
 		try
 		{
@@ -623,7 +662,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		// Expected: .../<Year>/<Month>/<DateRange>/<File>
 		var parts = sharePointPath.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-		// try to locate a 4-digit year segment
+		// Try to locate a 4-digit year segment
 		int yearIndex = -1;
 		for (int i = 0; i < parts.Length; i++)
 		{
@@ -639,11 +678,22 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 			return (parts[yearIndex + 1], parts[yearIndex + 2]);
 		}
 
-		// fallback: assume last segments
+		// Fallback: assume last segments
 		if (parts.Length >= 3)
 			return (parts[^3], parts[^2]);
 
 		return ("UnknownMonth", "UnknownDate");
+	}
+
+	private static string? TryParseYearFromSharePointPath(string sharePointPath)
+	{
+		var parts = sharePointPath.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		foreach (var p in parts)
+		{
+			if (Regex.IsMatch(p, @"^\d{4}$"))
+				return p;
+		}
+		return null;
 	}
 
 	private static string GetLabFolderName(LabFileMap lab)
@@ -651,13 +701,12 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		if (!string.IsNullOrWhiteSpace(lab.LabName))
 			return SanitizePathSegment(lab.LabName);
 
-		return SanitizePathSegment(lab.LabId.ToString());
+		return SanitizePathSegment(lab.LabId.ToString(CultureInfo.InvariantCulture));
 	}
 
 	private static string GetLabOutputPrefix(LabFileMap lab)
 	{
-		// Required file name style: Cove_ClaimLevel.csv / Cove_LineLevel.csv
-		// Normalize spaces to '_' to keep file names consistent across labs.
+		// Required file name style: Beech_Tree_ClaimLevel.csv / Beech_Tree_LineLevel.csv
 		var name = !string.IsNullOrWhiteSpace(lab.LabName)
 			? lab.LabName.Trim()
 			: lab.LabId.ToString(CultureInfo.InvariantCulture);

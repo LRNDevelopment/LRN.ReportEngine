@@ -78,11 +78,6 @@
 			"DataType": "decimal"
 		},
 		{
-			"Name": "TotalBalance",
-			"Required": true,
-			"DataType": "decimal"
-		},
-		{
 			"Name": "CarrierBalance",
 			"Required": true,
 			"DataType": "decimal"
@@ -99,11 +94,6 @@
 		},
 		{
 			"Name": "PatientWO",
-			"Required": true,
-			"DataType": "decimal"
-		},
-		{
-			"Name": "TotalPayment",
 			"Required": true,
 			"DataType": "decimal"
 		}

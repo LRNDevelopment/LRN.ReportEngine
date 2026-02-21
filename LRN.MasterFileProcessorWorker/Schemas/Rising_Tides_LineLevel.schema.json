@@ -133,11 +133,6 @@
 			"DataType": "decimal"
 		},
 		{
-			"Name": "TotalBalance",
-			"Required": true,
-			"DataType": "decimal"
-		},
-		{
 			"Name": "Denail Code",
 			"Required": true,
 			"DataType": "string"

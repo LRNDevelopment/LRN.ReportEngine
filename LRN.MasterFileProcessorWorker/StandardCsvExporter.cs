@@ -1,4 +1,3 @@
-
 using Microsoft.VisualBasic.FileIO;
 using LRN.ExcelValidator.Models;
 using System.IO;
@@ -277,7 +276,22 @@ public static class StandardCsvExporter
 
 				// Calculation columns
 				else if (!string.IsNullOrWhiteSpace(col.Calculation))
-					val = EvaluateCalculation(col.Calculation!, extracted, schemaByName, row, headerExact, headerNorm, labOv);
+				{
+					// Requirement:
+					// If this calculated column already exists in the LAB-level schema (meaning the lab file provides it),
+					// then DO NOT calculate — take the lab value as-is.
+					if (LabProvidesTargetColumn(col, labOv) &&
+						TryReadValueIfHeaderExists(col, row, headerExact, headerNorm, labOv, out var directVal))
+					{
+						val = directVal;
+						extracted[col.Name] = directVal;
+					}
+					else
+					{
+						val = EvaluateCalculation(col.Calculation!, extracted, schemaByName, row, headerExact, headerNorm, labOv);
+						extracted[col.Name] = val;
+					}
+				}
 
 				// Standard extracted columns
 				else
@@ -629,6 +643,113 @@ public static class StandardCsvExporter
 		return "";
 	}
 
+	private static bool LabProvidesTargetColumn(ColumnSpec col, LabOverrides labOv)
+	{
+		// Composite lab mapping counts as "provided"
+		if (TryGetCompositeTemplate(col, labOv, out _))
+			return true;
+
+		// Direct name match
+		if (labOv.PreferredExact.Contains(col.Name))
+			return true;
+
+		var nn = NormKey(col.Name);
+		if (!string.IsNullOrWhiteSpace(nn) && labOv.PreferredNorm.Contains(nn))
+			return true;
+
+		// Any alias match
+		if (col.Aliases != null)
+		{
+			foreach (var a in col.Aliases)
+			{
+				var aa = (a ?? "").Trim();
+				if (string.IsNullOrWhiteSpace(aa)) continue;
+
+				if (labOv.PreferredExact.Contains(aa))
+					return true;
+
+				var an = NormKey(aa);
+				if (!string.IsNullOrWhiteSpace(an) && labOv.PreferredNorm.Contains(an))
+					return true;
+			}
+		}
+
+		return false;
+	}
+
+	/// <summary>
+	/// Tries to read the value for a common column ONLY IF a matching header exists in the source CSV.
+	/// Returns true if a header match was found (even if the cell value is blank).
+	/// </summary>
+	private static bool TryReadValueIfHeaderExists(
+		ColumnSpec col,
+		string[] row,
+		Dictionary<string, int> headerExact,
+		Dictionary<string, int> headerNorm,
+		LabOverrides labOv,
+		out string value)
+	{
+		// Composite overrides by column name OR by any alias (exact or normalized)
+		if (TryGetCompositeTemplate(col, labOv, out var tpl))
+		{
+			value = EvaluateComposite(tpl, row, headerExact, headerNorm);
+			return true;
+		}
+
+		var candidates = (col.Aliases ?? new List<string>())
+			.Where(a => !string.IsNullOrWhiteSpace(a))
+			.Concat(new[] { col.Name })
+			.Select(a => (a ?? "").Trim())
+			.Where(a => !string.IsNullOrWhiteSpace(a))
+			.ToList();
+
+		// Prefer headers explicitly present in the LAB schema when multiple COMMON aliases exist.
+		var ordered = new List<string>(candidates.Count);
+		var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+		foreach (var c in candidates)
+		{
+			var cn = NormKey(c);
+			var isPref = labOv.PreferredExact.Contains(c) || (!string.IsNullOrWhiteSpace(cn) && labOv.PreferredNorm.Contains(cn));
+			if (!isPref) continue;
+
+			if (seen.Add(c))
+				ordered.Add(c);
+		}
+
+		foreach (var c in candidates)
+		{
+			var cn = NormKey(c);
+			var isPref = labOv.PreferredExact.Contains(c) || (!string.IsNullOrWhiteSpace(cn) && labOv.PreferredNorm.Contains(cn));
+			if (isPref) continue;
+
+			if (seen.Add(c))
+				ordered.Add(c);
+		}
+
+		foreach (var cand in ordered)
+		{
+			var c = (cand ?? "").Trim();
+			if (string.IsNullOrWhiteSpace(c)) continue;
+
+			if (headerExact.TryGetValue(c, out int idx))
+			{
+				value = Get(row, idx);
+				return true;
+			}
+
+			var cn = NormKey(c);
+			if (!string.IsNullOrWhiteSpace(cn) && headerNorm.TryGetValue(cn, out idx))
+			{
+				value = Get(row, idx);
+				return true;
+			}
+		}
+
+		value = "";
+		return false;
+	}
+
 	private static string EvaluateCalculation(
 		string expr,
 		Dictionary<string, string> extracted,
@@ -737,7 +858,7 @@ public static class StandardCsvExporter
 		decimal PatAdj = ParseDecimal(extracted.TryGetValue("PatientAdjustments", out var pa) ? pa : "");
 		decimal InsAdj = ParseDecimal(extracted.TryGetValue("InsuranceAdjustments", out var ia) ? ia : "");
 
-		decimal totalAdj = PatAdj+ InsAdj;
+		decimal totalAdj = PatAdj + InsAdj;
 		decimal chargeAmt = ParseDecimal(extracted.TryGetValue("ChargeAmount", out var ca) ? ca : "");
 
 		decimal patientBal = ParseDecimal(extracted.TryGetValue("PatientBalance", out var pb) ? pb : "");

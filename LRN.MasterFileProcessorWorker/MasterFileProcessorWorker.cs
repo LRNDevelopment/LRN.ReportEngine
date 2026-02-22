@@ -20,6 +20,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 	private readonly MasterFileProcessorFileStatusStore _status;
 	private readonly IExcelSchemaValidator _schemaValidator;
 	private readonly IColumnSchemaLoader _schemaLoader;
+	private readonly IProcessLogService _processLog;
 
 	private ColumnSchema? _commonLineSchema;
 	private ColumnSchema? _commonClaimSchema;
@@ -33,7 +34,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		SharePointDownloader sp,
 		MasterFileProcessorFileStatusStore status,
 		IExcelSchemaValidator schemaValidator,
-		IColumnSchemaLoader schemaLoader)
+		IColumnSchemaLoader schemaLoader,
+		IProcessLogService processLog)
 	{
 		_logger = logger;
 		_fileLog = fileLog;
@@ -42,6 +44,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		_status = status;
 		_schemaValidator = schemaValidator;
 		_schemaLoader = schemaLoader;
+		_processLog = processLog;
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -144,17 +147,75 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		{
 			ct.ThrowIfCancellationRequested();
 
+			// One unique RunID per lab-run
+			var runCtx = await _processLog.StartRunAsync(
+				labName: lab.LabName,
+				pipelineName: "LRN.MasterFileProcessor",
+				triggerType: "Schedule",
+				triggeredBy: Environment.UserName,
+				ct: ct);
+
+			var runRow = new RunLogRow
+			{
+				RunID = runCtx.RunId,
+				LabName = lab.LabName,
+				PipelineName = "LRN.MasterFileProcessor",
+				TriggerType = "Schedule",
+				TriggeredBy = Environment.UserName,
+				StartTimeIST = runCtx.StartTimeIST,
+				OverallStatus = "IN_PROGRESS",
+				LatestMasterFileFound = "NO",
+				MandatoryColumnCheck = "SKIPPED",
+				SplitOutputWrittenToSharePoint = "SKIPPED",
+				PayerPolicyValidationStatus = "SKIPPED",
+				CodingValidationStatus = "SKIPPED",
+				AveragesProcessStatus = "SKIPPED",
+				OutputsCopiedToSharePoint = "SKIPPED",
+				MasterSyncPerformed = "SKIPPED",
+				TotalErrors = 0,
+				TotalWarnings = 0
+			};
+
 			SharePointDownloader.SelectedFile? selected = null;
+			int stepSeq = 0;
+			StepLogRow? activeStep = null;
 
 			try
 			{
-				// NOTE: your downloader already checks latest folder first and falls back to previous
+				// STEP 10: Find latest eligible SharePoint file
+				stepSeq = 10;
+				var step10 = new StepLogRow
+				{
+					StepSeq = stepSeq,
+					StepName = "Find Latest Master File",
+					StepCategory = "Ingestion",
+					SourceSystem = "SharePoint",
+					StartTimeIST = _processLog.NowIST(),
+					Status = "IN_PROGRESS"
+				};
+				activeStep = step10;
+				await _processLog.StepStartAsync(runCtx, step10, ct);
+
+				// NOTE: downloader checks latest folder first and falls back to previous
 				selected = await _sp.TryGetLatestFileForLabAsync(lab, runLocalNow.Year, ct);
+
+				step10.EndTimeIST = _processLog.NowIST();
+				step10.Status = selected == null ? "SKIPPED" : "SUCCESS";
+				step10.PathOut = selected?.SharePointPath;
+				step10.FileNameOut = selected?.Name;
+				step10.ErrorMessage = selected == null ? "no eligible SharePoint file found" : null;
+				await _processLog.StepEndAsync(runCtx, step10, ct);
+				activeStep = null;
 
 				if (selected == null)
 				{
 					_logger.LogInformation("Lab {LabId}: no eligible SharePoint file found.", lab.LabId);
 					_fileLog.Info($"Lab {lab.LabId}: no eligible SharePoint file found.");
+
+					runRow.OverallStatus = "SKIPPED";
+					runRow.LatestMasterFileFound = "NO";
+					runRow.Notes = "no eligible SharePoint file found";
+					await _processLog.CompleteRunAsync(runCtx, runRow, ct);
 
 					MasterProcessorLogCsv.Append(
 						folder: masterLogFolder,
@@ -173,11 +234,43 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					continue;
 				}
 
-				// Skip if already processed
-				if (await _status.IsProcessedAsync(selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey, ct))
+				runRow.LatestMasterFileFound = "YES";
+				runRow.InputMasterSharePointPath = selected.SharePointPath;
+				runRow.InputMasterFileName = selected.Name;
+				runRow.InputMasterFileModifiedTime = selected.LastModifiedUtc?.ToLocalTime().DateTime;
+
+				// STEP 15: Check already processed
+				stepSeq = 15;
+				var step15 = new StepLogRow
+				{
+					StepSeq = stepSeq,
+					StepName = "Check Already Processed",
+					StepCategory = "Validation",
+					SourceSystem = "SQL",
+					StartTimeIST = _processLog.NowIST(),
+					Status = "IN_PROGRESS",
+					FileNameIn = selected.Name,
+					PathIn = selected.SharePointPath
+				};
+				activeStep = step15;
+				await _processLog.StepStartAsync(runCtx, step15, ct);
+
+				var alreadyProcessed = await _status.IsProcessedAsync(selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey, ct);
+				step15.EndTimeIST = _processLog.NowIST();
+				step15.Status = alreadyProcessed ? "SKIPPED" : "SUCCESS";
+				step15.ErrorMessage = alreadyProcessed ? "already processed (etag unchanged)" : null;
+				await _processLog.StepEndAsync(runCtx, step15, ct);
+				activeStep = null;
+
+				if (alreadyProcessed)
 				{
 					_logger.LogInformation("Lab {LabId}: already processed, skipping: {File}", lab.LabId, selected.Name);
 					_fileLog.Info($"Lab {lab.LabId}: already processed, skipping: {selected.Name}");
+
+					runRow.OverallStatus = "SKIPPED";
+					runRow.LatestMasterFileFound = "YES";
+					runRow.Notes = "already processed (etag unchanged)";
+					await _processLog.CompleteRunAsync(runCtx, runRow, ct);
 
 					MasterProcessorLogCsv.Append(
 						folder: masterLogFolder,
@@ -202,6 +295,22 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					statusMessage: "Downloading from SharePoint",
 					processedAtUtc: null,
 					ct: ct);
+
+				// STEP 20: Download XLSX
+				stepSeq = 20;
+				var step20 = new StepLogRow
+				{
+					StepSeq = stepSeq,
+					StepName = "Download Master File",
+					StepCategory = "Ingestion",
+					SourceSystem = "SharePoint",
+					StartTimeIST = _processLog.NowIST(),
+					Status = "IN_PROGRESS",
+					FileNameIn = selected.Name,
+					PathIn = selected.SharePointPath
+				};
+				activeStep = step20;
+				await _processLog.StepStartAsync(runCtx, step20, ct);
 
 				// --------------------------------------------------------------------
 				// NEW PATH LOGIC (matches SharePoint input structure)
@@ -238,8 +347,41 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				await _sp.DownloadFileAsync(selected.DriveId, selected.ItemId, stagingPath, ct);
 
-				// Validate download looks like XLSX
+				// Update file size after download
+				try
+				{
+					var fi = new FileInfo(stagingPath);
+					runRow.InputMasterFileSizeMB = Math.Round((decimal)fi.Length / (1024m * 1024m), 2);
+				}
+				catch { }
+
+				step20.EndTimeIST = _processLog.NowIST();
+				step20.Status = "SUCCESS";
+				step20.FileNameOut = Path.GetFileName(stagingPath);
+				step20.PathOut = stagingPath;
+				await _processLog.StepEndAsync(runCtx, step20, ct);
+				activeStep = null;
+
+				// STEP 30: Validate XLSX
+				stepSeq = 30;
+				var step30 = new StepLogRow
+				{
+					StepSeq = stepSeq,
+					StepName = "Validate Downloaded XLSX",
+					StepCategory = "Validation",
+					SourceSystem = "Local",
+					StartTimeIST = _processLog.NowIST(),
+					Status = "IN_PROGRESS",
+					FileNameIn = Path.GetFileName(stagingPath),
+					PathIn = stagingPath
+				};
+				activeStep = step30;
+				await _processLog.StepStartAsync(runCtx, step30, ct);
 				XlsxFileValidator.ValidateDownloadedXlsxOrThrow(stagingPath);
+				step30.EndTimeIST = _processLog.NowIST();
+				step30.Status = "SUCCESS";
+				await _processLog.StepEndAsync(runCtx, step30, ct);
+				activeStep = null;
 
 				// -------- Column validation --------
 				var lineSchemaPath = ResolvePath(!string.IsNullOrWhiteSpace(lab.LineLevelSchemaJsonPath)
@@ -249,6 +391,22 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				var claimSchemaPath = ResolvePath(!string.IsNullOrWhiteSpace(lab.ClaimLevelSchemaJsonPath)
 					? lab.ClaimLevelSchemaJsonPath!
 					: _opt.ClaimLevelSchemaJsonPath);
+
+				// STEP 40: Schema validation
+				stepSeq = 40;
+				var step40 = new StepLogRow
+				{
+					StepSeq = stepSeq,
+					StepName = "Validate Mandatory Columns",
+					StepCategory = "Validation",
+					SourceSystem = "Local",
+					StartTimeIST = _processLog.NowIST(),
+					Status = "IN_PROGRESS",
+					FileNameIn = Path.GetFileName(stagingPath),
+					PathIn = stagingPath
+				};
+				activeStep = step40;
+				await _processLog.StepStartAsync(runCtx, step40, ct);
 
 				var lineValidation = _schemaValidator.Validate(stagingPath, _opt.SheetName, lineSchemaPath);
 				var claimValidation = _schemaValidator.Validate(stagingPath, _opt.ClaimSheetName, claimSchemaPath);
@@ -271,9 +429,53 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 					await TryWriteAndUploadFileStatusLogAsync(lab, selected, siteDriveId, status: "Failed", outputLocation: _opt.ErrorFolder, logMessage: msg, ct: ct);
 
+					step40.EndTimeIST = _processLog.NowIST();
+					step40.Status = "FAILED";
+					step40.ErrorCode = "SCHEMA_VALIDATION_FAILED";
+					step40.ErrorMessage = msg;
+					await _processLog.StepEndAsync(runCtx, step40, ct);
+					activeStep = null;
+
+					// Error_Log entry
+					await _processLog.LogErrorAsync(runCtx, new ErrorLogRow
+					{
+						Severity = "ERROR",
+						StepName = step40.StepName,
+						ErrorCode = "SCHEMA_VALIDATION_FAILED",
+						ErrorSummary = msg,
+						MissingColumns = string.Join(" | ",
+							new[]
+							{
+								lineValidation.MissingRequiredColumns.Count > 0 ? $"LineLevel: {string.Join(", ", lineValidation.MissingRequiredColumns)}" : "",
+								claimValidation.MissingRequiredColumns.Count > 0 ? $"ClaimLevel: {string.Join(", ", claimValidation.MissingRequiredColumns)}" : ""
+							}.Where(x => !string.IsNullOrWhiteSpace(x))),
+						SheetName = string.Join(" | ",
+							new[]
+							{
+								lineValidation.SheetUsed != null ? $"LineLevel={lineValidation.SheetUsed}" : "",
+								claimValidation.SheetUsed != null ? $"ClaimLevel={claimValidation.SheetUsed}" : ""
+							}.Where(x => !string.IsNullOrWhiteSpace(x))),
+						FileName = selected.Name,
+						FilePath = selected.SharePointPath,
+						RecommendedAction = "Fix missing columns in the master file or update lab schema aliases.",
+						OwnerTeam = "LRN",
+						Status = "OPEN"
+					}, ct);
+					runRow.TotalErrors += 1;
+					runRow.OverallStatus = "FAILED";
+					runRow.MandatoryColumnCheck = "FAIL";
+					runRow.Notes = msg;
+					await _processLog.CompleteRunAsync(runCtx, runRow, ct);
+
 					MoveToErrorFolder(stagingPath, msg);
 					continue;
 				}
+
+				step40.EndTimeIST = _processLog.NowIST();
+				step40.Status = "SUCCESS";
+				await _processLog.StepEndAsync(runCtx, step40, ct);
+				activeStep = null;
+				runRow.MandatoryColumnCheck = "PASS";
 
 				// Load LAB schemas for preferred header mapping / composite expressions during standardization
 				var labLineSchema = _schemaLoader.LoadFromFile(lineSchemaPath);
@@ -294,12 +496,48 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				var sw = Stopwatch.StartNew();
 
-				// LineLevel RAW export (from Excel)
+				// STEP 50: LineLevel RAW export
+				stepSeq = 50;
+				var step50 = new StepLogRow
+				{
+					StepSeq = stepSeq,
+					StepName = "Export LineLevel RAW CSV",
+					StepCategory = "Transform",
+					SourceSystem = "Local",
+					StartTimeIST = _processLog.NowIST(),
+					Status = "IN_PROGRESS",
+					FileNameIn = Path.GetFileName(stagingPath),
+					PathIn = stagingPath,
+					FileNameOut = Path.GetFileName(lineRawPath),
+					PathOut = lineRawPath
+				};
+				activeStep = step50;
+				await _processLog.StepStartAsync(runCtx, step50, ct);
 				await ExcelCsvExporter.ExportSingleSheetToCsvAsync(stagingPath, _opt.SheetName, lineRawPath, ct);
+				step50.EndTimeIST = _processLog.NowIST();
+				step50.Status = "SUCCESS";
+				await _processLog.StepEndAsync(runCtx, step50, ct);
+				activeStep = null;
 				_logger.LogInformation("Lab {LabId}: LineLevel RAW CSV export done -> {Path}", lab.LabId, lineRawPath);
 				_fileLog.Info($"Lab {lab.LabId}: LineLevel RAW CSV export -> {lineRawPath}");
 
-				// Standardize LineLevel using COMMON schema -> processed output folder
+				// STEP 60: LineLevel STANDARD CSV
+				stepSeq = 60;
+				var step60 = new StepLogRow
+				{
+					StepSeq = stepSeq,
+					StepName = "Generate LineLevel STANDARD CSV",
+					StepCategory = "Transform",
+					SourceSystem = "Local",
+					StartTimeIST = _processLog.NowIST(),
+					Status = "IN_PROGRESS",
+					FileNameIn = Path.GetFileName(lineRawPath),
+					PathIn = lineRawPath,
+					FileNameOut = Path.GetFileName(lineOutPath),
+					PathOut = lineOutPath
+				};
+				activeStep = step60;
+				await _processLog.StepStartAsync(runCtx, step60, ct);
 				StandardCsvExporter.Generate(
 					sourceCsvPath: lineRawPath,
 					headerRow: _commonLineSchema!.HeaderRow,
@@ -311,16 +549,56 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					ingestedOnLocal: DateTime.Now,
 					labSchema: labLineSchema,
 					insuranceMaster: _insuranceMaster);
+				step60.EndTimeIST = _processLog.NowIST();
+				step60.Status = "SUCCESS";
+				await _processLog.StepEndAsync(runCtx, step60, ct);
+				activeStep = null;
 
 				_logger.LogInformation("Lab {LabId}: LineLevel STANDARD CSV generated -> {Path}", lab.LabId, lineOutPath);
 				_fileLog.Info($"Lab {lab.LabId}: LineLevel STANDARD CSV -> {lineOutPath}");
 
-				// ClaimLevel RAW export (from Excel)
+				// STEP 70: ClaimLevel RAW export
+				stepSeq = 70;
+				var step70 = new StepLogRow
+				{
+					StepSeq = stepSeq,
+					StepName = "Export ClaimLevel RAW CSV",
+					StepCategory = "Transform",
+					SourceSystem = "Local",
+					StartTimeIST = _processLog.NowIST(),
+					Status = "IN_PROGRESS",
+					FileNameIn = Path.GetFileName(stagingPath),
+					PathIn = stagingPath,
+					FileNameOut = Path.GetFileName(claimRawPath),
+					PathOut = claimRawPath
+				};
+				activeStep = step70;
+				await _processLog.StepStartAsync(runCtx, step70, ct);
 				await ExcelCsvExporter.ExportSingleSheetToCsvAsync(stagingPath, _opt.ClaimSheetName, claimRawPath, ct);
+				step70.EndTimeIST = _processLog.NowIST();
+				step70.Status = "SUCCESS";
+				await _processLog.StepEndAsync(runCtx, step70, ct);
+				activeStep = null;
 				_logger.LogInformation("Lab {LabId}: ClaimLevel RAW CSV export done -> {Path}", lab.LabId, claimRawPath);
 				_fileLog.Info($"Lab {lab.LabId}: ClaimLevel RAW CSV export -> {claimRawPath}");
 
-				// Standardize ClaimLevel using COMMON schema -> processed output folder
+				// STEP 80: ClaimLevel STANDARD CSV
+				stepSeq = 80;
+				var step80 = new StepLogRow
+				{
+					StepSeq = stepSeq,
+					StepName = "Generate ClaimLevel STANDARD CSV",
+					StepCategory = "Transform",
+					SourceSystem = "Local",
+					StartTimeIST = _processLog.NowIST(),
+					Status = "IN_PROGRESS",
+					FileNameIn = Path.GetFileName(claimRawPath),
+					PathIn = claimRawPath,
+					FileNameOut = Path.GetFileName(claimOutPath),
+					PathOut = claimOutPath
+				};
+				activeStep = step80;
+				await _processLog.StepStartAsync(runCtx, step80, ct);
 				StandardCsvExporter.Generate(
 					sourceCsvPath: claimRawPath,
 					headerRow: _commonClaimSchema!.HeaderRow,
@@ -332,6 +610,11 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					ingestedOnLocal: DateTime.Now,
 					labSchema: labClaimSchema,
 					insuranceMaster: _insuranceMaster);
+				step80.EndTimeIST = _processLog.NowIST();
+				step80.Status = "SUCCESS";
+				await _processLog.StepEndAsync(runCtx, step80, ct);
+				activeStep = null;
+				runRow.SplitOutputWrittenToSharePoint = "YES";
 
 				_logger.LogInformation("Lab {LabId}: ClaimLevel STANDARD CSV generated -> {Path}", lab.LabId, claimOutPath);
 				_fileLog.Info($"Lab {lab.LabId}: ClaimLevel STANDARD CSV -> {claimOutPath}");
@@ -345,11 +628,80 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					TryDelete(claimRawPath);
 				}
 
-				// Write + upload file status log (CSV)
+				// STEP 90: FileStatus CSV log (local + optional upload)
+				stepSeq = 90;
+				var step90 = new StepLogRow
+				{
+					StepSeq = stepSeq,
+					StepName = "Write File Status Log",
+					StepCategory = "Publish",
+					SourceSystem = "SharePoint",
+					StartTimeIST = _processLog.NowIST(),
+					Status = "IN_PROGRESS"
+				};
+				activeStep = step90;
+				await _processLog.StepStartAsync(runCtx, step90, ct);
 				await TryWriteAndUploadFileStatusLogAsync(lab, selected, siteDriveId, status: "Completed", outputLocation: processedOutFolder, logMessage: "imported", ct: ct);
+				step90.EndTimeIST = _processLog.NowIST();
+				step90.Status = "SUCCESS";
+				await _processLog.StepEndAsync(runCtx, step90, ct);
+				activeStep = null;
 
-				// Upload standardized outputs to SharePoint output folder (client requirement)
+				// STEP 100: Upload standardized outputs to SharePoint
+				stepSeq = 100;
+				var step100 = new StepLogRow
+				{
+					StepSeq = stepSeq,
+					StepName = "Upload Outputs to SharePoint",
+					StepCategory = "Publish",
+					SourceSystem = "SharePoint",
+					StartTimeIST = _processLog.NowIST(),
+					Status = "IN_PROGRESS",
+					FileNameIn = $"{Path.GetFileName(claimOutPath)} | {Path.GetFileName(lineOutPath)}",
+					PathIn = processedOutFolder
+				};
+				activeStep = step100;
+				await _processLog.StepStartAsync(runCtx, step100, ct);
 				var outputUploadResult = await TryUploadOutputsAsync(lab, selected, runLocalNow, claimOutPath, lineOutPath, ct);
+				step100.EndTimeIST = _processLog.NowIST();
+				step100.Status = outputUploadResult.StartsWith("UPLOADED", StringComparison.OrdinalIgnoreCase) ? "SUCCESS" : "WARNING";
+				step100.ErrorMessage = outputUploadResult;
+				await _processLog.StepEndAsync(runCtx, step100, ct);
+				activeStep = null;
+				runRow.OutputsCopiedToSharePoint = outputUploadResult.StartsWith("UPLOADED", StringComparison.OrdinalIgnoreCase) ? "YES" : (outputUploadResult.StartsWith("SKIPPED", StringComparison.OrdinalIgnoreCase) ? "SKIPPED" : "NO");
+
+				if (step100.Status == "WARNING" && !outputUploadResult.StartsWith("SKIPPED", StringComparison.OrdinalIgnoreCase))
+				{
+					await _processLog.LogErrorAsync(runCtx, new ErrorLogRow
+					{
+						Severity = "WARNING",
+						StepName = step100.StepName,
+						ErrorCode = "OUTPUT_UPLOAD_WARNING",
+						ErrorSummary = outputUploadResult,
+						FileName = selected.Name,
+						FilePath = selected.SharePointPath,
+						RecommendedAction = "Verify SharePoint output folder path/permissions and retry upload if needed.",
+						OwnerTeam = "LRN",
+						Status = "OPEN"
+					}, ct);
+					runRow.TotalWarnings += 1;
+				}
+
+				// STEP 110: Mark status PROCESSED (SQL)
+				stepSeq = 110;
+				var step110 = new StepLogRow
+				{
+					StepSeq = stepSeq,
+					StepName = "Mark File PROCESSED",
+					StepCategory = "Sync",
+					SourceSystem = "SQL",
+					StartTimeIST = _processLog.NowIST(),
+					Status = "IN_PROGRESS",
+					FileNameIn = selected.Name,
+					PathIn = selected.SharePointPath
+				};
+				activeStep = step110;
+				await _processLog.StepStartAsync(runCtx, step110, ct);
 
 				// Mark PROCESSED
 				await _status.UpsertStatusAsync(
@@ -359,6 +711,11 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					statusMessage: $"Saved LineLevel='{lineOutPath}', ClaimLevel='{claimOutPath}'. OutputUpload={outputUploadResult}.",
 					processedAtUtc: DateTimeOffset.UtcNow,
 					ct: ct);
+
+				step110.EndTimeIST = _processLog.NowIST();
+				step110.Status = "SUCCESS";
+				await _processLog.StepEndAsync(runCtx, step110, ct);
+				activeStep = null;
 
 				// Daily master processor log row (client requirement)
 				MasterProcessorLogCsv.Append(
@@ -375,6 +732,22 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				_fileLog.Info($"Lab {lab.LabId}: PROCESSED {selected.Name}.");
 
+				// STEP 120: Archive RAW XLSX
+				stepSeq = 120;
+				var step120 = new StepLogRow
+				{
+					StepSeq = stepSeq,
+					StepName = "Archive RAW XLSX",
+					StepCategory = "Publish",
+					SourceSystem = "Local",
+					StartTimeIST = _processLog.NowIST(),
+					Status = "IN_PROGRESS",
+					FileNameIn = Path.GetFileName(stagingPath),
+					PathIn = stagingPath
+				};
+				activeStep = step120;
+				await _processLog.StepStartAsync(runCtx, step120, ct);
+
 				// Archive RAW XLSX after success:
 				// D:\LRN\Automation\LRN-RAWFILE\Archive\02.February\02.06.2026 - 02.12.2026\<file>.xlsx
 				try
@@ -388,19 +761,77 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						File.Move(stagingPath, dest, overwrite: true);
 
 					_fileLog.Info($"Archived raw XLSX: {dest}");
+					step120.FileNameOut = Path.GetFileName(dest);
+					step120.PathOut = dest;
+					step120.Status = "SUCCESS";
 				}
 				catch (Exception ex)
 				{
 					_fileLog.Error("Failed to archive raw XLSX.", ex);
+					step120.Status = "WARNING";
+					step120.ErrorCode = "ARCHIVE_FAILED";
+					step120.ErrorMessage = ex.Message;
+
+					try
+					{
+						await _processLog.LogErrorAsync(runCtx, new ErrorLogRow
+						{
+							Severity = "WARNING",
+							StepName = step120.StepName,
+							ErrorCode = "ARCHIVE_FAILED",
+							ErrorSummary = ex.Message,
+							FileName = Path.GetFileName(stagingPath),
+							FilePath = stagingPath,
+							RecommendedAction = "Check disk permissions/locks for archive folder and retry.",
+							OwnerTeam = "LRN",
+							Status = "OPEN"
+						}, ct);
+						runRow.TotalWarnings += 1;
+					}
+					catch { }
+				}
+				finally
+				{
+					step120.EndTimeIST = _processLog.NowIST();
+					await _processLog.StepEndAsync(runCtx, step120, ct);
+					activeStep = null;
 				}
 
-				// Optional SharePoint move (still supported by config)
+				// STEP 130: Optional SharePoint move
+				stepSeq = 130;
+				var step130 = new StepLogRow
+				{
+					StepSeq = stepSeq,
+					StepName = "Move Source File to Processed Folder",
+					StepCategory = "Publish",
+					SourceSystem = "SharePoint",
+					StartTimeIST = _processLog.NowIST(),
+					Status = "IN_PROGRESS",
+					FileNameIn = selected.Name,
+					PathIn = selected.SharePointPath
+				};
+				activeStep = step130;
+				await _processLog.StepStartAsync(runCtx, step130, ct);
+
 				var processedFolderId = await _sp.TryResolveProcessedFolderIdAsync(ct);
 				if (!string.IsNullOrWhiteSpace(processedFolderId))
 				{
 					await _sp.MoveItemAsync(selected.DriveId, selected.ItemId, processedFolderId!, ct);
 					_fileLog.Info($"Lab {lab.LabId}: moved SharePoint file to processed folder.");
+					step130.Status = "SUCCESS";
 				}
+				else
+				{
+					step130.Status = "SKIPPED";
+					step130.ErrorMessage = "Processed folder not configured or not resolved.";
+				}
+				step130.EndTimeIST = _processLog.NowIST();
+				await _processLog.StepEndAsync(runCtx, step130, ct);
+				activeStep = null;
+
+				runRow.OverallStatus = "SUCCESS";
+				runRow.Notes = $"Saved LineLevel='{lineOutPath}', ClaimLevel='{claimOutPath}'. OutputUpload={outputUploadResult}.";
+				await _processLog.CompleteRunAsync(runCtx, runRow, ct);
 			}
 			catch (OperationCanceledException) when (ct.IsCancellationRequested)
 			{
@@ -408,6 +839,21 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 			}
 			catch (Exception ex)
 			{
+				// If a step was started but not ended, mark it as FAILED
+				try
+				{
+					if (activeStep != null && string.Equals(activeStep.Status, "IN_PROGRESS", StringComparison.OrdinalIgnoreCase))
+					{
+						activeStep.EndTimeIST = _processLog.NowIST();
+						activeStep.Status = "FAILED";
+						activeStep.ErrorCode ??= "STEP_FAILED";
+						activeStep.ErrorMessage ??= ex.Message;
+						activeStep.ErrorDetail ??= ex.ToString();
+						await _processLog.StepEndAsync(runCtx, activeStep, ct);
+					}
+				}
+				catch { }
+
 				_logger.LogError(ex, "Lab {LabId}: error processing SharePoint file.", lab.LabId);
 				_fileLog.Error($"Lab {lab.LabId}: error processing SharePoint file.", ex);
 
@@ -422,6 +868,33 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						ct: ct,
 						errorLogInfo: ex.ToString());
 				}
+
+				// Error_Log entry for unexpected exceptions
+				try
+				{
+					await _processLog.LogErrorAsync(runCtx, new ErrorLogRow
+					{
+						Severity = "ERROR",
+						StepName = stepSeq > 0 ? $"Step {stepSeq}" : "Unhandled",
+						ErrorCode = "UNHANDLED_EXCEPTION",
+						ErrorSummary = ex.Message,
+						FileName = selected?.Name,
+						FilePath = selected?.SharePointPath,
+						RecommendedAction = "Check ErrorDetail and fix the underlying failure, then rerun.",
+						OwnerTeam = "LRN",
+						Status = "OPEN"
+					}, ct);
+					runRow.TotalErrors += 1;
+				}
+				catch { }
+
+				try
+				{
+					runRow.OverallStatus = "FAILED";
+					runRow.Notes = ex.Message;
+					await _processLog.CompleteRunAsync(runCtx, runRow, ct);
+				}
+				catch { }
 
 				await TryWriteAndUploadFileStatusLogAsync(lab, selected, siteDriveId, status: "Failed", outputLocation: _opt.ErrorFolder, logMessage: ex.Message, ct: ct);
 

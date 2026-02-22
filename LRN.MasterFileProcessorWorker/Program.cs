@@ -31,6 +31,11 @@ Host.CreateDefaultBuilder(args)
         if (!sec.Exists()) sec = context.Configuration.GetSection("BillingFrequency");
         services.Configure<ImportOptions>(sec);
 
+        // Process log (Run_Log / Step_Log / Error_Log) - matches LRN_Process_Log_Template.xlsx
+        services.Configure<ProcessLogOptions>(context.Configuration.GetSection("ProcessLog"));
+        services.AddSingleton<IProcessLogRepository, SqlProcessLogRepository>();
+        services.AddSingleton<IProcessLogService, ProcessLogService>();
+
         services.AddHttpClient<SharePointDownloader>();
         services.AddSingleton<MasterFileProcessorFileStatusStore>();
 

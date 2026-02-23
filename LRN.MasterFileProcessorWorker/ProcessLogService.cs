@@ -18,14 +18,18 @@ public interface IProcessLogService
 public sealed class ProcessLogService : IProcessLogService
 {
     private readonly IProcessLogRepository _repo;
+    private readonly IProcessLogCsvWriter _csv;
+    private readonly IProcessLogWorkbookWriter _wb;
     private readonly ProcessLogOptions _opt;
     private readonly TimeZoneInfo _tz;
     private readonly string _host;
     private readonly string _version;
 
-    public ProcessLogService(IProcessLogRepository repo, IOptions<ProcessLogOptions> opt)
+    public ProcessLogService(IProcessLogRepository repo, IProcessLogCsvWriter csv, IProcessLogWorkbookWriter wb, IOptions<ProcessLogOptions> opt)
     {
         _repo = repo;
+        _csv = csv;
+        _wb = wb;
         _opt = opt.Value ?? new ProcessLogOptions();
         _tz = ResolveIstTimeZone();
         _host = Environment.MachineName;
@@ -77,6 +81,14 @@ public sealed class ProcessLogService : IProcessLogService
 
         await _repo.InsertRunAsync(row, ct);
 
+        // CSV upsert (one row per RunID)
+        if (_opt.CsvEnabled)
+            await _csv.UpsertRunAsync(start, row, ct);
+
+        // Workbook upsert (one row per RunID)
+        if (_opt.WorkbookEnabled)
+            await _wb.UpsertRunAsync(start, row, ct);
+
         return new ProcessRunContext { RunId = runId, LabName = labName, StartTimeIST = start };
     }
 
@@ -93,6 +105,14 @@ public sealed class ProcessLogService : IProcessLogService
         step.ModuleVersion ??= _version;
 
         await _repo.UpsertStepAsync(step, ct);
+
+        // CSV upsert (key: RunID + StepSeq)
+        if (_opt.CsvEnabled)
+            await _csv.UpsertStepAsync(step.StartTimeIST ?? NowIST(), step, ct);
+
+        // Workbook upsert (key: RunID + StepSeq)
+        if (_opt.WorkbookEnabled)
+            await _wb.UpsertStepAsync(step.StartTimeIST ?? NowIST(), step, ct);
     }
 
     public async Task StepEndAsync(ProcessRunContext ctx, StepLogRow step, CancellationToken ct)
@@ -114,6 +134,14 @@ public sealed class ProcessLogService : IProcessLogService
         step.ModuleVersion ??= _version;
 
         await _repo.UpsertStepAsync(step, ct);
+
+        // CSV upsert (key: RunID + StepSeq)
+        if (_opt.CsvEnabled)
+            await _csv.UpsertStepAsync(step.StartTimeIST ?? NowIST(), step, ct);
+
+        // Workbook upsert (key: RunID + StepSeq)
+        if (_opt.WorkbookEnabled)
+            await _wb.UpsertStepAsync(step.StartTimeIST ?? NowIST(), step, ct);
     }
 
     public async Task LogErrorAsync(ProcessRunContext ctx, ErrorLogRow err, CancellationToken ct)
@@ -128,6 +156,22 @@ public sealed class ProcessLogService : IProcessLogService
 
         await _repo.InsertErrorAsync(err, ct);
         await _repo.IncrementRunCountAsync(ctx.RunId, isWarning: err.Severity.Equals("WARNING", StringComparison.OrdinalIgnoreCase), ct);
+
+        // CSV append for error + increment totals in Run_Log CSV
+        if (_opt.CsvEnabled)
+        {
+            var now = err.ErrorTimeIST == default ? NowIST() : err.ErrorTimeIST;
+            await _csv.AppendErrorAsync(now, err, ct);
+            await _csv.IncrementRunCountAsync(now, ctx.RunId, isWarning: err.Severity.Equals("WARNING", StringComparison.OrdinalIgnoreCase), ct);
+        }
+
+        // Workbook append for error + increment totals in Run_Log sheet
+        if (_opt.WorkbookEnabled)
+        {
+            var now = err.ErrorTimeIST == default ? NowIST() : err.ErrorTimeIST;
+            await _wb.AppendErrorAsync(now, err, ct);
+            await _wb.IncrementRunCountAsync(now, ctx.RunId, isWarning: err.Severity.Equals("WARNING", StringComparison.OrdinalIgnoreCase), ct);
+        }
     }
 
     public async Task CompleteRunAsync(ProcessRunContext ctx, RunLogRow finalUpdate, CancellationToken ct)
@@ -141,5 +185,20 @@ public sealed class ProcessLogService : IProcessLogService
         finalUpdate.StartTimeIST ??= ctx.StartTimeIST;
         finalUpdate.DurationSeconds = (int)Math.Max(0, (end - ctx.StartTimeIST).TotalSeconds);
         await _repo.UpdateRunAsync(finalUpdate, ct);
+
+        // CSV upsert with final values
+        if (_opt.CsvEnabled)
+            await _csv.UpsertRunAsync(finalUpdate.StartTimeIST ?? end, finalUpdate, ct);
+
+        // Workbook upsert with final values
+        if (_opt.WorkbookEnabled)
+        {
+            var now = finalUpdate.StartTimeIST ?? end;
+            await _wb.UpsertRunAsync(now, finalUpdate, ct);
+
+            // If configured to upload only at end of run, force upload here.
+            if (string.Equals(_opt.WorkbookUploadMode, "EndOfRun", StringComparison.OrdinalIgnoreCase))
+                await _wb.UploadWorkbookAsync(now, ct);
+        }
     }
 }

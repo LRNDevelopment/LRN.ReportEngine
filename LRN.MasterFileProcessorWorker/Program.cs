@@ -34,6 +34,8 @@ Host.CreateDefaultBuilder(args)
         // Process log (Run_Log / Step_Log / Error_Log) - matches LRN_Process_Log_Template.xlsx
         services.Configure<ProcessLogOptions>(context.Configuration.GetSection("ProcessLog"));
         services.AddSingleton<IProcessLogRepository, SqlProcessLogRepository>();
+        services.AddSingleton<IProcessLogCsvWriter, ProcessLogCsvWriter>();
+        services.AddSingleton<IProcessLogWorkbookWriter, ProcessLogWorkbookWriter>();
         services.AddSingleton<IProcessLogService, ProcessLogService>();
 
         services.AddHttpClient<SharePointDownloader>();

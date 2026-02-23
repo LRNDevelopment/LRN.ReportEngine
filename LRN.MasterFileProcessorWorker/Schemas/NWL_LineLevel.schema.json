@@ -23,6 +23,11 @@
       "DataType": "string"
     },
     {
+      "Name": "Diag Pointer",
+      "Required": false,
+      "DataType": "string"
+    },
+    {
       "Name": "Proc-Department Desc",
       "Required": false,
       "DataType": "string"

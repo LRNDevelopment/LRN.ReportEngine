@@ -33,6 +33,11 @@
 			"DataType": "string"
 		},
 		{
+			"Name": "Diag Pointer",
+			"Required": false,
+			"DataType": "string"
+		},
+		{
 			"Name": "DOB",
 			"Required": true,
 			"DataType": "date"
@@ -103,7 +108,7 @@
 			"DataType": "string"
 		},
 		{
-			"Name": "ICD Claim  Level",
+			"Name": "ICD Line level",
 			"Required": true,
 			"DataType": "string"
 		}

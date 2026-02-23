@@ -208,6 +208,14 @@ public static class StandardCsvExporter
 				}
 			}
 
+			if (commonSchema.Columns.Any(c => c.Name.Equals("ICDCode", StringComparison.OrdinalIgnoreCase)))
+			{
+				if (extracted["ICDCode"] != null)
+				{
+					extracted["ICDCode"] = ExtractIcdCodes(extracted["ICDCode"].ToString());
+				}
+			}
+
 			// --- Per-unit columns (LineLevel) ---
 			var unitsRaw = extracted.TryGetValue("Units", out var uRaw) ? uRaw : "";
 			var unitsVal = ParseDecimal(unitsRaw);
@@ -232,7 +240,44 @@ public static class StandardCsvExporter
 			// --- Pay Status (derived) ---
 			if (commonSchema.Columns.Any(c => c.Name.Equals("Pay Status", StringComparison.OrdinalIgnoreCase)))
 			{
-				extracted["Pay Status"] = ComputePayStatus(extracted);
+				decimal carrierPay = ParseDecimal(extracted.TryGetValue("InsurancePayment", out var ip) ? ip : "");
+				decimal patientPay = ParseDecimal(extracted.TryGetValue("PatientPayment", out var pp) ? pp : "");
+				decimal totalPayment = carrierPay + patientPay;
+
+				decimal carrierBal = ParseDecimal(extracted.TryGetValue("InsuranceBalance", out var cb) ? cb : "");
+
+				decimal patAdj = ParseDecimal(extracted.TryGetValue("PatientAdjustments", out var pa) ? pa : "");
+				decimal insAdj = ParseDecimal(extracted.TryGetValue("InsuranceAdjustments", out var ia) ? ia : "");
+				decimal totalAdj = patAdj + insAdj;
+
+				decimal chargeAmt = ParseDecimal(extracted.TryGetValue("ChargeAmount", out var ca) ? ca : "");
+				decimal patientBal = ParseDecimal(extracted.TryGetValue("PatientBalance", out var pb) ? pb : "");
+				decimal totalbalance = ParseDecimal(extracted.TryGetValue("Total Balance", out var tb) ? tb : "");
+
+				string status = ComputePayStatus(extracted);
+
+				if (status == "Adjusted")
+				{
+					if (totalAdj == chargeAmt)
+					{
+						extracted["AllowedAmount"] = "0";
+					}
+				}
+				else if (status == "Denied")
+				{
+					if (chargeAmt == totalbalance)
+					{
+						extracted["AllowedAmount"] = "0";
+					}
+				}
+				else if (status == "Partially Adjusted")
+				{
+					if (chargeAmt == totalbalance + totalAdj)
+					{
+						extracted["AllowedAmount"] = "0";
+					}
+				}
+				extracted["Pay Status"] = status;
 			}
 
 
@@ -307,8 +352,32 @@ public static class StandardCsvExporter
 			sw.WriteLine(string.Join(",", outFields));
 		}
 	}
+	public static string ExtractIcdCodes(string input)
+	{
+		if (string.IsNullOrWhiteSpace(input))
+			return "";
 
+		// Split on commas, but keep it simple (your examples use comma as separator)
+		var parts = input.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
+		var codes = new List<string>();
+
+		foreach (var part in parts)
+		{
+			// Take left side of '-' if present, else whole part
+			var left = part;
+			var dashIndex = part.IndexOf('-');
+			if (dashIndex >= 0)
+				left = part.Substring(0, dashIndex);
+
+			left = left.Trim();
+
+			if (!string.IsNullOrWhiteSpace(left))
+				codes.Add(left);
+		}
+
+		return string.Join(",", codes.Distinct(StringComparer.OrdinalIgnoreCase));
+	}
 	// ---------------- Lab schema overrides ----------------
 	// Lab schema is used to:
 	// 1) Prefer certain source headers when multiple COMMON aliases exist (e.g., CPT vs Procedure).
@@ -841,66 +910,90 @@ public static class StandardCsvExporter
 
 	private static string ComputePayStatus(Dictionary<string, string> extracted)
 	{
-		// Map rule terms:
-		// Total Payment -> TotalPayments
-		// Carrier Balance -> InsuranceBalance
-		// Total Adjustment -> TotalAdjustments
-		// Charge Amount -> ChargeAmount
-		// Denial Code -> DenialCode
-		// Carrier Payment -> InsurancePayment
-		// Patient Balance -> PatientBalance
-
 		decimal carrierPay = ParseDecimal(extracted.TryGetValue("InsurancePayment", out var ip) ? ip : "");
-		decimal PatPayemnt = ParseDecimal(extracted.TryGetValue("PatientPayment", out var tp) ? tp : "");
-		decimal totalPayment = carrierPay + PatPayemnt;
+		decimal patientPay = ParseDecimal(extracted.TryGetValue("PatientPayment", out var pp) ? pp : "");
+		decimal totalPayment = carrierPay + patientPay;
+
 		decimal carrierBal = ParseDecimal(extracted.TryGetValue("InsuranceBalance", out var cb) ? cb : "");
 
-		decimal PatAdj = ParseDecimal(extracted.TryGetValue("PatientAdjustments", out var pa) ? pa : "");
-		decimal InsAdj = ParseDecimal(extracted.TryGetValue("InsuranceAdjustments", out var ia) ? ia : "");
+		decimal patAdj = ParseDecimal(extracted.TryGetValue("PatientAdjustments", out var pa) ? pa : "");
+		decimal insAdj = ParseDecimal(extracted.TryGetValue("InsuranceAdjustments", out var ia) ? ia : "");
+		decimal totalAdj = patAdj + insAdj;
 
-		decimal totalAdj = PatAdj + InsAdj;
 		decimal chargeAmt = ParseDecimal(extracted.TryGetValue("ChargeAmount", out var ca) ? ca : "");
-
 		decimal patientBal = ParseDecimal(extracted.TryGetValue("PatientBalance", out var pb) ? pb : "");
 
 		var denial = (extracted.TryGetValue("DenialCode", out var dc) ? dc : "") ?? "";
-		bool hasDenial = !string.IsNullOrWhiteSpace(denial);
+		denial = denial.Trim();
+		bool hasDenial = !string.IsNullOrWhiteSpace(denial);   // "Code"
+		bool denialBlank = !hasDenial;                         // "Blank"
 
-		const decimal EPS = 0.00m;
+		// Use a tiny epsilon for safe comparisons
+		const decimal EPS = 0.00001m;
 
-		// Paid
+		static bool IsZero(decimal v, decimal eps) => Math.Abs(v) <= eps;
+		static bool Eq(decimal a, decimal b, decimal eps) => Math.Abs(a - b) <= eps;
+
+		// Rule 1: Paid
 		if (totalPayment > EPS)
 			return "Paid";
 
-		// Patient Responsibility
-		if (Math.Abs(carrierPay) <= EPS && patientBal > EPS)
-			return "Patient Responsibility";
+		// Rule 9: Negative Payment
+		if (totalPayment < -EPS)
+			return "Negative Payment";
 
-		// Denied
-		if (Math.Abs(totalPayment) <= EPS && carrierBal > EPS && hasDenial)
-			return "Denied";
+		// Rule 12: Zero Billed Amount
+		// NOTE: put this BEFORE rule 2, otherwise ChargeAmount=0 would incorrectly become "Adjusted".
+		if (IsZero(chargeAmt, EPS))
+			return "Zero Billed Amount";
 
-		if (Math.Abs(totalPayment) <= EPS && Math.Abs(totalAdj) <= EPS && Math.Abs(carrierBal) <= EPS && hasDenial)
-			return "Denied";
-
-		// Adjusted
-		if (Math.Abs(totalPayment) <= EPS && carrierBal <= EPS && totalAdj >= chargeAmt)
+		// Rule 2: Adjusted
+		// Total Payment = 0 AND Carrier Balance <= 0 AND Total Adjustment >= Charge Amount AND Denial Code = Code or Blank
+		if (IsZero(totalPayment, EPS) && carrierBal <= EPS && (totalAdj + EPS) >= chargeAmt)
 			return "Adjusted";
 
-		// Partially Adjusted
-		if (Math.Abs(totalPayment) == EPS && carrierBal > EPS && totalAdj > EPS && !hasDenial)
+		// Rule 3: Partially Adjusted
+		// Total Payment = 0 AND Carrier Balance > 0 AND Total Adjustment > 0 AND Denial Code = Blank
+		if (IsZero(totalPayment, EPS) && carrierBal > EPS && totalAdj > EPS && denialBlank)
 			return "Partially Adjusted";
 
-		// No Response
-		if (Math.Abs(chargeAmt - carrierBal) <= EPS && !hasDenial)
+		// Rule 4: No Response
+		// Charge Amount = Carrier Balance AND Denial Code = Blank
+		if (Eq(chargeAmt, carrierBal, EPS) && denialBlank)
 			return "No Response";
 
-		if (Math.Abs(totalPayment) <= EPS && Math.Abs(totalAdj) <= EPS && Math.Abs(carrierBal) <= EPS && !hasDenial)
+		// Rule 5: No Response
+		// Total Payment = 0 AND Total Adjustments = 0 AND Carrier Balance = 0 AND Denial Code = Blank
+		if (IsZero(totalPayment, EPS) && IsZero(totalAdj, EPS) && IsZero(carrierBal, EPS) && denialBlank)
 			return "No Response";
+
+		// Rule 6: Denied
+		// Total Payment = 0 AND Carrier Balance > 0 AND Denial Code = Code
+		if (IsZero(totalPayment, EPS) && carrierBal > EPS && hasDenial)
+			return "Denied";
+
+		// Rule 7: Denied
+		// Total Payment = 0 AND Total Adjustments = 0 AND Carrier Balance = 0 AND Denial Code = Code
+		if (IsZero(totalPayment, EPS) && IsZero(totalAdj, EPS) && IsZero(carrierBal, EPS) && hasDenial)
+			return "Denied";
+
+		// Rule 8: Patient Responsibility
+		// Carrier Payment = 0 AND Patient Balance > 0
+		if (IsZero(carrierPay, EPS) && patientBal > EPS)
+			return "Patient Responsibility";
+
+		// Rule 10: Partially Adjusted
+		// Total Payment = 0 AND Carrier Balance = 0 AND Total Adjustment > 0 AND Denial Code = Blank
+		if (IsZero(totalPayment, EPS) && IsZero(carrierBal, EPS) && totalAdj > EPS && denialBlank)
+			return "Partially Adjusted";
+
+		// Rule 11: Partially Adjusted
+		// Total Payment = 0 AND Carrier Balance = 0 AND Total Adjustment > 0 AND Denial Code = Code
+		if (IsZero(totalPayment, EPS) && IsZero(carrierBal, EPS) && totalAdj > EPS && hasDenial)
+			return "Partially Adjusted";
 
 		return "";
 	}
-
 	private static DateTime? ParseDateMaybe(string raw)
 	{
 		raw = (raw ?? "").Trim();

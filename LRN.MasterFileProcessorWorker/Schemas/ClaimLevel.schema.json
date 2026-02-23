@@ -106,13 +106,6 @@
 			]
 		},
 		{
-			"Name": "ICD Pointer",
-			"DataType": "string",
-			"Aliases": [
-				"Diag Pointer"
-			]
-		},
-		{
 			"Name": "BillingProvider",
 			"DataType": "string",
 			"Aliases": [

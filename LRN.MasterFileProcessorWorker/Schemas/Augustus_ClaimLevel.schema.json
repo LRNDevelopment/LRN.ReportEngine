@@ -116,6 +116,11 @@
       "Name": "ICD Claim  Level",
       "Required": true,
       "DataType": "string"
+    },
+    {
+      "Name": "Diag Pointer",
+      "Required": false,
+      "DataType": "string"
     }
   ]
 }

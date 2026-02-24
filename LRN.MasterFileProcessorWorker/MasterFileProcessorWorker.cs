@@ -330,8 +330,12 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				var processedOutFolder = Path.Combine(_opt.WatchFolder, labPrefix, monthFolder, weekFolder);
 				Directory.CreateDirectory(processedOutFolder);
 
-				var claimOutPath = Path.Combine(processedOutFolder, $"{labPrefix}_ClaimLevel.csv");
-				var lineOutPath = Path.Combine(processedOutFolder, $"{labPrefix}_LineLevel.csv");
+				var sourceDateLabel = NormalizeWeekFolderForFileName(weekFolder);
+				var claimOutFileName = BuildProcessedOutputFileName(runCtx.RunId, lab.LabName, "Claim Level", sourceDateLabel);
+				var lineOutFileName = BuildProcessedOutputFileName(runCtx.RunId, lab.LabName, "Line Level", sourceDateLabel);
+
+				var claimOutPath = Path.Combine(processedOutFolder, claimOutFileName);
+				var lineOutPath = Path.Combine(processedOutFolder, lineOutFileName);
 
 				// RAW ROOT (no lab folder):
 				// D:\LRN\Automation\LRN-RAWFILE\02.February\02.06.2026 - 02.12.2026\
@@ -1186,6 +1190,33 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 		name = name.Replace(' ', '_');
 		return SanitizeFileName(name);
+	}
+
+
+	private static string BuildProcessedOutputFileName(string runId, string? labName, string levelLabel, string sourceDateLabel)
+	{
+		var labPart = string.IsNullOrWhiteSpace(labName) ? "UnknownLab" : labName.Trim();
+		var levelPart = string.IsNullOrWhiteSpace(levelLabel) ? "Output" : levelLabel.Trim();
+		var datePart = string.IsNullOrWhiteSpace(sourceDateLabel) ? "UnknownDate" : sourceDateLabel.Trim();
+
+		var fileName = $"{runId}_{labPart}_{levelPart}_{datePart}.csv";
+		return SanitizeFileNameKeepSpaces(fileName);
+	}
+
+	private static string NormalizeWeekFolderForFileName(string? weekFolder)
+	{
+		if (string.IsNullOrWhiteSpace(weekFolder)) return "UnknownDate";
+
+		var value = weekFolder.Trim();
+		value = Regex.Replace(value, @"\s*-\s*", " to ");
+		return value;
+	}
+
+	private static string SanitizeFileNameKeepSpaces(string input)
+	{
+		foreach (var c in Path.GetInvalidFileNameChars())
+			input = input.Replace(c, '_');
+		return input.Trim();
 	}
 
 	private static string SanitizePathSegment(string input)

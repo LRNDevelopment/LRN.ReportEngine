@@ -167,6 +167,48 @@ public sealed class SharePointDownloader
         resp.EnsureSuccessStatusCode();
     }
 
+    public sealed record SharePointFileEntry(
+        string DriveId,
+        string ItemId,
+        string Name,
+        string FolderPath,
+        DateTimeOffset? LastModifiedUtc,
+        long? Size,
+        string? ETag);
+
+    public async Task<IReadOnlyList<SharePointFileEntry>> ListFilesInFolderPathAsync(string driveId, string folderPath, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(driveId)) throw new ArgumentException("driveId is empty", nameof(driveId));
+        if (string.IsNullOrWhiteSpace(folderPath)) throw new ArgumentException("folderPath is empty", nameof(folderPath));
+
+        await EnsureGraphAuthAsync(ct);
+        var folderId = await GetItemIdByPathAsync(driveId, folderPath, ct);
+        var items = await ListChildrenPagedAsync(driveId, folderId, ct);
+
+        return items
+            .Where(x => !x.IsFolder)
+            .Select(x => new SharePointFileEntry(
+                driveId,
+                x.Id,
+                x.Name ?? string.Empty,
+                folderPath,
+                x.LastModifiedUtc,
+                null,
+                x.ETag))
+            .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    public async Task<SharePointFileEntry?> FindLatestFileInFolderPathAsync(string driveId, string folderPath, string wildcardPattern, CancellationToken ct)
+    {
+        var files = await ListFilesInFolderPathAsync(driveId, folderPath, ct);
+        return files
+            .Where(x => WildcardMatch(x.Name, wildcardPattern))
+            .OrderByDescending(x => x.LastModifiedUtc ?? DateTimeOffset.MinValue)
+            .ThenByDescending(x => x.Name, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault();
+    }
+
     // ---------------- Drive bootstrap ----------------
 
     private async Task EnsureDriveAsync(CancellationToken ct)

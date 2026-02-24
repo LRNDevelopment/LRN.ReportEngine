@@ -253,6 +253,10 @@ public static class StandardCsvExporter
 				decimal chargeAmt = ParseDecimal(extracted.TryGetValue("ChargeAmount", out var ca) ? ca : "");
 				decimal patientBal = ParseDecimal(extracted.TryGetValue("PatientBalance", out var pb) ? pb : "");
 				decimal totalbalance = ParseDecimal(extracted.TryGetValue("Total Balance", out var tb) ? tb : "");
+				if (totalbalance == 0)
+				{
+					totalbalance = carrierBal + patientBal;
+				}
 
 				string status = ComputePayStatus(extracted);
 
@@ -357,26 +361,24 @@ public static class StandardCsvExporter
 		if (string.IsNullOrWhiteSpace(input))
 			return "";
 
-		// Split on commas, but keep it simple (your examples use comma as separator)
-		var parts = input.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		// ICD-10 style pattern examples:
+		// D89.40, C85.90, C43.9, D72.829
+		var matches = Regex.Matches(
+			input.ToUpperInvariant(),
+			@"\b[A-Z][0-9]{2}(?:\.[A-Z0-9]{1,4})?\b",
+			RegexOptions.CultureInvariant);
 
+		var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 		var codes = new List<string>();
 
-		foreach (var part in parts)
+		foreach (Match match in matches)
 		{
-			// Take left side of '-' if present, else whole part
-			var left = part;
-			var dashIndex = part.IndexOf('-');
-			if (dashIndex >= 0)
-				left = part.Substring(0, dashIndex);
-
-			left = left.Trim();
-
-			if (!string.IsNullOrWhiteSpace(left))
-				codes.Add(left);
+			var code = match.Value.Trim();
+			if (seen.Add(code))
+				codes.Add(code);
 		}
 
-		return string.Join(",", codes.Distinct(StringComparer.OrdinalIgnoreCase));
+		return string.Join(",", codes);
 	}
 	// ---------------- Lab schema overrides ----------------
 	// Lab schema is used to:

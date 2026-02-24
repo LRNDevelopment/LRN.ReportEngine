@@ -381,6 +381,13 @@
 		{
 			"Name": "DaystoPost",
 			"DataType": "string"
+		},
+		{
+			"Name": "ICD Pointer",
+			"DataType": "string",
+			"Aliases": [
+				"Diag Pointer"
+			]
 		}
 	]
 }

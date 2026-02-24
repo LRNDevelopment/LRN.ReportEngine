@@ -47,6 +47,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.SharePointClient", "LRN
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.SharePointUploader", "LRN.SharePointUploader\LRN.SharePointUploader.csproj", "{7762000C-4FAC-7F56-98D7-133E574B8645}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.SharePointSynchronizer", "LRN.SharePointSynchronizer\LRN.SharePointSynchronizer.csproj", "{046AE66E-4617-2ED6-4E53-025DA651F493}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -321,6 +323,18 @@ Global
 		{7762000C-4FAC-7F56-98D7-133E574B8645}.Release|x64.Build.0 = Release|Any CPU
 		{7762000C-4FAC-7F56-98D7-133E574B8645}.Release|x86.ActiveCfg = Release|Any CPU
 		{7762000C-4FAC-7F56-98D7-133E574B8645}.Release|x86.Build.0 = Release|Any CPU
+		{046AE66E-4617-2ED6-4E53-025DA651F493}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{046AE66E-4617-2ED6-4E53-025DA651F493}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{046AE66E-4617-2ED6-4E53-025DA651F493}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{046AE66E-4617-2ED6-4E53-025DA651F493}.Debug|x64.Build.0 = Debug|Any CPU
+		{046AE66E-4617-2ED6-4E53-025DA651F493}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{046AE66E-4617-2ED6-4E53-025DA651F493}.Debug|x86.Build.0 = Debug|Any CPU
+		{046AE66E-4617-2ED6-4E53-025DA651F493}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{046AE66E-4617-2ED6-4E53-025DA651F493}.Release|Any CPU.Build.0 = Release|Any CPU
+		{046AE66E-4617-2ED6-4E53-025DA651F493}.Release|x64.ActiveCfg = Release|Any CPU
+		{046AE66E-4617-2ED6-4E53-025DA651F493}.Release|x64.Build.0 = Release|Any CPU
+		{046AE66E-4617-2ED6-4E53-025DA651F493}.Release|x86.ActiveCfg = Release|Any CPU
+		{046AE66E-4617-2ED6-4E53-025DA651F493}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

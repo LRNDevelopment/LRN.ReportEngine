@@ -44,7 +44,7 @@ BEGIN
     COMMIT;
 
     SET @RunId =
-        'RUN-' + CONVERT(varchar(10), @today, 23) + '-' + RIGHT('0000' + CONVERT(varchar(10), @seq), 4);
+        REPLACE(CONVERT(varchar(10), getdate(), 23),'-','') + 'R' + RIGHT('0000' + CONVERT(varchar(10), @seq), 4);
 END
 GO
 

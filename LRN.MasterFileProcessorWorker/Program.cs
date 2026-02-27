@@ -2,52 +2,32 @@ using Common.Logging;
 using LRN.ExcelValidator.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
-Host.CreateDefaultBuilder(args)
-    .UseContentRoot(AppContext.BaseDirectory) // important for Windows Service + finding appsettings.json
-    .UseWindowsService(o => o.ServiceName = "LRN.MasterFileProcessorWorker")
-    .ConfigureLogging((context, logging) =>
-    {
-        logging.ClearProviders();
+var builder = Host.CreateApplicationBuilder(args);
 
-        // Console is helpful when running locally
-        logging.AddConsole();
+// Bind EXISTING config (do not change appsettings structure)
+builder.Services.Configure<ImportOptions>(builder.Configuration.GetSection("MasterFileProcessor"));
+builder.Services.Configure<ProcessLogOptions>(builder.Configuration.GetSection("ProcessLog"));
 
-        // EventLog is helpful when installed as a Windows Service
-        logging.AddEventLog();
+// log4net wrapper (file log)
+builder.Services.AddSingleton<ILoggerService, LogManagerService>();
 
-        // Show only OUR categories; suppress framework noise
-        logging.AddFilter((provider, category, level) =>
-        {
-            if (category.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase)) return false;
-            if (category.StartsWith("System.", StringComparison.OrdinalIgnoreCase)) return false;
-            return level >= LogLevel.Information;
-        });
-    })
-    .ConfigureServices((context, services) =>
-    {
-        var sec = context.Configuration.GetSection("MasterFileProcessor");
-        if (!sec.Exists()) sec = context.Configuration.GetSection("BillingFrequency");
-        services.Configure<ImportOptions>(sec);
+// SharePoint client (Graph over raw HttpClient)
+builder.Services.AddHttpClient<SharePointDownloader>();
 
-        // Process log (Run_Log / Step_Log / Error_Log) - matches LRN_Process_Log_Template.xlsx
-        services.Configure<ProcessLogOptions>(context.Configuration.GetSection("ProcessLog"));
-        services.AddSingleton<IProcessLogRepository, SqlProcessLogRepository>();
-        services.AddSingleton<IProcessLogCsvWriter, ProcessLogCsvWriter>();
-        services.AddSingleton<IProcessLogWorkbookWriter, ProcessLogWorkbookWriter>();
-        services.AddSingleton<IProcessLogService, ProcessLogService>();
+// Excel schema validator (uses your existing lab schemas)
+builder.Services.AddExcelValidator();
 
-        services.AddHttpClient<SharePointDownloader>();
-        services.AddSingleton<MasterFileProcessorFileStatusStore>();
+// SQL status store
+builder.Services.AddSingleton<MasterFileProcessorFileStatusStore>();
 
-        // File logger (log4net) - logs only what you explicitly write via ILoggerService
-        services.AddSingleton<ILoggerService, LogManagerService>();
+// Process logging (DB + CSV + Workbook)
+builder.Services.AddSingleton<IProcessLogRepository, SqlProcessLogRepository>();
+builder.Services.AddSingleton<IProcessLogCsvWriter, ProcessLogCsvWriter>();
+builder.Services.AddSingleton<IProcessLogWorkbookWriter, ProcessLogWorkbookWriter>();
+builder.Services.AddSingleton<IProcessLogService, ProcessLogService>();
 
-        // Global schema validator library
-        services.AddExcelValidator();
+// Run the existing worker
+builder.Services.AddHostedService<MasterFileProcessorWorker>();
 
-        services.AddHostedService<MasterFileProcessorWorker>();
-    })
-    .Build()
-    .Run();
+await builder.Build().RunAsync();

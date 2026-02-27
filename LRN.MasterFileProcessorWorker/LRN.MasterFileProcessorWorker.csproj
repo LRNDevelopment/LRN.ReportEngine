@@ -1,40 +1,57 @@
-<Project Sdk="Microsoft.NET.Sdk.Worker">
+﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>dotnet-LRN.BillingFrequencyWorker-d383e787-7e5e-40ad-914b-0722dd3a2553</UserSecretsId>
-    <EnableDefaultContentItems>false</EnableDefaultContentItems>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="appsettings.Development.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="log4net.config" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="Schemas\*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="sql\*.sql" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\LRN.CommonLogger\LRN.CommonLogger.csproj" />
+		<ProjectReference Include="..\LRN.DataLibrary\LRN.DataLibrary.csproj" />
+		<ProjectReference Include="..\LRN.ExcelValidator\LRN.ExcelValidator.csproj" />
+		<ProjectReference Include="..\LRN.Shared\LRN.Shared.csproj" />
+		<ProjectReference Include="..\LRN.SharePointClient\LRN.SharePointClient.csproj" />
+		<ProjectReference Include="..\LRN.SharePointUploader\LRN.SharePointUploader.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\LRN.CommonLogger\LRN.CommonLogger.csproj" />
-    <ProjectReference Include="..\LRN.ExcelValidator\LRN.ExcelValidator.csproj" />
-    <ProjectReference Include="..\LRN.SharePointClient\LRN.SharePointClient.csproj" />
-    <ProjectReference Include="..\LRN.Shared\LRN.Shared.csproj" />
-  </ItemGroup>
+	<!--
+    IMPORTANT:
+    This project contains an older (production) pipeline based on ImportOptions/LabFileMap
+    (MasterFileProcessorWorker.cs) and an experimental orchestrator pipeline.
+    To keep the existing config + schema shape, we compile ONLY the production pipeline.
+  -->
+	<ItemGroup>
+		<Compile Remove="Options\**\*.cs" />
+		<Compile Remove="Schema\**\*.cs" />
+		<Compile Remove="Processing\**\*.cs" />
+		<Compile Remove="Services\**\*.cs" />
+		<Compile Remove="Worker.cs" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Azure.Core" Version="1.50.0" />
-    <PackageReference Include="Azure.Identity" Version="1.17.1" />
-    <PackageReference Include="ClosedXML" Version="0.105.0" />
-    <PackageReference Include="ExcelDataReader" Version="3.6.0" />
-    <PackageReference Include="ExcelDataReader.DataSet" Version="3.6.0" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.1" />
-        <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
-<PackageReference Include="Microsoft.Extensions.Logging.EventLog" Version="8.0.1" />
-<PackageReference Include="Microsoft.Graph" Version="5.101.0" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.3" />
+		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.3" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.3" />
+
+		<PackageReference Include="ClosedXML" Version="0.102.0" />
+
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="appsettings.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="log4net.config">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="schemas\**\*.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
 </Project>

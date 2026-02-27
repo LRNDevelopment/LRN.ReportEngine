@@ -10,4 +10,8 @@
     <PackageReference Include="log4net" Version="2.0.17" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\LRN.DataLibrary\LRN.DataLibrary.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -361,11 +361,11 @@ public static class StandardCsvExporter
 		if (string.IsNullOrWhiteSpace(input))
 			return "";
 
-		// ICD-10 style pattern examples:
-		// D89.40, C85.90, C43.9, D72.829
+		// ICD-10-CM examples:
+		// D89.40, C85.90, C43.9, D72.829, Z3A.13
 		var matches = Regex.Matches(
 			input.ToUpperInvariant(),
-			@"\b[A-Z][0-9]{2}(?:\.[A-Z0-9]{1,4})?\b",
+			@"\b[A-Z][0-9][A-Z0-9](?:\.[A-Z0-9]{1,4})?\b",
 			RegexOptions.CultureInvariant);
 
 		var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

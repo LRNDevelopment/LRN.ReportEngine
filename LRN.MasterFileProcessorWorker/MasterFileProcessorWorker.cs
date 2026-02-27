@@ -80,7 +80,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 			try
 			{
-				await Task.Delay(TimeSpan.FromMinutes(Math.Max(10, _opt.PollSeconds)), stoppingToken);
+				await Task.Delay(TimeSpan.FromSeconds(Math.Max(10, _opt.PollSeconds)), stoppingToken);
 			}
 			catch (OperationCanceledException) { }
 		}

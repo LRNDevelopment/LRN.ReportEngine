@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Globalization;
 using System.Text;
-using System.Threading; // ensure SemaphoreSlim is available
 
 namespace DenialDatabaseProcessorWorker.Services;
 
@@ -27,11 +26,11 @@ public sealed class CsvStepLogger
         string claimActionMapperFilePath,
         string outputPath,
         string? errorInfo = null,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        string policyActionMapperFilePath = "")
     {
         var path = _options.LogCsvPath;
-        var now = DateTime.Now; // local server time
-        var line = BuildCsvLine(lab, stepDescription, logType, payerPolicyFilePath, claimActionMapperFilePath, errorInfo, now, outputPath);
+        var now = DateTime.Now;
 
         try
         {
@@ -39,21 +38,39 @@ public sealed class CsvStepLogger
 
             Directory.CreateDirectory(Path.GetDirectoryName(path) ?? ".");
 
-            var writeHeader = !File.Exists(path) || new FileInfo(path).Length == 0;
+            bool writeHeader = !File.Exists(path) || new FileInfo(path).Length == 0;
+
+            bool useNewFormat = true;
+            if (!writeHeader)
+            {
+                try
+                {
+                    var header = File.ReadLines(path).FirstOrDefault() ?? "";
+                    useNewFormat = header.Contains("PolicyActionMapperFilePath", StringComparison.OrdinalIgnoreCase);
+                }
+                catch
+                {
+                    useNewFormat = true;
+                }
+            }
+
+            var line = useNewFormat
+                ? BuildCsvLineNew(lab, stepDescription, logType, payerPolicyFilePath, claimActionMapperFilePath, policyActionMapperFilePath, errorInfo, now, outputPath)
+                : BuildCsvLineOld(lab, stepDescription, logType, payerPolicyFilePath, claimActionMapperFilePath, errorInfo, now, outputPath);
 
             await using var fs = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
             await using var sw = new StreamWriter(fs, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
 
             if (writeHeader)
             {
-                await sw.WriteLineAsync("LabName,LabId,StepDescription,LogType,PayerPolicyFilePath,ClaimActionMapperFilePath,ErrorInfo,LogDateTime,OutputPath");
+                await sw.WriteLineAsync("LabName,LabId,StepDescription,LogType,PayerPolicyFilePath,ClaimActionMapperFilePath,PolicyActionMapperFilePath,ErrorInfo,LogDateTime,OutputPath");
             }
 
             await sw.WriteLineAsync(line);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to write CSV log to {LogCsvPath}", path);
+            _logger.LogError(ex, "Failed to write CSV log to {LogCsvPath}", _options.LogCsvPath);
         }
         finally
         {
@@ -61,7 +78,20 @@ public sealed class CsvStepLogger
         }
     }
 
-    private static string BuildCsvLine(
+    private static string Escape(string? s)
+    {
+        s ??= "";
+
+        if (s.Contains(',') || s.Contains('"') || s.Contains('\n') || s.Contains('\r'))
+        {
+            s = s.Replace("\"", "\"\"");
+            return $"\"{s}\"";
+        }
+
+        return s;
+    }
+
+    private static string BuildCsvLineOld(
         LabConfig lab,
         string stepDescription,
         string logType,
@@ -71,31 +101,41 @@ public sealed class CsvStepLogger
         DateTime now,
         string outputPath)
     {
-        // RFC4180-ish escaping
-        static string E(string? s)
-        {
-            if (string.IsNullOrEmpty(s))
-                return string.Empty;
-
-            var mustQuote = s.IndexOfAny(new[] { ',', '"', '\n', '\r' }) >= 0;
-            if (mustQuote)
-            {
-                s = s.Replace("\"", "\"\"");
-                return $"\"{s}\"";
-            }
-            return s;
-        }
-
         return string.Join(",",
-            E(lab.LabName),
+            Escape(lab.LabName),
             lab.LabId.ToString(CultureInfo.InvariantCulture),
-            E(stepDescription),
-            E(logType),
-            E(payerPolicyFilePath),
-            E(claimActionMapperFilePath),
-            E(errorInfo),
-            E(now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)),
-            E(outputPath)
+            Escape(stepDescription),
+            Escape(logType),
+            Escape(payerPolicyFilePath),
+            Escape(claimActionMapperFilePath),
+            Escape(errorInfo),
+            Escape(now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)),
+            Escape(outputPath)
+        );
+    }
+
+    private static string BuildCsvLineNew(
+        LabConfig lab,
+        string stepDescription,
+        string logType,
+        string payerPolicyFilePath,
+        string claimActionMapperFilePath,
+        string policyActionMapperFilePath,
+        string? errorInfo,
+        DateTime now,
+        string outputPath)
+    {
+        return string.Join(",",
+            Escape(lab.LabName),
+            lab.LabId.ToString(CultureInfo.InvariantCulture),
+            Escape(stepDescription),
+            Escape(logType),
+            Escape(payerPolicyFilePath),
+            Escape(claimActionMapperFilePath),
+            Escape(policyActionMapperFilePath),
+            Escape(errorInfo),
+            Escape(now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)),
+            Escape(outputPath)
         );
     }
 }

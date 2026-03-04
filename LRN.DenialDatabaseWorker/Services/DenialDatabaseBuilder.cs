@@ -9,16 +9,17 @@ public sealed class DenialDatabaseBuilder
         _normalizer = normalizer;
     }
 
-    /// <summary>
-    /// Adds normalized + mapped columns to PayerPolicy rows (in-place) and returns the final header list.
-    /// IMPORTANT: Output includes ALL original PayerPolicy columns (in the same order), plus new columns.
-    /// </summary>
     public (List<string> Headers, List<Dictionary<string, string>> Rows) Build(
-        List<string> payerPolicyHeaders,
         List<Dictionary<string, string>> payerPolicyRows,
-        ClaimActionMapperIndex mapperIndex,
+        ClaimActionMapperIndex claimMapperIndex,
+        PolicyActionMapperIndex? policyActionMapperIndex,
         string denialCodeHeader = "DenialCode")
     {
+        // Extract headers from first row
+        var payerPolicyHeaders = payerPolicyRows.Count > 0
+            ? payerPolicyRows[0].Keys.ToList()
+            : new List<string>();
+
         if (payerPolicyRows.Count == 0)
             return (payerPolicyHeaders, payerPolicyRows);
 
@@ -41,12 +42,11 @@ public sealed class DenialDatabaseBuilder
             "Gender Validation Required",
             "MUE Validation Required",
 
-            // keep both, because your input mapper uses "Action Code" but your requirement mentions "Status Action Code"
             "Status Action Code",
             "Task Guidance"
         };
 
-        // We will also update these existing columns if present, otherwise create them:
+        // Headers that should be overwritten or created
         var upsertHeaders = new List<string>
         {
             "Denial Description",
@@ -57,10 +57,10 @@ public sealed class DenialDatabaseBuilder
             "Recommended Action"
         };
 
-        // Build final headers preserving payerPolicyHeaders order
+        // Build final headers preserving original order
         var finalHeaders = new List<string>(payerPolicyHeaders);
 
-        // Insert DenialCode_Original and DenialCode_Normalized right after DenialCode column if possible
+        // Insert normalized columns after DenialCode
         var denialIdx = finalHeaders.FindIndex(h => string.Equals(h, headerKey, StringComparison.OrdinalIgnoreCase));
         if (denialIdx >= 0)
         {
@@ -73,7 +73,7 @@ public sealed class DenialDatabaseBuilder
             AddIfMissing(finalHeaders, "DenialCode_Normalized");
         }
 
-        // Ensure upsert headers exist (if not, add near the end)
+        // Ensure upsert headers exist
         foreach (var h in upsertHeaders)
             AddIfMissing(finalHeaders, h);
 
@@ -93,13 +93,12 @@ public sealed class DenialDatabaseBuilder
             row["DenialCode_Original"] = rawDenialCode;
             row["DenialCode_Normalized"] = normalized;
 
-            // Normalize the DenialCode column itself (this matches your requirement)
+            // Normalize the DenialCode column itself
             row[headerKey] = normalized;
 
-            // Map fields (split code mapping -> comma join)
-            var mapped = mapperIndex.MapForCodes(codes);
+            // Claim-level mapping
+            var mapped = claimMapperIndex.MapForCodes(codes);
 
-            // Upsert/overwrite
             row["Denial Description"] = mapped.DenialDescription;
             row["Denial Classification"] = mapped.DenialClassification;
             row["Denial Type"] = mapped.DenialType;
@@ -111,15 +110,53 @@ public sealed class DenialDatabaseBuilder
             row["Gender Validation Required"] = mapped.GenderValidationRequired;
             row["MUE Validation Required"] = mapped.MueValidationRequired;
 
-            // Payability
             row["Payability"] = mapped.Payability;
 
-            // Action code fields
             row["Action Code"] = mapped.StatusActionCode;
             row["Status Action Code"] = mapped.StatusActionCode;
 
             row["Recommended Action"] = mapped.RecommendedAction;
             row["Task Guidance"] = mapped.TaskGuidance;
+
+            // Policy-level mapping
+            if (policyActionMapperIndex != null)
+            {
+                row.TryGetValue("Coverage Status", out var coverageStatus);
+                row.TryGetValue("ICD Compliance Status", out var icdComplianceStatus);
+
+                row.TryGetValue("Denial Type", out var denialTypeField);
+                denialTypeField ??= "";
+
+                var denialTypes = denialTypeField
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Where(t => !string.IsNullOrWhiteSpace(t))
+                    .ToList();
+
+                var denialValidityVals = new List<string>();
+                var policyActionCodes = new List<string>();
+                var policyRecommended = new List<string>();
+                var policyTasks = new List<string>();
+
+                foreach (var dt in denialTypes)
+                {
+                    var matches = policyActionMapperIndex.FindMatches(dt, coverageStatus ?? "", icdComplianceStatus ?? "");
+                    foreach (var m in matches)
+                    {
+                        AddPlain(denialValidityVals, m.DenialValidity);
+                        AddPlain(policyActionCodes, m.ActionCode);
+                        AddPlain(policyRecommended, m.RecommendedAction);
+                        AddPlain(policyTasks, m.Task);
+                    }
+                }
+
+                if (denialValidityVals.Count > 0)
+                    row["Denial Validity"] = string.Join(", ", denialValidityVals);
+
+                MergeInto(row, "Action Code", policyActionCodes);
+                MergeInto(row, "Status Action Code", policyActionCodes);
+                MergeInto(row, "Recommended Action", policyRecommended);
+                MergeInto(row, "Task Guidance", policyTasks);
+            }
         }
 
         return (finalHeaders, payerPolicyRows);
@@ -147,5 +184,37 @@ public sealed class DenialDatabaseBuilder
             .Where(ch => char.IsLetterOrDigit(ch))
             .Select(char.ToLowerInvariant)
             .ToArray());
+    }
+
+    private static void AddPlain(List<string> list, string? value)
+    {
+        value = (value ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(value))
+            return;
+
+        if (!list.Any(x => string.Equals(x, value, StringComparison.OrdinalIgnoreCase)))
+            list.Add(value);
+    }
+
+    private static void MergeInto(Dictionary<string, string> row, string key, List<string> addValues)
+    {
+        if (addValues == null || addValues.Count == 0)
+            return;
+
+        row.TryGetValue(key, out var existing);
+        existing ??= "";
+
+        var existingParts = existing
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToList();
+
+        foreach (var v in addValues)
+        {
+            if (!existingParts.Any(x => string.Equals(x, v, StringComparison.OrdinalIgnoreCase)))
+                existingParts.Add(v);
+        }
+
+        row[key] = string.Join(", ", existingParts);
     }
 }

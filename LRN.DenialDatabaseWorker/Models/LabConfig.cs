@@ -8,6 +8,8 @@ public sealed class LabConfig
     public string PayerPolicyFile { get; init; } = "";
     public string ClaimActionMapper { get; init; } = "";
 
+    public string PolicyActionMapper { get; init; } = "";
+
     /// <summary>
     /// A SharePoint folder link (often AllItems.aspx?id=...).
     /// The worker extracts the 'id=' folder path and uploads under it.

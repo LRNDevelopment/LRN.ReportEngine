@@ -2,32 +2,35 @@ using Common.Logging;
 using LRN.ExcelValidator.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-var builder = Host.CreateApplicationBuilder(args);
+var host = Host.CreateDefaultBuilder(args)
+	.UseContentRoot(AppContext.BaseDirectory)
+	.UseWindowsService(o => o.ServiceName = "LRN - Master File Processor")
+	.ConfigureLogging((context, logging) =>
+	{
+		logging.ClearProviders();
+		logging.AddConsole();   // useful when running EXE manually
+		logging.AddEventLog();  // useful when running as Windows Service
+	})
+	.ConfigureServices((context, services) =>
+	{
+		services.Configure<ImportOptions>(context.Configuration.GetSection("MasterFileProcessor"));
+		services.Configure<ProcessLogOptions>(context.Configuration.GetSection("ProcessLog"));
 
-// Bind EXISTING config (do not change appsettings structure)
-builder.Services.Configure<ImportOptions>(builder.Configuration.GetSection("MasterFileProcessor"));
-builder.Services.Configure<ProcessLogOptions>(builder.Configuration.GetSection("ProcessLog"));
+		services.AddSingleton<ILoggerService, LogManagerService>();
+		services.AddHttpClient<SharePointDownloader>();
+		services.AddExcelValidator();
 
-// log4net wrapper (file log)
-builder.Services.AddSingleton<ILoggerService, LogManagerService>();
+		services.AddSingleton<MasterFileProcessorFileStatusStore>();
 
-// SharePoint client (Graph over raw HttpClient)
-builder.Services.AddHttpClient<SharePointDownloader>();
+		services.AddSingleton<IProcessLogRepository, SqlProcessLogRepository>();
+		services.AddSingleton<IProcessLogCsvWriter, ProcessLogCsvWriter>();
+		services.AddSingleton<IProcessLogWorkbookWriter, ProcessLogWorkbookWriter>();
+		services.AddSingleton<IProcessLogService, ProcessLogService>();
 
-// Excel schema validator (uses your existing lab schemas)
-builder.Services.AddExcelValidator();
+		services.AddHostedService<MasterFileProcessorWorker>();
+	})
+	.Build();
 
-// SQL status store
-builder.Services.AddSingleton<MasterFileProcessorFileStatusStore>();
-
-// Process logging (DB + CSV + Workbook)
-builder.Services.AddSingleton<IProcessLogRepository, SqlProcessLogRepository>();
-builder.Services.AddSingleton<IProcessLogCsvWriter, ProcessLogCsvWriter>();
-builder.Services.AddSingleton<IProcessLogWorkbookWriter, ProcessLogWorkbookWriter>();
-builder.Services.AddSingleton<IProcessLogService, ProcessLogService>();
-
-// Run the existing worker
-builder.Services.AddHostedService<MasterFileProcessorWorker>();
-
-await builder.Build().RunAsync();
+await host.RunAsync();

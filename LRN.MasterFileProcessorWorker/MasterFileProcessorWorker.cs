@@ -167,11 +167,11 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				LatestMasterFileFound = "NO",
 				MandatoryColumnCheck = "SKIPPED",
 				SplitOutputWrittenToSharePoint = "SKIPPED",
-				PayerPolicyValidationStatus = "SKIPPED",
-				CodingValidationStatus = "SKIPPED",
-				AveragesProcessStatus = "SKIPPED",
-				OutputsCopiedToSharePoint = "SKIPPED",
-				MasterSyncPerformed = "SKIPPED",
+				PayerPolicyValidationStatus = "PENDING",
+				CodingValidationStatus = "PENDING",
+				AveragesProcessStatus = "PENDING",
+				OutputsCopiedToSharePoint = "PENDING",
+				MasterSyncPerformed = "PENDING",
 				TotalErrors = 0,
 				TotalWarnings = 0
 			};

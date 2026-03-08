@@ -65,16 +65,18 @@ public sealed class DenialDatabaseWorker : BackgroundService
             {
                 _logger.LogInformation("RunOnceOnStartup=true. Stopping host.");
                 Environment.ExitCode = 0;
+                // In worker services, best-effort immediate exit after finishing.
+                // (If installed as Windows Service, it will stop.)
                 // If you prefer to keep service alive, set RunOnceOnStartup=false.
             }
         }
 
         if (!_options.RunOnceOnStartup)
         {
+            // If you want a schedule, add a delay loop here (e.g. run every N hours).
+            // For now, we just idle.
             while (!stoppingToken.IsCancellationRequested)
-            {
                 await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
-            }
         }
     }
 
@@ -86,108 +88,46 @@ public sealed class DenialDatabaseWorker : BackgroundService
         var outDir = Path.Combine(_options.OutputRoot, lab.LabName, monthFolder, dateFolder);
         var outFile = Path.Combine(outDir, $"{lab.LabName}_DenialDatabase_{dateFolder}.xlsx");
 
-        await _stepLogger.LogAsync(
-            lab, "Start", "InProgress",
-            lab.PayerPolicyFile, lab.ClaimActionMapper, outFile,
-            null, ct, lab.PolicyActionMapper);
+        await _stepLogger.LogAsync(lab, "Start", "InProgress", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct, lab.PolicyActionMapper);
 
         try
         {
-            await _stepLogger.LogAsync(
-                lab, "Load ClaimActionMapper excel", "InProgress",
-                lab.PayerPolicyFile, lab.ClaimActionMapper, outFile,
-                null, ct, lab.PolicyActionMapper);
-
+            await _stepLogger.LogAsync(lab, "Load ClaimActionMapper excel", "InProgress", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct, lab.PolicyActionMapper);
             var claimRows = _excelReader.Read(lab.ClaimActionMapper);
             var claimMapperIndex = new ClaimActionMapperIndex(claimRows);
-
-            await _stepLogger.LogAsync(
-                lab, "Load ClaimActionMapper excel", "Completed",
-                lab.PayerPolicyFile, lab.ClaimActionMapper, outFile,
-                null, ct, lab.PolicyActionMapper);
+            await _stepLogger.LogAsync(lab, "Load ClaimActionMapper excel", "Completed", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct, lab.PolicyActionMapper);
 
             PolicyActionMapperIndex? policyActionMapperIndex = null;
             if (!string.IsNullOrWhiteSpace(lab.PolicyActionMapper))
             {
-                await _stepLogger.LogAsync(
-                    lab, "Load PolicyActionMapper excel", "InProgress",
-                    lab.PayerPolicyFile, lab.ClaimActionMapper, outFile,
-                    null, ct, lab.PolicyActionMapper);
-
+                await _stepLogger.LogAsync(lab, "Load PolicyActionMapper excel", "InProgress", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct, lab.PolicyActionMapper);
                 var policyRows = _excelReader.Read(lab.PolicyActionMapper);
                 policyActionMapperIndex = new PolicyActionMapperIndex(policyRows);
-
-                await _stepLogger.LogAsync(
-                    lab, "Load PolicyActionMapper excel", "Completed",
-                    lab.PayerPolicyFile, lab.ClaimActionMapper, outFile,
-                    null, ct, lab.PolicyActionMapper);
+                await _stepLogger.LogAsync(lab, "Load PolicyActionMapper excel", "Completed", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct, lab.PolicyActionMapper);
             }
 
-            await _stepLogger.LogAsync(
-                lab, "Load PayerPolicy excel", "InProgress",
-                lab.PayerPolicyFile, lab.ClaimActionMapper, outFile,
-                null, ct, lab.PolicyActionMapper);
-
+            await _stepLogger.LogAsync(lab, "Load PayerPolicy excel", "InProgress", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct, lab.PolicyActionMapper);
             var payerRows = _excelReader.Read(lab.PayerPolicyFile);
+            await _stepLogger.LogAsync(lab, "Load PayerPolicy excel", "Completed", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct, lab.PolicyActionMapper);
 
-            await _stepLogger.LogAsync(
-                lab, "Load PayerPolicy excel", "Completed",
-                lab.PayerPolicyFile, lab.ClaimActionMapper, outFile,
-                null, ct, lab.PolicyActionMapper);
+            await _stepLogger.LogAsync(lab, "Normalize DenialCode + map fields", "InProgress", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct, lab.PolicyActionMapper);
+            var (headers, finalRows) = _builder.Build(payerRows, claimMapperIndex, policyActionMapperIndex, denialCodeHeader: "DenialCode");
+            await _stepLogger.LogAsync(lab, "Normalize DenialCode + map fields", "Completed", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct, lab.PolicyActionMapper);
 
-            await _stepLogger.LogAsync(
-                lab, "Normalize DenialCode + map fields", "InProgress",
-                lab.PayerPolicyFile, lab.ClaimActionMapper, outFile,
-                null, ct, lab.PolicyActionMapper);
-
-            var (headers, finalRows) = _builder.Build(
-                payerRows,
-                claimMapperIndex,
-                policyActionMapperIndex,
-                denialCodeHeader: "DenialCode");
-
-            await _stepLogger.LogAsync(
-                lab, "Normalize DenialCode + map fields", "Completed",
-                lab.PayerPolicyFile, lab.ClaimActionMapper, outFile,
-                null, ct, lab.PolicyActionMapper);
-
-            await _stepLogger.LogAsync(
-                lab, "Write DenialDatabase excel", "InProgress",
-                lab.PayerPolicyFile, lab.ClaimActionMapper, outFile,
-                null, ct, lab.PolicyActionMapper);
-
+            await _stepLogger.LogAsync(lab, "Write DenialDatabase excel", "InProgress", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct, lab.PolicyActionMapper);
             _excelWriter.Write(outFile, "DenialDatabase", headers, finalRows);
+            await _stepLogger.LogAsync(lab, "Write DenialDatabase excel", "Completed", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct, lab.PolicyActionMapper);
 
-            await _stepLogger.LogAsync(
-                lab, "Write DenialDatabase excel", "Completed",
-                lab.PayerPolicyFile, lab.ClaimActionMapper, outFile,
-                null, ct, lab.PolicyActionMapper);
-
-            await _stepLogger.LogAsync(
-                lab, "Upload to SharePoint", "InProgress",
-                lab.PayerPolicyFile, lab.ClaimActionMapper, outFile,
-                null, ct, lab.PolicyActionMapper);
-
+            await _stepLogger.LogAsync(lab, "Upload to SharePoint", "InProgress", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct, lab.PolicyActionMapper);
             await _uploader.UploadIfEnabledAsync(lab, outFile, now, ct);
+            await _stepLogger.LogAsync(lab, "Upload to SharePoint", "Completed", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct, lab.PolicyActionMapper);
 
-            await _stepLogger.LogAsync(
-                lab, "Upload to SharePoint", "Completed",
-                lab.PayerPolicyFile, lab.ClaimActionMapper, outFile,
-                null, ct, lab.PolicyActionMapper);
-
-            await _stepLogger.LogAsync(
-                lab, "Completed", "Completed",
-                lab.PayerPolicyFile, lab.ClaimActionMapper, outFile,
-                null, ct, lab.PolicyActionMapper);
+            await _stepLogger.LogAsync(lab, "Completed", "Completed", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct, lab.PolicyActionMapper);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lab processing failed: {LabName}", lab.LabName);
-
-            await _stepLogger.LogAsync(
-                lab, "Failed", "ERROR",
-                lab.PayerPolicyFile, lab.ClaimActionMapper, outFile,
-                ex.ToString(), ct, lab.PolicyActionMapper);
+            await _stepLogger.LogAsync(lab, "Failed", "ERROR", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, ex.ToString(), ct, lab.PolicyActionMapper);
         }
     }
 }

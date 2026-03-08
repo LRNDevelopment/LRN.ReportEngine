@@ -40,6 +40,7 @@ public sealed class CsvStepLogger
 
             bool writeHeader = !File.Exists(path) || new FileInfo(path).Length == 0;
 
+            // If file exists with OLD header (no PolicyActionMapperFilePath), keep old format appends.
             bool useNewFormat = true;
             if (!writeHeader)
             {
@@ -78,42 +79,42 @@ public sealed class CsvStepLogger
         }
     }
 
-    private static string Escape(string? s)
+    private static string BuildCsvLineOld(
+      LabConfig lab,
+      string stepDescription,
+      string logType,
+      string payerPolicyFilePath,
+      string claimActionMapperFilePath,
+      string? errorInfo,
+      DateTime now,
+      string outputPath)
     {
-        s ??= "";
-
-        if (s.Contains(',') || s.Contains('"') || s.Contains('\n') || s.Contains('\r'))
+        static string E(string? s)
         {
-            s = s.Replace("\"", "\"\"");
-            return $"\"{s}\"";
+            s ??= "";
+            if (s.Contains(',') || s.Contains('"') || s.Contains('\n') || s.Contains('\r'))
+            {
+                // Fix: Use standard string replace for quotes
+                s = s.Replace("\"", "\"\"");
+                return $"\"{s}\"";
+            }
+            return s;
         }
 
-        return s;
-    }
-
-    private static string BuildCsvLineOld(
-        LabConfig lab,
-        string stepDescription,
-        string logType,
-        string payerPolicyFilePath,
-        string claimActionMapperFilePath,
-        string? errorInfo,
-        DateTime now,
-        string outputPath)
-    {
         return string.Join(",",
-            Escape(lab.LabName),
+            E(lab.LabName),
             lab.LabId.ToString(CultureInfo.InvariantCulture),
-            Escape(stepDescription),
-            Escape(logType),
-            Escape(payerPolicyFilePath),
-            Escape(claimActionMapperFilePath),
-            Escape(errorInfo),
-            Escape(now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)),
-            Escape(outputPath)
+            E(stepDescription),
+            E(logType),
+            E(payerPolicyFilePath),
+            E(claimActionMapperFilePath),
+            E(errorInfo),
+            E(now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)),
+            E(outputPath)
         );
     }
 
+    // Apply the same fix to BuildCsvLineNew...
     private static string BuildCsvLineNew(
         LabConfig lab,
         string stepDescription,
@@ -125,17 +126,28 @@ public sealed class CsvStepLogger
         DateTime now,
         string outputPath)
     {
+        static string E(string? s)
+        {
+            s ??= "";
+            if (s.Contains(',') || s.Contains('"') || s.Contains('\n') || s.Contains('\r'))
+            {
+                s = s.Replace("\"", "\"\"");
+                return $"\"{s}\"";
+            }
+            return s;
+        }
+
         return string.Join(",",
-            Escape(lab.LabName),
+            E(lab.LabName),
             lab.LabId.ToString(CultureInfo.InvariantCulture),
-            Escape(stepDescription),
-            Escape(logType),
-            Escape(payerPolicyFilePath),
-            Escape(claimActionMapperFilePath),
-            Escape(policyActionMapperFilePath),
-            Escape(errorInfo),
-            Escape(now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)),
-            Escape(outputPath)
+            E(stepDescription),
+            E(logType),
+            E(payerPolicyFilePath),
+            E(claimActionMapperFilePath),
+            E(policyActionMapperFilePath),
+            E(errorInfo),
+            E(now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)),
+            E(outputPath)
         );
     }
 }

@@ -1,4 +1,4 @@
-using Common.Logging;
+﻿using Common.Logging;
 using LRN.ExcelValidator.Services;
 using LRN.ExcelValidator.Models;
 using Microsoft.Extensions.Hosting;
@@ -336,6 +336,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				var claimOutPath = Path.Combine(processedOutFolder, claimOutFileName);
 				var lineOutPath = Path.Combine(processedOutFolder, lineOutFileName);
+				var modeMedianOutFileName = BuildModeMedianOutputFileName(runCtx.RunId, runLocalNow);
+				var modeMedianOutPath = Path.Combine(processedOutFolder, modeMedianOutFileName);
 
 				// RAW ROOT (no lab folder):
 				// D:\LRN\Automation\LRN-RAWFILE\02.February\02.06.2026 - 02.12.2026\
@@ -561,6 +563,31 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				_logger.LogInformation("Lab {LabId}: LineLevel STANDARD CSV generated -> {Path}", lab.LabId, lineOutPath);
 				_fileLog.Info($"Lab {lab.LabId}: LineLevel STANDARD CSV -> {lineOutPath}");
 
+				// STEP 65: Mode/Median payment workbook
+				stepSeq = 65;
+				var step65 = new StepLogRow
+				{
+					StepSeq = stepSeq,
+					StepName = "Generate Mode Median Payment Workbook",
+					StepCategory = "Transform",
+					SourceSystem = "Local",
+					StartTimeIST = _processLog.NowIST(),
+					Status = "IN_PROGRESS",
+					FileNameIn = Path.GetFileName(lineOutPath),
+					PathIn = lineOutPath,
+					FileNameOut = Path.GetFileName(modeMedianOutPath),
+					PathOut = modeMedianOutPath
+				};
+				activeStep = step65;
+				await _processLog.StepStartAsync(runCtx, step65, ct);
+				ModeMedianPaymentReportWriter.Generate(lineOutPath, modeMedianOutPath);
+				step65.EndTimeIST = _processLog.NowIST();
+				step65.Status = "SUCCESS";
+				await _processLog.StepEndAsync(runCtx, step65, ct);
+				activeStep = null;
+				_logger.LogInformation("Lab {LabId}: Mode/Median payment workbook generated -> {Path}", lab.LabId, modeMedianOutPath);
+				_fileLog.Info($"Lab {lab.LabId}: Mode/Median payment workbook -> {modeMedianOutPath}");
+
 				// STEP 70: ClaimLevel RAW export
 				stepSeq = 70;
 				var step70 = new StepLogRow
@@ -661,12 +688,12 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					SourceSystem = "SharePoint",
 					StartTimeIST = _processLog.NowIST(),
 					Status = "IN_PROGRESS",
-					FileNameIn = $"{Path.GetFileName(claimOutPath)} | {Path.GetFileName(lineOutPath)}",
+					FileNameIn = $"{Path.GetFileName(claimOutPath)} | {Path.GetFileName(lineOutPath)} | {Path.GetFileName(modeMedianOutPath)}",
 					PathIn = processedOutFolder
 				};
 				activeStep = step100;
 				await _processLog.StepStartAsync(runCtx, step100, ct);
-				var outputUploadResult = await TryUploadOutputsAsync(lab, selected, runLocalNow, claimOutPath, lineOutPath, ct);
+				var outputUploadResult = await TryUploadOutputsAsync(lab, selected, runLocalNow, claimOutPath, lineOutPath, modeMedianOutPath, ct);
 				step100.EndTimeIST = _processLog.NowIST();
 				step100.Status = outputUploadResult.StartsWith("UPLOADED", StringComparison.OrdinalIgnoreCase) ? "SUCCESS" : "WARNING";
 				step100.ErrorMessage = outputUploadResult;
@@ -712,7 +739,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey,
 					selected.Name, selected.SharePointPath, selected.LastModifiedUtc,
 					status: "PROCESSED",
-					statusMessage: $"Saved LineLevel='{lineOutPath}', ClaimLevel='{claimOutPath}'. OutputUpload={outputUploadResult}.",
+					statusMessage: $"Saved LineLevel='{lineOutPath}', ClaimLevel='{claimOutPath}', ModeMedian='{modeMedianOutPath}'. OutputUpload={outputUploadResult}.",
 					processedAtUtc: DateTimeOffset.UtcNow,
 					ct: ct);
 
@@ -730,7 +757,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					sourceFileName: selected.Name,
 					sourceFileLocation: selected.SharePointPath,
 					status: "Completed",
-					message: $"imported; {outputUploadResult}",
+					message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult}",
 					claimOutput: claimOutPath,
 					lineOutput: lineOutPath);
 
@@ -834,7 +861,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				activeStep = null;
 
 				runRow.OverallStatus = "SUCCESS";
-				runRow.Notes = $"Saved LineLevel='{lineOutPath}', ClaimLevel='{claimOutPath}'. OutputUpload={outputUploadResult}.";
+				runRow.Notes = $"Saved LineLevel='{lineOutPath}', ClaimLevel='{claimOutPath}', ModeMedian='{modeMedianOutPath}'. OutputUpload={outputUploadResult}.";
 				await _processLog.CompleteRunAsync(runCtx, runRow, ct);
 			}
 			catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -1043,6 +1070,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		DateTime runLocalNow,
 		string claimOutPath,
 		string lineOutPath,
+		string modeMedianOutPath,
 		CancellationToken ct)
 	{
 		try
@@ -1078,6 +1106,16 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				localFilePath: lineOutPath,
 				uploadFileName: Path.GetFileName(lineOutPath),
 				ct: ct);
+
+			if (File.Exists(modeMedianOutPath))
+			{
+				await _sp.UploadFileToFolderPathAsync(
+					driveId: selected.DriveId,
+					folderPath: destFolder,
+					localFilePath: modeMedianOutPath,
+					uploadFileName: Path.GetFileName(modeMedianOutPath),
+					ct: ct);
+			}
 
 			_fileLog.Info($"Lab {lab.LabId}: output files uploaded to SharePoint folder '{destFolder}'.");
 			return $"UPLOADED -> {destFolder}";
@@ -1200,6 +1238,13 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		var datePart = string.IsNullOrWhiteSpace(sourceDateLabel) ? "UnknownDate" : sourceDateLabel.Trim();
 
 		var fileName = $"{runId}_{labPart}_{levelPart}_{datePart}.csv";
+		return SanitizeFileNameKeepSpaces(fileName);
+	}
+
+	private static string BuildModeMedianOutputFileName(string runId, DateTime runLocalNow)
+	{
+		var datePart = runLocalNow.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
+		var fileName = $"{runId}_Mode_Median_{datePart}.xlsx";
 		return SanitizeFileNameKeepSpaces(fileName);
 	}
 

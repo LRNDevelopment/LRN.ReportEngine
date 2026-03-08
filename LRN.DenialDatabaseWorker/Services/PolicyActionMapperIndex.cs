@@ -18,25 +18,77 @@ public sealed class PolicyActionMapperIndex
         _byDenialType = Build(rows);
     }
 
-    public IReadOnlyList<PolicyRule> FindMatches(string denialType, string coverageStatus, string icdComplianceStatus)
+    public IReadOnlyList<PolicyRule> GetRules(string denialType)
     {
         denialType = (denialType ?? "").Trim();
-        coverageStatus = (coverageStatus ?? "").Trim();
-        icdComplianceStatus = (icdComplianceStatus ?? "").Trim();
-
         if (string.IsNullOrWhiteSpace(denialType))
             return Array.Empty<PolicyRule>();
+
+        return _byDenialType.TryGetValue(denialType, out var rules)
+            ? rules
+            : Array.Empty<PolicyRule>();
+    }
+
+    /// <summary>
+    /// Matches NON-NA policy rules for a single denial type, using payer Coverage Status + ICD Compliance Status.
+    /// Rule matching:
+    /// - Rule Coverage Status:
+    ///   - empty => wildcard (matches any)
+    ///   - "Blank" => matches when payer is null/empty (or literal "Blank")
+    ///   - "NA" / "N/A" => excluded from this match function (handled separately)
+    ///   - otherwise => case-insensitive equals
+    /// - Rule ICD Compliance Status: same behavior (empty wildcard, "Blank" = payer empty, else equals)
+    /// </summary>
+    public IReadOnlyList<PolicyRule> FindMatches(string denialType, string payerCoverageStatus, string payerIcdComplianceStatus)
+    {
+        denialType = (denialType ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(denialType))
+            return Array.Empty<PolicyRule>();
+
+        var cov = NormalizePayerStatus(payerCoverageStatus);
+        var icd = NormalizePayerStatus(payerIcdComplianceStatus);
 
         if (!_byDenialType.TryGetValue(denialType, out var rules))
             return Array.Empty<PolicyRule>();
 
-        // match with optional wildcards (blank in rule means "any")
         return rules
-            .Where(r =>
-                (string.IsNullOrWhiteSpace(r.CoverageStatus) || string.Equals(r.CoverageStatus.Trim(), coverageStatus, StringComparison.OrdinalIgnoreCase)) &&
-                (string.IsNullOrWhiteSpace(r.IcdComplianceStatus) || string.Equals(r.IcdComplianceStatus.Trim(), icdComplianceStatus, StringComparison.OrdinalIgnoreCase))
-            )
+            .Where(r => !IsNaRule(r.CoverageStatus))
+            .Where(r => MatchesRuleValue(r.CoverageStatus, cov) && MatchesRuleValue(r.IcdComplianceStatus, icd))
             .ToList();
+    }
+
+    public static bool IsNaRule(string? ruleCoverageStatus)
+    {
+        var v = (ruleCoverageStatus ?? "").Trim();
+        return string.Equals(v, "NA", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(v, "N/A", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool MatchesRuleValue(string ruleValueRaw, string? payerValueNormalized)
+    {
+        var ruleValue = (ruleValueRaw ?? "").Trim();
+
+        // wildcard
+        if (string.IsNullOrWhiteSpace(ruleValue))
+            return true;
+
+        // explicit blank match
+        if (string.Equals(ruleValue, "Blank", StringComparison.OrdinalIgnoreCase))
+            return string.IsNullOrWhiteSpace(payerValueNormalized);
+
+        // normal equals
+        return string.Equals(ruleValue, payerValueNormalized ?? "", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string? NormalizePayerStatus(string? payerValue)
+    {
+        var v = (payerValue ?? "").Trim();
+
+        // treat literal "Blank" as empty
+        if (string.Equals(v, "Blank", StringComparison.OrdinalIgnoreCase))
+            return "";
+
+        return v;
     }
 
     private static Dictionary<string, List<PolicyRule>> Build(List<Dictionary<string, string>> rows)
@@ -56,27 +108,41 @@ public sealed class PolicyActionMapperIndex
 
         foreach (var r in rows)
         {
-            var denialType = Get(r, "Denial Type").Trim();
-            if (string.IsNullOrWhiteSpace(denialType))
+            // Denial Type may be comma-separated in policy mapper; index each denial type
+            var denialTypeRaw = Get(r, "Denial Type");
+            var denialTypes = (denialTypeRaw ?? "")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .ToList();
+
+            if (denialTypes.Count == 0)
                 continue;
 
-            var rule = new PolicyRule(
-                DenialType: denialType,
-                CoverageStatus: Get(r, "Coverage Status"),
-                IcdComplianceStatus: Get(r, "ICD Compliance Status"),
+            var coverage = Get(r, "Coverage Status");
+            var icd = Get(r, "ICD Compliance Status");
+
+            var ruleBase = new PolicyRule(
+                DenialType: "",
+                CoverageStatus: coverage,
+                IcdComplianceStatus: icd,
                 DenialValidity: Get(r, "Denial Validity"),
                 ActionCode: Get(r, "Action Code"),
                 RecommendedAction: Get(r, "Recommended Action"),
                 Task: Get(r, "Task")
             );
 
-            if (!dict.TryGetValue(denialType, out var list))
+            foreach (var dt in denialTypes)
             {
-                list = new List<PolicyRule>();
-                dict[denialType] = list;
-            }
+                var rule = ruleBase with { DenialType = dt };
 
-            list.Add(rule);
+                if (!dict.TryGetValue(dt, out var list))
+                {
+                    list = new List<PolicyRule>();
+                    dict[dt] = list;
+                }
+
+                list.Add(rule);
+            }
         }
 
         return dict;

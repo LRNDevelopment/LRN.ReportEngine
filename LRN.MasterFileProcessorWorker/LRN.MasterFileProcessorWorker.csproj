@@ -11,6 +11,7 @@
 		<ProjectReference Include="..\LRN.CommonLogger\LRN.CommonLogger.csproj" />
 		<ProjectReference Include="..\LRN.DataLibrary\LRN.DataLibrary.csproj" />
 		<ProjectReference Include="..\LRN.ExcelValidator\LRN.ExcelValidator.csproj" />
+		<ProjectReference Include="..\LRN.Notification\LRN.Notifications.csproj" />
 		<ProjectReference Include="..\LRN.Shared\LRN.Shared.csproj" />
 		<ProjectReference Include="..\LRN.SharePointClient\LRN.SharePointClient.csproj" />
 		<ProjectReference Include="..\LRN.SharePointUploader\LRN.SharePointUploader.csproj" />

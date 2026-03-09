@@ -1,6 +1,8 @@
 ﻿using Common.Logging;
 using LRN.ExcelValidator.Services;
 using LRN.ExcelValidator.Models;
+using LRN.Notifications.Abstractions;
+using LRN.Notifications.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -21,6 +23,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 	private readonly IExcelSchemaValidator _schemaValidator;
 	private readonly IColumnSchemaLoader _schemaLoader;
 	private readonly IProcessLogService _processLog;
+	private readonly ITeamsNotifier _teamsNotifier;
 
 	private ColumnSchema? _commonLineSchema;
 	private ColumnSchema? _commonClaimSchema;
@@ -35,7 +38,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		MasterFileProcessorFileStatusStore status,
 		IExcelSchemaValidator schemaValidator,
 		IColumnSchemaLoader schemaLoader,
-		IProcessLogService processLog)
+		IProcessLogService processLog,
+		ITeamsNotifier teamsNotifier)
 	{
 		_logger = logger;
 		_fileLog = fileLog;
@@ -45,6 +49,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		_schemaValidator = schemaValidator;
 		_schemaLoader = schemaLoader;
 		_processLog = processLog;
+		_teamsNotifier = teamsNotifier;
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -231,6 +236,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 					// Also write status log locally + upload if enabled
 					await TryWriteAndUploadFileStatusLogAsync(lab, selected, siteDriveId, status: "Skipped", outputLocation: "", logMessage: "no eligible SharePoint file found", ct: ct);
+					await NotifyNoLatestFileFoundAsync(lab, ct);
 					continue;
 				}
 
@@ -474,6 +480,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					await _processLog.CompleteRunAsync(runCtx, runRow, ct);
 
 					MoveToErrorFolder(stagingPath, msg);
+					await NotifyProcessingErrorAsync(lab, msg, selected.Name, selected.SharePointPath, ct);
 					continue;
 				}
 
@@ -863,6 +870,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				runRow.OverallStatus = "SUCCESS";
 				runRow.Notes = $"Saved LineLevel='{lineOutPath}', ClaimLevel='{claimOutPath}', ModeMedian='{modeMedianOutPath}'. OutputUpload={outputUploadResult}.";
 				await _processLog.CompleteRunAsync(runCtx, runRow, ct);
+				await NotifyCompletedAsync(lab, ResolveNotificationOutputLocation(outputUploadResult, processedOutFolder), ct);
 			}
 			catch (OperationCanceledException) when (ct.IsCancellationRequested)
 			{
@@ -940,11 +948,77 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					message: ex.Message,
 					claimOutput: "",
 					lineOutput: "");
+
+				await NotifyProcessingErrorAsync(lab, ex.Message, selected?.Name, selected?.SharePointPath, ct);
 			}
 		}
 
 		// Upload the daily master processor log once per run (client requirement)
 		await TryUploadMasterProcessorLogAsync(runLocalNow, masterLogFolder, ct);
+	}
+
+	private async Task NotifyNoLatestFileFoundAsync(LabFileMap lab, CancellationToken ct)
+	{
+		var title = $"Master File Processor - No Latest File Found For Lab {lab.LabName}";
+		var message = string.IsNullOrWhiteSpace(lab.SharePointRootPath)
+			? "No latest eligible master file was found for processing."
+			: $"No latest eligible master file was found under {lab.SharePointRootPath}.";
+
+		await TrySendTeamNotificationAsync(title, message, ct);
+	}
+
+	private async Task NotifyProcessingErrorAsync(LabFileMap lab, string errorMessage, string? fileName, string? filePath, CancellationToken ct)
+	{
+		var title = $"Master File Processor - Error On File Processing For Lab {lab.LabName}";
+
+		var parts = new List<string>();
+		if (!string.IsNullOrWhiteSpace(fileName))
+			parts.Add($"File: {fileName}");
+		if (!string.IsNullOrWhiteSpace(filePath))
+			parts.Add($"Path: {filePath}");
+		parts.Add($"Error: {errorMessage}");
+
+		await TrySendTeamNotificationAsync(title, string.Join(Environment.NewLine, parts), ct);
+	}
+
+	private async Task NotifyCompletedAsync(LabFileMap lab, string outputLocation, CancellationToken ct)
+	{
+		var title = $"Master File Processor - Completed Process For Lab {lab.LabName}";
+		var message = $"Copied the Line level and claim level files under {outputLocation}.";
+
+		await TrySendTeamNotificationAsync(title, message, ct);
+	}
+
+	private async Task TrySendTeamNotificationAsync(string title, string message, CancellationToken ct)
+	{
+		try
+		{
+			await _teamsNotifier.SendAsync(new TeamsNotification
+			{
+				Title = title,
+				Message = message
+			}, ct);
+
+			_fileLog.Info($"Teams notification sent. Title='{title}'");
+		}
+		catch (Exception ex)
+		{
+			_logger.LogWarning(ex, "Failed to send Teams notification. Title={Title}", title);
+			_fileLog.Warn($"Failed to send Teams notification. Title='{title}'. Error='{ex.Message}'");
+		}
+	}
+
+	private static string ResolveNotificationOutputLocation(string outputUploadResult, string processedOutFolder)
+	{
+		const string uploadedPrefix = "UPLOADED -> ";
+
+		if (!string.IsNullOrWhiteSpace(outputUploadResult) &&
+			outputUploadResult.StartsWith(uploadedPrefix, StringComparison.OrdinalIgnoreCase))
+		{
+			return outputUploadResult.Substring(uploadedPrefix.Length).Trim();
+		}
+
+		return processedOutFolder;
 	}
 
 	private static string BuildSchemaErrorMessage(

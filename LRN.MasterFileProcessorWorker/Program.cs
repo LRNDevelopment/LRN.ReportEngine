@@ -1,5 +1,6 @@
-using Common.Logging;
+﻿using Common.Logging;
 using LRN.ExcelValidator.Services;
+using LRN.Notifications;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -21,6 +22,7 @@ var host = Host.CreateDefaultBuilder(args)
 		services.AddSingleton<ILoggerService, LogManagerService>();
 		services.AddHttpClient<SharePointDownloader>();
 		services.AddExcelValidator();
+		services.AddMyCompanyNotifications(context.Configuration);
 
 		services.AddSingleton<MasterFileProcessorFileStatusStore>();
 

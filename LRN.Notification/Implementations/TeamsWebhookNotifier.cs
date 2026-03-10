@@ -2,8 +2,8 @@ using LRN.Notifications.Abstractions;
 using LRN.Notifications.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Net.Http;
-using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
 
 namespace LRN.Notifications.Implementations;
 
@@ -25,122 +25,88 @@ public sealed class TeamsWebhookNotifier : ITeamsNotifier
 
 	public async Task SendAsync(TeamsNotification msg, CancellationToken ct = default)
 	{
-		if (!_opt.Enabled) return;
+		if (!_opt.Enabled)
+			return;
 
 		if (string.IsNullOrWhiteSpace(_opt.WebhookUrl))
 			throw new InvalidOperationException("Teams webhook URL is not configured.");
 
-		if (string.IsNullOrWhiteSpace(msg.Message))
-			throw new ArgumentException("TeamsNotification.Message is required.");
+		if (string.IsNullOrWhiteSpace(msg.Title) && string.IsNullOrWhiteSpace(msg.Message))
+			throw new ArgumentException("TeamsNotification title or message is required.");
 
 		if (!Uri.TryCreate(_opt.WebhookUrl, UriKind.Absolute, out var uri))
 			throw new InvalidOperationException("Teams webhook URL is invalid.");
 
-		var endpointType = ResolveEndpointType(uri, _opt.EndpointType);
-		var payload = endpointType == TeamsEndpointType.Workflow
-			? BuildWorkflowPayload(msg)
-			: BuildLegacyMessageCardPayload(msg);
+		var payload = BuildAdaptiveCardWrapper(msg);
+		var json = JsonSerializer.Serialize(payload);
 
+		using var content = new StringContent(json, Encoding.UTF8, "application/json");
 		var http = _httpFactory.CreateClient();
 
 		try
 		{
-			using var resp = await http.PostAsJsonAsync(uri, payload, ct);
-			if (!resp.IsSuccessStatusCode)
+			using var response = await http.PostAsync(uri, content, ct);
+			var body = await response.Content.ReadAsStringAsync(ct);
+
+			if (!response.IsSuccessStatusCode)
 			{
-				var body = await resp.Content.ReadAsStringAsync(ct);
 				throw new HttpRequestException(
-					$"Teams webhook call failed. Status={(int)resp.StatusCode} {resp.ReasonPhrase}. Response={body}");
+					$"Teams webhook call failed. Status={(int)response.StatusCode} {response.ReasonPhrase}. Response={body}");
 			}
 
-			_logger.LogInformation("Teams {EndpointType} message sent.", endpointType);
+			_logger.LogInformation("Teams webhook message sent successfully. Status={StatusCode}", (int)response.StatusCode);
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError(ex, "Failed to send Teams {EndpointType} message.", endpointType);
+			_logger.LogError(ex, "Failed to send Teams webhook message.");
 			throw;
 		}
 	}
 
-	private static TeamsEndpointType ResolveEndpointType(Uri uri, string? configuredValue)
-	{
-		if (!string.IsNullOrWhiteSpace(configuredValue))
-		{
-			if (configuredValue.Equals("Workflow", StringComparison.OrdinalIgnoreCase))
-				return TeamsEndpointType.Workflow;
-			if (configuredValue.Equals("LegacyWebhook", StringComparison.OrdinalIgnoreCase))
-				return TeamsEndpointType.LegacyWebhook;
-		}
-
-		var host = uri.Host ?? string.Empty;
-		var pathAndQuery = (uri.AbsolutePath + uri.Query).ToLowerInvariant();
-
-		if (host.Contains("logic.azure.com", StringComparison.OrdinalIgnoreCase) ||
-			host.Contains("logic-apis", StringComparison.OrdinalIgnoreCase) ||
-			pathAndQuery.Contains("/triggers/manual/") ||
-			pathAndQuery.Contains("/paths/invoke") ||
-			pathAndQuery.Contains("sig="))
-		{
-			return TeamsEndpointType.Workflow;
-		}
-
-		return TeamsEndpointType.LegacyWebhook;
-	}
-
-	private static object BuildLegacyMessageCardPayload(TeamsNotification msg)
-	{
-		return new
-		{
-			@type = "MessageCard",
-			@context = "http://schema.org/extensions",
-			summary = msg.Title,
-			title = msg.Title,
-			text = (msg.Message ?? string.Empty).Replace("\n", "<br/>")
-		};
-	}
-
-	private static object BuildWorkflowPayload(TeamsNotification msg)
+	private static object BuildAdaptiveCardWrapper(TeamsNotification msg)
 	{
 		return new
 		{
 			type = "message",
 			attachments = new object[]
 			{
-			new
-			{
-				contentType = "application/vnd.microsoft.card.adaptive",
-				contentUrl = (string?)null,
-				content = new Dictionary<string, object?>
+				new
 				{
-					["$schema"] = "http://adaptivecards.io/schemas/adaptive-card.json",
-					["type"] = "AdaptiveCard",
-					["version"] = "1.4",
-					["body"] = new object[]
+					contentType = "application/vnd.microsoft.card.adaptive",
+					contentUrl = (string?)null,
+					content = new Dictionary<string, object?>
 					{
-						new Dictionary<string, object?>
+						["$schema"] = "http://adaptivecards.io/schemas/adaptive-card.json",
+						["type"] = "AdaptiveCard",
+						["version"] = "1.4",
+						["body"] = new object[]
 						{
-							["type"] = "TextBlock",
-							["text"] = msg.Title,
-							["weight"] = "Bolder",
-							["size"] = "Medium",
-							["wrap"] = true
-						},
-						new Dictionary<string, object?>
-						{
-							["type"] = "TextBlock",
-							["text"] = msg.Message,
-							["wrap"] = true
+							new Dictionary<string, object?>
+							{
+								["type"] = "TextBlock",
+								["text"] = msg.Title,
+								["weight"] = "Bolder",
+								["size"] = "Medium",
+								["wrap"] = true
+							},
+							new Dictionary<string, object?>
+							{
+								["type"] = "TextBlock",
+								["text"] = msg.Message,
+								["wrap"] = true
+							},
+							new Dictionary<string, object?>
+							{
+								["type"] = "TextBlock",
+								["text"] = $"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}",
+								["isSubtle"] = true,
+								["size"] = "Small",
+								["wrap"] = true
+							}
 						}
 					}
 				}
 			}
-			}
 		};
-	}
-
-	private enum TeamsEndpointType
-	{
-		Workflow,
-		LegacyWebhook
 	}
 }

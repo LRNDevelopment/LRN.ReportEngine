@@ -1,11 +1,18 @@
 using ClosedXML.Excel;
 using Microsoft.VisualBasic.FileIO;
 using System.Globalization;
-using System.Text.RegularExpressions;
 
 public static class ModeMedianPaymentReportWriter
 {
 	public static void Generate(string lineLevelStandardCsvPath, string outputWorkbookPath)
+	{
+		GenerateMedianFile(lineLevelStandardCsvPath, outputWorkbookPath);
+	}
+
+	public static void GenerateSeparateFiles(
+		string lineLevelStandardCsvPath,
+		string medianOutputWorkbookPath,
+		string modeOutputWorkbookPath)
 	{
 		if (string.IsNullOrWhiteSpace(lineLevelStandardCsvPath))
 			throw new ArgumentException("LineLevel standard CSV path is required.", nameof(lineLevelStandardCsvPath));
@@ -13,10 +20,9 @@ public static class ModeMedianPaymentReportWriter
 		if (!File.Exists(lineLevelStandardCsvPath))
 			throw new FileNotFoundException("LineLevel standard CSV not found.", lineLevelStandardCsvPath);
 
-		Directory.CreateDirectory(Path.GetDirectoryName(outputWorkbookPath)!);
+		var allRows = ReadRows(lineLevelStandardCsvPath);
 
-		var rows = ReadRows(lineLevelStandardCsvPath);
-		var reportRows = BuildReportRows(rows)
+		var reportRows = BuildReportRows(allRows)
 			.OrderBy(x => x.PayerName, StringComparer.OrdinalIgnoreCase)
 			.ThenBy(x => x.Panel, StringComparer.OrdinalIgnoreCase)
 			.ThenBy(x => x.CPTCode, StringComparer.OrdinalIgnoreCase)
@@ -24,11 +30,67 @@ public static class ModeMedianPaymentReportWriter
 			.ThenBy(x => x.InsurancePaymentAmount ?? decimal.MinValue)
 			.ToList();
 
-		using var workbook = new XLWorkbook();
-		WriteMedianSheet(workbook, reportRows);
-		WriteModeSheet(workbook, reportRows);
-		workbook.SaveAs(outputWorkbookPath);
+		if (!string.IsNullOrWhiteSpace(medianOutputWorkbookPath))
+		{
+			EnsureDirectory(medianOutputWorkbookPath);
+			using var medianWorkbook = new XLWorkbook();
+			WriteMedianSheet(medianWorkbook, reportRows);
+			medianWorkbook.SaveAs(medianOutputWorkbookPath);
+		}
+
+		if (!string.IsNullOrWhiteSpace(modeOutputWorkbookPath))
+		{
+			EnsureDirectory(modeOutputWorkbookPath);
+			using var modeWorkbook = new XLWorkbook();
+			WriteModeSheet(modeWorkbook, reportRows);
+			modeWorkbook.SaveAs(modeOutputWorkbookPath);
+		}
 	}
+
+	public static void GenerateMedianFile(string lineLevelStandardCsvPath, string medianOutputWorkbookPath)
+	{
+		GenerateSeparateFiles(lineLevelStandardCsvPath, medianOutputWorkbookPath, string.Empty);
+	}
+
+	public static void GenerateModeFile(string lineLevelStandardCsvPath, string modeOutputWorkbookPath)
+	{
+		GenerateSeparateFiles(lineLevelStandardCsvPath, string.Empty, modeOutputWorkbookPath);
+	}
+
+	private static void EnsureDirectory(string outputWorkbookPath)
+	{
+		var outputDirectory = Path.GetDirectoryName(outputWorkbookPath);
+		if (!string.IsNullOrWhiteSpace(outputDirectory))
+			Directory.CreateDirectory(outputDirectory);
+	}
+
+	//public static void Generate(string lineLevelStandardCsvPath, string outputWorkbookPath)
+	//{
+	//	if (string.IsNullOrWhiteSpace(lineLevelStandardCsvPath))
+	//		throw new ArgumentException("LineLevel standard CSV path is required.", nameof(lineLevelStandardCsvPath));
+
+	//	if (!File.Exists(lineLevelStandardCsvPath))
+	//		throw new FileNotFoundException("LineLevel standard CSV not found.", lineLevelStandardCsvPath);
+
+	//	var outputDirectory = Path.GetDirectoryName(outputWorkbookPath);
+	//	if (!string.IsNullOrWhiteSpace(outputDirectory))
+	//		Directory.CreateDirectory(outputDirectory);
+
+	//	var allRows = ReadRows(lineLevelStandardCsvPath);
+
+	//	var reportRows = BuildReportRows(allRows)
+	//		.OrderBy(x => x.PayerName, StringComparer.OrdinalIgnoreCase)
+	//		.ThenBy(x => x.Panel, StringComparer.OrdinalIgnoreCase)
+	//		.ThenBy(x => x.CPTCode, StringComparer.OrdinalIgnoreCase)
+	//		.ThenBy(x => x.AllowedAmount ?? decimal.MinValue)
+	//		.ThenBy(x => x.InsurancePaymentAmount ?? decimal.MinValue)
+	//		.ToList();
+
+	//	using var workbook = new XLWorkbook();
+	//	WriteMedianSheet(workbook, reportRows);
+	//	WriteModeSheet(workbook, reportRows);
+	//	workbook.SaveAs(outputWorkbookPath);
+	//}
 
 	private static List<PaymentRow> ReadRows(string csvPath)
 	{
@@ -46,6 +108,23 @@ public static class ModeMedianPaymentReportWriter
 		int cptIdx = FindHeaderIndex(header, "CPTCode", "CPT Code");
 		int allowedIdx = FindHeaderIndex(header, "AllowedAmount", "Allowed Amount");
 		int insuranceIdx = FindHeaderIndex(header, "InsurancePayment", "InsurancePaymentAmount", "Insurance Payment", "Insurance Payment Amount");
+
+		int allowedPerUnitIdx = FindHeaderIndexOptional(
+			header,
+			"AllowedAmountPerUnit",
+			"Allowed Amount Per Unit",
+			"AllowedPerUnit",
+			"Allowed Amt Per Unit");
+
+		int insurancePerUnitIdx = FindHeaderIndexOptional(
+			header,
+			"InsurancePaymentPerUnit",
+			"Insurance Payment Per Unit",
+			"InsurancePaymentAmountPerUnit",
+			"Insurance Payment Amount Per Unit",
+			"PaidAmountPerUnit",
+			"Paid Amount Per Unit",
+			"Insurance Paid Per Unit");
 
 		if (payerIdx < 0 || panelIdx < 0 || cptIdx < 0 || allowedIdx < 0 || insuranceIdx < 0)
 		{
@@ -67,70 +146,202 @@ public static class ModeMedianPaymentReportWriter
 			var cptCode = NormalizeCptCode(ReadField(fields, cptIdx));
 			var allowedAmount = ParseNullableDecimal(ReadField(fields, allowedIdx));
 			var insurancePaymentAmount = ParseNullableDecimal(ReadField(fields, insuranceIdx));
+			var allowedAmountPerUnit = ParseNullableDecimal(ReadField(fields, allowedPerUnitIdx));
+			var insurancePaymentPerUnit = ParseNullableDecimal(ReadField(fields, insurancePerUnitIdx));
 
 			rows.Add(new PaymentRow(
 				payerName,
 				panel,
 				cptCode,
 				allowedAmount,
-				insurancePaymentAmount));
+				insurancePaymentAmount,
+				allowedAmountPerUnit,
+				insurancePaymentPerUnit));
 		}
 
 		return rows;
 	}
 
-	private static IEnumerable<PaymentReportRow> BuildReportRows(IEnumerable<PaymentRow> rows)
+	private static int FindHeaderIndexOptional(string[] header, params string[] aliases)
 	{
-		var distinctRows = rows
-			.Where(r => (!string.IsNullOrWhiteSpace(r.PayerName)
-					  || !string.IsNullOrWhiteSpace(r.Panel)
-					  || !string.IsNullOrWhiteSpace(r.CPTCode))
-					 && r.InsurancePaymentAmount.HasValue
-					 && r.InsurancePaymentAmount.Value > 0)
-			.GroupBy(BuildDistinctRowKey)
-			.Select(g => g.First())
+		for (int i = 0; i < header.Length; i++)
+		{
+			var current = NormalizeHeader(header[i]);
+			foreach (var alias in aliases)
+			{
+				if (current == NormalizeHeader(alias))
+					return i;
+			}
+		}
+
+		return -1;
+	}
+
+	private static decimal? GetHighestValue(IReadOnlyList<decimal> values)
+	{
+		if (values == null || values.Count == 0)
+			return null;
+
+		return values.Max();
+	}
+
+	private static decimal? CalculatePaymentModeForSelectedAllowed(
+		IReadOnlyList<PaymentRow> rows,
+		decimal? selectedAllowedValue,
+		Func<PaymentRow, decimal?> allowedSelector,
+		Func<PaymentRow, decimal?> paymentSelector)
+	{
+		if (!selectedAllowedValue.HasValue)
+			return null;
+
+		var candidatePayments = rows
+			.Where(r => allowedSelector(r).HasValue && allowedSelector(r)!.Value == selectedAllowedValue.Value)
+			.Select(paymentSelector)
+			.Where(v => v.HasValue)
+			.Select(v => v!.Value)
 			.ToList();
 
-		return distinctRows
-			.GroupBy(r => BuildGroupKey(r))
-			.SelectMany(g =>
+		if (candidatePayments.Count == 0)
+			return null;
+
+		return candidatePayments
+			.GroupBy(x => x)
+			.Select(g => new { Value = g.Key, Count = g.Count() })
+			.OrderByDescending(x => x.Count)
+			.ThenByDescending(x => x.Value)
+			.Select(x => (decimal?)x.Value)
+			.FirstOrDefault();
+	}
+	private static IEnumerable<PaymentReportRow> BuildReportRows(IEnumerable<PaymentRow> rows)
+	{
+		var filteredRows = rows
+			.Where(r =>
+				(!string.IsNullOrWhiteSpace(r.PayerName)
+				 || !string.IsNullOrWhiteSpace(r.Panel)
+				 || !string.IsNullOrWhiteSpace(r.CPTCode))
+				&& r.InsurancePaymentAmount.HasValue
+				&& r.InsurancePaymentAmount.Value > 0)
+			.ToList();
+
+		return filteredRows
+			.GroupBy(BuildGroupKey)
+			.SelectMany(group =>
 			{
-				var groupRows = g.ToList();
-				var paymentValues = groupRows
+				var rawGroupRows = group.ToList();
+
+				// distinct output rows
+				var distinctOutputRows = rawGroupRows
+					.GroupBy(BuildDistinctRowKey)
+					.Select(g => g.First())
+					.OrderBy(x => x.AllowedAmount ?? decimal.MinValue)
+					.ThenBy(x => x.InsurancePaymentAmount ?? decimal.MinValue)
+					.ToList();
+
+				// count of EACH exact combination inside the group
+				var exactCombinationCountMap = rawGroupRows
+					.GroupBy(BuildDistinctRowKey)
+					.ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
+
+				var allowedValues = rawGroupRows
+					.Where(x => x.AllowedAmount.HasValue)
+					.Select(x => x.AllowedAmount!.Value)
+					.ToList();
+
+				var paymentValues = rawGroupRows
 					.Where(x => x.InsurancePaymentAmount.HasValue)
 					.Select(x => x.InsurancePaymentAmount!.Value)
 					.ToList();
 
-				var median = CalculateMedian(paymentValues);
-				var mode = CalculateMode(paymentValues);
-				var distinctAllowedPaymentCount = groupRows.Count;
+				var allowedPerUnitValues = rawGroupRows
+					.Where(x => x.AllowedAmountPerUnit.HasValue)
+					.Select(x => x.AllowedAmountPerUnit!.Value)
+					.ToList();
 
-				return groupRows.Select(r => new PaymentReportRow(
-					PayerName: r.PayerName,
-					Panel: r.Panel,
-					CPTCode: r.CPTCode,
-					AllowedAmount: r.AllowedAmount,
-					InsurancePaymentAmount: r.InsurancePaymentAmount,
-					DistinctAllowedPaymentCount: distinctAllowedPaymentCount,
-					MedianPayment: median,
-					ModePayment: mode));
+				var paymentPerUnitValues = rawGroupRows
+					.Where(x => x.InsurancePaymentPerUnit.HasValue)
+					.Select(x => x.InsurancePaymentPerUnit!.Value)
+					.ToList();
+
+				// median from raw filtered line-level rows
+				var medianAllowedAmount = CalculateMedian(allowedValues);
+				var medianInsurancePaymentAmount = CalculateMedian(paymentValues);
+				var medianAllowedAmountPerUnit = CalculateMedian(allowedPerUnitValues);
+				var medianInsurancePaymentPerUnit = CalculateMedian(paymentPerUnitValues);
+
+				// your business rule:
+				// mode allowed = highest allowed in the group
+				var modeAllowedAmount = GetHighestValue(
+					distinctOutputRows
+						.Where(x => x.AllowedAmount.HasValue)
+						.Select(x => x.AllowedAmount!.Value)
+						.ToList());
+
+				// payment mode only from rows under selected allowed amount
+				var modeInsurancePaymentAmount = CalculatePaymentModeForSelectedAllowed(
+					rawGroupRows,
+					modeAllowedAmount,
+					r => r.AllowedAmount,
+					r => r.InsurancePaymentAmount);
+
+				// same logic for per-unit
+				var modeAllowedAmountPerUnit = GetHighestValue(
+					rawGroupRows
+						.Where(x => x.AllowedAmountPerUnit.HasValue)
+						.Select(x => x.AllowedAmountPerUnit!.Value)
+						.ToList());
+
+				var modeInsurancePaymentPerUnit = CalculatePaymentModeForSelectedAllowed(
+					rawGroupRows,
+					modeAllowedAmountPerUnit,
+					r => r.AllowedAmountPerUnit,
+					r => r.InsurancePaymentPerUnit);
+
+				return distinctOutputRows.Select(r =>
+				{
+					var rowKey = BuildDistinctRowKey(r);
+					var exactCombinationCount = exactCombinationCountMap.TryGetValue(rowKey, out var count)
+						? count
+						: 0;
+
+					return new PaymentReportRow(
+						PayerName: r.PayerName,
+						Panel: r.Panel,
+						CPTCode: r.CPTCode,
+						AllowedAmount: r.AllowedAmount,
+						InsurancePaymentAmount: r.InsurancePaymentAmount,
+						DistinctAllowedPaymentCount: exactCombinationCount,
+						MedianAllowedAmount: medianAllowedAmount,
+						MedianInsurancePaymentAmount: medianInsurancePaymentAmount,
+						ModeAllowedAmount: modeAllowedAmount,
+						ModeInsurancePaymentAmount: modeInsurancePaymentAmount,
+						MedianAllowedAmountPerUnit: medianAllowedAmountPerUnit,
+						MedianInsurancePaymentPerUnit: medianInsurancePaymentPerUnit,
+						ModeAllowedAmountPerUnit: modeAllowedAmountPerUnit,
+						ModeInsurancePaymentPerUnit: modeInsurancePaymentPerUnit);
+				});
 			});
 	}
 
 	private static void WriteMedianSheet(XLWorkbook workbook, IReadOnlyList<PaymentReportRow> rows)
 	{
 		var ws = workbook.Worksheets.Add("Median Payment");
-		WriteHeaderRow(ws, "MedianPayment");
+		WriteHeaderRow(
+			ws,
+			"MedianAllowedAmount",
+			"MedianInsurancePaymentAmount",
+			"AllowedAmountPerUnit Median",
+			"InsurancePaymentPerUnit Median");
 
 		var rowNo = 2;
 		foreach (var row in rows)
 		{
 			WriteCommonRow(ws, rowNo, row);
-			if (row.MedianPayment.HasValue)
-			{
-				ws.Cell(rowNo, 7).Value = row.MedianPayment.Value;
-				ws.Cell(rowNo, 7).Style.NumberFormat.Format = "0.00";
-			}
+
+			WriteDecimal(ws, rowNo, 7, row.MedianAllowedAmount);
+			WriteDecimal(ws, rowNo, 8, row.MedianInsurancePaymentAmount);
+			WriteDecimal(ws, rowNo, 9, row.MedianAllowedAmountPerUnit);
+			WriteDecimal(ws, rowNo, 10, row.MedianInsurancePaymentPerUnit);
+
 			rowNo++;
 		}
 
@@ -140,29 +351,41 @@ public static class ModeMedianPaymentReportWriter
 	private static void WriteModeSheet(XLWorkbook workbook, IReadOnlyList<PaymentReportRow> rows)
 	{
 		var ws = workbook.Worksheets.Add("Mode Payment");
-		WriteHeaderRow(ws, "ModePayment");
+		WriteHeaderRow(
+			ws,
+			"ModeAllowedAmount",
+			"ModeInsurancePaymentAmount",
+			"AllowedAmountPerUnit Mode",
+			"InsurancePaymentPerUnit Mode");
 
 		var rowNo = 2;
 		foreach (var row in rows)
 		{
 			WriteCommonRow(ws, rowNo, row);
-			if (row.ModePayment.HasValue)
-			{
-				ws.Cell(rowNo, 7).Value = row.ModePayment.Value;
-				ws.Cell(rowNo, 7).Style.NumberFormat.Format = "0.00";
-			}
+
+			WriteDecimal(ws, rowNo, 7, row.ModeAllowedAmount);
+			WriteDecimal(ws, rowNo, 8, row.ModeInsurancePaymentAmount);
+			WriteDecimal(ws, rowNo, 9, row.ModeAllowedAmountPerUnit);
+			WriteDecimal(ws, rowNo, 10, row.ModeInsurancePaymentPerUnit);
+
 			rowNo++;
 		}
 
 		FormatWorksheet(ws, rowNo - 1);
 	}
 
+	private static void WriteDecimal(IXLWorksheet ws, int rowNo, int colNo, decimal? value)
+	{
+		if (!value.HasValue)
+			return;
+
+		ws.Cell(rowNo, colNo).Value = value.Value;
+		ws.Cell(rowNo, colNo).Style.NumberFormat.Format = "0.00";
+	}
 	private static void WriteCommonRow(IXLWorksheet ws, int rowNo, PaymentReportRow row)
 	{
 		ws.Cell(rowNo, 1).Value = row.PayerName ?? string.Empty;
 		ws.Cell(rowNo, 2).Value = row.Panel ?? string.Empty;
-
-		// Write CPT as string/text
 		ws.Cell(rowNo, 3).Value = NormalizeCptCode(row.CPTCode);
 
 		if (row.AllowedAmount.HasValue)
@@ -187,7 +410,6 @@ public static class ModeMedianPaymentReportWriter
 
 		var value = cptCode.Trim();
 
-		// If CPT comes like 99213.00 -> write as 99213
 		if (decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var d))
 		{
 			if (d == decimal.Truncate(d))
@@ -197,7 +419,12 @@ public static class ModeMedianPaymentReportWriter
 		return value;
 	}
 
-	private static void WriteHeaderRow(IXLWorksheet ws, string metricHeader)
+	private static void WriteHeaderRow(
+		IXLWorksheet ws,
+		string metricHeader1,
+		string metricHeader2,
+		string metricHeader3,
+		string metricHeader4)
 	{
 		ws.Cell(1, 1).Value = "PayerName";
 		ws.Cell(1, 2).Value = "Panel";
@@ -205,7 +432,10 @@ public static class ModeMedianPaymentReportWriter
 		ws.Cell(1, 4).Value = "AllowedAmount";
 		ws.Cell(1, 5).Value = "InsurancePaymentAmount";
 		ws.Cell(1, 6).Value = "DistinctAllowedPaymentCount";
-		ws.Cell(1, 7).Value = metricHeader;
+		ws.Cell(1, 7).Value = metricHeader1;
+		ws.Cell(1, 8).Value = metricHeader2;
+		ws.Cell(1, 9).Value = metricHeader3;
+		ws.Cell(1, 10).Value = metricHeader4;
 		ws.Row(1).Style.Font.Bold = true;
 	}
 
@@ -213,7 +443,7 @@ public static class ModeMedianPaymentReportWriter
 	{
 		if (lastRow >= 1)
 		{
-			var range = ws.Range(1, 1, Math.Max(lastRow, 1), 7);
+			var range = ws.Range(1, 1, Math.Max(lastRow, 1), 10);
 			range.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 			range.Style.Alignment.WrapText = false;
 			range.SetAutoFilter();
@@ -224,7 +454,10 @@ public static class ModeMedianPaymentReportWriter
 	}
 
 	private static string BuildGroupKey(PaymentRow row)
-		=> string.Join("|", NormalizeKey(row.PayerName), NormalizeKey(row.Panel), NormalizeKey(row.CPTCode));
+		=> string.Join("|",
+			NormalizeKey(row.PayerName),
+			NormalizeKey(row.Panel),
+			NormalizeKey(row.CPTCode));
 
 	private static string BuildDistinctRowKey(PaymentRow row)
 		=> string.Join("|",
@@ -254,7 +487,9 @@ public static class ModeMedianPaymentReportWriter
 
 	private static string NormalizeHeader(string? value)
 	{
-		if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+		if (string.IsNullOrWhiteSpace(value))
+			return string.Empty;
+
 		return new string(value.Where(c => !char.IsWhiteSpace(c) && c != '_' && c != '-').ToArray())
 			.Trim()
 			.ToUpperInvariant();
@@ -265,7 +500,8 @@ public static class ModeMedianPaymentReportWriter
 
 	private static decimal? ParseNullableDecimal(string? value)
 	{
-		if (string.IsNullOrWhiteSpace(value)) return null;
+		if (string.IsNullOrWhiteSpace(value))
+			return null;
 
 		var cleaned = value.Trim()
 			.Replace("$", string.Empty)
@@ -284,7 +520,8 @@ public static class ModeMedianPaymentReportWriter
 
 	private static decimal? CalculateMedian(IReadOnlyList<decimal> values)
 	{
-		if (values.Count == 0) return null;
+		if (values.Count == 0)
+			return null;
 
 		var ordered = values.OrderBy(x => x).ToList();
 		var mid = ordered.Count / 2;
@@ -297,7 +534,8 @@ public static class ModeMedianPaymentReportWriter
 
 	private static decimal? CalculateMode(IReadOnlyList<decimal> values)
 	{
-		if (values.Count == 0) return null;
+		if (values.Count == 0)
+			return null;
 
 		return values
 			.GroupBy(x => x)
@@ -309,11 +547,13 @@ public static class ModeMedianPaymentReportWriter
 	}
 
 	private sealed record PaymentRow(
-		string PayerName,
-		string Panel,
-		string CPTCode,
-		decimal? AllowedAmount,
-		decimal? InsurancePaymentAmount);
+	string PayerName,
+	string Panel,
+	string CPTCode,
+	decimal? AllowedAmount,
+	decimal? InsurancePaymentAmount,
+	decimal? AllowedAmountPerUnit,
+	decimal? InsurancePaymentPerUnit);
 
 	private sealed record PaymentReportRow(
 		string PayerName,
@@ -322,6 +562,12 @@ public static class ModeMedianPaymentReportWriter
 		decimal? AllowedAmount,
 		decimal? InsurancePaymentAmount,
 		int DistinctAllowedPaymentCount,
-		decimal? MedianPayment,
-		decimal? ModePayment);
+		decimal? MedianAllowedAmount,
+		decimal? MedianInsurancePaymentAmount,
+		decimal? ModeAllowedAmount,
+		decimal? ModeInsurancePaymentAmount,
+		decimal? MedianAllowedAmountPerUnit,
+		decimal? MedianInsurancePaymentPerUnit,
+		decimal? ModeAllowedAmountPerUnit,
+		decimal? ModeInsurancePaymentPerUnit);
 }

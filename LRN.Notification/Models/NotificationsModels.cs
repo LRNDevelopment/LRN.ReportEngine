@@ -9,10 +9,9 @@ public sealed class EmailNotification
 
 	public string Subject { get; set; } = "";
 	public string Content { get; set; } = "";
-
-	// Optional (nice to have)
 	public bool IsHtml { get; set; } = false;
 }
+
 public sealed class TeamsNotification
 {
 	public string Title { get; set; } = "Notification";
@@ -34,9 +33,4 @@ public sealed class TeamsWebhookOptions
 {
 	public bool Enabled { get; set; } = true;
 	public string WebhookUrl { get; set; } = "";
-
-	// Auto: detect from URL
-	// Workflow: Power Automate / Workflows webhook URL (Adaptive Card payload)
-	// LegacyWebhook: classic Teams incoming webhook (MessageCard payload)
-	public string EndpointType { get; set; } = "Auto";
 }

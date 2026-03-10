@@ -24,6 +24,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 	private readonly IColumnSchemaLoader _schemaLoader;
 	private readonly IProcessLogService _processLog;
 	private readonly ITeamsNotifier _teamsNotifier;
+	private readonly ModeMedianReportPublisher _modeMedianPublisher;
 
 	private ColumnSchema? _commonLineSchema;
 	private ColumnSchema? _commonClaimSchema;
@@ -39,7 +40,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		IExcelSchemaValidator schemaValidator,
 		IColumnSchemaLoader schemaLoader,
 		IProcessLogService processLog,
-		ITeamsNotifier teamsNotifier)
+		ITeamsNotifier teamsNotifier,
+		ModeMedianReportPublisher modeMedianPublisher	)
 	{
 		_logger = logger;
 		_fileLog = fileLog;
@@ -50,6 +52,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		_schemaLoader = schemaLoader;
 		_processLog = processLog;
 		_teamsNotifier = teamsNotifier;
+		_modeMedianPublisher = modeMedianPublisher;
+
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -570,30 +574,34 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				_logger.LogInformation("Lab {LabId}: LineLevel STANDARD CSV generated -> {Path}", lab.LabId, lineOutPath);
 				_fileLog.Info($"Lab {lab.LabId}: LineLevel STANDARD CSV -> {lineOutPath}");
 
-				// STEP 65: Mode/Median payment workbook
-				stepSeq = 65;
-				var step65 = new StepLogRow
+				try
 				{
-					StepSeq = stepSeq,
-					StepName = "Generate Mode Median Payment Workbook",
-					StepCategory = "Transform",
-					SourceSystem = "Local",
-					StartTimeIST = _processLog.NowIST(),
-					Status = "IN_PROGRESS",
-					FileNameIn = Path.GetFileName(lineOutPath),
-					PathIn = lineOutPath,
-					FileNameOut = Path.GetFileName(modeMedianOutPath),
-					PathOut = modeMedianOutPath
-				};
-				activeStep = step65;
-				await _processLog.StepStartAsync(runCtx, step65, ct);
-				ModeMedianPaymentReportWriter.Generate(lineOutPath, modeMedianOutPath);
-				step65.EndTimeIST = _processLog.NowIST();
-				step65.Status = "SUCCESS";
-				await _processLog.StepEndAsync(runCtx, step65, ct);
-				activeStep = null;
-				_logger.LogInformation("Lab {LabId}: Mode/Median payment workbook generated -> {Path}", lab.LabId, modeMedianOutPath);
-				_fileLog.Info($"Lab {lab.LabId}: Mode/Median payment workbook -> {modeMedianOutPath}");
+					var publishResult = await _modeMedianPublisher.PublishAsync(
+						runCtx.RunId,
+						lab.LabName,
+						sourceDateLabel,
+						lineOutPath,
+						ct);
+
+					_logger.LogInformation(
+						"Median/Mode publish result for lab {LabId}: {Summary}",
+						lab.LabId,
+						publishResult.Summary);
+
+					_fileLog.Info(
+						$"Median/Mode publish result for lab {lab.LabId}: {publishResult.Summary}");
+				}
+				catch (Exception ex)
+				{
+					_logger.LogWarning(
+						ex,
+						"Median/Mode publish failed for lab {LabId}",
+						lab.LabId);
+
+					_fileLog.Error(
+						$"Median/Mode publish failed for lab {lab.LabId}",
+						ex);
+				}
 
 				// STEP 70: ClaimLevel RAW export
 				stepSeq = 70;
@@ -658,6 +666,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				_fileLog.Info($"Lab {lab.LabId}: ClaimLevel STANDARD CSV -> {claimOutPath}");
 
 				sw.Stop();
+
+
 
 				// Cleanup RAW CSVs unless configured to keep
 				if (!_opt.KeepRawCsvExports)

@@ -3,11 +3,6 @@ using LRN.Notifications.Implementations;
 using LRN.Notifications.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LRN.Notifications
 {
@@ -15,10 +10,17 @@ namespace LRN.Notifications
 	{
 		public static IServiceCollection AddMyCompanyNotifications(
 			this IServiceCollection services,
-            IConfiguration config)
+			IConfiguration config)
 		{
 			services.Configure<SmtpOptions>(config.GetSection("Notifications:Smtp"));
-			services.Configure<TeamsWebhookOptions>(config.GetSection("Notifications:Teams"));
+
+			var teamsSection = config.GetSection("Notifications:Teams");
+			if (!teamsSection.Exists())
+			{
+				teamsSection = config.GetSection("TeamsSettings");
+			}
+
+			services.Configure<TeamsWebhookOptions>(teamsSection);
 
 			services.AddHttpClient();
 

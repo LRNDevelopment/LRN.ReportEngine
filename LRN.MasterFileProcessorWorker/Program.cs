@@ -11,8 +11,8 @@ var host = Host.CreateDefaultBuilder(args)
 	.ConfigureLogging((context, logging) =>
 	{
 		logging.ClearProviders();
-		logging.AddConsole();   // useful when running EXE manually
-		logging.AddEventLog();  // useful when running as Windows Service
+		logging.AddConsole();
+		logging.AddEventLog();
 	})
 	.ConfigureServices((context, services) =>
 	{
@@ -24,12 +24,14 @@ var host = Host.CreateDefaultBuilder(args)
 		services.AddExcelValidator();
 		services.AddMyCompanyNotifications(context.Configuration);
 
+
 		services.AddSingleton<MasterFileProcessorFileStatusStore>();
 
 		services.AddSingleton<IProcessLogRepository, SqlProcessLogRepository>();
 		services.AddSingleton<IProcessLogCsvWriter, ProcessLogCsvWriter>();
 		services.AddSingleton<IProcessLogWorkbookWriter, ProcessLogWorkbookWriter>();
 		services.AddSingleton<IProcessLogService, ProcessLogService>();
+		services.AddSingleton<ModeMedianReportPublisher>();
 
 		services.AddHostedService<MasterFileProcessorWorker>();
 	})

@@ -229,7 +229,6 @@ public static class ModeMedianPaymentReportWriter
 			{
 				var rawGroupRows = group.ToList();
 
-				// distinct output rows
 				var distinctOutputRows = rawGroupRows
 					.GroupBy(BuildDistinctRowKey)
 					.Select(g => g.First())
@@ -237,7 +236,7 @@ public static class ModeMedianPaymentReportWriter
 					.ThenBy(x => x.InsurancePaymentAmount ?? decimal.MinValue)
 					.ToList();
 
-				// count of EACH exact combination inside the group
+				// exact count for each AllowedAmount + InsurancePaymentAmount combination
 				var exactCombinationCountMap = rawGroupRows
 					.GroupBy(BuildDistinctRowKey)
 					.ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
@@ -262,39 +261,20 @@ public static class ModeMedianPaymentReportWriter
 					.Select(x => x.InsurancePaymentPerUnit!.Value)
 					.ToList();
 
-				// median from raw filtered line-level rows
+				// Median stays exactly the same
 				var medianAllowedAmount = CalculateMedian(allowedValues);
 				var medianInsurancePaymentAmount = CalculateMedian(paymentValues);
 				var medianAllowedAmountPerUnit = CalculateMedian(allowedPerUnitValues);
 				var medianInsurancePaymentPerUnit = CalculateMedian(paymentPerUnitValues);
 
-				// your business rule:
-				// mode allowed = highest allowed in the group
-				var modeAllowedAmount = GetHighestValue(
-					distinctOutputRows
-						.Where(x => x.AllowedAmount.HasValue)
-						.Select(x => x.AllowedAmount!.Value)
-						.ToList());
+				// NEW MODE RULE:
+				// 1) take the combination with the highest count
+				// 2) if counts tie, take the higher AllowedAmount
+				// 3) if still tie, take the higher InsurancePaymentAmount
+				var amountMode = SelectWinningAmountPaymentMode(rawGroupRows);
 
-				// payment mode only from rows under selected allowed amount
-				var modeInsurancePaymentAmount = CalculatePaymentModeForSelectedAllowed(
-					rawGroupRows,
-					modeAllowedAmount,
-					r => r.AllowedAmount,
-					r => r.InsurancePaymentAmount);
-
-				// same logic for per-unit
-				var modeAllowedAmountPerUnit = GetHighestValue(
-					rawGroupRows
-						.Where(x => x.AllowedAmountPerUnit.HasValue)
-						.Select(x => x.AllowedAmountPerUnit!.Value)
-						.ToList());
-
-				var modeInsurancePaymentPerUnit = CalculatePaymentModeForSelectedAllowed(
-					rawGroupRows,
-					modeAllowedAmountPerUnit,
-					r => r.AllowedAmountPerUnit,
-					r => r.InsurancePaymentPerUnit);
+				// Same rule for per-unit columns
+				var perUnitMode = SelectWinningPerUnitMode(rawGroupRows);
 
 				return distinctOutputRows.Select(r =>
 				{
@@ -312,15 +292,75 @@ public static class ModeMedianPaymentReportWriter
 						DistinctAllowedPaymentCount: exactCombinationCount,
 						MedianAllowedAmount: medianAllowedAmount,
 						MedianInsurancePaymentAmount: medianInsurancePaymentAmount,
-						ModeAllowedAmount: modeAllowedAmount,
-						ModeInsurancePaymentAmount: modeInsurancePaymentAmount,
+						ModeAllowedAmount: amountMode.AllowedAmount,
+						ModeInsurancePaymentAmount: amountMode.InsurancePaymentAmount,
 						MedianAllowedAmountPerUnit: medianAllowedAmountPerUnit,
 						MedianInsurancePaymentPerUnit: medianInsurancePaymentPerUnit,
-						ModeAllowedAmountPerUnit: modeAllowedAmountPerUnit,
-						ModeInsurancePaymentPerUnit: modeInsurancePaymentPerUnit);
+						ModeAllowedAmountPerUnit: perUnitMode.AllowedAmountPerUnit,
+						ModeInsurancePaymentPerUnit: perUnitMode.InsurancePaymentPerUnit);
 				});
 			});
 	}
+
+	private static (decimal? AllowedAmount, decimal? InsurancePaymentAmount) SelectWinningAmountPaymentMode(
+	IReadOnlyList<PaymentRow> rows)
+	{
+		var winner = rows
+			.Where(x => x.AllowedAmount.HasValue && x.InsurancePaymentAmount.HasValue)
+			.GroupBy(BuildDistinctRowKey)
+			.Select(g =>
+			{
+				var first = g.First();
+				return new
+				{
+					AllowedAmount = first.AllowedAmount,
+					InsurancePaymentAmount = first.InsurancePaymentAmount,
+					Count = g.Count()
+				};
+			})
+			.OrderByDescending(x => x.Count)
+			.ThenByDescending(x => x.AllowedAmount ?? decimal.MinValue)
+			.ThenByDescending(x => x.InsurancePaymentAmount ?? decimal.MinValue)
+			.FirstOrDefault();
+
+		return winner == null
+			? (null, null)
+			: (winner.AllowedAmount, winner.InsurancePaymentAmount);
+	}
+
+	private static (decimal? AllowedAmountPerUnit, decimal? InsurancePaymentPerUnit) SelectWinningPerUnitMode(
+		IReadOnlyList<PaymentRow> rows)
+	{
+		var winner = rows
+			.Where(x => x.AllowedAmountPerUnit.HasValue && x.InsurancePaymentPerUnit.HasValue)
+			.GroupBy(BuildPerUnitDistinctRowKey)
+			.Select(g =>
+			{
+				var first = g.First();
+				return new
+				{
+					AllowedAmountPerUnit = first.AllowedAmountPerUnit,
+					InsurancePaymentPerUnit = first.InsurancePaymentPerUnit,
+					Count = g.Count()
+				};
+			})
+			.OrderByDescending(x => x.Count)
+			.ThenByDescending(x => x.AllowedAmountPerUnit ?? decimal.MinValue)
+			.ThenByDescending(x => x.InsurancePaymentPerUnit ?? decimal.MinValue)
+			.FirstOrDefault();
+
+		return winner == null
+			? (null, null)
+			: (winner.AllowedAmountPerUnit, winner.InsurancePaymentPerUnit);
+	}
+
+	private static string BuildPerUnitDistinctRowKey(PaymentRow row)
+		=> string.Join("|",
+			NormalizeKey(row.PayerName),
+			NormalizeKey(row.Panel),
+			NormalizeKey(row.CPTCode),
+			row.AllowedAmountPerUnit?.ToString("0.##############", CultureInfo.InvariantCulture) ?? string.Empty,
+			row.InsurancePaymentPerUnit?.ToString("0.##############", CultureInfo.InvariantCulture) ?? string.Empty);
 
 	private static void WriteMedianSheet(XLWorkbook workbook, IReadOnlyList<PaymentReportRow> rows)
 	{

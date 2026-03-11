@@ -63,7 +63,7 @@
 			"DataType": "date"
 		},
 		{
-			"Name": "Panel Group",
+			"Name": "Panel Name",
 			"Required": true,
 			"DataType": "string"
 		},

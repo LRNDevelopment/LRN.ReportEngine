@@ -41,7 +41,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		IColumnSchemaLoader schemaLoader,
 		IProcessLogService processLog,
 		ITeamsNotifier teamsNotifier,
-		ModeMedianReportPublisher modeMedianPublisher	)
+		ModeMedianReportPublisher modeMedianPublisher)
 	{
 		_logger = logger;
 		_fileLog = fileLog;
@@ -62,6 +62,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 		_logger.LogInformation("Worker started. SharePoint.Enabled={Enabled}", _opt.SharePoint.Enabled);
 		_fileLog.Info($"Worker started. SharePoint.Enabled={_opt.SharePoint.Enabled}");
+
+		////await TrySendTeamNotificationAsync("Test : Master File Processor", string.Join(Environment.NewLine, "Message : This is test"), stoppingToken);
 
 		while (!stoppingToken.IsCancellationRequested)
 		{

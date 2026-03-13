@@ -1,3 +1,5 @@
+using static SharePointDownloader;
+
 public sealed class ProcessLogOptions
 {
     public bool Enabled { get; set; } = true;
@@ -65,3 +67,4 @@ public sealed class ProcessLogOptions
     public string DefaultTriggerType { get; set; } = "Schedule";
     public string DefaultTriggeredBy { get; set; } = "Worker";
 }
+

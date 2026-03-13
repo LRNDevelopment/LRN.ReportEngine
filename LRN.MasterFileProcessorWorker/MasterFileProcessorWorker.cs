@@ -1,8 +1,9 @@
 ﻿using Common.Logging;
-using LRN.ExcelValidator.Services;
 using LRN.ExcelValidator.Models;
+using LRN.ExcelValidator.Services;
 using LRN.Notifications.Abstractions;
 using LRN.Notifications.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,6 +13,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using static SharePointDownloader;
 
 public sealed class MasterFileProcessorWorker : BackgroundService
 {
@@ -25,6 +27,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 	private readonly IProcessLogService _processLog;
 	private readonly ITeamsNotifier _teamsNotifier;
 	private readonly ModeMedianReportPublisher _modeMedianPublisher;
+	private readonly IConfiguration _configuration;
 
 	private ColumnSchema? _commonLineSchema;
 	private ColumnSchema? _commonClaimSchema;
@@ -41,7 +44,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		IColumnSchemaLoader schemaLoader,
 		IProcessLogService processLog,
 		ITeamsNotifier teamsNotifier,
-		ModeMedianReportPublisher modeMedianPublisher)
+		ModeMedianReportPublisher modeMedianPublisher,
+		IConfiguration configuration)
 	{
 		_logger = logger;
 		_fileLog = fileLog;
@@ -53,6 +57,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		_processLog = processLog;
 		_teamsNotifier = teamsNotifier;
 		_modeMedianPublisher = modeMedianPublisher;
+		_configuration = configuration;
 
 	}
 
@@ -109,7 +114,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 			_opt.ReportOutputsRoot = Path.Combine(AppContext.BaseDirectory, "LabReportOutputs");
 
 		Directory.CreateDirectory(_opt.WatchFolder);
-		Directory.CreateDirectory(_opt.ErrorFolder);
+		//Directory.CreateDirectory(_opt.ErrorFolder);
 		Directory.CreateDirectory(_opt.ReportOutputsRoot);
 		Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "logs"));
 	}
@@ -190,6 +195,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 			SharePointDownloader.SelectedFile? selected = null;
 			int stepSeq = 0;
 			StepLogRow? activeStep = null;
+			ModeMedianReportPublisher.ModeMedianPublishResult? modeMedianPublishResult = null;
 
 			try
 			{
@@ -207,25 +213,25 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				activeStep = step10;
 				await _processLog.StepStartAsync(runCtx, step10, ct);
 
-				// NOTE: downloader checks latest folder first and falls back to previous
-				selected = await _sp.TryGetLatestFileForLabAsync(lab, runLocalNow.Year, ct);
+				var lookup = await _sp.TryGetLatestFileForLabAsync(lab, runLocalNow.Year, ct);
+				selected = lookup.File;
 
 				step10.EndTimeIST = _processLog.NowIST();
 				step10.Status = selected == null ? "SKIPPED" : "SUCCESS";
 				step10.PathOut = selected?.SharePointPath;
 				step10.FileNameOut = selected?.Name;
-				step10.ErrorMessage = selected == null ? "no eligible SharePoint file found" : null;
+				step10.ErrorMessage = selected == null ? lookup.Message : null;
 				await _processLog.StepEndAsync(runCtx, step10, ct);
 				activeStep = null;
 
 				if (selected == null)
 				{
-					_logger.LogInformation("Lab {LabId}: no eligible SharePoint file found.", lab.LabId);
-					_fileLog.Info($"Lab {lab.LabId}: no eligible SharePoint file found.");
+					_logger.LogInformation("Lab {LabId}: {Message}", lab.LabId, lookup.Message);
+					_fileLog.Info($"Lab {lab.LabId}: {lookup.Message}");
 
 					runRow.OverallStatus = "SKIPPED";
 					runRow.LatestMasterFileFound = "NO";
-					runRow.Notes = "no eligible SharePoint file found";
+					runRow.Notes = lookup.Message;
 					await _processLog.CompleteRunAsync(runCtx, runRow, ct);
 
 					MasterProcessorLogCsv.Append(
@@ -236,13 +242,32 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						sourceFileName: "",
 						sourceFileLocation: "",
 						status: "Skipped",
-						message: "no eligible SharePoint file found",
+						message: lookup.Message ?? "no eligible SharePoint file found",
 						claimOutput: "",
 						lineOutput: "");
 
-					// Also write status log locally + upload if enabled
-					await TryWriteAndUploadFileStatusLogAsync(lab, selected, siteDriveId, status: "Skipped", outputLocation: "", logMessage: "no eligible SharePoint file found", ct: ct);
-					await NotifyNoLatestFileFoundAsync(lab, ct);
+					await TryWriteAndUploadFileStatusLogAsync(
+						lab,
+						selected,
+						siteDriveId,
+						status: "Skipped",
+						outputLocation: "",
+						logMessage: lookup.Message ?? "no eligible SharePoint file found",
+						ct: ct);
+
+					if (lookup.Status == SharePointDownloader.LatestFileLookupStatus.NoFileInCurrentWeekFolder)
+					{
+						await NotifyNoRecentFileFoundInLatestWeekFolderAsync(
+							lab,
+							lookup.MonthFolderName,
+							lookup.WeekFolderName,
+							ct);
+					}
+					else
+					{
+						await NotifyNoLatestFileFoundAsync(lab, ct);
+					}
+
 					continue;
 				}
 
@@ -267,7 +292,13 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				activeStep = step15;
 				await _processLog.StepStartAsync(runCtx, step15, ct);
 
-				var alreadyProcessed = await _status.IsProcessedAsync(selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey, ct);
+				var alreadyProcessed = await _status.IsProcessedAsync(
+					selected.LabId,
+					selected.DriveId,
+					selected.ItemId,
+					selected.ETagKey,
+					ct);
+
 				step15.EndTimeIST = _processLog.NowIST();
 				step15.Status = alreadyProcessed ? "SKIPPED" : "SUCCESS";
 				step15.ErrorMessage = alreadyProcessed ? "already processed (etag unchanged)" : null;
@@ -296,7 +327,15 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						claimOutput: "",
 						lineOutput: "");
 
-					await TryWriteAndUploadFileStatusLogAsync(lab, selected, siteDriveId, status: "Skipped", outputLocation: "", logMessage: "already processed (etag unchanged)", ct: ct);
+					await TryWriteAndUploadFileStatusLogAsync(
+						lab,
+						selected,
+						siteDriveId,
+						status: "Skipped",
+						outputLocation: "",
+						logMessage: "already processed (etag unchanged)",
+						ct: ct);
+
 					continue;
 				}
 
@@ -343,12 +382,16 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				Directory.CreateDirectory(processedOutFolder);
 
 				var sourceDateLabel = NormalizeWeekFolderForFileName(weekFolder);
+
+				// Move previous output files for same lab + same week into Obsolete
+				ArchiveExistingWeekOutputFiles(processedOutFolder, lab.LabName, sourceDateLabel);
+
 				var claimOutFileName = BuildProcessedOutputFileName(runCtx.RunId, lab.LabName, "Claim Level", sourceDateLabel);
 				var lineOutFileName = BuildProcessedOutputFileName(runCtx.RunId, lab.LabName, "Line Level", sourceDateLabel);
+				var modeMedianOutFileName = BuildModeMedianOutputFileName(runCtx.RunId, lab.LabName, sourceDateLabel);
 
 				var claimOutPath = Path.Combine(processedOutFolder, claimOutFileName);
 				var lineOutPath = Path.Combine(processedOutFolder, lineOutFileName);
-				var modeMedianOutFileName = BuildModeMedianOutputFileName(runCtx.RunId, runLocalNow);
 				var modeMedianOutPath = Path.Combine(processedOutFolder, modeMedianOutFileName);
 
 				// RAW ROOT (no lab folder):
@@ -445,7 +488,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						ct: ct,
 						errorLogInfo: msg);
 
-					await TryWriteAndUploadFileStatusLogAsync(lab, selected, siteDriveId, status: "Failed", outputLocation: _opt.ErrorFolder, logMessage: msg, ct: ct);
+					//await TryWriteAndUploadFileStatusLogAsync(lab, selected, siteDriveId, status: "Failed", outputLocation: _opt.ErrorFolder, logMessage: msg, ct: ct);
 
 					step40.EndTimeIST = _processLog.NowIST();
 					step40.Status = "FAILED";
@@ -485,7 +528,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					runRow.Notes = msg;
 					await _processLog.CompleteRunAsync(runCtx, runRow, ct);
 
-					MoveToErrorFolder(stagingPath, msg);
+					//MoveToErrorFolder(stagingPath, msg);
 					await NotifyProcessingErrorAsync(lab, msg, selected.Name, selected.SharePointPath, ct);
 					continue;
 				}
@@ -578,7 +621,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				try
 				{
-					var publishResult = await _modeMedianPublisher.PublishAsync(
+					modeMedianPublishResult = await _modeMedianPublisher.PublishAsync(
 						runCtx.RunId,
 						lab.LabName,
 						sourceDateLabel,
@@ -588,10 +631,10 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					_logger.LogInformation(
 						"Median/Mode publish result for lab {LabId}: {Summary}",
 						lab.LabId,
-						publishResult.Summary);
+						modeMedianPublishResult.Summary);
 
 					_fileLog.Info(
-						$"Median/Mode publish result for lab {lab.LabId}: {publishResult.Summary}");
+						$"Median/Mode publish result for lab {lab.LabId}: {modeMedianPublishResult.Summary}");
 				}
 				catch (Exception ex)
 				{
@@ -882,7 +925,13 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				runRow.OverallStatus = "SUCCESS";
 				runRow.Notes = $"Saved LineLevel='{lineOutPath}', ClaimLevel='{claimOutPath}', ModeMedian='{modeMedianOutPath}'. OutputUpload={outputUploadResult}.";
 				await _processLog.CompleteRunAsync(runCtx, runRow, ct);
-				await NotifyCompletedAsync(lab, ResolveNotificationOutputLocation(outputUploadResult, processedOutFolder), ct);
+				await NotifyCompletedAsync(
+					lab,
+					claimOutPath,
+					lineOutPath,
+					ResolveNotificationOutputLocation(outputUploadResult, processedOutFolder),
+					modeMedianPublishResult,
+					ct);
 			}
 			catch (OperationCanceledException) when (ct.IsCancellationRequested)
 			{
@@ -981,24 +1030,165 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 	private async Task NotifyProcessingErrorAsync(LabFileMap lab, string errorMessage, string? fileName, string? filePath, CancellationToken ct)
 	{
-		var title = $"Master File Processor - Error On File Processing For Lab {lab.LabName}";
+		var title = "LRN : Master File Processor";
 
-		var parts = new List<string>();
+		var parts = new List<string>
+		{
+			$"⚠️ Error while processing files for the {lab.LabName} lab."
+		};
+
 		if (!string.IsNullOrWhiteSpace(fileName))
-			parts.Add($"File: {fileName}");
-		if (!string.IsNullOrWhiteSpace(filePath))
-			parts.Add($"Path: {filePath}");
-		parts.Add($"Error: {errorMessage}");
+			parts.Add($"📄 File: {fileName}");
 
-		await TrySendTeamNotificationAsync(title, string.Join(Environment.NewLine, parts), ct);
+		if (!string.IsNullOrWhiteSpace(filePath))
+			parts.Add($"📁 Source: {filePath}");
+
+		parts.Add($"❌ Error: {errorMessage}");
+
+		await TrySendTeamNotificationAsync(title, string.Join(Environment.NewLine + Environment.NewLine, parts), ct);
 	}
 
-	private async Task NotifyCompletedAsync(LabFileMap lab, string outputLocation, CancellationToken ct)
+	private async Task NotifyCompletedAsync(
+		LabFileMap lab,
+		string claimOutPath,
+		string lineOutPath,
+		string outputLocation,
+		ModeMedianReportPublisher.ModeMedianPublishResult? modeMedianPublishResult,
+		CancellationToken ct)
 	{
-		var title = $"Master File Processor - Completed Process For Lab {lab.LabName}";
-		var message = $"Copied the Line level and claim level files under {outputLocation}.";
+		var title = "LRN : Master File Processor";
 
-		await TrySendTeamNotificationAsync(title, message, ct);
+		var claimDownloadPath = ToSharePointNotificationUrl(CombineNotificationPath(outputLocation, Path.GetFileName(claimOutPath)));
+		var lineDownloadPath = ToSharePointNotificationUrl(CombineNotificationPath(outputLocation, Path.GetFileName(lineOutPath)));
+		var medianDownloadPath = ToSharePointNotificationUrl(ResolvePublishedDownloadPath(
+			modeMedianPublishResult?.MedianSharePointStatus,
+			modeMedianPublishResult?.MedianLocalPath));
+		var modeDownloadPath = ToSharePointNotificationUrl(ResolvePublishedDownloadPath(
+			modeMedianPublishResult?.ModeSharePointStatus,
+			modeMedianPublishResult?.ModeLocalPath));
+
+		var lines = new List<string>
+		{
+			$"🟢 Files generated for the {lab.LabName} lab.",
+			"Please download the files from the links below:",
+			BuildDownloadLine("Claim Level", Path.GetFileName(claimOutPath), claimDownloadPath),
+			BuildDownloadLine("Line Level", Path.GetFileName(lineOutPath), lineDownloadPath)
+		};
+
+		if (!string.IsNullOrWhiteSpace(modeMedianPublishResult?.MedianLocalPath))
+			lines.Add(BuildDownloadLine("Median", Path.GetFileName(modeMedianPublishResult.MedianLocalPath), medianDownloadPath));
+
+		if (!string.IsNullOrWhiteSpace(modeMedianPublishResult?.ModeLocalPath))
+			lines.Add(BuildDownloadLine("Mode", Path.GetFileName(modeMedianPublishResult.ModeLocalPath), modeDownloadPath));
+
+		await TrySendTeamNotificationAsync(title, string.Join(Environment.NewLine + Environment.NewLine, lines), ct);
+	}
+
+	private static string BuildDownloadLine(string label, string fileName, string downloadPath)
+	{
+		if (Uri.TryCreate(downloadPath, UriKind.Absolute, out _))
+			return $"📄 {label}: [{fileName}]({downloadPath})";
+
+		return $"📄 {label}: {fileName}{Environment.NewLine}Path: {downloadPath}";
+	}
+
+	private static string ResolvePublishedDownloadPath(string? sharePointStatus, string? fallbackLocalPath)
+	{
+		const string uploadedPrefix = "UPLOADED -> ";
+
+		if (!string.IsNullOrWhiteSpace(sharePointStatus) &&
+			sharePointStatus.StartsWith(uploadedPrefix, StringComparison.OrdinalIgnoreCase))
+		{
+			return sharePointStatus.Substring(uploadedPrefix.Length).Trim();
+		}
+
+		return fallbackLocalPath ?? string.Empty;
+	}
+
+	private static string CombineNotificationPath(string folderOrPath, string fileName)
+	{
+		if (string.IsNullOrWhiteSpace(folderOrPath))
+			return fileName;
+
+		var normalizedFolder = folderOrPath.Replace('\\', '/');
+		if (normalizedFolder.EndsWith(fileName, StringComparison.OrdinalIgnoreCase))
+			return normalizedFolder;
+
+		if (normalizedFolder.Contains('/'))
+			return normalizedFolder.TrimEnd('/') + "/" + fileName;
+
+		return Path.Combine(folderOrPath, fileName);
+	}
+
+	private string ToSharePointNotificationUrl(string pathOrUrl)
+	{
+		if (string.IsNullOrWhiteSpace(pathOrUrl))
+			return string.Empty;
+
+		var normalized = pathOrUrl.Replace('\\', '/').Trim();
+
+		if (Uri.TryCreate(normalized, UriKind.Absolute, out _))
+			return normalized;
+
+		if (Regex.IsMatch(normalized, @"^[a-zA-Z]:/"))
+			return normalized;
+
+		var sharePointSection = GetSharePointNotificationSection();
+		var hostname = sharePointSection["Hostname"];
+		var sitePath = sharePointSection["SitePath"];
+		var driveName = sharePointSection["DriveName"] ?? "Shared Documents";
+
+		if (string.IsNullOrWhiteSpace(hostname) || string.IsNullOrWhiteSpace(sitePath))
+			return normalized;
+
+		var relativePath = NormalizeDriveRelativePath(normalized, driveName);
+		var host = hostname!.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+			? hostname.TrimEnd('/')
+			: "https://" + hostname.Trim().TrimEnd('/');
+
+		var encodedPath = JoinUrlSegments(sitePath!, driveName, relativePath);
+		return host + "/" + encodedPath;
+	}
+
+	private IConfigurationSection GetSharePointNotificationSection()
+	{
+		var root = _configuration.GetSection("SharePoint");
+		if (root.Exists())
+			return root;
+
+		return _configuration.GetSection("MasterFileProcessor:SharePoint");
+	}
+
+	private static string NormalizeDriveRelativePath(string path, string driveName)
+	{
+		if (string.IsNullOrWhiteSpace(path))
+			return string.Empty;
+
+		var normalized = path.Replace('\\', '/').Trim().Trim('/');
+		var markers = new[]
+		{
+			driveName.Trim('/'),
+			"Shared Documents"
+		};
+
+		foreach (var marker in markers.Where(x => !string.IsNullOrWhiteSpace(x)))
+		{
+			var prefix = marker + "/";
+			if (normalized.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+				return normalized.Substring(prefix.Length).Trim('/');
+		}
+
+		return normalized;
+	}
+
+	private static string JoinUrlSegments(params string[] parts)
+	{
+		return string.Join(
+			"/",
+			parts
+				.Where(p => !string.IsNullOrWhiteSpace(p))
+				.SelectMany(p => p.Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries))
+				.Select(Uri.EscapeDataString));
 	}
 
 	private async Task TrySendTeamNotificationAsync(string title, string message, CancellationToken ct)
@@ -1248,7 +1438,24 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 			_fileLog.Error("Failed to upload master processor log to SharePoint.", ex);
 		}
 	}
+	private async Task NotifyNoRecentFileFoundInLatestWeekFolderAsync(
+	LabFileMap lab,
+	string? monthFolder,
+	string? weekFolder,
+	CancellationToken ct)
+	{
+		var title = "LRN : Master File Processor";
 
+		var lines = new List<string>
+	{
+		$"⚠️ No recent file found for the {lab.LabName} lab.",
+		$"📁 Latest month folder: {monthFolder ?? "Unknown"}",
+		$"📂 Latest week folder: {weekFolder ?? "Unknown"}",
+		"No earlier week folders were checked."
+	};
+
+		await TrySendTeamNotificationAsync(title, string.Join(Environment.NewLine + Environment.NewLine, lines), ct);
+	}
 	private static string CombineSpPath(params string[] parts)
 	{
 		var clean = parts
@@ -1327,11 +1534,61 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		return SanitizeFileNameKeepSpaces(fileName);
 	}
 
-	private static string BuildModeMedianOutputFileName(string runId, DateTime runLocalNow)
+	private static string BuildModeMedianOutputFileName(string runId, string? labName, string sourceDateLabel)
 	{
-		var datePart = runLocalNow.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
-		var fileName = $"{runId}_Mode_Median_{datePart}.xlsx";
+		var labPart = string.IsNullOrWhiteSpace(labName) ? "UnknownLab" : labName.Trim();
+		var datePart = string.IsNullOrWhiteSpace(sourceDateLabel) ? "UnknownDate" : sourceDateLabel.Trim();
+
+		var fileName = $"{runId}_{labPart}_Mode Median_{datePart}.xlsx";
 		return SanitizeFileNameKeepSpaces(fileName);
+	}
+
+	private static void ArchiveExistingWeekOutputFiles(string processedOutFolder, string? labName, string sourceDateLabel)
+	{
+		if (string.IsNullOrWhiteSpace(processedOutFolder))
+			return;
+
+		Directory.CreateDirectory(processedOutFolder);
+
+		var obsoleteFolder = Path.Combine(processedOutFolder, "Obsolete");
+		Directory.CreateDirectory(obsoleteFolder);
+
+		var labPart = string.IsNullOrWhiteSpace(labName) ? "UnknownLab" : labName.Trim();
+		var datePart = string.IsNullOrWhiteSpace(sourceDateLabel) ? "UnknownDate" : sourceDateLabel.Trim();
+
+		var markers = new[]
+		{
+		$"_{labPart}_Claim Level_{datePart}",
+		$"_{labPart}_Line Level_{datePart}",
+		$"_{labPart}_Mode_{datePart}",
+		$"_{labPart}_Median_{datePart}",
+		$"_{labPart}_Mode Median_{datePart}"
+	};
+
+		foreach (var filePath in Directory.EnumerateFiles(processedOutFolder, "*.*", SearchOption.TopDirectoryOnly))
+		{
+			var fileName = Path.GetFileName(filePath);
+
+			var isMatch = markers.Any(marker =>
+				fileName.Contains(marker, StringComparison.OrdinalIgnoreCase));
+
+			if (!isMatch)
+				continue;
+
+			var destName =
+				$"{Path.GetFileNameWithoutExtension(fileName)}_Obsolete_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(fileName)}";
+
+			var destPath = Path.Combine(obsoleteFolder, destName);
+
+			if (File.Exists(destPath))
+			{
+				destPath = Path.Combine(
+					obsoleteFolder,
+					$"{Path.GetFileNameWithoutExtension(fileName)}_Obsolete_{DateTime.Now:yyyyMMddHHmmssfff}{Path.GetExtension(fileName)}");
+			}
+
+			File.Move(filePath, destPath);
+		}
 	}
 
 	private static string NormalizeWeekFolderForFileName(string? weekFolder)

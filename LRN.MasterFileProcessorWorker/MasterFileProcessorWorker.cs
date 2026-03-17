@@ -14,9 +14,17 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using static SharePointDownloader;
+using LRN.SharePointClient.Models; 
 
 public sealed class MasterFileProcessorWorker : BackgroundService
 {
+	private sealed class OutputUploadResult
+	{
+		public string Summary { get; set; } = "SKIPPED";
+		public SharePointPublishedFile? ClaimFile { get; set; }
+		public SharePointPublishedFile? LineFile { get; set; }
+	}
+
 	private readonly ILogger<MasterFileProcessorWorker> _logger;   // console/eventlog
 	private readonly ILoggerService _fileLog;                      // log4net file (only what we write)
 	private readonly ImportOptions _opt;
@@ -133,17 +141,25 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		// Load Insurance Master once (required for Global_Payer_ID and normalized PayerName)
 		if (_insuranceMaster == null)
 		{
-			var insPath = ResolvePath(_opt.InsuranceMasterCsvPath);
+			var configuredPath = ResolvePath(_opt.InsuranceMasterCsvPath); // keep same option name for now
+			var insPath = InsuranceMasterExcelReader.ResolveLatestInsuranceMasterPath(configuredPath);
+
 			if (!string.IsNullOrWhiteSpace(insPath))
 			{
-				_insuranceMaster = StandardCsvExporter.LoadInsuranceMaster(insPath);
-				_logger.LogInformation("Loaded Insurance Master: {Count} payer rows from {Path}", _insuranceMaster.Count, insPath);
-				_fileLog.Info($"Loaded Insurance Master: {_insuranceMaster.Count} payer rows from {insPath}");
+				_insuranceMaster = InsuranceMasterExcelReader.LoadInsuranceMasterFromExcel(insPath);
+
+				_logger.LogInformation(
+					"Loaded Insurance Master: {Count} payer rows from latest Excel file {Path}",
+					_insuranceMaster.Count,
+					insPath);
+
+				_fileLog.Info($"Loaded Insurance Master: {_insuranceMaster.Count} payer rows from latest Excel file {insPath}");
 			}
 			else
 			{
-				_logger.LogWarning("InsuranceMasterCsvPath not configured. Global_Payer_ID and PayerName normalization will be blank.");
-				_fileLog.Warn("InsuranceMasterCsvPath not configured. Global_Payer_ID and PayerName normalization will be blank.");
+				_logger.LogWarning("Insurance master Excel file not found. Global_Payer_ID and PayerName normalization will be blank.");
+				_fileLog.Warn("Insurance master Excel file not found. Global_Payer_ID and PayerName normalization will be blank.");
+
 				_insuranceMaster = new Dictionary<string, StandardCsvExporter.InsuranceMasterEntry>(StringComparer.OrdinalIgnoreCase);
 			}
 		}
@@ -755,28 +771,44 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				};
 				activeStep = step100;
 				await _processLog.StepStartAsync(runCtx, step100, ct);
-				var outputUploadResult = await TryUploadOutputsAsync(lab, selected, runLocalNow, claimOutPath, lineOutPath, modeMedianOutPath, ct);
+				var outputUploadResult = await TryUploadOutputsAsync(
+												lab,
+												selected,
+												runLocalNow,
+												claimOutPath,
+												lineOutPath,
+												modeMedianOutPath,
+												ct);
+
 				step100.EndTimeIST = _processLog.NowIST();
-				step100.Status = outputUploadResult.StartsWith("UPLOADED", StringComparison.OrdinalIgnoreCase) ? "SUCCESS" : "WARNING";
-				step100.ErrorMessage = outputUploadResult;
+				step100.Status = outputUploadResult.Summary.StartsWith("UPLOADED", StringComparison.OrdinalIgnoreCase)
+					? "SUCCESS"
+					: "WARNING";
+				step100.ErrorMessage = outputUploadResult.Summary;
 				await _processLog.StepEndAsync(runCtx, step100, ct);
 				activeStep = null;
-				runRow.OutputsCopiedToSharePoint = outputUploadResult.StartsWith("UPLOADED", StringComparison.OrdinalIgnoreCase) ? "YES" : (outputUploadResult.StartsWith("SKIPPED", StringComparison.OrdinalIgnoreCase) ? "SKIPPED" : "NO");
 
-				if (step100.Status == "WARNING" && !outputUploadResult.StartsWith("SKIPPED", StringComparison.OrdinalIgnoreCase))
+				runRow.OutputsCopiedToSharePoint =
+					outputUploadResult.Summary.StartsWith("UPLOADED", StringComparison.OrdinalIgnoreCase) ? "YES" :
+					outputUploadResult.Summary.StartsWith("SKIPPED", StringComparison.OrdinalIgnoreCase) ? "SKIPPED" :
+					"NO";
+
+				if (step100.Status == "WARNING" &&
+					!outputUploadResult.Summary.StartsWith("SKIPPED", StringComparison.OrdinalIgnoreCase))
 				{
 					await _processLog.LogErrorAsync(runCtx, new ErrorLogRow
 					{
 						Severity = "WARNING",
 						StepName = step100.StepName,
 						ErrorCode = "OUTPUT_UPLOAD_WARNING",
-						ErrorSummary = outputUploadResult,
+						ErrorSummary = outputUploadResult.Summary,
 						FileName = selected.Name,
 						FilePath = selected.SharePointPath,
 						RecommendedAction = "Verify SharePoint output folder path/permissions and retry upload if needed.",
 						OwnerTeam = "LRN",
 						Status = "OPEN"
 					}, ct);
+
 					runRow.TotalWarnings += 1;
 				}
 
@@ -801,8 +833,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					selected.LabId, selected.DriveId, selected.ItemId, selected.ETagKey,
 					selected.Name, selected.SharePointPath, selected.LastModifiedUtc,
 					status: "PROCESSED",
-					statusMessage: $"Saved LineLevel='{lineOutPath}', ClaimLevel='{claimOutPath}', ModeMedian='{modeMedianOutPath}'. OutputUpload={outputUploadResult}.",
-					processedAtUtc: DateTimeOffset.UtcNow,
+statusMessage: $"Saved LineLevel='{lineOutPath}', ClaimLevel='{claimOutPath}', ModeMedian='{modeMedianOutPath}'. OutputUpload={outputUploadResult.Summary}.", processedAtUtc: DateTimeOffset.UtcNow,
 					ct: ct);
 
 				step110.EndTimeIST = _processLog.NowIST();
@@ -819,8 +850,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					sourceFileName: selected.Name,
 					sourceFileLocation: selected.SharePointPath,
 					status: "Completed",
-					message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult}",
-					claimOutput: claimOutPath,
+message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summary}", claimOutput: claimOutPath,
 					lineOutput: lineOutPath);
 
 				_fileLog.Info($"Lab {lab.LabId}: PROCESSED {selected.Name}.");
@@ -923,15 +953,15 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				activeStep = null;
 
 				runRow.OverallStatus = "SUCCESS";
-				runRow.Notes = $"Saved LineLevel='{lineOutPath}', ClaimLevel='{claimOutPath}', ModeMedian='{modeMedianOutPath}'. OutputUpload={outputUploadResult}.";
-				await _processLog.CompleteRunAsync(runCtx, runRow, ct);
+				runRow.Notes = $"Saved LineLevel='{lineOutPath}', ClaimLevel='{claimOutPath}', ModeMedian='{modeMedianOutPath}'. OutputUpload={outputUploadResult.Summary}."; await _processLog.CompleteRunAsync(runCtx, runRow, ct);
 				await NotifyCompletedAsync(
-					lab,
-					claimOutPath,
-					lineOutPath,
-					ResolveNotificationOutputLocation(outputUploadResult, processedOutFolder),
-					modeMedianPublishResult,
-					ct);
+							lab,
+							claimOutPath,
+							lineOutPath,
+							outputUploadResult.ClaimFile,
+							outputUploadResult.LineFile,
+							modeMedianPublishResult,
+							ct);
 			}
 			catch (OperationCanceledException) when (ct.IsCancellationRequested)
 			{
@@ -1049,31 +1079,34 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 	}
 
 	private async Task NotifyCompletedAsync(
-		LabFileMap lab,
-		string claimOutPath,
-		string lineOutPath,
-		string outputLocation,
-		ModeMedianReportPublisher.ModeMedianPublishResult? modeMedianPublishResult,
-		CancellationToken ct)
+	LabFileMap lab,
+	string claimOutPath,
+	string lineOutPath,
+	SharePointPublishedFile? claimPublishedFile,
+	SharePointPublishedFile? linePublishedFile,
+	ModeMedianReportPublisher.ModeMedianPublishResult? modeMedianPublishResult,
+	CancellationToken ct)
 	{
 		var title = "LRN : Master File Processor";
 
-		var claimDownloadPath = ToSharePointNotificationUrl(CombineNotificationPath(outputLocation, Path.GetFileName(claimOutPath)));
-		var lineDownloadPath = ToSharePointNotificationUrl(CombineNotificationPath(outputLocation, Path.GetFileName(lineOutPath)));
-		var medianDownloadPath = ToSharePointNotificationUrl(ResolvePublishedDownloadPath(
+		var claimDownloadPath = ResolveNotificationUrl(claimPublishedFile, claimOutPath);
+		var lineDownloadPath = ResolveNotificationUrl(linePublishedFile, lineOutPath);
+
+		var medianDownloadPath = ResolvePublishedDownloadPath(
 			modeMedianPublishResult?.MedianSharePointStatus,
-			modeMedianPublishResult?.MedianLocalPath));
-		var modeDownloadPath = ToSharePointNotificationUrl(ResolvePublishedDownloadPath(
+			modeMedianPublishResult?.MedianLocalPath);
+
+		var modeDownloadPath = ResolvePublishedDownloadPath(
 			modeMedianPublishResult?.ModeSharePointStatus,
-			modeMedianPublishResult?.ModeLocalPath));
+			modeMedianPublishResult?.ModeLocalPath);
 
 		var lines = new List<string>
-		{
-			$"🟢 Files generated for the {lab.LabName} lab.",
-			"Please download the files from the links below:",
-			BuildDownloadLine("Claim Level", Path.GetFileName(claimOutPath), claimDownloadPath),
-			BuildDownloadLine("Line Level", Path.GetFileName(lineOutPath), lineDownloadPath)
-		};
+	{
+		$"🟢 Files generated for the {lab.LabName} lab.",
+		"Please download the files from the links below:",
+		BuildDownloadLine("Claim Level", Path.GetFileName(claimOutPath), claimDownloadPath),
+		BuildDownloadLine("Line Level", Path.GetFileName(lineOutPath), lineDownloadPath)
+	};
 
 		if (!string.IsNullOrWhiteSpace(modeMedianPublishResult?.MedianLocalPath))
 			lines.Add(BuildDownloadLine("Median", Path.GetFileName(modeMedianPublishResult.MedianLocalPath), medianDownloadPath));
@@ -1082,6 +1115,14 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 			lines.Add(BuildDownloadLine("Mode", Path.GetFileName(modeMedianPublishResult.ModeLocalPath), modeDownloadPath));
 
 		await TrySendTeamNotificationAsync(title, string.Join(Environment.NewLine + Environment.NewLine, lines), ct);
+	}
+
+	private static string ResolveNotificationUrl(SharePointPublishedFile? publishedFile, string fallbackLocalPath)
+	{
+		if (!string.IsNullOrWhiteSpace(publishedFile?.NotificationUrl))
+			return publishedFile.NotificationUrl!;
+
+		return fallbackLocalPath;
 	}
 
 	private static string BuildDownloadLine(string label, string fileName, string downloadPath)
@@ -1094,12 +1135,12 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 	private static string ResolvePublishedDownloadPath(string? sharePointStatus, string? fallbackLocalPath)
 	{
-		const string uploadedPrefix = "UPLOADED -> ";
+		const string uploadedUrlPrefix = "UPLOADED_URL -> ";
 
 		if (!string.IsNullOrWhiteSpace(sharePointStatus) &&
-			sharePointStatus.StartsWith(uploadedPrefix, StringComparison.OrdinalIgnoreCase))
+			sharePointStatus.StartsWith(uploadedUrlPrefix, StringComparison.OrdinalIgnoreCase))
 		{
-			return sharePointStatus.Substring(uploadedPrefix.Length).Trim();
+			return sharePointStatus.Substring(uploadedUrlPrefix.Length).Trim();
 		}
 
 		return fallbackLocalPath ?? string.Empty;
@@ -1340,7 +1381,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		}
 	}
 
-	private async Task<string> TryUploadOutputsAsync(
+	private async Task<OutputUploadResult> TryUploadOutputsAsync(
 		LabFileMap lab,
 		SharePointDownloader.SelectedFile selected,
 		DateTime runLocalNow,
@@ -1349,34 +1390,38 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		string modeMedianOutPath,
 		CancellationToken ct)
 	{
+		var result = new OutputUploadResult();
+
 		try
 		{
 			var sp = _opt.SharePoint;
 			if (!sp.Enabled || !sp.UploadOutputs)
-				return "SKIPPED";
+			{
+				result.Summary = "SKIPPED";
+				return result;
+			}
 
 			if (string.IsNullOrWhiteSpace(sp.OutputUploadFolderPath))
-				return "SKIPPED (OutputUploadFolderPath empty)";
+			{
+				result.Summary = "SKIPPED (OutputUploadFolderPath empty)";
+				return result;
+			}
 
-			// Prefer year from SharePoint path; fallback to run year
 			var year = TryParseYearFromSharePointPath(selected.SharePointPath)
 				?? runLocalNow.ToString("yyyy", CultureInfo.InvariantCulture);
 
-			// Parse from SharePoint FULL path:
-			// Data Analysis/Beech Tree/2026/02.February/02.06.2026 - 02.12.2026/<file>.xlsx
 			var (monthFolder, weekFolder) = ParseMonthAndDateFolder(selected.SharePointPath);
 
-			// Use extracted weekFolder as requested
 			var destFolder = CombineSpPath(sp.OutputUploadFolderPath, lab.LabName, year, monthFolder, weekFolder);
 
-			await _sp.UploadFileToFolderPathAsync(
+			result.ClaimFile = await _sp.UploadFileToFolderPathWithLinkAsync(
 				driveId: selected.DriveId,
 				folderPath: destFolder,
 				localFilePath: claimOutPath,
 				uploadFileName: Path.GetFileName(claimOutPath),
 				ct: ct);
 
-			await _sp.UploadFileToFolderPathAsync(
+			result.LineFile = await _sp.UploadFileToFolderPathWithLinkAsync(
 				driveId: selected.DriveId,
 				folderPath: destFolder,
 				localFilePath: lineOutPath,
@@ -1394,12 +1439,14 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 			}
 
 			_fileLog.Info($"Lab {lab.LabId}: output files uploaded to SharePoint folder '{destFolder}'.");
-			return $"UPLOADED -> {destFolder}";
+			result.Summary = $"UPLOADED -> {destFolder}";
+			return result;
 		}
 		catch (Exception ex)
 		{
 			_fileLog.Error($"Lab {lab.LabId}: failed to upload output files to SharePoint.", ex);
-			return "UPLOAD_FAILED";
+			result.Summary = "UPLOAD_FAILED";
+			return result;
 		}
 	}
 

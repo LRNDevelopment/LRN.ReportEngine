@@ -1,5 +1,6 @@
 using Azure.Core;
 using Azure.Identity;
+using LRN.SharePointClient.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Globalization;
@@ -7,7 +8,6 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using static SharePointDownloader;
 
 public sealed class SharePointDownloader
 {
@@ -372,25 +372,42 @@ public sealed class SharePointDownloader
 	}
 
 
+	public async Task UploadFileToFolderPathAsync(
+		string driveId,
+		string folderPath,
+		string localFilePath,
+		string? uploadFileName,
+		CancellationToken ct)
+	{
+		_ = await UploadFileToFolderPathWithLinkAsync(
+			driveId,
+			folderPath,
+			localFilePath,
+			uploadFileName,
+			ct);
+	}
 
-	/// <summary>
-	/// Upload a local file to a folder path under the drive root (small file upload).
-	/// - Ensures folders exist (creates missing segments).
-	/// - folderPath example: "Data Analysis/ImportLogs/February" or "10. Automation/LRN-Logs/Master File Processor"
-	/// </summary>
-	public async Task UploadFileToFolderPathAsync(string driveId, string folderPath, string localFilePath, string? uploadFileName, CancellationToken ct)
+	public async Task<SharePointPublishedFile> UploadFileToFolderPathWithLinkAsync(
+		string driveId,
+		string folderPath,
+		string localFilePath,
+		string? uploadFileName,
+		CancellationToken ct)
 	{
 		if (string.IsNullOrWhiteSpace(driveId))
 			throw new ArgumentException("driveId is empty", nameof(driveId));
+
 		if (!File.Exists(localFilePath))
 			throw new FileNotFoundException("Local file not found", localFilePath);
 
 		await EnsureGraphAuthAsync(ct);
 
-		var fileName = string.IsNullOrWhiteSpace(uploadFileName) ? Path.GetFileName(localFilePath) : uploadFileName!;
-		folderPath ??= "";
+		var fileName = string.IsNullOrWhiteSpace(uploadFileName)
+			? Path.GetFileName(localFilePath)
+			: uploadFileName!;
 
-		// Ensure folders exist first (Graph PUT doesn't create intermediate folders reliably)
+		folderPath ??= string.Empty;
+
 		if (!string.IsNullOrWhiteSpace(folderPath))
 			await EnsureFolderPathExistsAsync(driveId, folderPath, ct);
 
@@ -400,17 +417,84 @@ public sealed class SharePointDownloader
 
 		var encodedPath = EncodeGraphPath(combined);
 
-		var url = $"https://graph.microsoft.com/v1.0/drives/{driveId}/root:/{encodedPath}:/content";
+		var url = $"https://graph.microsoft.com/v1.0/drives/{driveId}/root:/{encodedPath}:/content?$select=id,name,webUrl";
 
 		await using var fs = new FileStream(localFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 		using var req = new HttpRequestMessage(HttpMethod.Put, url)
 		{
 			Content = new StreamContent(fs)
 		};
+
 		req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
 
 		using var resp = await _http.SendAsync(req, ct);
+		var body = await resp.Content.ReadAsStringAsync(ct);
 		resp.EnsureSuccessStatusCode();
+
+		using var doc = JsonDocument.Parse(body);
+		var root = doc.RootElement;
+
+		var itemId = root.TryGetProperty("id", out var idEl) ? idEl.GetString() : null;
+		var returnedName = root.TryGetProperty("name", out var nameEl) ? nameEl.GetString() : fileName;
+		var webUrl = root.TryGetProperty("webUrl", out var webUrlEl) ? webUrlEl.GetString() : null;
+
+		string? shareLinkUrl = null;
+		if (!string.IsNullOrWhiteSpace(itemId))
+			shareLinkUrl = await TryCreateOrganizationViewLinkAsync(driveId, itemId!, ct);
+
+		return new SharePointPublishedFile
+		{
+			FileName = returnedName ?? fileName,
+			LocalPath = localFilePath,
+			RelativeSharePointPath = combined,
+			WebUrl = webUrl,
+			ShareLinkUrl = shareLinkUrl
+		};
+	}
+
+	private async Task<string?> TryCreateOrganizationViewLinkAsync(string driveId, string itemId, CancellationToken ct)
+	{
+		try
+		{
+			var url = $"https://graph.microsoft.com/v1.0/drives/{driveId}/items/{itemId}/createLink";
+
+			using var req = new HttpRequestMessage(HttpMethod.Post, url)
+			{
+				Content = new StringContent(
+					"{\"type\":\"view\",\"scope\":\"organization\"}",
+					Encoding.UTF8,
+					"application/json")
+			};
+
+			using var resp = await _http.SendAsync(req, ct);
+			var body = await resp.Content.ReadAsStringAsync(ct);
+
+			if (!resp.IsSuccessStatusCode)
+			{
+				_logger.LogWarning(
+					"CreateLink failed for driveId={DriveId}, itemId={ItemId}. Status={StatusCode}. Body={Body}",
+					driveId,
+					itemId,
+					(int)resp.StatusCode,
+					body);
+				return null;
+			}
+
+			using var doc = JsonDocument.Parse(body);
+
+			if (doc.RootElement.TryGetProperty("link", out var linkEl) &&
+				linkEl.TryGetProperty("webUrl", out var linkUrlEl))
+			{
+				return linkUrlEl.GetString();
+			}
+
+			return null;
+		}
+		catch (Exception ex)
+		{
+			_logger.LogWarning(ex, "CreateLink failed for driveId={DriveId}, itemId={ItemId}", driveId, itemId);
+			return null;
+		}
 	}
 
 	/// <summary>

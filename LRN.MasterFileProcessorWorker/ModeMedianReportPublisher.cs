@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Linq;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -165,7 +166,13 @@ public sealed class ModeMedianReportPublisher
 
 			await UploadSmallFileAsync(ctx, folderPath, uploadFileName, localFilePath, ct);
 
+			var publishedUrl = await TryGetPublishedFileUrlAsync(ctx, folderPath, uploadFileName, ct);
+
 			_fileLog.Info($"{reportType} report uploaded to SharePoint as {uploadFileName}");
+
+			if (!string.IsNullOrWhiteSpace(publishedUrl))
+				return $"UPLOADED_URL -> {publishedUrl}";
+
 			return $"UPLOADED -> {folderPath}/{uploadFileName}";
 		}
 		catch (Exception ex)
@@ -173,6 +180,84 @@ public sealed class ModeMedianReportPublisher
 			_logger.LogWarning(ex, "Failed SharePoint upload for {ReportType}", reportType);
 			_fileLog.Error($"Failed SharePoint upload for {reportType}", ex);
 			return "UPLOAD_FAILED";
+		}
+	}
+
+	private async Task<string?> TryGetPublishedFileUrlAsync(
+	GraphContext ctx,
+	string folderPath,
+	string fileName,
+	CancellationToken ct)
+	{
+		try
+		{
+			using var response = await ctx.Http.GetAsync(
+				$"https://graph.microsoft.com/v1.0/drives/{ctx.DriveId}/root:/{EncodePath(CombineSpPath(folderPath, fileName))}?$select=id,name,webUrl",
+				ct);
+
+			if (!response.IsSuccessStatusCode)
+				return null;
+
+			var json = await response.Content.ReadAsStringAsync(ct);
+			using var doc = JsonDocument.Parse(json);
+
+			var root = doc.RootElement;
+			var itemId = root.TryGetProperty("id", out var idEl) ? idEl.GetString() : null;
+			var webUrl = root.TryGetProperty("webUrl", out var webUrlEl) ? webUrlEl.GetString() : null;
+
+			if (!string.IsNullOrWhiteSpace(itemId))
+			{
+				var shareLink = await TryCreateOrganizationViewLinkAsync(ctx, itemId!, ct);
+				if (!string.IsNullOrWhiteSpace(shareLink))
+					return shareLink;
+			}
+
+			return webUrl;
+		}
+		catch (Exception ex)
+		{
+			_logger.LogWarning(ex, "Failed to resolve published file URL for {FileName}", fileName);
+			_fileLog.Error($"Failed to resolve published file URL for {fileName}", ex);
+			return null;
+		}
+	}
+
+	private async Task<string?> TryCreateOrganizationViewLinkAsync(
+		GraphContext ctx,
+		string itemId,
+		CancellationToken ct)
+	{
+		try
+		{
+			using var request = new HttpRequestMessage(
+				HttpMethod.Post,
+				$"https://graph.microsoft.com/v1.0/drives/{ctx.DriveId}/items/{itemId}/createLink");
+
+			request.Content = new StringContent(
+				"{\"type\":\"view\",\"scope\":\"organization\"}",
+				Encoding.UTF8,
+				"application/json");
+
+			using var response = await ctx.Http.SendAsync(request, ct);
+			if (!response.IsSuccessStatusCode)
+				return null;
+
+			var json = await response.Content.ReadAsStringAsync(ct);
+			using var doc = JsonDocument.Parse(json);
+
+			if (doc.RootElement.TryGetProperty("link", out var linkEl) &&
+				linkEl.TryGetProperty("webUrl", out var webUrlEl))
+			{
+				return webUrlEl.GetString();
+			}
+
+			return null;
+		}
+		catch (Exception ex)
+		{
+			_logger.LogWarning(ex, "Failed to create organization view link for item {ItemId}", itemId);
+			_fileLog.Error($"Failed to create organization view link for item {itemId}", ex);
+			return null;
 		}
 	}
 

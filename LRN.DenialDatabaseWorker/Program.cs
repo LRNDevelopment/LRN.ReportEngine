@@ -32,6 +32,7 @@ builder.Services.AddSingleton<ExcelTableReader>();
 builder.Services.AddSingleton<DenialCodeNormalizer>();
 builder.Services.AddSingleton<DenialDatabaseBuilder>();
 builder.Services.AddSingleton<ExcelWriter>();
+builder.Services.AddSingleton<DenialInsightBuilder>();
 
 // SharePoint uploader (Graph REST + ClientSecret credential)
 // If SharePoint.Enabled=false, uploader becomes a no-op.

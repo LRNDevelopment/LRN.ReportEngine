@@ -15,8 +15,10 @@ public sealed class ExcelTableReader
     public sealed record ExcelTable(List<string> Headers, List<Dictionary<string, string>> Rows);
 
     /// <summary>
-    /// Reads the first worksheet by default, treating the first row as headers.
-    /// Returns header order + one dictionary per row: Header -> string value.
+    /// Reads a worksheet and auto-detects the header row.
+    /// Header row detection prefers the row with the highest number of populated cells
+    /// near the top of the used range, which supports files such as the new
+    /// "Denial Classifier" sheet that contain a title row above the actual headers.
     /// </summary>
     public ExcelTable ReadTable(string path, string? sheetName = null)
     {
@@ -33,22 +35,22 @@ public sealed class ExcelTableReader
         if (used == null)
             return new(new(), new());
 
-        var firstRow = used.FirstRow();
-        var lastRow = used.LastRow();
-        var firstCol = used.FirstColumn().ColumnNumber();
-        var lastCol = used.LastColumn().ColumnNumber();
+        var firstRowNo = used.FirstRow().RowNumber();
+        var lastRowNo = used.LastRow().RowNumber();
+        var firstColNo = used.FirstColumn().ColumnNumber();
+        var lastColNo = used.LastColumn().ColumnNumber();
 
-        // headers in column order
+        var headerRowNo = DetectHeaderRow(ws, firstRowNo, lastRowNo, firstColNo, lastColNo);
+
         var headers = new List<string>();
         var cols = new List<(int Col, string Header)>();
 
-        for (int c = firstCol; c <= lastCol; c++)
+        for (int c = firstColNo; c <= lastColNo; c++)
         {
-            var h = ws.Cell(firstRow.RowNumber(), c).GetString()?.Trim() ?? "";
+            var h = ws.Cell(headerRowNo, c).GetString()?.Trim() ?? "";
             if (string.IsNullOrWhiteSpace(h))
                 continue;
 
-            // Ensure uniqueness (Excel files sometimes have duplicates)
             var unique = h;
             int i = 2;
             while (headers.Contains(unique, StringComparer.OrdinalIgnoreCase))
@@ -58,9 +60,9 @@ public sealed class ExcelTableReader
             cols.Add((c, unique));
         }
 
-        var rows = new List<Dictionary<string, string>>(capacity: Math.Max(0, lastRow.RowNumber() - firstRow.RowNumber()));
+        var rows = new List<Dictionary<string, string>>(capacity: Math.Max(0, lastRowNo - headerRowNo));
 
-        for (int r = firstRow.RowNumber() + 1; r <= lastRow.RowNumber(); r++)
+        for (int r = headerRowNo + 1; r <= lastRowNo; r++)
         {
             var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             bool any = false;
@@ -79,7 +81,10 @@ public sealed class ExcelTableReader
             rows.Add(dict);
         }
 
-        _logger.LogInformation("Read {RowCount} rows from {Path} ({SheetName})", rows.Count, path, ws.Name);
+        _logger.LogInformation(
+            "Read {RowCount} rows from {Path} ({SheetName}) using header row {HeaderRowNo}",
+            rows.Count, path, ws.Name, headerRowNo);
+
         return new(headers, rows);
     }
 
@@ -88,4 +93,32 @@ public sealed class ExcelTableReader
     /// </summary>
     public List<Dictionary<string, string>> Read(string path, string? sheetName = null)
         => ReadTable(path, sheetName).Rows;
+
+    private static int DetectHeaderRow(IXLWorksheet ws, int firstRowNo, int lastRowNo, int firstColNo, int lastColNo)
+    {
+        var scanEndRow = Math.Min(lastRowNo, firstRowNo + 9);
+
+        int bestRow = firstRowNo;
+        int bestScore = -1;
+
+        for (int r = firstRowNo; r <= scanEndRow; r++)
+        {
+            int populated = 0;
+
+            for (int c = firstColNo; c <= lastColNo; c++)
+            {
+                var text = ws.Cell(r, c).GetString()?.Trim() ?? "";
+                if (!string.IsNullOrWhiteSpace(text))
+                    populated++;
+            }
+
+            if (populated > bestScore)
+            {
+                bestScore = populated;
+                bestRow = r;
+            }
+        }
+
+        return bestRow;
+    }
 }

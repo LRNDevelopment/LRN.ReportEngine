@@ -133,7 +133,7 @@
 			"DataType": "decimal"
 		},
 		{
-			"Name": "Denail Code",
+			"Name": "Denial Code",
 			"Required": true,
 			"DataType": "string"
 		},

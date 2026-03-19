@@ -263,6 +263,7 @@ public static class StandardCsvExporter
 					if (totalAdj == chargeAmt)
 					{
 						extracted["AllowedAmount"] = "0";
+						extracted["AllowedAmountPerUnit"] = "0";
 					}
 				}
 				else if (status == "Denied")
@@ -270,6 +271,7 @@ public static class StandardCsvExporter
 					if (chargeAmt == totalbalance)
 					{
 						extracted["AllowedAmount"] = "0";
+						extracted["AllowedAmountPerUnit"] = "0";
 					}
 				}
 				else if (status == "Partially Adjusted")
@@ -277,6 +279,7 @@ public static class StandardCsvExporter
 					if (chargeAmt == totalbalance + totalAdj)
 					{
 						extracted["AllowedAmount"] = "0";
+						extracted["AllowedAmountPerUnit"] = "0";
 					}
 				}
 				extracted["Pay Status"] = status;
@@ -963,8 +966,8 @@ public static class StandardCsvExporter
 			return "No Response";
 
 		// Rule 5: No Response
-		// Total Payment = 0 AND Total Adjustments = 0 AND Carrier Balance = 0 AND Denial Code = Blank
-		if (IsZero(totalPayment, EPS) && IsZero(totalAdj, EPS) && IsZero(carrierBal, EPS) && denialBlank)
+		// Total Payment = 0 AND Total Adjustments = 0 AND Carrier Balance > 0 AND Denial Code = Blank
+		if (IsZero(totalPayment, EPS) && IsZero(totalAdj, EPS) && carrierBal > EPS && denialBlank)
 			return "No Response";
 
 		// Rule 6: Denied
@@ -984,7 +987,7 @@ public static class StandardCsvExporter
 
 		// Rule 10: Partially Adjusted
 		// Total Payment = 0 AND Carrier Balance = 0 AND Total Adjustment > 0 AND Denial Code = Blank
-		if (IsZero(totalPayment, EPS) && IsZero(carrierBal, EPS) && totalAdj > EPS && denialBlank)
+		if (IsZero(totalPayment, EPS) && IsZero(carrierBal, EPS) && totalAdj > EPS && IsZero(patientBal, EPS) && denialBlank)
 			return "Partially Adjusted";
 
 		// Rule 11: Partially Adjusted

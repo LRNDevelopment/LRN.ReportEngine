@@ -3,30 +3,31 @@ namespace DenialDatabaseProcessorWorker.Services;
 public sealed class ClaimActionMapperIndex
 {
     public sealed record MapperRow(
-        string DenialCodePrefix,
+        string DenialCode,
         string DenialDescription,
         string DenialClassification,
-        string DenialType,
-        string PayerPolicyValidationRequired,
-        string CptValidationRequired,
-        string IcdValidationRequired,
-        string FrequencyValidationRequired,
-        string GenderValidationRequired,
-        string MueValidationRequired,
-        string Payability,
-        string StatusActionCode,
+        string IcdComplianceStatus,
+        string DenialValidity,
+        string ActionCode,
         string RecommendedAction,
-        string TaskGuidance);
+        string ActionCategory,
+        string Task,
+        string ShortCategory,
+        string Priority,
+        string SlaDays,
+        string NotesComments);
 
-    private readonly Dictionary<string, List<MapperRow>> _byPrefix;
+    private readonly Dictionary<string, List<MapperRow>> _byCode;
 
     public ClaimActionMapperIndex(List<Dictionary<string, string>> rows)
     {
-        _byPrefix = Build(rows);
+        _byCode = Build(rows);
     }
 
-    public IReadOnlyList<MapperRow> FindByPrefix(string prefix)
-        => _byPrefix.TryGetValue(prefix, out var list) ? list : Array.Empty<MapperRow>();
+    public IReadOnlyList<MapperRow> FindByCode(string denialCode)
+        => _byCode.TryGetValue((denialCode ?? "").Trim().ToUpperInvariant(), out var list)
+            ? list
+            : Array.Empty<MapperRow>();
 
     private static Dictionary<string, List<MapperRow>> Build(List<Dictionary<string, string>> rows)
     {
@@ -45,39 +46,38 @@ public sealed class ClaimActionMapperIndex
 
         foreach (var r in rows)
         {
-            var prefix = Get(r,
-                "Denail code_prefix",
-                "Denial code_prefix",
+            var denialCode = Get(r,
+                "Denial Code",
+                "DenialCode",
                 "Denial Code_Prefix",
-                "DenialCode_Prefix",
-                "Denial Code Prefix",
-                "DenialCodePrefix");
+                "DenialCodePrefix",
+                "Denial code_prefix",
+                "Denail code_prefix");
 
-            prefix = (prefix ?? "").Trim().ToUpperInvariant();
-            if (string.IsNullOrWhiteSpace(prefix))
+            denialCode = (denialCode ?? "").Trim().ToUpperInvariant();
+            if (string.IsNullOrWhiteSpace(denialCode))
                 continue;
 
             var row = new MapperRow(
-                DenialCodePrefix: prefix,
+                DenialCode: denialCode,
                 DenialDescription: Get(r, "Denial Description"),
                 DenialClassification: Get(r, "Denial Classification"),
-                DenialType: Get(r, "Denial Type"),
-                PayerPolicyValidationRequired: Get(r, "Payer Policy Validation Required"),
-                CptValidationRequired: Get(r, "CPT Validation Required", "Cpt Validation Required"),
-                IcdValidationRequired: Get(r, "ICD Validation Required", "Icd Validation Required"),
-                FrequencyValidationRequired: Get(r, "Frequency Validation Required"),
-                GenderValidationRequired: Get(r, "Gender Validation Required"),
-                MueValidationRequired: Get(r, "MUE Validation Required", "MUE Validation", "Mue Validation", "MUE Validation Required?"),
-                Payability: Get(r, "Payability", "Payability Status"),
-                StatusActionCode: Get(r, "Status Action Code", "Action Code"),
+                IcdComplianceStatus: Get(r, "ICD Compliance Status", "Icd Compliance Status"),
+                DenialValidity: Get(r, "Denial Validity"),
+                ActionCode: Get(r, "Action Code", "Status Action Code"),
                 RecommendedAction: Get(r, "Recommended Action"),
-                TaskGuidance: Get(r, "Task Guidance")
+                ActionCategory: Get(r, "Action Category"),
+                Task: Get(r, "Task", "Task Guidance"),
+                ShortCategory: Get(r, "Short Category"),
+                Priority: Get(r, "Priority"),
+                SlaDays: Get(r, "SLA (Days)", "SLA Days", "SlaDays"),
+                NotesComments: Get(r, "Notes / Comments", "Notes/Comments", "Notes Comments")
             );
 
-            if (!dict.TryGetValue(prefix, out var list))
+            if (!dict.TryGetValue(denialCode, out var list))
             {
                 list = new List<MapperRow>();
-                dict[prefix] = list;
+                dict[denialCode] = list;
             }
 
             list.Add(row);

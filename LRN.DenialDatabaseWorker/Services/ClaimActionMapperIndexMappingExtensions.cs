@@ -6,81 +6,63 @@ public static class ClaimActionMapperIndexMappingExtensions
         string DenialDescription,
         string DenialClassification,
         string DenialType,
-        string PayerPolicyValidationRequired,
-        string CptValidationRequired,
-        string IcdValidationRequired,
-        string FrequencyValidationRequired,
-        string GenderValidationRequired,
-        string MueValidationRequired,
-        string Payability,
-        string StatusActionCode,
+        string DenialValidity,
+        string ActionCode,
         string RecommendedAction,
-        string TaskGuidance);
+        string ActionCategory,
+        string TaskGuidance,
+        string ShortCategory,
+        string Priority,
+        string SlaDays,
+        string NotesComments);
 
     /// <summary>
-    /// Rules:
-    /// - Denial Description, Denial Classification => CODE - Value (all denial types)
-    /// - Denial Type and all Validation Required columns => plain values (no code prefix) (all denial types)
-    /// - Action/Recommended/Task => ONLY from Denial Type == "Claim Level Denial"
-    ///   Additionally: normalize repeated descriptions by grouping multiple codes with same value:
-    ///   CO97, OA94 - CORRECT_AND_RESUBMIT (instead of two separate entries).
+    /// Rules retained from existing logic:
+    /// - Denial Description, Denial Classification => CODE - Value
+    /// - Denial Type => same value as Denial Classification (plain distinct values)
+    /// - Action/detail columns => grouped by value and prefixed with the matching denial codes
+    ///   Example: CO97, OA94 - Correct and Resubmit
     /// </summary>
     public static MappedValues MapForCodes(this ClaimActionMapperIndex index, IReadOnlyList<string> codes)
     {
         if (codes == null || codes.Count == 0)
-            return new("", "", "", "", "", "", "", "", "", "", "", "", "");
+            return new("", "", "", "", "", "", "", "", "", "", "", "");
 
-        const string claimLevel = "Claim Level Denial";
-
-        // CODE-prefixed columns
         var denialDescription = new List<string>();
         var denialClassification = new List<string>();
-
-        // Plain columns
         var denialType = new List<string>();
-        var ppv = new List<string>();
-        var cpt = new List<string>();
-        var icd = new List<string>();
-        var freq = new List<string>();
-        var gender = new List<string>();
-        var mue = new List<string>();
-        var payability = new List<string>();
 
-        // Claim-level only, grouped by value => [value] -> codes
-        var statusActionByValue = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        var denialValidityByValue = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        var actionCodeByValue = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
         var recommendedByValue = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
-        var guidanceByValue = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        var actionCategoryByValue = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        var taskByValue = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        var shortCategoryByValue = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        var priorityByValue = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        var slaDaysByValue = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        var notesByValue = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var code in codes)
         {
-            var rowsAll = index.FindByPrefix(code);
-            if (rowsAll.Count == 0)
+            var rows = index.FindByCode(code);
+            if (rows.Count == 0)
                 continue;
 
-            foreach (var r in rowsAll)
+            foreach (var r in rows)
             {
                 AddPair(denialDescription, code, r.DenialDescription);
                 AddPair(denialClassification, code, r.DenialClassification);
+                AddPlain(denialType, r.DenialClassification);
 
-                AddPlain(denialType, r.DenialType);
-
-                AddPlain(ppv, r.PayerPolicyValidationRequired);
-                AddPlain(cpt, r.CptValidationRequired);
-                AddPlain(icd, r.IcdValidationRequired);
-                AddPlain(freq, r.FrequencyValidationRequired);
-                AddPlain(gender, r.GenderValidationRequired);
-                AddPlain(mue, r.MueValidationRequired);
-
-                AddPlain(payability, r.Payability);
-            }
-
-            // claim-level only for action columns
-            foreach (var r in rowsAll.Where(r =>
-                         string.Equals((r.DenialType ?? "").Trim(), claimLevel, StringComparison.OrdinalIgnoreCase)))
-            {
-                AddGrouped(statusActionByValue, r.StatusActionCode, code);
+                AddGrouped(denialValidityByValue, r.DenialValidity, code);
+                AddGrouped(actionCodeByValue, r.ActionCode, code);
                 AddGrouped(recommendedByValue, r.RecommendedAction, code);
-                AddGrouped(guidanceByValue, r.TaskGuidance, code);
+                AddGrouped(actionCategoryByValue, r.ActionCategory, code);
+                AddGrouped(taskByValue, r.Task, code);
+                AddGrouped(shortCategoryByValue, r.ShortCategory, code);
+                AddGrouped(priorityByValue, r.Priority, code);
+                AddGrouped(slaDaysByValue, r.SlaDays, code);
+                AddGrouped(notesByValue, r.NotesComments, code);
             }
         }
 
@@ -88,19 +70,15 @@ public static class ClaimActionMapperIndexMappingExtensions
             DenialDescription: Join(denialDescription),
             DenialClassification: Join(denialClassification),
             DenialType: JoinPlain(denialType),
-
-            PayerPolicyValidationRequired: JoinPlain(ppv),
-            CptValidationRequired: JoinPlain(cpt),
-            IcdValidationRequired: JoinPlain(icd),
-            FrequencyValidationRequired: JoinPlain(freq),
-            GenderValidationRequired: JoinPlain(gender),
-            MueValidationRequired: JoinPlain(mue),
-
-            Payability: JoinPlain(payability),
-
-            StatusActionCode: JoinGrouped(statusActionByValue),
+            DenialValidity: JoinGrouped(denialValidityByValue),
+            ActionCode: JoinGrouped(actionCodeByValue),
             RecommendedAction: JoinGrouped(recommendedByValue),
-            TaskGuidance: JoinGrouped(guidanceByValue)
+            ActionCategory: JoinGrouped(actionCategoryByValue),
+            TaskGuidance: JoinGrouped(taskByValue),
+            ShortCategory: JoinGrouped(shortCategoryByValue),
+            Priority: JoinGrouped(priorityByValue),
+            SlaDays: JoinGrouped(slaDaysByValue),
+            NotesComments: JoinGrouped(notesByValue)
         );
 
         static void AddPair(List<string> list, string code, string? value)
@@ -148,7 +126,6 @@ public static class ClaimActionMapperIndexMappingExtensions
 
         static string JoinGrouped(Dictionary<string, List<string>> byValue)
         {
-            // preserve insertion order by iterating keys in dict insertion order
             var parts = new List<string>();
             foreach (var kv in byValue)
             {
@@ -158,6 +135,7 @@ public static class ClaimActionMapperIndexMappingExtensions
 
                 parts.Add($"{string.Join(", ", codes)} - {value}");
             }
+
             return string.Join(", ", parts);
         }
     }

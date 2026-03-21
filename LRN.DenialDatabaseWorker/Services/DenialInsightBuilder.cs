@@ -9,9 +9,10 @@ public sealed class DenialInsightBuilder
 		if (lineRows == null || lineRows.Count == 0)
 			return new InsightTable(new List<string>(), new List<Dictionary<string, string>>());
 
+		// Only rows with valid denial codes
 		var validRows = lineRows
-		.Where(r => !string.IsNullOrWhiteSpace(r.GetValueOrDefault("DenialCode_Normalized")))
-		.ToList();
+			.Where(r => !string.IsNullOrWhiteSpace(r.GetValueOrDefault("DenialCode_Normalized")))
+			.ToList();
 
 		var groups = validRows.GroupBy(r => new
 		{
@@ -31,24 +32,44 @@ public sealed class DenialInsightBuilder
 
 			row["Denial Codes"] = g.Key.Code;
 			row["Descriptions"] = g.Key.Desc;
+
+			// # of Denial = line item count
 			row["# of Denial"] = g.Count().ToString();
 
-			decimal totalBalance = g.Sum(r => ParseDecimal(r, "Total Balance"));
-			decimal insBalance = g.Sum(r => ParseDecimal(r, "Insurance Balance"));
+			// NEW: # of Claims = distinct Visit Number
+			var claimCount = g
+				.Select(r => r.GetValueOrDefault("Visit Number") ?? "")
+				.Where(v => !string.IsNullOrWhiteSpace(v))
+				.Distinct()
+				.Count();
 
+			row["# of Claims"] = claimCount.ToString();
+
+			// Total Balance = sum of Insurance Balance
+			decimal totalBalance = g.Sum(r => ParseDecimal(r, "Insurance Balance"));
 			row["Total Balance ($)"] = totalBalance.ToString("0.00");
+
+			// Highest impact payer (based on Insurance Balance)
+			var highestPayer = g
+				.GroupBy(r => r.GetValueOrDefault("PayerName Normalized") ?? "")
+				.OrderByDescending(x => x.Sum(r => ParseDecimal(r, "Insurance Balance")))
+				.First().Key;
+
+			row["Highest $ Impact - Insurance"] = highestPayer;
+
+			// Ins. Balance ($) = sum of Insurance Balance for highest payer only
+			decimal insBalance = g
+				.Where(r => (r.GetValueOrDefault("PayerName Normalized") ?? "") == highestPayer)
+				.Sum(r => ParseDecimal(r, "Insurance Balance"));
+
 			row["Ins. Balance ($)"] = insBalance.ToString("0.00");
+
+			// % Impact
 			row["$ Impact (%)"] = totalBalance == 0
 				? "0%"
 				: ((insBalance / totalBalance) * 100).ToString("0.00") + "%";
 
-			// Highest impact payer
-			row["Highest $ Impact - Insurance"] = g
-				.GroupBy(r => r.GetValueOrDefault("PayerName Normalized") ?? "")
-				.OrderByDescending(x => x.Sum(r => ParseDecimal(r, "Total Balance")))
-				.First().Key;
-
-			// Observation (panel detection)
+			// Observation
 			row["Observation"] = ExtractObservation(g);
 
 			row["Data"] = "Link";

@@ -121,6 +121,21 @@
 			"Name": "Line Level ICD",
 			"Required": false,
 			"DataType": "string"
+		},
+		{
+			"Name": "Denial Date",
+			"Required": true,
+			"DataType": "date"
+		},
+		{
+			"Name": "Deposit Date",
+			"Required": true,
+			"DataType": "date"
+		},
+		{
+			"Name": "Denial Code",
+			"Required": true,
+			"DataType": "string"
 		}
 	]
 }

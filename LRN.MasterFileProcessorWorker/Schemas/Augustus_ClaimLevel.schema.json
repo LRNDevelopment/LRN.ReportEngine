@@ -113,6 +113,11 @@
       "DataType": "string"
     },
     {
+      "Name": "Denial Date",
+      "Required": false,
+      "DataType": "date"
+    },
+    {
       "Name": "ICD Claim  Level",
       "Required": true,
       "DataType": "string"

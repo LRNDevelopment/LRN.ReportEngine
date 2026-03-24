@@ -347,7 +347,15 @@
 			"Aliases": [
 				"CheckDate",
 				"Deposit Date",
-				"Posted Date"
+				"DOD"
+			]
+		},
+		{
+			"Name": "Posting Date",
+			"DataType": "date",
+			"Aliases": [
+				"Posted Date",
+				"PostedDate"
 			]
 		},
 		{
@@ -369,8 +377,18 @@
 				"Claim Level Denial Code",
 				"Combined Claim Level Denial code",
 				"Claim Level Denials",
+				"Line Level Denials",
 				"Denial Code",
 				"Denail Code"
+			]
+		},
+		{
+			"Name": "Denial Date",
+			"DataType": "date",
+			"Aliases": [
+				"Denial Date",
+				"DenialDate",
+				"Denial Posted Date"
 			]
 		},
 		{

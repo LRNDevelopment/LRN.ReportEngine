@@ -121,6 +121,16 @@
       "Name": "PatientBalance",
       "Required": false,
       "DataType": "decimal"
+    },
+    {
+      "Name": "Denial Code",
+      "Required": true,
+      "DataType": "string"
+    },
+    {
+      "Name": "Denial Date",
+      "Required": false,
+      "DataType": "date"
     }
   ]
 }

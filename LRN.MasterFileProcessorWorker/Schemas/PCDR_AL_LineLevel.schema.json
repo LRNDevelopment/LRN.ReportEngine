@@ -126,6 +126,21 @@
       "Name": "CheckDate",
       "Required": false,
       "DataType": "date"
+    },
+    {
+      "Name": "Denial Code",
+      "Required": true,
+      "DataType": "string"
+    },
+    {
+      "Name": "Denial Date",
+      "Required": true,
+      "DataType": "date"
+    },
+    {
+      "Name": "Deposit Date",
+      "Required": true,
+      "DataType": "date"
     }
   ]
 }

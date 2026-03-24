@@ -119,11 +119,11 @@
 		},
 		{
 			"Name": "Deposit Date",
-			"Required": false,
+			"Required": true,
 			"DataType": "date"
 		},
 		{
-			"Name": "Claim Level Denial Code",
+			"Name": "Denial Code",
 			"Required": true,
 			"DataType": "string"
 		},
@@ -131,6 +131,11 @@
 			"Name": "ICD",
 			"Required": true,
 			"DataType": "string"
+		},
+		{
+			"Name": "Denial Date",
+			"Required": true,
+			"DataType": "date"
 		}
 	]
 }

@@ -14,8 +14,8 @@ public sealed class DenialCodeNormalizer
         "PR253","CO253","PI253"
     };
 
-    private static readonly Regex Splitter = new(@"\s*,\s*", RegexOptions.Compiled);
-    private static readonly Regex Cleanup = new(@"[\s-]+", RegexOptions.Compiled);
+	private static readonly Regex Splitter = new(@"\s*[;,]\s*", RegexOptions.Compiled);
+	private static readonly Regex Cleanup = new(@"[\s-]+", RegexOptions.Compiled);
 
     public string NormalizeDenialCodeField(string? raw)
     {

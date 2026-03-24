@@ -47,6 +47,7 @@ public sealed class DenialDatabaseBuilder
 		AddIfMissing(finalHeaders, "Status Action Code");
 		AddIfMissing(finalHeaders, "Recommended Action");
 		AddIfMissing(finalHeaders, "Task Guidance");
+		AddIfMissing(finalHeaders, "Task Status");          // NEW COLUMN
 		AddIfMissing(finalHeaders, "Short Category");
 		AddIfMissing(finalHeaders, "Priority");
 		AddIfMissing(finalHeaders, "SLA (Days)");
@@ -59,87 +60,181 @@ public sealed class DenialDatabaseBuilder
 			rawDenialCode ??= "";
 
 			var codes = _normalizer.SplitToCodes(rawDenialCode);
-			var normalized = string.Join(",", codes);
+			var normalized = string.Join(";", codes);
 
 			row["DenialCode_Original"] = rawDenialCode;
 			row["DenialCode_Normalized"] = normalized;
 			row[denialCodeKey] = normalized;
 
-			// Get all mapper rows for these codes
-			var mapperRows = codes
-				.SelectMany(code => claimMapperIndex.FindByCode(code))
-				.ToList();
-
-			if (mapperRows.Count == 0)
-			{
-				ClearMappedFields(row);
-				continue;
-			}
-
 			// Extract payer fields
 			var payerCoverage = row.GetValueOrDefault("Coverage Status") ?? "";
 			var payerICD = row.GetValueOrDefault("ICD Compliance Status") ?? "";
 
-			// Always map these fields from ANY mapper row (first row)
-			var first = mapperRows.First();
-			row["Denial Description"] = first.DenialDescription;
-			row["Denial Classification"] = first.DenialClassification;
-			row["Denial Type"] = first.DenialClassification;
+			var expectedPaymentDateStr = row.GetValueOrDefault("Expected Payment Date");
+			var firstBilledDateStr = row.GetValueOrDefault("First Billed Date");
 
-			// CASE 1 — Coverage=N/A & ICD=N/A
-			var case1 = mapperRows.FirstOrDefault(m =>
-				m.CoverageStatus.Equals("N/A", StringComparison.OrdinalIgnoreCase) &&
-				m.IcdComplianceStatus.Equals("N/A", StringComparison.OrdinalIgnoreCase)
-			);
+			DateTime? expectedPaymentDate = DateTime.TryParse(expectedPaymentDateStr, out var epd) ? epd : null;
+			DateTime? firstBilledDate = DateTime.TryParse(firstBilledDateStr, out var fbd) ? fbd : null;
 
-			// CASE 2 — Coverage matches & ICD matches
-			var case2 = mapperRows.FirstOrDefault(m =>
-				m.CoverageStatus.Equals(payerCoverage, StringComparison.OrdinalIgnoreCase) &&
-				m.IcdComplianceStatus.Equals(payerICD, StringComparison.OrdinalIgnoreCase)
-			);
+			// Default Task Status
+			string taskStatus = "Open";
 
-			// CASE 3 — Coverage=N/A & ICD matches
-			var case3 = mapperRows.FirstOrDefault(m =>
-				m.CoverageStatus.Equals("N/A", StringComparison.OrdinalIgnoreCase) &&
-				m.IcdComplianceStatus.Equals(payerICD, StringComparison.OrdinalIgnoreCase)
-			);
+			// Aggregated per-code maps
+			var descMap = new Dictionary<string, string?>();
+			var classMap = new Dictionary<string, string?>();
+			var typeMap = new Dictionary<string, string?>();
 
-			var match = case2 ?? case1 ?? case3;
+			var validityMap = new Dictionary<string, string?>();
+			var actionCodeMap = new Dictionary<string, string?>();
+			var recActionMap = new Dictionary<string, string?>();
+			var actionCatMap = new Dictionary<string, string?>();
+			var taskMap = new Dictionary<string, string?>();
+			var shortCatMap = new Dictionary<string, string?>();
+			var priorityMap = new Dictionary<string, string?>();
+			var slaMap = new Dictionary<string, string?>();
+			var notesMap = new Dictionary<string, string?>();
 
-			if (match == null)
+			foreach (var code in codes)
 			{
-				ClearMappedFields(row);
-				continue;
+				var mapperRows = claimMapperIndex.FindByCode(code).ToList();
+				if (mapperRows.Count == 0)
+					continue;
+
+				// Always map description/classification from first row
+				var first = mapperRows.First();
+				descMap[code] = first.DenialDescription;
+				classMap[code] = first.DenialClassification;
+				typeMap[code] = first.DenialClassification;
+
+				// Matching logic (your updated conditions)
+
+				var match =
+						// CASE 1 — Coverage=N/A & ICD=N/A
+						mapperRows.FirstOrDefault(m =>
+							IsNA(m.CoverageStatus) &&
+							IsNA(m.IcdComplianceStatus)
+						)
+						??
+						// CASE 2 — Coverage matches & ICD matches
+						mapperRows.FirstOrDefault(m =>
+							string.Equals(m.CoverageStatus, payerCoverage, StringComparison.OrdinalIgnoreCase) &&
+							string.Equals(m.IcdComplianceStatus, payerICD, StringComparison.OrdinalIgnoreCase)
+						)
+						??
+						// CASE 4 — payer Coverage is EMPTY & mapper Coverage blank/null/N/A & ICD matches
+						mapperRows.FirstOrDefault(m =>
+							string.IsNullOrWhiteSpace(payerCoverage) &&
+							IsNA(m.CoverageStatus) &&
+							string.Equals(m.IcdComplianceStatus, payerICD, StringComparison.OrdinalIgnoreCase)
+						)
+						??
+						// CASE 3 — Coverage=N/A & ICD matches
+						mapperRows.FirstOrDefault(m =>
+							IsNA(m.CoverageStatus) &&
+							string.Equals(m.IcdComplianceStatus, payerICD, StringComparison.OrdinalIgnoreCase)
+						);
+
+				if (match == null)
+					continue;
+
+				validityMap[code] = match.DenialValidity;
+				actionCodeMap[code] = match.ActionCode;
+				recActionMap[code] = ExtractActionEssence(match.RecommendedAction);
+				actionCatMap[code] = match.ActionCategory;
+				taskMap[code] = ExtractActionEssence(match.Task);
+				shortCatMap[code] = match.ShortCategory;
+				priorityMap[code] = match.Priority;
+				slaMap[code] = match.SlaDays;
+				notesMap[code] = ExtractActionEssence(match.NotesComments);
+
+				// Task Status logic
+				bool isRebillTask =
+					(!string.IsNullOrWhiteSpace(match.Task) &&
+					 match.Task.Contains("rebill", StringComparison.OrdinalIgnoreCase))
+					||
+					string.Equals(match.ActionCode, "RB", StringComparison.OrdinalIgnoreCase);
+
+				bool hasValidDates =
+					expectedPaymentDate.HasValue &&
+					firstBilledDate.HasValue &&
+					firstBilledDate.Value > expectedPaymentDate.Value;
+
+				if (taskStatus != "Closed" && isRebillTask && hasValidDates)
+				{
+					taskStatus = "Closed";
+				}
 			}
 
-			// Apply matched action fields
-			row["Denial Validity"] = match.DenialValidity;
-			row["Action Code"] = match.ActionCode;
-			row["Status Action Code"] = match.ActionCode;
-			row["Recommended Action"] = match.RecommendedAction;
-			row["Action Category"] = match.ActionCategory;
-			row["Task Guidance"] = match.Task;
-			row["Short Category"] = match.ShortCategory;
-			row["Priority"] = match.Priority;
-			row["SLA (Days)"] = match.SlaDays;
-			row["Notes / Comments"] = match.NotesComments;
+			// Assign aggregated values
+			row["Denial Description"] = FormatGrouped(descMap);
+			row["Denial Classification"] = FormatGrouped(classMap);
+			row["Denial Type"] = FormatGrouped(typeMap);
+
+			row["Denial Validity"] = FormatGrouped(validityMap);
+			row["Action Code"] = FormatGrouped(actionCodeMap);
+			row["Status Action Code"] = FormatGrouped(actionCodeMap);
+			row["Recommended Action"] = FormatGrouped(recActionMap);
+			row["Action Category"] = FormatGrouped(actionCatMap);
+			row["Task Guidance"] = FormatGrouped(taskMap);
+			row["Task Status"] = taskStatus;
+			row["Short Category"] = FormatGrouped(shortCatMap);
+			row["Priority"] = FormatGrouped(priorityMap);
+			row["SLA (Days)"] = FormatGrouped(slaMap);
+			row["Notes / Comments"] = FormatGrouped(notesMap);
 		}
 
 		return (finalHeaders, payerPolicyRows);
 	}
 
-	private static void ClearMappedFields(Dictionary<string, string> row)
+	// Extract last actionable sentence
+	private static string ExtractActionEssence(string? text)
 	{
-		row["Denial Validity"] = "";
-		row["Action Category"] = "";
-		row["Status Action Code"] = "";
-		row["Action Code"] = "";
-		row["Recommended Action"] = "";
-		row["Task Guidance"] = "";
-		row["Short Category"] = "";
-		row["Priority"] = "";
-		row["SLA (Days)"] = "";
-		row["Notes / Comments"] = "";
+		if (string.IsNullOrWhiteSpace(text))
+			return "";
+
+		var parts = text.Split('.', StringSplitOptions.RemoveEmptyEntries)
+						.Select(p => p.Trim())
+						.Where(p => !string.IsNullOrWhiteSpace(p))
+						.ToList();
+
+		if (parts.Count == 0)
+			return "";
+
+		var essence = parts.Last().Trim().TrimEnd('.');
+		return essence;
+	}
+
+	// Group codes by value
+	private static string FormatGrouped(Dictionary<string, string?> codeToValue)
+	{
+		if (codeToValue.Count == 0)
+			return "";
+
+		var groups = codeToValue
+			.GroupBy(kv => string.IsNullOrWhiteSpace(kv.Value) ? "" : kv.Value!.Trim())
+			.ToList();
+
+		var results = new List<string>();
+
+		foreach (var g in groups)
+		{
+			if (string.IsNullOrWhiteSpace(g.Key))
+				continue;
+
+			var codes = string.Join(", ", g.Select(x => x.Key));
+			results.Add($"{codes}: {g.Key}");
+		}
+
+		return string.Join(", ", results);
+	}
+
+	private static bool IsNA(string? v)
+	{
+		return string.IsNullOrWhiteSpace(v) ||
+			   v.Equals("N/A", StringComparison.OrdinalIgnoreCase) ||
+			   v.Equals("NA", StringComparison.OrdinalIgnoreCase) ||
+			   v.Equals("Blank", StringComparison.OrdinalIgnoreCase) ||
+			   v.Equals("BLANK", StringComparison.OrdinalIgnoreCase);
 	}
 
 	private static void AddIfMissing(List<string> headers, string header)

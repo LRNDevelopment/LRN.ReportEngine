@@ -93,7 +93,7 @@
       "DataType": "date"
     },
     {
-      "Name": "Claim Level Denials",
+      "Name": "Line Level Denials",
       "Required": true,
       "DataType": "string"
     },

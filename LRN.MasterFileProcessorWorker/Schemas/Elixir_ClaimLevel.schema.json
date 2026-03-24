@@ -141,6 +141,11 @@
 			"Name": "Claim Level ICD",
 			"Required": true,
 			"DataType": "string"
+		},
+		{
+			"Name": "Denial Date",
+			"Required": false,
+			"DataType": "date"
 		}
 	]
 }

@@ -113,14 +113,24 @@
       "DataType": "decimal"
     },
     {
-      "Name": "Posted Date",
-      "Required": false,
+      "Name": "PostedDate",
+      "Required": true,
       "DataType": "date"
     },
     {
       "Name": "Denial Code",
       "Required": true,
       "DataType": "string"
+    },
+    {
+      "Name": "DenialDate",
+      "Required": true,
+      "DataType": "date"
+    },
+    {
+      "Name": "DOD",
+      "Required": true,
+      "DataType": "date"
     }
   ]
 }

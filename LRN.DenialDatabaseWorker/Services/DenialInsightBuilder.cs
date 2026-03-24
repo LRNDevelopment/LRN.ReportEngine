@@ -86,8 +86,15 @@ public sealed class DenialInsightBuilder
 			insightRows.Add(row);
 		}
 
+		// Sort by Total Balance desc, then Ins. Balance desc
+		insightRows = insightRows
+			.OrderByDescending(r => decimal.TryParse(r.GetValueOrDefault("Total Balance ($)"), out var tb) ? tb : 0)
+			.ThenByDescending(r => decimal.TryParse(r.GetValueOrDefault("Ins. Balance ($)"), out var ib) ? ib : 0)
+			.ToList();
+
 		var headers = insightRows.First().Keys.ToList();
 		return new InsightTable(headers, insightRows);
+
 	}
 
 	private static decimal ParseDecimal(Dictionary<string, string> row, string key)

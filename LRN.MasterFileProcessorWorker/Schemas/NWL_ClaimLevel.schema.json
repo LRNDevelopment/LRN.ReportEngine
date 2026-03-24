@@ -111,6 +111,11 @@
       "Name": "Diag Pointer",
       "Required": false,
       "DataType": "string"
+    },
+    {
+      "Name": "Denial Date",
+      "Required": false,
+      "DataType": "date"
     }
   ]
 }

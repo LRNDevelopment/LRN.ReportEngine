@@ -103,6 +103,11 @@
       "DataType": "string"
     },
     {
+      "Name": "Denial Date",
+      "Required": false,
+      "DataType": "date"
+    },
+    {
       "Name": "Claim Level ICD Code",
       "Required": true,
       "DataType": "string"

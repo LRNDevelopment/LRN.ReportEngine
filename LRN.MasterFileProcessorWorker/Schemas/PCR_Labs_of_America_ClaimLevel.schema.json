@@ -138,6 +138,11 @@
 			"DataType": "string"
 		},
 		{
+			"Name": "Denial Date",
+			"Required": false,
+			"DataType": "date"
+		},
+		{
 			"Name": "PrimaryDiagnosis",
 			"Required": true,
 			"DataType": "string"

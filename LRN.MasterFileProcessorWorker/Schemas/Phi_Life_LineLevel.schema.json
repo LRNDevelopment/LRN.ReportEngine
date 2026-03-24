@@ -138,14 +138,24 @@
       "DataType": "decimal"
     },
     {
-      "Name": "Deposit Date",
-      "Required": false,
-      "DataType": "datetime"
-    },
-    {
       "Name": "Denial Code",
       "Required": true,
       "DataType": "string"
+    },
+    {
+      "Name": "Posted Date",
+      "Required": false,
+      "DataType": "date"
+    },
+    {
+      "Name": "Denial Date",
+      "Required": false,
+      "DataType": "date"
+    },
+    {
+      "Name": "DOD",
+      "Required": false,
+      "DataType": "date"
     }
   ]
 }

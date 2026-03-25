@@ -1,4 +1,5 @@
 using ClosedXML.Excel;
+using LRN.DenialDatabaseWorker.Services;
 using Microsoft.Extensions.Logging;
 
 namespace DenialDatabaseProcessorWorker.Services;
@@ -6,10 +7,12 @@ namespace DenialDatabaseProcessorWorker.Services;
 public sealed class ExcelWriter
 {
 	private readonly ILogger<ExcelWriter> _logger;
+	private readonly TaskBoardBuilder _taskBoardBuilder;
 
 	public ExcelWriter(ILogger<ExcelWriter> logger)
 	{
 		_logger = logger;
+		_taskBoardBuilder = new TaskBoardBuilder();
 	}
 
 	public void Write(
@@ -42,6 +45,9 @@ public sealed class ExcelWriter
 		var effectiveLineHeaders = lineHeaders
 			.Where(h => !string.IsNullOrWhiteSpace(h) && !excludedHeaders.Contains(h.Trim()))
 			.ToList();
+
+		// Build Task Board rows
+		var taskRows = _taskBoardBuilder.Build(lineRows);
 
 		using var wb = new XLWorkbook();
 
@@ -345,6 +351,76 @@ public sealed class ExcelWriter
 		// FREEZE HEADER
 		//
 		ws2.SheetView.FreezeRows(headerRow);
+
+		// ───────────────────────────────────────────────
+		//  SHEET 3: TASK BOARD
+		// ───────────────────────────────────────────────
+
+		var ws3 = wb.AddWorksheet("Task Board");
+
+		var taskHeaders = new List<string>
+			{
+				"Task ID","Claim ID","Patient / Acct #","CPT Code","Denial Code",
+				"Denial Description","Denial Classification","Action Code",
+				"Recommended Action","Task","Action Category","Priority",
+				"SLA (Days)","Assigned To","Status","Date Opened","Due Date",
+				"Date Completed","Days Remaining","SLA Status"
+			};
+
+		// HEADER
+		for (int c = 0; c < taskHeaders.Count; c++)
+		{
+			var cell = ws3.Cell(1, c + 1);
+			cell.Value = taskHeaders[c];
+
+			cell.Style.Font.Bold = true;
+			cell.Style.Font.FontColor = XLColor.White;
+			cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#34495E");
+			cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+			cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+		}
+
+		// BODY
+		for (int r = 0; r < taskRows.Count; r++)
+		{
+			var row = taskRows[r];
+			bool isEven = (r % 2 == 0);
+
+			for (int c = 0; c < taskHeaders.Count; c++)
+			{
+				var key = taskHeaders[c];
+				row.TryGetValue(key, out var val);
+
+				var cell = ws3.Cell(r + 2, c + 1);
+				cell.Value = val ?? "";
+
+				cell.Style.Fill.BackgroundColor = isEven
+					? XLColor.FromHtml("#ECF0F1")
+					: XLColor.White;
+
+				if (key is "Recommended Action" or "Task")
+					cell.Style.Alignment.WrapText = true;
+
+				if (key is "Date Opened" or "Due Date" or "Date Completed")
+				{
+					if (DateTime.TryParse(val, out var dt))
+					{
+						cell.Value = dt;
+						cell.Style.NumberFormat.Format = "yyyy-mm-dd";
+					}
+				}
+
+				cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+			}
+		}
+
+		// TABLE
+		var taskTableRange = ws3.Range(1, 1, taskRows.Count + 1, taskHeaders.Count);
+		var taskTable = taskTableRange.CreateTable();
+		taskTable.Theme = XLTableTheme.TableStyleMedium4;
+
+		ws3.SheetView.FreezeRows(1);
+		ws3.Columns().AdjustToContents();
 
 		//
 		// SAVE FILE

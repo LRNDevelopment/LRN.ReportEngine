@@ -2,6 +2,7 @@ using DenialDatabaseProcessorWorker.Models;
 using DenialDatabaseProcessorWorker.Services;
 using DenialDatabaseProcessorWorker.Services.SharePoint;
 using DenialDatabaseProcessorWorker.Worker;
+using LRN.DenialDatabaseWorker.Services;
 using Microsoft.Extensions.DependencyInjection;        // for AddHttpClient, AddWindowsService, etc.
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.WindowsServices;
@@ -33,6 +34,7 @@ builder.Services.AddSingleton<DenialCodeNormalizer>();
 builder.Services.AddSingleton<DenialDatabaseBuilder>();
 builder.Services.AddSingleton<ExcelWriter>();
 builder.Services.AddSingleton<DenialInsightBuilder>();
+builder.Services.AddSingleton<TaskBoardBuilder>();
 
 // SharePoint uploader (Graph REST + ClientSecret credential)
 // If SharePoint.Enabled=false, uploader becomes a no-op.

@@ -1,131 +1,120 @@
 {
-  "TargetTable": "dbo.LISStaging",
-  "Columns": [
-
-    {
-      "ExcelColumn": "Task ID",
-      "SqlColumn": "TaskID",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "Claim ID",
-      "SqlColumn": "ClaimID",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "Patient / Acct #",
-      "SqlColumn": "PatientId",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "CPT Code",
-      "SqlColumn": "CPTCode",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "Denial Code",
-      "SqlColumn": "DenialCode",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "Denial Description",
-      "SqlColumn": "DenialDescription",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "Denial Classification",
-      "SqlColumn": "DenialClassification",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "Action Code",
-      "SqlColumn": "ActionCode",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "Recommended Action",
-      "SqlColumn": "RecommendedAction",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "Task",
-      "SqlColumn": "Task",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "Action Category",
-      "SqlColumn": "DenialClassification",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "Action Category",
-      "SqlColumn": "DenialClassification",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "Priority",
-      "SqlColumn": "Priority",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "SLA (Days)",
-      "SqlColumn": "SLADays",
-      "DataType": "int"
-    },
-    {
-      "ExcelColumn": "Status",
-      "SqlColumn": "Status",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "Date Opened",
-      "SqlColumn": "DateOpened",
-      "DataType": "date"
-    },
-    {
-      "ExcelColumn": "Due Date",
-      "SqlColumn": "DueDate",
-      "DataType": "date"
-    },
-    {
-      "ExcelColumn": "Date Completed",
-      "SqlColumn": "DateCompleted",
-      "DataType": "date"
-    },
-    {
-      "ExcelColumn": "Days Remaining",
-      "SqlColumn": "DaysRemaining",
-      "DataType": "int"
-    },
-    {
-      "ExcelColumn": "SLA Status",
-      "SqlColumn": "SLAStatus",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "LabId",
-      "SqlColumn": "LabId",
-      "DataType": "int"
-    },
-    {
-      "ExcelColumn": "LabName",
-      "SqlColumn": "LabName",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "RunId",
-      "SqlColumn": "RunId",
-      "DataType": "string"
-    },
-    {
-      "ExcelColumn": "CreatedOn",
-      "SqlColumn": "CreatedOn",
-      "DataType": "DateTime"
-    },
-    {
-      "ExcelColumn": "UniqueTrackId",
-      "SqlColumn": "UniqueTrackId",
-      "DataType": "string"
-    }
-  ]
+	"TargetTable": "dbo.DenialTaskBoard",
+	"Columns": [
+		{
+			"ExcelColumn": "Task ID",
+			"SqlColumn": "TaskID",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Claim ID",
+			"SqlColumn": "ClaimID",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Patient / Acct #",
+			"SqlColumn": "PatientId",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "CPT Code",
+			"SqlColumn": "CPTCode",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Denial Code",
+			"SqlColumn": "DenialCode",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Denial Description",
+			"SqlColumn": "DenialDescription",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Denial Classification",
+			"SqlColumn": "DenialClassification",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Action Code",
+			"SqlColumn": "ActionCode",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Recommended Action",
+			"SqlColumn": "RecommendedAction",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Task",
+			"SqlColumn": "Task",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Priority",
+			"SqlColumn": "Priority",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "SLA (Days)",
+			"SqlColumn": "SLADays",
+			"DataType": "int"
+		},
+		{
+			"ExcelColumn": "Status",
+			"SqlColumn": "Status",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Date Opened",
+			"SqlColumn": "DateOpened",
+			"DataType": "date"
+		},
+		{
+			"ExcelColumn": "Due Date",
+			"SqlColumn": "DueDate",
+			"DataType": "date"
+		},
+		{
+			"ExcelColumn": "Date Completed",
+			"SqlColumn": "DateCompleted",
+			"DataType": "date"
+		},
+		{
+			"ExcelColumn": "Days Remaining",
+			"SqlColumn": "DaysRemaining",
+			"DataType": "int"
+		},
+		{
+			"ExcelColumn": "SLA Status",
+			"SqlColumn": "SLAStatus",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "LabId",
+			"SqlColumn": "LabId",
+			"DataType": "int"
+		},
+		{
+			"ExcelColumn": "LabName",
+			"SqlColumn": "LabName",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "RunId",
+			"SqlColumn": "RunId",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "CreatedOn",
+			"SqlColumn": "CreatedOn",
+			"DataType": "datetime"
+		},
+		{
+			"ExcelColumn": "UniqueTrackId",
+			"SqlColumn": "UniqueTrackId",
+			"DataType": "string"
+		}
+	]
 }

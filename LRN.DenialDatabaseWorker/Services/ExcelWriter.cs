@@ -1,18 +1,14 @@
 using ClosedXML.Excel;
-using LRN.DenialDatabaseWorker.Services;
-using Microsoft.Extensions.Logging;
 
 namespace DenialDatabaseProcessorWorker.Services;
 
 public sealed class ExcelWriter
 {
 	private readonly ILogger<ExcelWriter> _logger;
-	private readonly TaskBoardBuilder _taskBoardBuilder;
 
 	public ExcelWriter(ILogger<ExcelWriter> logger)
 	{
 		_logger = logger;
-		_taskBoardBuilder = new TaskBoardBuilder();
 	}
 
 	public void Write(
@@ -20,7 +16,8 @@ public sealed class ExcelWriter
 		List<string> lineHeaders,
 		List<Dictionary<string, string>> lineRows,
 		List<string> insightHeaders,
-		List<Dictionary<string, string>> insightRows)
+		List<Dictionary<string, string>> insightRows,
+		List<Dictionary<string, string>> taskRows)
 	{
 		Directory.CreateDirectory(Path.GetDirectoryName(outputPath) ?? ".");
 
@@ -46,19 +43,11 @@ public sealed class ExcelWriter
 			.Where(h => !string.IsNullOrWhiteSpace(h) && !excludedHeaders.Contains(h.Trim()))
 			.ToList();
 
-		// Build Task Board rows
-		var taskRows = _taskBoardBuilder.Build(lineRows);
-
 		using var wb = new XLWorkbook();
 
-		//
-		// ───────────────────────────────────────────────
-		//  SHEET 1: DENIAL DATABASE
-		// ───────────────────────────────────────────────
-		//
+		// SHEET 1: DENIAL DATABASE
 		var ws1 = wb.AddWorksheet("Denial Database");
 
-		// HEADER ROW
 		for (int c = 0; c < effectiveLineHeaders.Count; c++)
 		{
 			var cell = ws1.Cell(1, c + 1);
@@ -72,99 +61,89 @@ public sealed class ExcelWriter
 			cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
 		}
 
-		// FREEZE HEADER
 		ws1.SheetView.FreezeRows(1);
 
-		// BODY ROWS
 		for (int r = 0; r < lineRows.Count; r++)
 		{
 			var row = lineRows[r];
-			bool isEven = ((r + 1) % 2 == 0);
-
 			for (int c = 0; c < effectiveLineHeaders.Count; c++)
 			{
 				var key = effectiveLineHeaders[c];
 				row.TryGetValue(key, out var val);
-
-				var cell = ws1.Cell(r + 2, c + 1);
-				cell.Value = val ?? "";
-
-				// Zebra striping
-				cell.Style.Fill.BackgroundColor = isEven
-					? XLColor.FromHtml("#D9E1F2")
-					: XLColor.White;
-
-				// Wrap text
-				//string[] wrapColumns =
-				//{
-				//	"Denial Description","Coverage Status",
-				//	"Covered ICD 10 codes as per Payer Policy",
-				//	"Non Covered ICD 10 Codes as per Payer Policy",
-				//	"Action Comment","Coding Validation Sub-Status",
-				//	"Recommended Action","Notes / Comments"
-				//};
-
-				//if (wrapColumns.Contains(key))
-				//	cell.Style.Alignment.WrapText = true;
-
-				//// Date formatting
-				//string[] dateColumns =
-				//{
-				//	"First Billed Date",
-				//	"Expected Payment Date",
-				//	"Date of Service",
-				//	"Claim Received Date",
-				//	"Last Payment Date"
-				//};
-
-				//if (dateColumns.Contains(key))
-				//{
-				//	if (DateTime.TryParse(val, out var dt))
-				//	{
-				//		cell.Value = dt;
-				//		cell.Style.NumberFormat.Format = "yyyy-mm-dd";
-				//	}
-				//}
-
-				//// Currency formatting
-				//string[] moneyColumns =
-				//{
-				//	"Billed Amount","Allowed Amount","Insurance Payment","Insurance Adjustment",
-				//	"Patient Paid Amount","Patient Adjustment","Insurance Balance","Patient Balance",
-				//	"Total Balance","Medicare Fee","Expected Average Allowed Amount",
-				//	"Expected Average Insurance Payment","Expected Allowed Amount - Same Lab",
-				//	"Expected Insurance Payment - Same Lab","Mode Allowed Amount - Same Lab",
-				//	"Mode Insurance Paid - Same Lab","Mode Allowed Amount- Peer",
-				//	"Mode Insurance Paid- Peer","Median Allowed Amount- Same Lab",
-				//	"Median Insurance Paid - Same Lab","Median Allowed Amount- Peer",
-				//	"Median, Insurance Paid - Peer","Mode Allowed Amount Difference",
-				//	"Mode Insurance Paid Difference","Median Allowed Amount Difference",
-				//	"Median Insurance Paid Difference"
-				//};
-
-				//if (moneyColumns.Contains(key))
-				//{
-				//	if (decimal.TryParse(val, out var d))
-				//	{
-				//		cell.Value = d;
-				//		cell.Style.NumberFormat.Format = "$#,##0.00";
-				//	}
-				//}
-
-				//cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+				ws1.Cell(r + 2, c + 1).Value = val ?? "";
 			}
 		}
 
-		// HIDE SELECTED COLUMNS
-		//for (int c = 0; c < effectiveLineHeaders.Count; c++)
-		//{
-		//	var header = effectiveLineHeaders[c];
-		//	if (hiddenHeaders.Contains(header.Trim()))
-		//		ws1.Column(c + 1).Hide();
-		//}
+		var dataRange = ws1.Range(2, 1, lineRows.Count + 1, effectiveLineHeaders.Count);
 
-		// AUTO-FIT THEN STATIC WIDTHS
-		//ws1.Columns().AdjustToContents();
+		for (int r = 0; r < lineRows.Count; r++)
+		{
+			bool isEven = ((r + 1) % 2 == 0);
+			var rowRange = dataRange.Row(r + 1);
+			rowRange.Style.Fill.BackgroundColor = isEven
+				? XLColor.FromHtml("#D9E1F2")
+				: XLColor.White;
+		}
+
+		string[] wrapColumns =
+		{
+			"Denial Description","Coverage Status",
+			"Covered ICD 10 codes as per Payer Policy",
+			"Non Covered ICD 10 Codes as per Payer Policy",
+			"Action Comment","Coding Validation Sub-Status",
+			"Recommended Action","Notes / Comments"
+		};
+
+		string[] dateColumns =
+		{
+			"First Billed Date",
+			"Expected Payment Date",
+			"Date of Service",
+			"Claim Received Date",
+			"Last Payment Date"
+		};
+
+		string[] moneyColumns =
+		{
+			"Billed Amount","Allowed Amount","Insurance Payment","Insurance Adjustment",
+			"Patient Paid Amount","Patient Adjustment","Insurance Balance","Patient Balance",
+			"Total Balance","Medicare Fee","Expected Average Allowed Amount",
+			"Expected Average Insurance Payment","Expected Allowed Amount - Same Lab",
+			"Expected Insurance Payment - Same Lab","Mode Allowed Amount - Same Lab",
+			"Mode Insurance Paid - Same Lab","Mode Allowed Amount- Peer",
+			"Mode Insurance Paid- Peer","Median Allowed Amount- Same Lab",
+			"Median Insurance Paid - Same Lab","Median Allowed Amount- Peer",
+			"Median, Insurance Paid - Peer","Mode Allowed Amount Difference",
+			"Mode Insurance Paid Difference","Median Allowed Amount Difference",
+			"Median Insurance Paid Difference"
+		};
+
+		for (int c = 0; c < effectiveLineHeaders.Count; c++)
+		{
+			var header = effectiveLineHeaders[c];
+			var col = ws1.Column(c + 1);
+
+			if (wrapColumns.Contains(header))
+				col.Style.Alignment.WrapText = true;
+
+			if (dateColumns.Contains(header))
+				col.Style.NumberFormat.Format = "yyyy-mm-dd";
+
+			if (moneyColumns.Contains(header))
+				col.Style.NumberFormat.Format = "$#,##0.00";
+		}
+
+		dataRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+		dataRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+
+		for (int c = 0; c < effectiveLineHeaders.Count; c++)
+		{
+			var header = effectiveLineHeaders[c];
+			if (hiddenHeaders.Contains(header.Trim()))
+				ws1.Column(c + 1).Hide();
+		}
+
+		ws1.Columns().AdjustToContents();
 
 		void SetWidth(string header, double width)
 		{
@@ -173,21 +152,19 @@ public sealed class ExcelWriter
 				ws1.Column(index + 1).Width = width;
 		}
 
-		//SetWidth("Denial Description", 40);
-		//SetWidth("Coverage Status", 25);
-		//SetWidth("Covered ICD 10 codes as per Payer Policy", 45);
-		//SetWidth("Non Covered ICD 10 Codes as per Payer Policy", 45);
-		//SetWidth("Action Comment", 40);
-		//SetWidth("Coding Validation Sub-Status", 30);
-		//SetWidth("Recommended Action", 45);
-		//SetWidth("Notes / Comments", 45);
+		SetWidth("Denial Description", 40);
+		SetWidth("Coverage Status", 25);
+		SetWidth("Covered ICD 10 codes as per Payer Policy", 45);
+		SetWidth("Non Covered ICD 10 Codes as per Payer Policy", 45);
+		SetWidth("Action Comment", 40);
+		SetWidth("Coding Validation Sub-Status", 30);
+		SetWidth("Recommended Action", 45);
+		SetWidth("Notes / Comments", 45);
 
-		// CREATE EXCEL TABLE
 		var tableRange = ws1.Range(1, 1, lineRows.Count + 1, effectiveLineHeaders.Count);
 		var table = tableRange.CreateTable();
 		table.Theme = XLTableTheme.TableStyleMedium2;
 
-		// CONDITIONAL FORMATTING FOR NEGATIVE VALUES ONLY
 		foreach (var colName in effectiveLineHeaders)
 		{
 			int colIndex = effectiveLineHeaders.IndexOf(colName);
@@ -199,14 +176,12 @@ public sealed class ExcelWriter
 				colName.Contains("Fee", StringComparison.OrdinalIgnoreCase))
 			{
 				var col = ws1.Column(colIndex + 1);
-
 				col.AddConditionalFormat()
 					.WhenLessThan(0)
 					.Fill.SetBackgroundColor(XLColor.LightPink);
 			}
 		}
 
-		// PRIORITY COLOR CODING
 		int priorityIndex = effectiveLineHeaders.IndexOf("Priority");
 		if (priorityIndex >= 0)
 		{
@@ -225,19 +200,12 @@ public sealed class ExcelWriter
 				.Fill.SetBackgroundColor(XLColor.FromHtml("#C6EFCE"));
 		}
 
-		//
-		// ───────────────────────────────────────────────
-		//  SHEET 2: DENIAL INSIGHTS (NEW POLISHED STYLING + TABLE)
-		// ───────────────────────────────────────────────
-		//
+		// SHEET 2: DENIAL INSIGHTS
 		var ws2 = wb.AddWorksheet("Denial Insights");
 
 		int rowOffset = 3;
 		int colOffset = 2;
 
-		//
-		// TITLE
-		//
 		var titleCell = ws2.Cell(rowOffset, colOffset);
 		titleCell.Value = "Denial Insights Summary";
 
@@ -250,9 +218,6 @@ public sealed class ExcelWriter
 		titleCell.Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3D2F");
 		titleCell.Style.Border.BottomBorder = XLBorderStyleValues.Thick;
 
-		//
-		// HEADER ROW
-		//
 		int headerRow = rowOffset + 2;
 
 		for (int c = 0; c < insightHeaders.Count; c++)
@@ -267,9 +232,6 @@ public sealed class ExcelWriter
 			cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
 		}
 
-		//
-		// BODY ROWS
-		//
 		for (int r = 0; r < insightRows.Count; r++)
 		{
 			var row = insightRows[r];
@@ -282,12 +244,10 @@ public sealed class ExcelWriter
 
 				var cell = ws2.Cell(headerRow + 1 + r, colOffset + c);
 
-				// Zebra striping (green theme)
 				cell.Style.Fill.BackgroundColor = isEven
 					? XLColor.FromHtml("#E8F5E9")
 					: XLColor.White;
 
-				// Hyperlink
 				if (key.Equals("Data", StringComparison.OrdinalIgnoreCase))
 				{
 					cell.Value = "Link";
@@ -305,7 +265,6 @@ public sealed class ExcelWriter
 					cell.Value = val ?? "";
 				}
 
-				// Wrap text
 				if (key is "Descriptions" or "Observation" or "Action" or "Task")
 					cell.Style.Alignment.WrapText = true;
 
@@ -313,9 +272,6 @@ public sealed class ExcelWriter
 			}
 		}
 
-		//
-		// CREATE TABLE FOR INSIGHTS
-		//
 		var insightsTableRange = ws2.Range(
 			headerRow,
 			colOffset,
@@ -325,9 +281,6 @@ public sealed class ExcelWriter
 		var insightsTable = insightsTableRange.CreateTable();
 		insightsTable.Theme = XLTableTheme.TableStyleMedium9;
 
-		//
-		// COLUMN WIDTHS
-		//
 		void SetInsightWidth(string header, double width)
 		{
 			int index = insightHeaders.IndexOf(header);
@@ -347,27 +300,21 @@ public sealed class ExcelWriter
 		SetInsightWidth("Ins. Balance ($)", 18);
 		SetInsightWidth("$ Impact (%)", 15);
 
-		//
-		// FREEZE HEADER
-		//
 		ws2.SheetView.FreezeRows(headerRow);
 
-		// ───────────────────────────────────────────────
-		//  SHEET 3: TASK BOARD
-		// ───────────────────────────────────────────────
-
+		// SHEET 3: TASK BOARD
 		var ws3 = wb.AddWorksheet("Task Board");
 
 		var taskHeaders = new List<string>
-			{
-				"Task ID","Claim ID","Patient / Acct #","CPT Code","Denial Code",
-				"Denial Description","Denial Classification","Action Code",
-				"Recommended Action","Task","Action Category","Priority",
-				"SLA (Days)","Assigned To","Status","Date Opened","Due Date",
-				"Date Completed","Days Remaining","SLA Status"
-			};
+		{
+			"Task ID","Claim ID","Patient / Acct #","CPT Code","Denial Code",
+			"Denial Description","Denial Classification","Action Code",
+			"Recommended Action","Task","Action Category","Priority",
+			"SLA (Days)","Assigned To","Status","Date Opened","Due Date",
+			"Date Completed","Days Remaining","SLA Status",
+			"LabId","LabName","RunId","CreatedOn","UniqueTrackId"
+		};
 
-		// HEADER
 		for (int c = 0; c < taskHeaders.Count; c++)
 		{
 			var cell = ws3.Cell(1, c + 1);
@@ -380,7 +327,6 @@ public sealed class ExcelWriter
 			cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
 		}
 
-		// BODY
 		for (int r = 0; r < taskRows.Count; r++)
 		{
 			var row = taskRows[r];
@@ -401,12 +347,12 @@ public sealed class ExcelWriter
 				if (key is "Recommended Action" or "Task")
 					cell.Style.Alignment.WrapText = true;
 
-				if (key is "Date Opened" or "Due Date" or "Date Completed")
+				if (key is "Date Opened" or "Due Date" or "Date Completed" or "CreatedOn")
 				{
 					if (DateTime.TryParse(val, out var dt))
 					{
 						cell.Value = dt;
-						cell.Style.NumberFormat.Format = "yyyy-mm-dd";
+						cell.Style.NumberFormat.Format = "yyyy-MM-dd";
 					}
 				}
 
@@ -414,7 +360,6 @@ public sealed class ExcelWriter
 			}
 		}
 
-		// TABLE
 		var taskTableRange = ws3.Range(1, 1, taskRows.Count + 1, taskHeaders.Count);
 		var taskTable = taskTableRange.CreateTable();
 		taskTable.Theme = XLTableTheme.TableStyleMedium4;
@@ -422,10 +367,7 @@ public sealed class ExcelWriter
 		ws3.SheetView.FreezeRows(1);
 		ws3.Columns().AdjustToContents();
 
-		//
-		// SAVE FILE
-		//
 		wb.SaveAs(outputPath);
-		_logger.LogInformation("Wrote Denial Database Excel with Insights: {OutputPath}", outputPath);
+		_logger.LogInformation("Wrote Denial Database Excel with Insights and Task Board: {OutputPath}", outputPath);
 	}
 }

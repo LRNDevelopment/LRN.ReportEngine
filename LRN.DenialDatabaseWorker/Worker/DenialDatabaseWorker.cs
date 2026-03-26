@@ -1,8 +1,6 @@
 using DenialDatabaseProcessorWorker.Models;
 using DenialDatabaseProcessorWorker.Services;
 using DenialDatabaseProcessorWorker.Services.SharePoint;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace DenialDatabaseProcessorWorker.Worker;
@@ -19,6 +17,10 @@ public sealed class DenialDatabaseWorker : BackgroundService
 	private readonly ExcelWriter _excelWriter;
 	private readonly ISharePointUploader _uploader;
 	private readonly DenialInsightBuilder _insightBuilder;
+	private readonly FileResolver _fileResolver;
+	private readonly OutputPathBuilder _outputPathBuilder;
+	private readonly TaskBoardBulkWriter _taskBoardBulkWriter;
+	private readonly DenialAnalysisRunLogRepository _runLogRepo;
 
 	public DenialDatabaseWorker(
 		ILogger<DenialDatabaseWorker> logger,
@@ -29,7 +31,11 @@ public sealed class DenialDatabaseWorker : BackgroundService
 		DenialDatabaseBuilder builder,
 		ExcelWriter excelWriter,
 		ISharePointUploader uploader,
-		DenialInsightBuilder insightBuilder)
+		DenialInsightBuilder insightBuilder,
+		FileResolver fileResolver,
+		OutputPathBuilder outputPathBuilder,
+		TaskBoardBulkWriter taskBoardBulkWriter,
+		DenialAnalysisRunLogRepository runLogRepo)
 	{
 		_logger = logger;
 		_options = options.Value;
@@ -40,7 +46,11 @@ public sealed class DenialDatabaseWorker : BackgroundService
 		_builder = builder;
 		_excelWriter = excelWriter;
 		_uploader = uploader;
-		_insightBuilder = insightBuilder;      // <-- ADD THIS
+		_insightBuilder = insightBuilder;
+		_fileResolver = fileResolver;
+		_outputPathBuilder = outputPathBuilder;
+		_taskBoardBulkWriter = taskBoardBulkWriter;
+		_runLogRepo = runLogRepo;
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -54,9 +64,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
 		try
 		{
 			foreach (var lab in _labs)
-			{
 				await ProcessLabAsync(lab, stoppingToken);
-			}
 		}
 		catch (Exception ex)
 		{
@@ -80,53 +88,78 @@ public sealed class DenialDatabaseWorker : BackgroundService
 
 	private async Task ProcessLabAsync(LabConfig lab, CancellationToken ct)
 	{
-		var now = DateTime.Now;
-		var monthFolder = now.ToString("MMMM-yyyy");
-		var dateFolder = now.ToString("MMddyyyy");
-		var outDir = Path.Combine(_options.OutputRoot, lab.LabName, monthFolder, dateFolder);
-		var outFile = Path.Combine(outDir, $"{lab.LabName}_DenialDatabase_{dateFolder}.xlsx");
+		string payerPolicyFile = _fileResolver.GetLatestPayerPolicyFile(lab);
+		string claimActionMapperFile = _fileResolver.GetLatestClaimActionMapper(lab);
 
-		await _stepLogger.LogAsync(lab, "Start", "InProgress", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct);
+		var runId = _fileResolver.ExtractRunId(payerPolicyFile);
+
+		if (await _runLogRepo.ExistsAsync(runId))
+		{
+			_logger.LogInformation("RunId {RunId} already processed. Skipping lab {LabName}.", runId, lab.LabName);
+			return;
+		}
+
+		var (yearFolder, monthFolder, weekFolder) = _fileResolver.ExtractFolderStructure(payerPolicyFile);
+		var outFile = _outputPathBuilder.BuildOutputPath(_options.OutputRoot, lab.LabName, runId, yearFolder, monthFolder, weekFolder);
+
+		await _stepLogger.LogAsync(lab, "Start", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
 		try
 		{
-			await _stepLogger.LogAsync(lab, "Load ClaimActionMapper excel", "InProgress", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct);
-			var claimRows = _excelReader.Read(lab.ClaimActionMapper, "Denial Classifier");
+			// Load Claim Action Mapper
+			await _stepLogger.LogAsync(lab, "Load ClaimActionMapper excel", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
+			var claimRows = _excelReader.Read(claimActionMapperFile, "Denial Classifier");
 			var claimMapperIndex = new ClaimActionMapperIndex(claimRows);
-			await _stepLogger.LogAsync(lab, "Load ClaimActionMapper excel", "Completed", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct);
+			await _stepLogger.LogAsync(lab, "Load ClaimActionMapper excel", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
-			await _stepLogger.LogAsync(lab, "Load PayerPolicy excel", "InProgress", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct);
-			var payerRows = _excelReader.Read(lab.PayerPolicyFile);
-			await _stepLogger.LogAsync(lab, "Load PayerPolicy excel", "Completed", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct);
+			// Load Payer Policy
+			await _stepLogger.LogAsync(lab, "Load PayerPolicy excel", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
+			var payerRows = _excelReader.Read(payerPolicyFile);
+			await _stepLogger.LogAsync(lab, "Load PayerPolicy excel", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
-			await _stepLogger.LogAsync(lab, "Normalize DenialCode + map fields", "InProgress", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct);
+			// Normalize + Map
+			await _stepLogger.LogAsync(lab, "Normalize DenialCode + map fields", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 			var (headers, finalRows) = _builder.Build(payerRows, claimMapperIndex);
-			await _stepLogger.LogAsync(lab, "Normalize DenialCode + map fields", "Completed", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct);
+			await _stepLogger.LogAsync(lab, "Normalize DenialCode + map fields", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
-			// Build Insight Sheet
+			// Build Insights
 			var insight = _insightBuilder.Build(finalRows);
 
-			await _stepLogger.LogAsync(lab, "Write DenialDatabase excel", "InProgress", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct);
+			// Build Task Board
+			var taskBuilder = new TaskBoardBuilder(lab.LabId, lab.LabName, runId);
+			var taskRows = taskBuilder.Build(finalRows);
+
+			// Write Excel
+			await _stepLogger.LogAsync(lab, "Write DenialDatabase excel", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
+
 			_excelWriter.Write(
 				outFile,
 				headers,
 				finalRows,
 				insight.Headers,
-				insight.Rows
+				insight.Rows,
+				taskRows
 			);
-			await _stepLogger.LogAsync(lab, "Write DenialDatabase excel", "Completed", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct);
-			await _stepLogger.LogAsync(lab, "Write DenialDatabase excel", "Completed", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct);
 
-			await _stepLogger.LogAsync(lab, "Upload to SharePoint", "InProgress", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct);
-			await _uploader.UploadIfEnabledAsync(lab, outFile, now, ct);
-			await _stepLogger.LogAsync(lab, "Upload to SharePoint", "Completed", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct);
+			await _stepLogger.LogAsync(lab, "Write DenialDatabase excel", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
-			await _stepLogger.LogAsync(lab, "Completed", "Completed", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, null, ct);
+			// Bulk Insert Task Board
+			await _taskBoardBulkWriter.BulkInsertAsync(taskRows);
+
+			// Insert RunLog
+			await _runLogRepo.InsertAsync(runId, lab.LabId);
+
+			// Upload to SharePoint
+			await _stepLogger.LogAsync(lab, "Upload to SharePoint", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
+			await _uploader.UploadIfEnabledAsync(lab, outFile, DateTime.Now, ct);
+			await _stepLogger.LogAsync(lab, "Upload to SharePoint", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
+
+			await _stepLogger.LogAsync(lab, "Completed", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 		}
 		catch (Exception ex)
 		{
 			_logger.LogError(ex, "Lab processing failed: {LabName}", lab.LabName);
-			await _stepLogger.LogAsync(lab, "Failed", "ERROR", lab.PayerPolicyFile, lab.ClaimActionMapper, outFile, ex.ToString(), ct);
+			await _stepLogger.LogAsync(lab, "Failed", "ERROR", payerPolicyFile, claimActionMapperFile, outFile, ex.ToString(), ct);
 		}
 	}
 }

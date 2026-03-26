@@ -13,6 +13,10 @@ public sealed class ProcessorOptions
     public string LogCsvPath { get; init; } = @"C:\LRN-Files\Automation\LRN-Logs\DenialDatabaseProcessor_Log.csv";
 
     public SharePointOptions SharePoint { get; init; } = new();
+
+	// Add this so worker can access configuration
+	public IConfiguration? Configuration { get; set; }
+
 }
 
 public sealed class SharePointOptions

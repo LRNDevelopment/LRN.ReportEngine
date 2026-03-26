@@ -73,7 +73,7 @@
 			"DataType": "string"
 		},
 		{
-			"Name": "Sum of Patient ID",
+			"Name": "Billed Amount",
 			"Required": true,
 			"DataType": "decimal"
 		},

@@ -95,76 +95,76 @@ public sealed class ExcelWriter
 					: XLColor.White;
 
 				// Wrap text
-				string[] wrapColumns =
-				{
-					"Denial Description","Coverage Status",
-					"Covered ICD 10 codes as per Payer Policy",
-					"Non Covered ICD 10 Codes as per Payer Policy",
-					"Action Comment","Coding Validation Sub-Status",
-					"Recommended Action","Notes / Comments"
-				};
+				//string[] wrapColumns =
+				//{
+				//	"Denial Description","Coverage Status",
+				//	"Covered ICD 10 codes as per Payer Policy",
+				//	"Non Covered ICD 10 Codes as per Payer Policy",
+				//	"Action Comment","Coding Validation Sub-Status",
+				//	"Recommended Action","Notes / Comments"
+				//};
 
-				if (wrapColumns.Contains(key))
-					cell.Style.Alignment.WrapText = true;
+				//if (wrapColumns.Contains(key))
+				//	cell.Style.Alignment.WrapText = true;
 
-				// Date formatting
-				string[] dateColumns =
-				{
-					"First Billed Date",
-					"Expected Payment Date",
-					"Date of Service",
-					"Claim Received Date",
-					"Last Payment Date"
-				};
+				//// Date formatting
+				//string[] dateColumns =
+				//{
+				//	"First Billed Date",
+				//	"Expected Payment Date",
+				//	"Date of Service",
+				//	"Claim Received Date",
+				//	"Last Payment Date"
+				//};
 
-				if (dateColumns.Contains(key))
-				{
-					if (DateTime.TryParse(val, out var dt))
-					{
-						cell.Value = dt;
-						cell.Style.NumberFormat.Format = "yyyy-mm-dd";
-					}
-				}
+				//if (dateColumns.Contains(key))
+				//{
+				//	if (DateTime.TryParse(val, out var dt))
+				//	{
+				//		cell.Value = dt;
+				//		cell.Style.NumberFormat.Format = "yyyy-mm-dd";
+				//	}
+				//}
 
-				// Currency formatting
-				string[] moneyColumns =
-				{
-					"Billed Amount","Allowed Amount","Insurance Payment","Insurance Adjustment",
-					"Patient Paid Amount","Patient Adjustment","Insurance Balance","Patient Balance",
-					"Total Balance","Medicare Fee","Expected Average Allowed Amount",
-					"Expected Average Insurance Payment","Expected Allowed Amount - Same Lab",
-					"Expected Insurance Payment - Same Lab","Mode Allowed Amount - Same Lab",
-					"Mode Insurance Paid - Same Lab","Mode Allowed Amount- Peer",
-					"Mode Insurance Paid- Peer","Median Allowed Amount- Same Lab",
-					"Median Insurance Paid - Same Lab","Median Allowed Amount- Peer",
-					"Median, Insurance Paid - Peer","Mode Allowed Amount Difference",
-					"Mode Insurance Paid Difference","Median Allowed Amount Difference",
-					"Median Insurance Paid Difference"
-				};
+				//// Currency formatting
+				//string[] moneyColumns =
+				//{
+				//	"Billed Amount","Allowed Amount","Insurance Payment","Insurance Adjustment",
+				//	"Patient Paid Amount","Patient Adjustment","Insurance Balance","Patient Balance",
+				//	"Total Balance","Medicare Fee","Expected Average Allowed Amount",
+				//	"Expected Average Insurance Payment","Expected Allowed Amount - Same Lab",
+				//	"Expected Insurance Payment - Same Lab","Mode Allowed Amount - Same Lab",
+				//	"Mode Insurance Paid - Same Lab","Mode Allowed Amount- Peer",
+				//	"Mode Insurance Paid- Peer","Median Allowed Amount- Same Lab",
+				//	"Median Insurance Paid - Same Lab","Median Allowed Amount- Peer",
+				//	"Median, Insurance Paid - Peer","Mode Allowed Amount Difference",
+				//	"Mode Insurance Paid Difference","Median Allowed Amount Difference",
+				//	"Median Insurance Paid Difference"
+				//};
 
-				if (moneyColumns.Contains(key))
-				{
-					if (decimal.TryParse(val, out var d))
-					{
-						cell.Value = d;
-						cell.Style.NumberFormat.Format = "$#,##0.00";
-					}
-				}
+				//if (moneyColumns.Contains(key))
+				//{
+				//	if (decimal.TryParse(val, out var d))
+				//	{
+				//		cell.Value = d;
+				//		cell.Style.NumberFormat.Format = "$#,##0.00";
+				//	}
+				//}
 
-				cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+				//cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
 			}
 		}
 
 		// HIDE SELECTED COLUMNS
-		for (int c = 0; c < effectiveLineHeaders.Count; c++)
-		{
-			var header = effectiveLineHeaders[c];
-			if (hiddenHeaders.Contains(header.Trim()))
-				ws1.Column(c + 1).Hide();
-		}
+		//for (int c = 0; c < effectiveLineHeaders.Count; c++)
+		//{
+		//	var header = effectiveLineHeaders[c];
+		//	if (hiddenHeaders.Contains(header.Trim()))
+		//		ws1.Column(c + 1).Hide();
+		//}
 
 		// AUTO-FIT THEN STATIC WIDTHS
-		ws1.Columns().AdjustToContents();
+		//ws1.Columns().AdjustToContents();
 
 		void SetWidth(string header, double width)
 		{
@@ -173,14 +173,14 @@ public sealed class ExcelWriter
 				ws1.Column(index + 1).Width = width;
 		}
 
-		SetWidth("Denial Description", 40);
-		SetWidth("Coverage Status", 25);
-		SetWidth("Covered ICD 10 codes as per Payer Policy", 45);
-		SetWidth("Non Covered ICD 10 Codes as per Payer Policy", 45);
-		SetWidth("Action Comment", 40);
-		SetWidth("Coding Validation Sub-Status", 30);
-		SetWidth("Recommended Action", 45);
-		SetWidth("Notes / Comments", 45);
+		//SetWidth("Denial Description", 40);
+		//SetWidth("Coverage Status", 25);
+		//SetWidth("Covered ICD 10 codes as per Payer Policy", 45);
+		//SetWidth("Non Covered ICD 10 Codes as per Payer Policy", 45);
+		//SetWidth("Action Comment", 40);
+		//SetWidth("Coding Validation Sub-Status", 30);
+		//SetWidth("Recommended Action", 45);
+		//SetWidth("Notes / Comments", 45);
 
 		// CREATE EXCEL TABLE
 		var tableRange = ws1.Range(1, 1, lineRows.Count + 1, effectiveLineHeaders.Count);

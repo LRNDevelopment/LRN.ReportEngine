@@ -236,7 +236,8 @@
 				"Sum of Patient ID",
 				"Proc-Charge Amount $",
 				"TotalCharge",
-				"Biilled Amounts"
+				"Biilled Amounts",
+				"Billed Amount"
 			]
 		},
 		{

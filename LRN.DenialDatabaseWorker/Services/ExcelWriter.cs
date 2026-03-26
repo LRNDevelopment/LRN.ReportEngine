@@ -311,9 +311,9 @@ public sealed class ExcelWriter
 			"Denial Description","Denial Classification","Action Code",
 			"Recommended Action","Task","Action Category","Priority",
 			"SLA (Days)","Assigned To","Status","Date Opened","Due Date",
-			"Date Completed","Days Remaining","SLA Status",
-			"LabId","LabName","RunId","CreatedOn","UniqueTrackId"
+			"Date Completed","Days Remaining","SLA Status"
 		};
+
 
 		for (int c = 0; c < taskHeaders.Count; c++)
 		{

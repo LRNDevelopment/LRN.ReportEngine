@@ -1,16 +1,23 @@
-﻿namespace DenialDatabaseProcessorWorker.Services;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using static DenialDatabaseProcessorWorker.Services.DenialTaskBoardRepository;
+
+namespace DenialDatabaseProcessorWorker.Services;
 
 public sealed class TaskBoardBuilder
 {
 	private readonly int _labId;
 	private readonly string _labName;
 	private readonly string _runId;
+	private readonly Dictionary<string, ExistingTaskInfo> _existingTasks;
 
-	public TaskBoardBuilder(int labId, string labName, string runId)
+	public TaskBoardBuilder(int labId, string labName, string runId, Dictionary<string, ExistingTaskInfo> existingTasks)
 	{
 		_labId = labId;
 		_labName = labName;
 		_runId = runId;
+		_existingTasks = existingTasks ?? new();
 	}
 
 	public List<Dictionary<string, string>> Build(List<Dictionary<string, string>> lineRows)
@@ -44,18 +51,30 @@ public sealed class TaskBoardBuilder
 			DateTime? postedDate = TryParseDate(line.GetValueOrDefault("Posted Date"));
 			decimal insuranceBalance = TryParseDecimal(line.GetValueOrDefault("Insurance Balance"));
 
-			var taskCreationDate = today;
-			var dueDate = slaDays > 0 ? taskCreationDate.AddDays(slaDays) : (DateTime?)null;
-
 			var segments = ParseTaskSegments(taskGuidance, denialCodeNorm);
 
 			foreach (var seg in segments)
 			{
+				var key = $"{visitNumber}|{cptCode}|{seg.DenialCode}";
+				DateTime taskCreationDate = today;
+				string taskId;
+
+				if (_existingTasks.TryGetValue(key, out var existing))
+				{
+					taskId = existing.TaskId;
+					taskCreationDate = existing.DateOpened ?? today;
+				}
+				else
+				{
+					taskId = $"TSK-{taskCounter.ToString("D5")}";
+					taskCounter++;
+				}
+
+				var dueDate = slaDays > 0 ? taskCreationDate.AddDays(slaDays) : (DateTime?)null;
+
 				var row = new Dictionary<string, string>();
 
-				row["Task ID"] = $"TSK-{taskCounter.ToString("D5")}";
-				taskCounter++;
-
+				row["Task ID"] = taskId;
 				row["Claim ID"] = string.IsNullOrWhiteSpace(visitNumber) ? "" : $"CLM-{visitNumber}";
 				row["Patient / Acct #"] = "";
 				row["CPT Code"] = cptCode;
@@ -107,11 +126,12 @@ public sealed class TaskBoardBuilder
 
 				row["SLA Status"] = slaStatus;
 
+				// For DB only
 				row["LabId"] = _labId.ToString();
 				row["LabName"] = _labName;
 				row["RunId"] = _runId;
 				row["CreatedOn"] = DateTime.UtcNow.ToString("O");
-				row["UniqueTrackId"] = $"{visitNumber}|{cptCode}|{seg.DenialCode}";
+				row["UniqueTrackId"] = key;
 
 				result.Add(row);
 			}

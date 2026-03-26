@@ -47,6 +47,7 @@ builder.Services.AddSingleton<FileResolver>();
 builder.Services.AddSingleton<OutputPathBuilder>();
 builder.Services.AddSingleton<TaskBoardBulkWriter>();
 builder.Services.AddSingleton<DenialAnalysisRunLogRepository>();
+builder.Services.AddSingleton<DenialTaskBoardRepository>();
 
 // -------------------------------
 // SharePoint uploader

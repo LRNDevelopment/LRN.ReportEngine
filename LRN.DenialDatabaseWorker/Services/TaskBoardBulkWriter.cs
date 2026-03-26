@@ -1,6 +1,10 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using System;
 using System.Data;
+using System.IO;
 using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 
 namespace DenialDatabaseProcessorWorker.Services;
 
@@ -23,7 +27,9 @@ public sealed class TaskBoardBulkWriter
 				  ?? throw new InvalidOperationException("Failed to deserialize TaskBoardMapper.json");
 	}
 
-	public async Task BulkInsertAsync(System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, string>> taskRows)
+	public async Task BulkInsertAsync(
+		System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, string>> taskRows,
+		int labId)
 	{
 		if (taskRows == null || taskRows.Count == 0)
 			return;
@@ -53,6 +59,14 @@ public sealed class TaskBoardBulkWriter
 
 		await using var conn = new SqlConnection(_connectionString);
 		await conn.OpenAsync().ConfigureAwait(false);
+
+		// Delete existing rows for this LabId
+		const string deleteSql = "DELETE FROM dbo.DenialTaskBoard WHERE LabId = @LabId";
+		await using (var deleteCmd = new SqlCommand(deleteSql, conn))
+		{
+			deleteCmd.Parameters.AddWithValue("@LabId", labId);
+			await deleteCmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+		}
 
 		using var bulk = new SqlBulkCopy(conn)
 		{

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using static DenialDatabaseProcessorWorker.Services.DenialTaskBoardRepository;
@@ -49,6 +50,7 @@ public sealed class TaskBoardBuilder
 
 			DateTime? firstBilled = TryParseDate(line.GetValueOrDefault("First Billed Date"));
 			DateTime? postedDate = TryParseDate(line.GetValueOrDefault("Posted Date"));
+			var payStatus = StripPrefix(line.GetValueOrDefault("Pay Status") ?? ""); //
 			decimal insuranceBalance = TryParseDecimal(line.GetValueOrDefault("Insurance Balance"));
 
 			var segments = ParseTaskSegments(taskGuidance, denialCodeNorm);
@@ -102,8 +104,11 @@ public sealed class TaskBoardBuilder
 				}
 				else if (isWriteOff && insuranceBalance == 0 && postedDate.HasValue && postedDate.Value > taskCreationDate)
 				{
-					taskStatus = "Closed";
-					dateCompleted = postedDate;
+					if (payStatus == "adjusted")
+					{
+						taskStatus = "Closed";
+						dateCompleted = postedDate;
+					}
 				}
 
 				row["Status"] = taskStatus;

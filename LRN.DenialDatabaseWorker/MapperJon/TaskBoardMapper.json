@@ -47,6 +47,11 @@
 			"DataType": "string"
 		},
 		{
+			"ExcelColumn": "Action Category",
+			"SqlColumn": "ActionCategory",
+			"DataType": "string"
+		},
+		{
 			"ExcelColumn": "Task",
 			"SqlColumn": "Task",
 			"DataType": "string"
@@ -62,8 +67,8 @@
 			"DataType": "int"
 		},
 		{
-			"ExcelColumn": "Status",
-			"SqlColumn": "Status",
+			"ExcelColumn": "Assigned To",
+			"SqlColumn": "AssignedTo",
 			"DataType": "string"
 		},
 		{

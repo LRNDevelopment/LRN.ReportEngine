@@ -72,6 +72,16 @@
 			"DataType": "string"
 		},
 		{
+			"ExcelColumn": "Insurance Balance",
+			"SqlColumn": "InsuranceBalance",
+			"DataType": "decimal"
+		},
+		{
+			"ExcelColumn": "IsCurrentDenial",
+			"SqlColumn": "IsCurrentDenial",
+			"DataType": "boolean"
+		},
+		{
 			"ExcelColumn": "Assigned To",
 			"SqlColumn": "AssignedTo",
 			"DataType": "string"

@@ -54,6 +54,8 @@ builder.Services.AddSingleton<DenialTaskBoardRepository>();
 // -------------------------------
 builder.Services.AddHttpClient<SharePointGraphClient>();
 builder.Services.AddSingleton<ISharePointUploader, SharePointUploader>();
+builder.Services.AddSingleton<IErrorLogger, ErrorLogger>();
+
 
 // -------------------------------
 // Worker

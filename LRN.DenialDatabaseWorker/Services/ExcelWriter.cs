@@ -307,11 +307,27 @@ public sealed class ExcelWriter
 
 		var taskHeaders = new List<string>
 				{
-					"Task ID","Claim ID","Patient / Acct #","CPT Code","Denial Code",
-					"Denial Description","Denial Classification","Action Code",
-					"Recommended Action","Task","Action Category","Priority",
-					"SLA (Days)","Assigned To","Status","Date Opened","Due Date",
-					"Date Completed","Days Remaining","SLA Status"
+					"Task ID",
+					"Claim ID",
+					"Patient / Acct #",
+					"CPT Code",
+					"Denial Code",
+					"Denial Description",
+					"Denial Classification",
+					"Action Code",
+					"Recommended Action",
+					"Task",
+					"Action Category",
+					"Priority",
+					"SLA (Days)",
+					"Insurance Balance",   // NEW
+					"Assigned To",
+					"Status",
+					"Date Opened",
+					"Due Date",
+					"Date Completed",
+					"Days Remaining",
+					"SLA Status"
 				};
 
 

@@ -20,15 +20,21 @@ public sealed class DenialTaskBoardRepository
 	{
 		public string TaskId { get; set; } = "";
 		public DateTime? DateOpened { get; set; }
+		public Dictionary<string, string> Row { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 	}
 
-	// Key: VisitNumber|CPTCode|DenialCode
+	// Key: UniqueTrackId (VisitNumber|CPTCode|DenialCode)
 	public async Task<Dictionary<string, ExistingTaskInfo>> GetExistingTasksAsync(int labId)
 	{
 		const string sql = @"
-						SELECT TaskID, UniqueTrackId, DateOpened
-						FROM dbo.DenialTaskBoard
-						WHERE LabId = @LabId";
+SELECT TaskID, ClaimID, PatientId, CPTCode, DenialCode,
+       DenialDescription, DenialClassification, ActionCode, RecommendedAction,
+       Task, ActionCategory, Priority, SLADays, Status,
+       InsuranceBalance, IsCurrentDenial, AssignedTo,
+       DateOpened, DueDate, DateCompleted, DaysRemaining, SLAStatus,
+       LabId, LabName, RunId, CreatedOn, UniqueTrackId
+FROM dbo.DenialTaskBoard
+WHERE LabId = @LabId";
 
 		var result = new Dictionary<string, ExistingTaskInfo>(StringComparer.OrdinalIgnoreCase);
 
@@ -40,22 +46,47 @@ public sealed class DenialTaskBoardRepository
 		await using var reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
 		while (await reader.ReadAsync().ConfigureAwait(false))
 		{
-			var taskId = reader["TaskID"] as string ?? "";
 			var uniqueTrackId = reader["UniqueTrackId"] as string ?? "";
-			DateTime? dateOpened = reader["DateOpened"] is DateTime dt ? dt : (DateTime?)null;
-
 			if (string.IsNullOrWhiteSpace(uniqueTrackId))
 				continue;
 
-			var key = uniqueTrackId;
-			if (!result.ContainsKey(key))
+			var info = new ExistingTaskInfo
 			{
-				result[key] = new ExistingTaskInfo
+				TaskId = reader["TaskID"] as string ?? "",
+				DateOpened = reader["DateOpened"] is DateTime dt ? dt : (DateTime?)null,
+				Row = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
 				{
-					TaskId = taskId,
-					DateOpened = dateOpened
-				};
-			}
+					["Task ID"] = reader["TaskID"]?.ToString() ?? "",
+					["Claim ID"] = reader["ClaimID"]?.ToString() ?? "",
+					["Patient / Acct #"] = reader["PatientId"]?.ToString() ?? "",
+					["CPT Code"] = reader["CPTCode"]?.ToString() ?? "",
+					["Denial Code"] = reader["DenialCode"]?.ToString() ?? "",
+					["Denial Description"] = reader["DenialDescription"]?.ToString() ?? "",
+					["Denial Classification"] = reader["DenialClassification"]?.ToString() ?? "",
+					["Action Code"] = reader["ActionCode"]?.ToString() ?? "",
+					["Recommended Action"] = reader["RecommendedAction"]?.ToString() ?? "",
+					["Task"] = reader["Task"]?.ToString() ?? "",
+					["Action Category"] = reader["ActionCategory"]?.ToString() ?? "",
+					["Priority"] = reader["Priority"]?.ToString() ?? "",
+					["SLA (Days)"] = reader["SLADays"]?.ToString() ?? "",
+					["Status"] = reader["Status"]?.ToString() ?? "",
+					["Insurance Balance"] = reader["InsuranceBalance"]?.ToString() ?? "",
+					["IsCurrentDenial"] = reader["IsCurrentDenial"]?.ToString() ?? "",
+					["Assigned To"] = reader["AssignedTo"]?.ToString() ?? "",
+					["Date Opened"] = reader["DateOpened"] is DateTime doDt ? doDt.ToString("yyyy-MM-dd") : "",
+					["Due Date"] = reader["DueDate"] is DateTime ddDt ? ddDt.ToString("yyyy-MM-dd") : "",
+					["Date Completed"] = reader["DateCompleted"] is DateTime dcDt ? dcDt.ToString("yyyy-MM-dd") : "",
+					["Days Remaining"] = reader["DaysRemaining"]?.ToString() ?? "",
+					["SLA Status"] = reader["SLAStatus"]?.ToString() ?? "",
+					["LabId"] = reader["LabId"]?.ToString() ?? "",
+					["LabName"] = reader["LabName"]?.ToString() ?? "",
+					["RunId"] = reader["RunId"]?.ToString() ?? "",
+					["CreatedOn"] = reader["CreatedOn"] is DateTime coDt ? coDt.ToString("O") : "",
+					["UniqueTrackId"] = uniqueTrackId
+				}
+			};
+
+			result[uniqueTrackId] = info;
 		}
 
 		return result;

@@ -24,6 +24,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
 	private readonly TaskBoardBulkWriter _taskBoardBulkWriter;
 	private readonly DenialAnalysisRunLogRepository _runLogRepo;
 	private readonly DenialTaskBoardRepository _denialTaskBoardRepo;
+	private	readonly IErrorLogger _errorLogger;
 
 	public DenialDatabaseWorker(
 		ILogger<DenialDatabaseWorker> logger,
@@ -39,7 +40,8 @@ public sealed class DenialDatabaseWorker : BackgroundService
 		OutputPathBuilder outputPathBuilder,
 		TaskBoardBulkWriter taskBoardBulkWriter,
 		DenialAnalysisRunLogRepository runLogRepo,
-		DenialTaskBoardRepository denialTaskBoardRepo)
+		DenialTaskBoardRepository denialTaskBoardRepo,
+		IErrorLogger errorLogger)
 	{
 		_logger = logger;
 		_options = options.Value;
@@ -56,6 +58,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
 		_taskBoardBulkWriter = taskBoardBulkWriter;
 		_runLogRepo = runLogRepo;
 		_denialTaskBoardRepo = denialTaskBoardRepo;
+		_errorLogger = errorLogger;
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -114,6 +117,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
 			// Load existing tasks for this lab from DenialTaskBoard
 			var existingTasks = await _denialTaskBoardRepo.GetExistingTasksAsync(lab.LabId);
 
+
 			// Load Claim Action Mapper
 			await _stepLogger.LogAsync(lab, "Load ClaimActionMapper excel", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 			var claimRows = _excelReader.Read(claimActionMapperFile, "Denial Classifier");
@@ -133,13 +137,15 @@ public sealed class DenialDatabaseWorker : BackgroundService
 			// Build Insights
 			var insight = _insightBuilder.Build(finalRows);
 
-			// Build Task Board with reuse of existing TaskID/DateOpened
+
+			// Build Task Board
 			var taskBuilder = new TaskBoardBuilder(lab.LabId, lab.LabName, runId, existingTasks);
 			var taskRows = taskBuilder.Build(finalRows);
 
 			// Write Excel
 			await _stepLogger.LogAsync(lab, "Write DenialDatabase excel", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
+			// Write Excel (taskRows already contain Insurance Balance; IsCurrentDenial is ignored by ExcelWriter)
 			_excelWriter.Write(
 				outFile,
 				headers,
@@ -151,11 +157,12 @@ public sealed class DenialDatabaseWorker : BackgroundService
 
 			await _stepLogger.LogAsync(lab, "Write DenialDatabase excel", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
-			// Bulk Insert Task Board (delete by LabId then insert)
+			// Bulk Insert Task Board (delete by LabId then insert merged current + closed old tasks)
 			await _taskBoardBulkWriter.BulkInsertAsync(taskRows, lab.LabId);
 
+
 			// Insert RunLog
-			await _runLogRepo.InsertAsync(runId, lab.LabId);
+			await _runLogRepo.InsertAsync(runId, lab.LabId, outFile);
 
 			// Upload to SharePoint
 			await _stepLogger.LogAsync(lab, "Upload to SharePoint", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
@@ -167,7 +174,25 @@ public sealed class DenialDatabaseWorker : BackgroundService
 		catch (Exception ex)
 		{
 			_logger.LogError(ex, "Lab processing failed: {LabName}", lab.LabName);
-			await _stepLogger.LogAsync(lab, "Failed", "ERROR", payerPolicyFile, claimActionMapperFile, outFile, ex.ToString(), ct);
+
+			await _errorLogger.LogAsync(
+				runId,
+				lab.LabName,
+				"ProcessLabAsync",
+				Path.GetFileName(payerPolicyFile),
+				payerPolicyFile,
+				ex,
+				ct);
+
+			await _stepLogger.LogAsync(
+				lab,
+				"Failed",
+				"ERROR",
+				payerPolicyFile,
+				claimActionMapperFile,
+				outFile,
+				ex.ToString(),
+				ct);
 		}
 	}
 }

@@ -23,8 +23,10 @@ public sealed class TaskBoardBuilder
 	public List<Dictionary<string, string>> Build(List<Dictionary<string, string>> lineRows)
 	{
 		var result = new List<Dictionary<string, string>>();
-		int newTaskCounter = 1;
 		var today = DateTime.Today;
+		int newTaskCounter = 1;
+
+		var currentKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
 		foreach (var line in lineRows)
 		{
@@ -43,19 +45,18 @@ public sealed class TaskBoardBuilder
 			var rawActionCategory = line.GetValueOrDefault("Action Category") ?? "";
 			var rawPriority = line.GetValueOrDefault("Priority") ?? "";
 			var rawSla = line.GetValueOrDefault("SLA (Days)") ?? "";
+			var insuranceBalance = line.GetValueOrDefault("Insurance Balance") ?? "";
 
 			int slaDays = int.TryParse(StripPrefix(rawSla), out var s) ? s : 0;
 
 			DateTime? firstBilled = TryParseDate(line.GetValueOrDefault("First Billed Date"));
 			DateTime? postedDate = TryParseDate(line.GetValueOrDefault("Posted Date"));
-			decimal insuranceBalance = TryParseDecimal(line.GetValueOrDefault("Insurance Balance"));
+			decimal insBalanceVal = TryParseDecimal(insuranceBalance);
 
 			var denialCodes = denialCodeNorm
 				.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
 				.Select(x => x.Trim())
 				.ToList();
-
-			int totalCodes = denialCodes.Count;
 
 			var taskSegments = ParseTaskSegments(rawTask, denialCodes);
 
@@ -64,6 +65,7 @@ public sealed class TaskBoardBuilder
 				var seg = taskSegments[i];
 				var denialCode = seg.DenialCode;
 				var key = $"{visitNumber}|{cptCode}|{denialCode}";
+				currentKeys.Add(key);
 
 				string taskId;
 				DateTime dateOpened;
@@ -75,7 +77,7 @@ public sealed class TaskBoardBuilder
 				}
 				else
 				{
-					taskId = $"TSK-{newTaskCounter.ToString("D5")}";
+					taskId = $"TSK-{newTaskCounter:D5}";
 					newTaskCounter++;
 					dateOpened = today;
 				}
@@ -101,7 +103,7 @@ public sealed class TaskBoardBuilder
 					status = "Closed";
 					dateCompleted = firstBilled;
 				}
-				else if (isWriteOff && insuranceBalance == 0 && postedDate.HasValue && postedDate.Value > dateOpened)
+				else if (isWriteOff && insBalanceVal == 0 && postedDate.HasValue && postedDate.Value > dateOpened)
 				{
 					status = "Closed";
 					dateCompleted = postedDate;
@@ -134,6 +136,8 @@ public sealed class TaskBoardBuilder
 					["Action Category"] = actCategory,
 					["Priority"] = priority,
 					["SLA (Days)"] = slaDays > 0 ? slaDays.ToString() : "",
+					["Insurance Balance"] = insuranceBalance,
+					["IsCurrentDenial"] = "true",
 					["Assigned To"] = "",
 					["Status"] = status,
 					["Date Opened"] = dateOpened.ToString("yyyy-MM-dd"),
@@ -141,7 +145,6 @@ public sealed class TaskBoardBuilder
 					["Date Completed"] = dateCompleted?.ToString("yyyy-MM-dd") ?? "",
 					["Days Remaining"] = dueDate.HasValue ? daysRemaining.ToString() : "",
 					["SLA Status"] = slaStatus,
-
 					["LabId"] = _labId.ToString(),
 					["LabName"] = _labName,
 					["RunId"] = _runId,
@@ -153,6 +156,41 @@ public sealed class TaskBoardBuilder
 			}
 		}
 
+		// Add old tasks not present in current file as closed
+		var todayStr = DateTime.Today.ToString("yyyy-MM-dd");
+		foreach (var kvp in _existingTasks)
+		{
+			var key = kvp.Key;
+			var info = kvp.Value;
+
+			if (currentKeys.Contains(key))
+				continue;
+
+			var row = new Dictionary<string, string>(info.Row, StringComparer.OrdinalIgnoreCase)
+			{
+				["IsCurrentDenial"] = "false",
+				["Status"] = "Closed",
+				["Date Completed"] = todayStr
+			};
+
+			// Recompute DaysRemaining / SLAStatus for closed historical if needed
+			if (DateTime.TryParse(row.GetValueOrDefault("Due Date"), out var dueDt))
+			{
+				int daysRemaining = (dueDt - DateTime.Today).Days;
+				row["Days Remaining"] = daysRemaining.ToString();
+
+				if (DateTime.TryParse(row.GetValueOrDefault("Date Completed"), out var dc))
+				{
+					if (dc <= dueDt)
+						row["SLA Status"] = "Met";
+					else
+						row["SLA Status"] = "Overdue";
+				}
+			}
+
+			result.Add(row);
+		}
+
 		return result;
 	}
 
@@ -162,23 +200,20 @@ public sealed class TaskBoardBuilder
 			return "";
 
 		var parts = raw.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-
-		// Strip prefixes for inspection
 		var stripped = parts.Select(StripPrefix).ToList();
 
-		// If all stripped values are identical and not just codes → same for all
 		var nonCodeValues = stripped
 			.Where(v => !denialCodes.Contains(v, StringComparer.OrdinalIgnoreCase))
 			.ToList();
 
-		if (nonCodeValues.Count == 1 && stripped.All(v =>
+		if (nonCodeValues.Count == 1 &&
+			stripped.All(v =>
 				v.Equals(nonCodeValues[0], StringComparison.OrdinalIgnoreCase) ||
 				denialCodes.Contains(v, StringComparer.OrdinalIgnoreCase)))
 		{
 			return nonCodeValues[0];
 		}
 
-		// Build explicit map: code -> value from segments like "CO16: Text"
 		var codeToValue = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		string? commonText = null;
 
@@ -187,17 +222,13 @@ public sealed class TaskBoardBuilder
 			var original = parts[i];
 			var value = StripPrefix(original);
 
-			// If this segment starts with "<code>:" assign it to that code
 			foreach (var code in denialCodes)
 			{
 				var prefix = code + ":";
 				if (original.TrimStart().StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-				{
 					codeToValue[code] = value;
-				}
 			}
 
-			// First non‑code value becomes common text
 			if (!denialCodes.Contains(value, StringComparer.OrdinalIgnoreCase) &&
 				string.IsNullOrWhiteSpace(commonText))
 			{
@@ -207,19 +238,15 @@ public sealed class TaskBoardBuilder
 
 		var currentCode = denialCodes[index];
 
-		// 1) If we have explicit mapping for this code → use it
 		if (codeToValue.TryGetValue(currentCode, out var mapped))
 			return mapped;
 
-		// 2) If we have a common text (e.g. "Billing Related Denial") → use it
 		if (!string.IsNullOrWhiteSpace(commonText))
 			return commonText;
 
-		// 3) If parts count == codes count → align by index (after stripping)
 		if (parts.Length == denialCodes.Count)
 			return stripped[index];
 
-		// 4) Fallback: use first stripped part
 		return stripped[0];
 	}
 
@@ -228,19 +255,6 @@ public sealed class TaskBoardBuilder
 		if (string.IsNullOrWhiteSpace(value)) return "";
 		var idx = value.IndexOf(':');
 		return idx > 0 ? value[(idx + 1)..].Trim() : value.Trim();
-	}
-
-	private static string GetSplitValue(string raw, int index, int totalCodes)
-	{
-		if (string.IsNullOrWhiteSpace(raw))
-			return "";
-
-		var parts = raw.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-
-		if (parts.Length == totalCodes)
-			return parts[index];
-
-		return raw.Trim();
 	}
 
 	private static DateTime? TryParseDate(string? v)

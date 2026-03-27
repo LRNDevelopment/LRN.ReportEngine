@@ -85,6 +85,9 @@ public sealed class TaskBoardBulkWriter
 			"date" => typeof(DateTime),
 			"datetime" => typeof(DateTime),
 			"datetime2" => typeof(DateTime),
+			"decimal" => typeof(decimal),
+			"boolean" => typeof(bool),
+			"bit" => typeof(bool),
 			"string" => typeof(string),
 			_ => typeof(string)
 		};
@@ -99,6 +102,11 @@ public sealed class TaskBoardBulkWriter
 			"int" => int.TryParse(raw, out var i) ? i : DBNull.Value,
 			"date" or "datetime" or "datetime2" =>
 				DateTime.TryParse(raw, out var dt) ? dt : DBNull.Value,
+			"decimal" => decimal.TryParse(raw, out var d) ? d : DBNull.Value,
+			"boolean" or "bit" =>
+				bool.TryParse(raw, out var b)
+					? b
+					: raw == "1" ? true : raw == "0" ? false : DBNull.Value,
 			_ => raw
 		};
 	}

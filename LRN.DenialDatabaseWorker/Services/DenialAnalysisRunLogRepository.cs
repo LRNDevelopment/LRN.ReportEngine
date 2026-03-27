@@ -25,15 +25,16 @@ public sealed class DenialAnalysisRunLogRepository
 		return count > 0;
 	}
 
-	public async Task InsertAsync(string runId, int labId)
+	public async Task InsertAsync(string runId, int labId,string outputfilepath)
 	{
-		const string sql = @"INSERT INTO dbo.DenialAnalysisRunLog (RunId, LabId, CreatedOn)
-                             VALUES (@RunId, @LabId, SYSUTCDATETIME())";
+		const string sql = @"INSERT INTO dbo.DenialAnalysisRunLog (RunId, LabId, CreatedOn,OutputFileName)
+                             VALUES (@RunId, @LabId, SYSUTCDATETIME(),@outputfilepath)";
 
 		await using var conn = new SqlConnection(_connectionString);
 		await using var cmd = new SqlCommand(sql, conn);
 		cmd.Parameters.AddWithValue("@RunId", runId);
 		cmd.Parameters.AddWithValue("@LabId", labId);
+		cmd.Parameters.AddWithValue("@outputfilepath", outputfilepath);
 		await conn.OpenAsync().ConfigureAwait(false);
 		await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
 	}

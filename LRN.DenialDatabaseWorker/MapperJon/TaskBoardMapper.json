@@ -47,13 +47,13 @@
 			"DataType": "string"
 		},
 		{
-			"ExcelColumn": "Action Category",
-			"SqlColumn": "ActionCategory",
+			"ExcelColumn": "Task",
+			"SqlColumn": "Task",
 			"DataType": "string"
 		},
 		{
-			"ExcelColumn": "Task",
-			"SqlColumn": "Task",
+			"ExcelColumn": "Action Category",
+			"SqlColumn": "ActionCategory",
 			"DataType": "string"
 		},
 		{
@@ -65,6 +65,11 @@
 			"ExcelColumn": "SLA (Days)",
 			"SqlColumn": "SLADays",
 			"DataType": "int"
+		},
+		{
+			"ExcelColumn": "Status",
+			"SqlColumn": "Status",
+			"DataType": "string"
 		},
 		{
 			"ExcelColumn": "Assigned To",

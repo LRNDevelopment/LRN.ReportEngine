@@ -306,13 +306,13 @@ public sealed class ExcelWriter
 		var ws3 = wb.AddWorksheet("Task Board");
 
 		var taskHeaders = new List<string>
-		{
-			"Task ID","Claim ID","Patient / Acct #","CPT Code","Denial Code",
-			"Denial Description","Denial Classification","Action Code",
-			"Recommended Action","Task","Action Category","Priority",
-			"SLA (Days)","Assigned To","Status","Date Opened","Due Date",
-			"Date Completed","Days Remaining","SLA Status"
-		};
+				{
+					"Task ID","Claim ID","Patient / Acct #","CPT Code","Denial Code",
+					"Denial Description","Denial Classification","Action Code",
+					"Recommended Action","Task","Action Category","Priority",
+					"SLA (Days)","Assigned To","Status","Date Opened","Due Date",
+					"Date Completed","Days Remaining","SLA Status"
+				};
 
 
 		for (int c = 0; c < taskHeaders.Count; c++)

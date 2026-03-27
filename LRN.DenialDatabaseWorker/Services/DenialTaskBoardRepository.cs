@@ -26,9 +26,9 @@ public sealed class DenialTaskBoardRepository
 	public async Task<Dictionary<string, ExistingTaskInfo>> GetExistingTasksAsync(int labId)
 	{
 		const string sql = @"
-SELECT TaskID, UniqueTrackId, DateOpened
-FROM dbo.DenialTaskBoard
-WHERE LabId = @LabId";
+						SELECT TaskID, UniqueTrackId, DateOpened
+						FROM dbo.DenialTaskBoard
+						WHERE LabId = @LabId";
 
 		var result = new Dictionary<string, ExistingTaskInfo>(StringComparer.OrdinalIgnoreCase);
 
@@ -44,11 +44,10 @@ WHERE LabId = @LabId";
 			var uniqueTrackId = reader["UniqueTrackId"] as string ?? "";
 			DateTime? dateOpened = reader["DateOpened"] is DateTime dt ? dt : (DateTime?)null;
 
-			// UniqueTrackId is VisitNumber|CPTCode|DenialCode
 			if (string.IsNullOrWhiteSpace(uniqueTrackId))
 				continue;
 
-			var key = uniqueTrackId; // already in Visit|CPT|Denial format
+			var key = uniqueTrackId;
 			if (!result.ContainsKey(key))
 			{
 				result[key] = new ExistingTaskInfo

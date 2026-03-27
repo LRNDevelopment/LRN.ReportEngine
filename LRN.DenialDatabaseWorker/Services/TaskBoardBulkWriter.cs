@@ -60,7 +60,6 @@ public sealed class TaskBoardBulkWriter
 		await using var conn = new SqlConnection(_connectionString);
 		await conn.OpenAsync().ConfigureAwait(false);
 
-		// Delete existing rows for this LabId
 		const string deleteSql = "DELETE FROM dbo.DenialTaskBoard WHERE LabId = @LabId";
 		await using (var deleteCmd = new SqlCommand(deleteSql, conn))
 		{

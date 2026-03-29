@@ -1,9 +1,12 @@
 using DenialDatabaseProcessorWorker.Models;
+using DenialDatabaseProcessorWorker.Notifications;
 using DenialDatabaseProcessorWorker.Services;
 using DenialDatabaseProcessorWorker.Services.SharePoint;
+using DenialDatabaseProcessorWorker.Utils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Text;
 
 namespace DenialDatabaseProcessorWorker.Worker;
 
@@ -12,7 +15,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
 	private readonly ILogger<DenialDatabaseWorker> _logger;
 	private readonly ProcessorOptions _options;
 	private readonly List<LabConfig> _labs;
-
+	private readonly ITeamsNotifier _teamsNotifier;
 	private readonly CsvStepLogger _stepLogger;
 	private readonly ExcelTableReader _excelReader;
 	private readonly DenialDatabaseBuilder _builder;
@@ -24,7 +27,9 @@ public sealed class DenialDatabaseWorker : BackgroundService
 	private readonly TaskBoardBulkWriter _taskBoardBulkWriter;
 	private readonly DenialAnalysisRunLogRepository _runLogRepo;
 	private readonly DenialTaskBoardRepository _denialTaskBoardRepo;
-	private	readonly IErrorLogger _errorLogger;
+	private readonly IErrorLogger _errorLogger;
+	private readonly SharePointGraphOptions _spOpt;
+	private static List<(string Key, string Value)> lstOutput = new List<(string Key, string Value)>();
 
 	public DenialDatabaseWorker(
 		ILogger<DenialDatabaseWorker> logger,
@@ -41,7 +46,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
 		TaskBoardBulkWriter taskBoardBulkWriter,
 		DenialAnalysisRunLogRepository runLogRepo,
 		DenialTaskBoardRepository denialTaskBoardRepo,
-		IErrorLogger errorLogger)
+		IErrorLogger errorLogger, IOptions<SharePointGraphOptions> spOpt, ITeamsNotifier teamsNotifier)
 	{
 		_logger = logger;
 		_options = options.Value;
@@ -59,6 +64,8 @@ public sealed class DenialDatabaseWorker : BackgroundService
 		_runLogRepo = runLogRepo;
 		_denialTaskBoardRepo = denialTaskBoardRepo;
 		_errorLogger = errorLogger;
+		_spOpt = spOpt.Value;
+		_teamsNotifier = teamsNotifier;
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -73,6 +80,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
 		{
 			foreach (var lab in _labs)
 				await ProcessLabAsync(lab, stoppingToken);
+
 		}
 		catch (Exception ex)
 		{
@@ -90,7 +98,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
 		if (!_options.RunOnceOnStartup)
 		{
 			while (!stoppingToken.IsCancellationRequested)
-				await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+				await Task.Delay(TimeSpan.FromMinutes(120), stoppingToken);
 		}
 	}
 
@@ -170,6 +178,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
 			await _stepLogger.LogAsync(lab, "Upload to SharePoint", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
 			await _stepLogger.LogAsync(lab, "Completed", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
+
 		}
 		catch (Exception ex)
 		{
@@ -193,6 +202,44 @@ public sealed class DenialDatabaseWorker : BackgroundService
 				outFile,
 				ex.ToString(),
 				ct);
+
+			await NotifyFileUploadFailedAsync("Denial Analysis Report", lab.LabName, payerPolicyFile, ex, ct);
+
 		}
+	}
+
+	private Task NotifyFileSynchronizedAsync(string fileType, string remotePath, string localPath, CancellationToken ct)
+	{
+		var fileName = Path.GetFileName(localPath);
+		var remoteUrl = SharePointWebLinkBuilder.TryBuildFileUrl(_spOpt, remotePath);
+
+		var message = new StringBuilder()
+			.AppendLine("🟢 File synchronized successfully.\n")
+			.AppendLine($"📁 Type: {fileType}  \n")
+			.AppendLine(string.IsNullOrWhiteSpace(remoteUrl)
+				? $"📁 Source: {remotePath}\n"
+				: $"📄 Source: [{fileName}]({remoteUrl})\n")
+			.Append($"Destination: {localPath}")
+			.ToString();
+
+		return _teamsNotifier.SendAsync("🤖 LRN : Denial Database Processor", message, ct);
+	}
+
+	private Task NotifyFileUploadFailedAsync(string fileType, string localFile, string remotePath, Exception ex, CancellationToken ct)
+	{
+		var fileName = Path.GetFileName(localFile);
+		var remoteUrl = SharePointWebLinkBuilder.TryBuildFileUrl(_spOpt, remotePath);
+
+		var message = new StringBuilder()
+			.AppendLine("⚠️ File upload failed.\n")
+			.AppendLine($"Type: {fileType} \n")
+			.AppendLine(string.IsNullOrWhiteSpace(remoteUrl)
+				? $"📁 SharePoint: {remotePath} \n	"
+				: $"📄 SharePoint: [{fileName}]({remoteUrl}\n")
+			.AppendLine($"Source: {localFile} \n")
+			.Append($"Error: {ex.Message}")
+			.ToString();
+
+		return _teamsNotifier.SendAsync("🤖 LRN : Denial Database Processor", message, ct);
 	}
 }

@@ -1,4 +1,5 @@
 using DenialDatabaseProcessorWorker.Models;
+using DenialDatabaseProcessorWorker.Notifications;
 using DenialDatabaseProcessorWorker.Services;
 using DenialDatabaseProcessorWorker.Services.SharePoint;
 using DenialDatabaseProcessorWorker.Worker;
@@ -55,7 +56,7 @@ builder.Services.AddSingleton<DenialTaskBoardRepository>();
 builder.Services.AddHttpClient<SharePointGraphClient>();
 builder.Services.AddSingleton<ISharePointUploader, SharePointUploader>();
 builder.Services.AddSingleton<IErrorLogger, ErrorLogger>();
-
+builder.Services.AddSingleton<ITeamsNotifier, TeamsWebhookNotifier>();
 
 // -------------------------------
 // Worker

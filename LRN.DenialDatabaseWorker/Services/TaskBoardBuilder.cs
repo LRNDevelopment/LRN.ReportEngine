@@ -45,13 +45,24 @@ public sealed class TaskBoardBuilder
 			var rawActionCategory = line.GetValueOrDefault("Action Category") ?? "";
 			var rawPriority = line.GetValueOrDefault("Priority") ?? "";
 			var rawSla = line.GetValueOrDefault("SLA (Days)") ?? "";
-			var insuranceBalance = line.GetValueOrDefault("Insurance Balance") ?? "";
+			// Normalize Insurance Balance
+			var rawInsBalance = line.GetValueOrDefault("Insurance Balance");
+
+			// Convert to decimal safely
+			decimal insBalanceVal = 0;
+			if (!string.IsNullOrWhiteSpace(rawInsBalance))
+			{
+				if (!decimal.TryParse(rawInsBalance, out insBalanceVal))
+					insBalanceVal = 0;
+			}
+
+			// Always store a valid decimal string
+			var insuranceBalance = insBalanceVal.ToString("0.##");
 
 			int slaDays = int.TryParse(StripPrefix(rawSla), out var s) ? s : 0;
 
 			DateTime? firstBilled = TryParseDate(line.GetValueOrDefault("First Billed Date"));
 			DateTime? postedDate = TryParseDate(line.GetValueOrDefault("Posted Date"));
-			decimal insBalanceVal = TryParseDecimal(insuranceBalance);
 
 			var denialCodes = denialCodeNorm
 				.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)

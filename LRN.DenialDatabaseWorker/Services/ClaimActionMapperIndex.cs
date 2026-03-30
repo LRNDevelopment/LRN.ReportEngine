@@ -68,7 +68,14 @@ public sealed class ClaimActionMapperIndex
 			{
 				foreach (var n in names)
 				{
-					var key = r.Keys.FirstOrDefault(k => Normalize(k) == Normalize(n));
+					var nn = Normalize(n);
+
+					var key = r.Keys.FirstOrDefault(k =>
+					{
+						var nk = Normalize(k);
+						return nk == nn || nk.StartsWith(nn);
+					});
+
 					if (key != null && r.TryGetValue(key, out var v))
 						return v?.Trim() ?? "";
 				}

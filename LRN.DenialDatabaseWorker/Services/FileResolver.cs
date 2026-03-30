@@ -38,7 +38,7 @@ public sealed class FileResolver
 		if (string.IsNullOrWhiteSpace(root) || !Directory.Exists(root))
 			throw new DirectoryNotFoundException($"ClaimActionMapper root not found: {root}");
 
-		var files = Directory.GetFiles(root, "*_Denial_Action_Classifier_v*.xlsx");
+		var files = Directory.GetFiles(root, "*Denial_Action_Classifier_v*.xlsx");
 		if (files.Length == 0)
 			throw new InvalidOperationException("No Claim Action Mapper files found.");
 

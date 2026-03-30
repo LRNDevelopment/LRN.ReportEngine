@@ -30,6 +30,8 @@ public sealed class DenialDatabaseWorker : BackgroundService
 	private readonly IErrorLogger _errorLogger;
 	private readonly SharePointGraphOptions _spOpt;
 	private static List<(string Key, string Value)> lstOutput = new List<(string Key, string Value)>();
+	private readonly DenialInsightBulkWriter _denialInsightBulkWriter;
+	private readonly DenialLineItemBulkWriter _denialLineItemBulkWriter;
 
 	public DenialDatabaseWorker(
 		ILogger<DenialDatabaseWorker> logger,
@@ -46,7 +48,8 @@ public sealed class DenialDatabaseWorker : BackgroundService
 		TaskBoardBulkWriter taskBoardBulkWriter,
 		DenialAnalysisRunLogRepository runLogRepo,
 		DenialTaskBoardRepository denialTaskBoardRepo,
-		IErrorLogger errorLogger, IOptions<SharePointGraphOptions> spOpt, ITeamsNotifier teamsNotifier)
+		IErrorLogger errorLogger, IOptions<SharePointGraphOptions> spOpt, ITeamsNotifier teamsNotifier,
+		DenialInsightBulkWriter denialInsightBulkWriter, DenialLineItemBulkWriter denialLineItemBulkWriter)
 	{
 		_logger = logger;
 		_options = options.Value;
@@ -66,6 +69,8 @@ public sealed class DenialDatabaseWorker : BackgroundService
 		_errorLogger = errorLogger;
 		_spOpt = spOpt.Value;
 		_teamsNotifier = teamsNotifier;
+		_denialInsightBulkWriter = denialInsightBulkWriter;
+		_denialLineItemBulkWriter = denialLineItemBulkWriter;
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -119,6 +124,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
 		var outFile = _outputPathBuilder.BuildOutputPath(_options.OutputRoot, lab.LabName, runId, yearFolder, monthFolder, weekFolder);
 
 		await _stepLogger.LogAsync(lab, "Start", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
+		var context = new LabContext(lab.LabId, lab.LabName, runId);
 
 		try
 		{
@@ -145,7 +151,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
 			// Build Insights
 			var insight = _insightBuilder.Build(finalRows);
 
-
+			await _denialInsightBulkWriter.BulkInsertAsync(insight.Rows, context);
 			// Build Task Board
 			var taskBuilder = new TaskBoardBuilder(lab.LabId, lab.LabName, runId, existingTasks);
 			var taskRows = taskBuilder.Build(finalRows);
@@ -175,6 +181,9 @@ public sealed class DenialDatabaseWorker : BackgroundService
 			// Upload to SharePoint
 			await _stepLogger.LogAsync(lab, "Upload to SharePoint", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 			await _uploader.UploadIfEnabledAsync(lab, outFile, DateTime.Now, ct);
+
+			await _denialLineItemBulkWriter.BulkInsertAsync(finalRows, context);
+
 			await _stepLogger.LogAsync(lab, "Upload to SharePoint", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
 			await _stepLogger.LogAsync(lab, "Completed", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);

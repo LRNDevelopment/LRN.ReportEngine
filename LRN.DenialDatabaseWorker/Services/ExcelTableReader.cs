@@ -1,124 +1,92 @@
-using ClosedXML.Excel;
+using System.Data;
+using ExcelDataReader;
 using Microsoft.Extensions.Logging;
 
 namespace DenialDatabaseProcessorWorker.Services;
 
 public sealed class ExcelTableReader
 {
-    private readonly ILogger<ExcelTableReader> _logger;
+	private readonly ILogger<ExcelTableReader> _logger;
 
-    public ExcelTableReader(ILogger<ExcelTableReader> logger)
-    {
-        _logger = logger;
-    }
+	public ExcelTableReader(ILogger<ExcelTableReader> logger)
+	{
+		_logger = logger;
+		System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+	}
 
-    public sealed record ExcelTable(List<string> Headers, List<Dictionary<string, string>> Rows);
+	public sealed record ExcelTable(List<string> Headers, List<Dictionary<string, string>> Rows);
 
-    /// <summary>
-    /// Reads a worksheet and auto-detects the header row.
-    /// Header row detection prefers the row with the highest number of populated cells
-    /// near the top of the used range, which supports files such as the new
-    /// "Denial Classifier" sheet that contain a title row above the actual headers.
-    /// </summary>
-    public ExcelTable ReadTable(string path, string? sheetName = null)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-            throw new ArgumentException("Excel path is required.", nameof(path));
+	public ExcelTable ReadTable(string path, string? sheetName = null)
+	{
+		System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
-        if (!File.Exists(path))
-            throw new FileNotFoundException("Excel file not found.", path);
+		using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+		using var reader = ExcelReaderFactory.CreateReader(stream);
 
-        using var wb = new XLWorkbook(path);
-        var ws = !string.IsNullOrWhiteSpace(sheetName) ? wb.Worksheet(sheetName) : wb.Worksheets.First();
+		var result = reader.AsDataSet(new ExcelDataSetConfiguration
+		{
+			ConfigureDataTable = _ => new ExcelDataTableConfiguration
+			{
+				UseHeaderRow = false // IMPORTANT: do NOT treat first row as header
+			}
+		});
 
-        var used = ws.RangeUsed();
-        if (used == null)
-            return new(new(), new());
+		DataTable table = string.IsNullOrWhiteSpace(sheetName)
+			? result.Tables[0]
+			: result.Tables.Cast<DataTable>().First(t => t.TableName == sheetName);
 
-        var firstRowNo = used.FirstRow().RowNumber();
-        var lastRowNo = used.LastRow().RowNumber();
-        var firstColNo = used.FirstColumn().ColumnNumber();
-        var lastColNo = used.LastColumn().ColumnNumber();
+		// Detect header row (same logic as before)
+		int headerRowIndex = DetectHeaderRow(table);
 
-        var headerRowNo = DetectHeaderRow(ws, firstRowNo, lastRowNo, firstColNo, lastColNo);
+		// Build headers
+		var headers = table.Rows[headerRowIndex].ItemArray
+			.Select(x => x?.ToString()?.Trim() ?? "")
+			.ToList();
 
-        var headers = new List<string>();
-        var cols = new List<(int Col, string Header)>();
+		// Build rows
+		var rows = new List<Dictionary<string, string>>();
+		for (int r = headerRowIndex + 1; r < table.Rows.Count; r++)
+		{
+			var dr = table.Rows[r];
+			var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        for (int c = firstColNo; c <= lastColNo; c++)
-        {
-            var h = ws.Cell(headerRowNo, c).GetString()?.Trim() ?? "";
-            if (string.IsNullOrWhiteSpace(h))
-                continue;
+			bool any = false;
+			for (int c = 0; c < headers.Count; c++)
+			{
+				var header = headers[c];
+				if (string.IsNullOrWhiteSpace(header)) continue;
 
-            var unique = h;
-            int i = 2;
-            while (headers.Contains(unique, StringComparer.OrdinalIgnoreCase))
-                unique = $"{h}_{i++}";
+				var val = dr[c]?.ToString()?.Trim() ?? "";
+				if (!string.IsNullOrEmpty(val)) any = true;
 
-            headers.Add(unique);
-            cols.Add((c, unique));
-        }
+				dict[header] = val;
+			}
 
-        var rows = new List<Dictionary<string, string>>(capacity: Math.Max(0, lastRowNo - headerRowNo));
+			if (any)
+				rows.Add(dict);
+		}
 
-        for (int r = headerRowNo + 1; r <= lastRowNo; r++)
-        {
-            var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            bool any = false;
+		return new ExcelTable(headers, rows);
+	}
 
-            foreach (var (col, header) in cols)
-            {
-                var cell = ws.Cell(r, col);
-                var val = cell.GetString()?.Trim() ?? "";
-                if (!string.IsNullOrEmpty(val)) any = true;
-                dict[header] = val;
-            }
+	private int DetectHeaderRow(DataTable table)
+	{
+		int bestRow = 0;
+		int bestScore = -1;
 
-            if (!any)
-                continue;
+		for (int r = 0; r < Math.Min(10, table.Rows.Count); r++)
+		{
+			int populated = table.Rows[r].ItemArray.Count(x => !string.IsNullOrWhiteSpace(x?.ToString()));
+			if (populated > bestScore)
+			{
+				bestScore = populated;
+				bestRow = r;
+			}
+		}
 
-            rows.Add(dict);
-        }
+		return bestRow;
+	}
 
-        _logger.LogInformation(
-            "Read {RowCount} rows from {Path} ({SheetName}) using header row {HeaderRowNo}",
-            rows.Count, path, ws.Name, headerRowNo);
-
-        return new(headers, rows);
-    }
-
-    /// <summary>
-    /// Backward compatible helper returning only rows.
-    /// </summary>
-    public List<Dictionary<string, string>> Read(string path, string? sheetName = null)
-        => ReadTable(path, sheetName).Rows;
-
-    private static int DetectHeaderRow(IXLWorksheet ws, int firstRowNo, int lastRowNo, int firstColNo, int lastColNo)
-    {
-        var scanEndRow = Math.Min(lastRowNo, firstRowNo + 9);
-
-        int bestRow = firstRowNo;
-        int bestScore = -1;
-
-        for (int r = firstRowNo; r <= scanEndRow; r++)
-        {
-            int populated = 0;
-
-            for (int c = firstColNo; c <= lastColNo; c++)
-            {
-                var text = ws.Cell(r, c).GetString()?.Trim() ?? "";
-                if (!string.IsNullOrWhiteSpace(text))
-                    populated++;
-            }
-
-            if (populated > bestScore)
-            {
-                bestScore = populated;
-                bestRow = r;
-            }
-        }
-
-        return bestRow;
-    }
+	public List<Dictionary<string, string>> Read(string path, string? sheetName = null)
+		=> ReadTable(path, sheetName).Rows;
 }

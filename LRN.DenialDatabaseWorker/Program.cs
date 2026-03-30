@@ -57,7 +57,8 @@ builder.Services.AddHttpClient<SharePointGraphClient>();
 builder.Services.AddSingleton<ISharePointUploader, SharePointUploader>();
 builder.Services.AddSingleton<IErrorLogger, ErrorLogger>();
 builder.Services.AddSingleton<ITeamsNotifier, TeamsWebhookNotifier>();
-
+builder.Services.AddSingleton<DenialInsightBulkWriter>();
+builder.Services.AddSingleton<DenialLineItemBulkWriter>();
 // -------------------------------
 // Worker
 // -------------------------------

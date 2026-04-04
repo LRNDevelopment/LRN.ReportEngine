@@ -1,110 +1,42 @@
-﻿using DenialDatabaseProcessorWorker.Services;
-using Microsoft.Data.SqlClient;
+﻿using DenialDatabaseProcessorWorker.Models;
 using System.Data;
-using System.Text.Json;
 
 namespace DenialDatabaseProcessorWorker.BulkWriters;
 
-public sealed class DenialTaskBoardBulkWriter
+public sealed class DenialTaskBoardBulkWriter : BulkWriterBase
 {
-	private readonly string _connectionString;
-	private readonly TaskBoardMapper _mapper;
+	public DenialTaskBoardBulkWriter(string connectionString, string mapperPath)
+		: base(connectionString, mapperPath) { }
 
-	public DenialTaskBoardBulkWriter(IConfiguration configuration)
+	public async Task WriteAsync(List<Dictionary<string, string>> rows, LabConfig lab, string runId)
 	{
-		_connectionString = configuration.GetConnectionString("DenialDatabase")
-							?? throw new InvalidOperationException("Connection string 'DenialDatabase' not found.");
-
-		var mapperPath = configuration["DenialDatabaseProcessor:TaskBoardMapperPath"];
-		if (string.IsNullOrWhiteSpace(mapperPath) || !File.Exists(mapperPath))
-			throw new FileNotFoundException("TaskBoard mapper JSON not found.", mapperPath);
-
-		var json = File.ReadAllText(mapperPath);
-		_mapper = JsonSerializer.Deserialize<TaskBoardMapper>(json)
-				  ?? throw new InvalidOperationException("Failed to deserialize TaskBoardMapper.json");
-	}
-
-	public async Task BulkInsertAsync(
-		System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, string>> taskRows,
-		int labId)
-	{
-		if (taskRows == null || taskRows.Count == 0)
+		if (rows == null || rows.Count == 0)
 			return;
 
-		using var dt = new DataTable();
+		var mapper = await LoadMapperAsync();
 
-		foreach (var col in _mapper.Columns)
-		{
-			var type = GetTypeFromDataType(col.DataType);
-			dt.Columns.Add(col.SqlColumn, type);
-		}
+		// Delete existing rows for this lab/run
+		await DeleteExistingAsync(mapper.TargetTable, lab.LabId, runId);
 
-		foreach (var row in taskRows)
+		var table = new DataTable();
+		foreach (var col in mapper.Columns)
+			table.Columns.Add(col.SqlColumn, ResolveType(col.DataType));
+
+		foreach (var row in rows)
 		{
-			var dr = dt.NewRow();
-			foreach (var col in _mapper.Columns)
+			var dr = table.NewRow();
+
+			foreach (var col in mapper.Columns)
 			{
-				var excelKey = col.ExcelColumn;
-				var sqlCol = col.SqlColumn;
-				var dataType = col.DataType;
-
-				var raw = row.TryGetValue(excelKey, out var v) ? v : null;
-				dr[sqlCol] = ConvertValue(raw, dataType);
+				var val = row.GetValueOrDefault(col.ExcelColumn);
+				dr[col.SqlColumn] = ConvertValue(val, col.DataType);
 			}
-			dt.Rows.Add(dr);
+
+			// If LabId/LabName/RunId/CreatedOn are not mapped via JSON,
+			// ensure they exist in mapper and in TaskBoardBuilder rows.
+			table.Rows.Add(dr);
 		}
 
-		await using var conn = new SqlConnection(_connectionString);
-		await conn.OpenAsync().ConfigureAwait(false);
-
-		const string deleteSql = "DELETE FROM dbo.DenialTaskBoard WHERE LabId = @LabId";
-		await using (var deleteCmd = new SqlCommand(deleteSql, conn))
-		{
-			deleteCmd.Parameters.AddWithValue("@LabId", labId);
-			await deleteCmd.ExecuteNonQueryAsync().ConfigureAwait(false);
-		}
-
-		using var bulk = new SqlBulkCopy(conn)
-		{
-			DestinationTableName = _mapper.TargetTable
-		};
-
-		foreach (var col in _mapper.Columns)
-			bulk.ColumnMappings.Add(col.SqlColumn, col.SqlColumn);
-
-		await bulk.WriteToServerAsync(dt).ConfigureAwait(false);
-	}
-
-	private static Type GetTypeFromDataType(string dataType) =>
-		dataType.ToLowerInvariant() switch
-		{
-			"int" => typeof(int),
-			"date" => typeof(DateTime),
-			"datetime" => typeof(DateTime),
-			"datetime2" => typeof(DateTime),
-			"decimal" => typeof(decimal),
-			"boolean" => typeof(bool),
-			"bit" => typeof(bool),
-			"string" => typeof(string),
-			_ => typeof(string)
-		};
-
-	private static object ConvertValue(string? raw, string dataType)
-	{
-		if (string.IsNullOrWhiteSpace(raw))
-			return DBNull.Value;
-
-		return dataType.ToLowerInvariant() switch
-		{
-			"int" => int.TryParse(raw, out var i) ? i : DBNull.Value,
-			"date" or "datetime" or "datetime2" =>
-				DateTime.TryParse(raw, out var dt) ? dt : DBNull.Value,
-			"decimal" => decimal.TryParse(raw, out var d) ? d : DBNull.Value,
-			"boolean" or "bit" =>
-				bool.TryParse(raw, out var b)
-					? b
-					: raw == "1" ? true : raw == "0" ? false : DBNull.Value,
-			_ => raw
-		};
+		await BulkInsertAsync(table, mapper.TargetTable);
 	}
 }

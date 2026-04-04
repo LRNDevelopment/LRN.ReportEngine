@@ -3,13 +3,13 @@
 	public int LabId { get; }
 	public string LabName { get; }
 	public string RunId { get; }
-	public DateTime CreatedOn { get; }
+	public string ConnectionString { get; }
 
-	public LabContext(int labId, string labName, string runId)
+	public LabContext(int labId, string labName, string runId, string connectionString)
 	{
 		LabId = labId;
 		LabName = labName;
 		RunId = runId;
-		CreatedOn = DateTime.UtcNow;
+		ConnectionString = connectionString;
 	}
 }

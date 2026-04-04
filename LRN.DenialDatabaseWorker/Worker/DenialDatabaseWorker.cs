@@ -5,6 +5,7 @@ using DenialDatabaseProcessorWorker.Notifications;
 using DenialDatabaseProcessorWorker.Services;
 using DenialDatabaseProcessorWorker.Services.SharePoint;
 using DenialDatabaseProcessorWorker.Utils;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -30,6 +31,8 @@ public sealed class DenialDatabaseWorker : BackgroundService
 	private readonly DenialTaskBoardRepository _denialTaskBoardRepo;
 	private readonly IErrorLogger _errorLogger;
 	private readonly SharePointGraphOptions _spOpt;
+	private readonly IConfiguration _config;
+
 
 	public DenialDatabaseWorker(
 		ILogger<DenialDatabaseWorker> logger,
@@ -47,7 +50,8 @@ public sealed class DenialDatabaseWorker : BackgroundService
 		DenialTaskBoardRepository denialTaskBoardRepo,
 		IErrorLogger errorLogger,
 		IOptions<SharePointGraphOptions> spOpt,
-		ITeamsNotifier teamsNotifier)
+		ITeamsNotifier teamsNotifier,
+		IConfiguration config)
 	{
 		_logger = logger;
 		_options = options.Value;
@@ -66,6 +70,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
 		_errorLogger = errorLogger;
 		_spOpt = spOpt.Value;
 		_teamsNotifier = teamsNotifier;
+		_config = config;
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -119,35 +124,38 @@ public sealed class DenialDatabaseWorker : BackgroundService
 
 		await _stepLogger.LogAsync(lab, "Start", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
+		// NEW: per-lab context
+		var context = new LabContext(lab.LabId, lab.LabName, runId, lab.LabConnectionString);
+
 		try
 		{
-			// 1) Existing tasks from lab DB
+			// 1️⃣ Load existing tasks (from lab DB)
 			var existingTasks = await _denialTaskBoardRepo.GetExistingTasksAsync(lab.LabId);
 
-			// 2) Claim Action Mapper
+			// 2️⃣ Load Claim Action Mapper
 			await _stepLogger.LogAsync(lab, "Load ClaimActionMapper excel", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 			var claimRows = _excelReader.Read(claimActionMapperFile, "Denial Classifier");
 			var claimMapperIndex = new ClaimActionMapperIndex(claimRows);
 			await _stepLogger.LogAsync(lab, "Load ClaimActionMapper excel", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
-			// 3) Payer Policy
+			// 3️⃣ Load Payer Policy
 			await _stepLogger.LogAsync(lab, "Load PayerPolicy excel", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 			var payerRows = _excelReader.Read(payerPolicyFile);
 			await _stepLogger.LogAsync(lab, "Load PayerPolicy excel", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
-			// 4) Normalize + map
+			// 4️⃣ Normalize + Map
 			await _stepLogger.LogAsync(lab, "Normalize DenialCode + map fields", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 			var (headers, finalRows) = _builder.Build(payerRows, claimMapperIndex);
 			await _stepLogger.LogAsync(lab, "Normalize DenialCode + map fields", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
-			// 5) Build Insights
+			// 5️⃣ Build Insights
 			var insight = _insightBuilder.Build(finalRows);
 
-			// 6) Build Task Board (from denial line items)
+			// 6️⃣ Build Task Board
 			var taskBuilder = new TaskBoardBuilder(lab.LabId, lab.LabName, runId, existingTasks);
 			var taskRows = taskBuilder.Build(finalRows);
 
-			// 7) Write Excel
+			// 7️⃣ Write Excel
 			await _stepLogger.LogAsync(lab, "Write DenialDatabase excel", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
 			_excelWriter.Write(
@@ -161,30 +169,38 @@ public sealed class DenialDatabaseWorker : BackgroundService
 
 			await _stepLogger.LogAsync(lab, "Write DenialDatabase excel", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
-			// 8) Per-lab bulk writers (lab DB)
+			// ⭐ Load mapper paths from config
+			var mapperRoot = lab.ClaimActionMapper;
+
+			var insightMapperPath = Path.Combine(mapperRoot,
+				_config["DenialDatabaseProcessor:DenialInshightMapperPath"]);
+
+			var lineItemMapperPath = Path.Combine(mapperRoot,
+				_config["DenialDatabaseProcessor:DenialLineItemMapperPath"]);
+
+			var taskBoardMapperPath = Path.Combine(mapperRoot,
+				_config["DenialDatabaseProcessor:TaskBoardMapperPath"]);
+
+			// ⭐ Per-lab bulk writers
 			var insightWriter = new DenialInsightBulkWriter(
 				lab.LabConnectionString,
-				Path.Combine(lab.ClaimActionMapper, "DenialInsightMapper.json")
+				insightMapperPath
 			);
 
 			var lineItemWriter = new DenialLineItemBulkWriter(
 				lab.LabConnectionString,
-				Path.Combine(lab.ClaimActionMapper, "DenialLineItemMapper.json")
+				lineItemMapperPath
 			);
 
 			var taskBoardWriter = new DenialTaskBoardBulkWriter(
 				lab.LabConnectionString,
-				Path.Combine(lab.ClaimActionMapper, "DenialTaskBoardMapper.json")
+				taskBoardMapperPath
 			);
 
-			await insightWriter.WriteAsync(insight.Rows, lab, runId);
-			await lineItemWriter.WriteAsync(finalRows, lab, runId);
-			await taskBoardWriter.WriteAsync(taskRows, lab, runId);
-
-			// 9) Insert RunLog (master DB)
+			// 🔟 Insert RunLog (master DB)
 			await _runLogRepo.InsertAsync(runId, lab.LabId, outFile);
 
-			// 10) Upload to SharePoint
+			// 1️⃣1️⃣ Upload to SharePoint
 			await _stepLogger.LogAsync(lab, "Upload to SharePoint", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 			await _uploader.UploadIfEnabledAsync(lab, outFile, DateTime.Now, ct);
 			await _stepLogger.LogAsync(lab, "Upload to SharePoint", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);

@@ -11,7 +11,6 @@ public sealed class DenialInsightBulkWriter : BulkWriterBase
 	public async Task WriteAsync(List<Dictionary<string, string>> rows, LabConfig lab, string runId)
 	{
 		var mapper = await LoadMapperAsync();
-
 		await DeleteExistingAsync(mapper.TargetTable, lab.LabId, runId);
 
 		var table = new DataTable();

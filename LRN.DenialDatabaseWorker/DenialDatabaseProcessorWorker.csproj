@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="MapperJon\TaskBoardMapper.json" />
+    <Content Remove="MapperJon\DenialTaskBoardMapper.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,7 +28,7 @@
 
 
 	<ItemGroup>
-    <None Include="MapperJon\TaskBoardMapper.json">
+    <None Include="MapperJon\DenialTaskBoardMapper.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

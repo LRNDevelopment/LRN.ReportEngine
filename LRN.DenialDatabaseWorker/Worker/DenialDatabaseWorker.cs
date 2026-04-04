@@ -1,3 +1,5 @@
+using DenialDatabaseProcessorWorker.Builders;
+using DenialDatabaseProcessorWorker.BulkWriters;
 using DenialDatabaseProcessorWorker.Models;
 using DenialDatabaseProcessorWorker.Notifications;
 using DenialDatabaseProcessorWorker.Services;
@@ -24,7 +26,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
 	private readonly DenialInsightBuilder _insightBuilder;
 	private readonly FileResolver _fileResolver;
 	private readonly OutputPathBuilder _outputPathBuilder;
-	private readonly TaskBoardBulkWriter _taskBoardBulkWriter;
+	private readonly DenialTaskBoardBulkWriter _taskBoardBulkWriter;
 	private readonly DenialAnalysisRunLogRepository _runLogRepo;
 	private readonly DenialTaskBoardRepository _denialTaskBoardRepo;
 	private readonly IErrorLogger _errorLogger;
@@ -45,7 +47,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
 		DenialInsightBuilder insightBuilder,
 		FileResolver fileResolver,
 		OutputPathBuilder outputPathBuilder,
-		TaskBoardBulkWriter taskBoardBulkWriter,
+		DenialTaskBoardBulkWriter taskBoardBulkWriter,
 		DenialAnalysisRunLogRepository runLogRepo,
 		DenialTaskBoardRepository denialTaskBoardRepo,
 		IErrorLogger errorLogger, IOptions<SharePointGraphOptions> spOpt, ITeamsNotifier teamsNotifier,

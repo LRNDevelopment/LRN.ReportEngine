@@ -1,4 +1,4 @@
-﻿namespace DenialDatabaseProcessorWorker.Services;
+﻿namespace DenialDatabaseProcessorWorker.Builders;
 
 public sealed class DenialInsightBuilder
 {

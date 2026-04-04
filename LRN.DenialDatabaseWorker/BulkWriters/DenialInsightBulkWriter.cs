@@ -1,10 +1,9 @@
-﻿using DenialDatabaseProcessorWorker.Models;
-using DocumentFormat.OpenXml.InkML;
+﻿using DenialDatabaseProcessorWorker.Services;
 using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Text.Json;
 
-namespace DenialDatabaseProcessorWorker.Services;
+namespace DenialDatabaseProcessorWorker.BulkWriters;
 
 public sealed class DenialInsightBulkWriter
 {

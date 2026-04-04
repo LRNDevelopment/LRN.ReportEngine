@@ -1,19 +1,16 @@
-﻿using System;
-using System.Data;
-using System.IO;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using DenialDatabaseProcessorWorker.Services;
 using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
+using System.Data;
+using System.Text.Json;
 
-namespace DenialDatabaseProcessorWorker.Services;
+namespace DenialDatabaseProcessorWorker.BulkWriters;
 
-public sealed class TaskBoardBulkWriter
+public sealed class DenialTaskBoardBulkWriter
 {
 	private readonly string _connectionString;
 	private readonly TaskBoardMapper _mapper;
 
-	public TaskBoardBulkWriter(IConfiguration configuration)
+	public DenialTaskBoardBulkWriter(IConfiguration configuration)
 	{
 		_connectionString = configuration.GetConnectionString("DenialDatabase")
 							?? throw new InvalidOperationException("Connection string 'DenialDatabase' not found.");

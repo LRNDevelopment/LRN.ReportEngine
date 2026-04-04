@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using DenialDatabaseProcessorWorker.Normalizers;
 using static DenialDatabaseProcessorWorker.Services.DenialTaskBoardRepository;
 
-namespace DenialDatabaseProcessorWorker.Services;
+namespace DenialDatabaseProcessorWorker.Builders;
 
 public sealed class TaskBoardBuilder
 {
@@ -45,18 +43,13 @@ public sealed class TaskBoardBuilder
 			var rawActionCategory = line.GetValueOrDefault("Action Category") ?? "";
 			var rawPriority = line.GetValueOrDefault("Priority") ?? "";
 			var rawSla = line.GetValueOrDefault("SLA (Days)") ?? "";
+
 			// Normalize Insurance Balance
 			var rawInsBalance = line.GetValueOrDefault("Insurance Balance");
-
-			// Convert to decimal safely
 			decimal insBalanceVal = 0;
 			if (!string.IsNullOrWhiteSpace(rawInsBalance))
-			{
-				if (!decimal.TryParse(rawInsBalance, out insBalanceVal))
-					insBalanceVal = 0;
-			}
+				decimal.TryParse(rawInsBalance, out insBalanceVal);
 
-			// Always store a valid decimal string
 			var insuranceBalance = insBalanceVal.ToString("0.##");
 
 			int slaDays = int.TryParse(StripPrefix(rawSla), out var s) ? s : 0;
@@ -103,6 +96,13 @@ public sealed class TaskBoardBuilder
 				string actCategory = GetAlignedValue(rawActionCategory, i, denialCodes);
 				string priority = GetAlignedValue(rawPriority, i, denialCodes);
 
+				// Normalize task text
+				taskText = TaskGuidanceNormalizer.Normalize(taskText, denialCode);
+
+				// Fallback: if still empty, use Recommended Action
+				if (string.IsNullOrWhiteSpace(taskText) && !string.IsNullOrWhiteSpace(recAct))
+					taskText = recAct;
+
 				string status = "Open";
 				DateTime? dateCompleted = null;
 
@@ -136,7 +136,7 @@ public sealed class TaskBoardBuilder
 				{
 					["Task ID"] = taskId,
 					["Claim ID"] = string.IsNullOrWhiteSpace(visitNumber) ? "" : $"CLM-{visitNumber}",
-					["Patient / Acct #"] = "",
+					["Patient / Acct #"] = line.GetValueOrDefault("PatientID") ?? "",
 					["CPT Code"] = cptCode,
 					["Denial Code"] = denialCode,
 					["Denial Description"] = desc,
@@ -147,20 +147,36 @@ public sealed class TaskBoardBuilder
 					["Action Category"] = actCategory,
 					["Priority"] = priority,
 					["SLA (Days)"] = slaDays > 0 ? slaDays.ToString() : "",
+					["Status"] = status,
 					["Insurance Balance"] = insuranceBalance,
 					["IsCurrentDenial"] = "true",
 					["Assigned To"] = "",
-					["Status"] = status,
+
 					["Date Opened"] = dateOpened.ToString("yyyy-MM-dd"),
 					["Due Date"] = dueDate?.ToString("yyyy-MM-dd") ?? "",
 					["Date Completed"] = dateCompleted?.ToString("yyyy-MM-dd") ?? "",
 					["Days Remaining"] = dueDate.HasValue ? daysRemaining.ToString() : "",
 					["SLA Status"] = slaStatus,
+
 					["LabId"] = _labId.ToString(),
 					["LabName"] = _labName,
 					["RunId"] = _runId,
 					["CreatedOn"] = DateTime.UtcNow.ToString("O"),
-					["UniqueTrackId"] = key
+					["UniqueTrackId"] = key,
+
+					// NEW: pulled from Denial Line Item
+					["SalesRepname"] = line.GetValueOrDefault("SalesRepname") ?? "",
+					["ClinicName"] = line.GetValueOrDefault("ClinicName") ?? "",
+					["ReferringProvider"] = line.GetValueOrDefault("ReferringProvider") ?? "",
+					["PayerName Normalized"] = line.GetValueOrDefault("PayerName Normalized") ?? "",
+					["Payer Name"] = line.GetValueOrDefault("Payer Name") ?? "",
+					["Payer Code"] = line.GetValueOrDefault("Payer Code") ?? "",
+					["Payer Type"] = line.GetValueOrDefault("Payer Type") ?? "",
+					["First Billed Date"] = line.GetValueOrDefault("First Billed Date") ?? "",
+					["ChargeEnteredDate"] = line.GetValueOrDefault("ChargeEnteredDate") ?? "",
+					["BillingProvider"] = line.GetValueOrDefault("BillingProvider") ?? "",
+					["Panel Name"] = line.GetValueOrDefault("Panel Name") ?? "",
+					["Date of Service"] = line.GetValueOrDefault("Date of Service") ?? ""
 				};
 
 				result.Add(row);
@@ -184,7 +200,6 @@ public sealed class TaskBoardBuilder
 				["Date Completed"] = todayStr
 			};
 
-			// Recompute DaysRemaining / SLAStatus for closed historical if needed
 			if (DateTime.TryParse(row.GetValueOrDefault("Due Date"), out var dueDt))
 			{
 				int daysRemaining = (dueDt - DateTime.Today).Days;
@@ -192,10 +207,7 @@ public sealed class TaskBoardBuilder
 
 				if (DateTime.TryParse(row.GetValueOrDefault("Date Completed"), out var dc))
 				{
-					if (dc <= dueDt)
-						row["SLA Status"] = "Met";
-					else
-						row["SLA Status"] = "Overdue";
+					row["SLA Status"] = dc <= dueDt ? "Met" : "Overdue";
 				}
 			}
 
@@ -271,9 +283,6 @@ public sealed class TaskBoardBuilder
 	private static DateTime? TryParseDate(string? v)
 		=> DateTime.TryParse(v, out var dt) ? dt : null;
 
-	private static decimal TryParseDecimal(string? v)
-		=> decimal.TryParse(v, out var d) ? d : 0;
-
 	private sealed record TaskSegment(string DenialCode, string TaskText);
 
 	private static List<TaskSegment> ParseTaskSegments(string taskGuidance, List<string> denialCodes)
@@ -297,5 +306,50 @@ public sealed class TaskBoardBuilder
 			segments.Add(new TaskSegment(code, taskGuidance));
 
 		return segments;
+	}
+}
+
+public static class TaskBoardDiagnostics
+{
+	public static string Diagnose(string denialCode, string rawTask, string recAction)
+	{
+		if (string.IsNullOrWhiteSpace(rawTask))
+			return $"Task blank because Task Guidance is empty for {denialCode}.";
+
+		if (rawTask.Equals(denialCode, StringComparison.OrdinalIgnoreCase))
+			return $"Task blank because Task Guidance equals denial code ({denialCode}).";
+
+		if (!string.IsNullOrWhiteSpace(recAction))
+			return $"Task replaced with Recommended Action for {denialCode}.";
+
+		return $"Task blank due to unknown mapping issue for {denialCode}.";
+	}
+}
+
+public static class ClaimMapperValidator
+{
+	public static List<string> Validate(List<Dictionary<string, string>> rows)
+	{
+		var errors = new List<string>();
+		var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+		foreach (var r in rows)
+		{
+			var code = r.GetValueOrDefault("Denial Code") ?? "";
+			var cov = r.GetValueOrDefault("Coverage Status") ?? "";
+			var icd = r.GetValueOrDefault("ICD Compliance Status") ?? "";
+
+			if (string.IsNullOrWhiteSpace(code))
+				errors.Add("Missing Denial Code in classifier row.");
+
+			var key = $"{code}|{cov}|{icd}";
+			if (!seen.Add(key))
+				errors.Add($"Duplicate classifier entry: {key}");
+
+			if (string.IsNullOrWhiteSpace(cov) && string.IsNullOrWhiteSpace(icd))
+				errors.Add($"Classifier row for {code} has no coverage or ICD info.");
+		}
+
+		return errors;
 	}
 }

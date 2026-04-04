@@ -1,6 +1,7 @@
-using DenialDatabaseProcessorWorker.Models;
+using DenialDatabaseProcessorWorker.Normalizers;
+using DenialDatabaseProcessorWorker.Services;
 
-namespace DenialDatabaseProcessorWorker.Services;
+namespace DenialDatabaseProcessorWorker.Builders;
 
 public sealed class DenialDatabaseBuilder
 {
@@ -47,7 +48,7 @@ public sealed class DenialDatabaseBuilder
 		AddIfMissing(finalHeaders, "Status Action Code");
 		AddIfMissing(finalHeaders, "Recommended Action");
 		AddIfMissing(finalHeaders, "Task Guidance");
-		AddIfMissing(finalHeaders, "Task Status");          // NEW COLUMN
+		AddIfMissing(finalHeaders, "Task Status");
 		AddIfMissing(finalHeaders, "Short Category");
 		AddIfMissing(finalHeaders, "Priority");
 		AddIfMissing(finalHeaders, "SLA (Days)");
@@ -70,13 +71,15 @@ public sealed class DenialDatabaseBuilder
 			var payerCoverage = row.GetValueOrDefault("Coverage Status") ?? "";
 			var payerICD = row.GetValueOrDefault("ICD Compliance Status") ?? "";
 
+			var payerCovNorm = CoverageIcdNormalizer.NormalizeCoverage(payerCoverage);
+			var payerIcdNorm = CoverageIcdNormalizer.NormalizeICD(payerICD);
+
 			var expectedPaymentDateStr = row.GetValueOrDefault("Expected Payment Date");
 			var firstBilledDateStr = row.GetValueOrDefault("First Billed Date");
 
 			DateTime? expectedPaymentDate = DateTime.TryParse(expectedPaymentDateStr, out var epd) ? epd : null;
 			DateTime? firstBilledDate = DateTime.TryParse(firstBilledDateStr, out var fbd) ? fbd : null;
 
-			// Default Task Status
 			string taskStatus = "Open";
 
 			// Aggregated per-code maps
@@ -100,39 +103,38 @@ public sealed class DenialDatabaseBuilder
 				if (mapperRows.Count == 0)
 					continue;
 
-				// Always map description/classification from first row
 				var first = mapperRows.First();
 				descMap[code] = first.DenialDescription;
 				classMap[code] = first.DenialClassification;
 				typeMap[code] = first.DenialClassification;
 
-				// Matching logic (your updated conditions)
-
+				// MATCHING LOGIC (FIXED)
+		
 				var match =
-						// CASE 1 — Coverage=N/A & ICD=N/A
-						mapperRows.FirstOrDefault(m =>
-							IsNA(m.CoverageStatus) &&
-							IsNA(m.IcdComplianceStatus)
-						)
-						??
-						// CASE 2 — Coverage matches & ICD matches
-						mapperRows.FirstOrDefault(m =>
-							string.Equals(m.CoverageStatus, payerCoverage, StringComparison.OrdinalIgnoreCase) &&
-							string.Equals(m.IcdComplianceStatus, payerICD, StringComparison.OrdinalIgnoreCase)
-						)
-						??
-						// CASE 4 — payer Coverage is EMPTY & mapper Coverage blank/null/N/A & ICD matches
-						mapperRows.FirstOrDefault(m =>
-							string.IsNullOrWhiteSpace(payerCoverage) &&
-							IsNA(m.CoverageStatus) &&
-							string.Equals(m.IcdComplianceStatus, payerICD, StringComparison.OrdinalIgnoreCase)
-						)
-						??
-						// CASE 3 — Coverage=N/A & ICD matches
-						mapperRows.FirstOrDefault(m =>
-							IsNA(m.CoverageStatus) &&
-							string.Equals(m.IcdComplianceStatus, payerICD, StringComparison.OrdinalIgnoreCase)
-						);
+					// CASE 1 — Coverage=N/A & ICD=N/A
+					mapperRows.FirstOrDefault(m =>
+						CoverageIcdNormalizer.IsNA(m.CoverageStatus) &&
+						CoverageIcdNormalizer.IsNA(m.IcdComplianceStatus)
+					)
+					??
+					// CASE 2 — Exact normalized match
+					mapperRows.FirstOrDefault(m =>
+						CoverageIcdNormalizer.NormalizeCoverage(m.CoverageStatus) == payerCovNorm &&
+						CoverageIcdNormalizer.NormalizeICD(m.IcdComplianceStatus) == payerIcdNorm
+					)
+					??
+					// CASE 3 — Coverage=N/A & ICD matches
+					mapperRows.FirstOrDefault(m =>
+						CoverageIcdNormalizer.IsNA(m.CoverageStatus) &&
+						CoverageIcdNormalizer.NormalizeICD(m.IcdComplianceStatus) == payerIcdNorm
+					)
+					??
+					// CASE 4 — Payer coverage empty & mapper coverage N/A & ICD matches
+					mapperRows.FirstOrDefault(m =>
+						string.IsNullOrWhiteSpace(payerCoverage) &&
+						CoverageIcdNormalizer.IsNA(m.CoverageStatus) &&
+						CoverageIcdNormalizer.NormalizeICD(m.IcdComplianceStatus) == payerIcdNorm
+					);
 
 				if (match == null)
 					continue;
@@ -186,7 +188,6 @@ public sealed class DenialDatabaseBuilder
 		return (finalHeaders, payerPolicyRows);
 	}
 
-	// Extract last actionable sentence
 	private static string ExtractActionEssence(string? text)
 	{
 		if (string.IsNullOrWhiteSpace(text))
@@ -204,7 +205,6 @@ public sealed class DenialDatabaseBuilder
 		return essence;
 	}
 
-	// Group codes by value
 	private static string FormatGrouped(Dictionary<string, string?> codeToValue)
 	{
 		if (codeToValue.Count == 0)
@@ -228,15 +228,6 @@ public sealed class DenialDatabaseBuilder
 		return string.Join(", ", results);
 	}
 
-	private static bool IsNA(string? v)
-	{
-		return string.IsNullOrWhiteSpace(v) ||
-			   v.Equals("N/A", StringComparison.OrdinalIgnoreCase) ||
-			   v.Equals("NA", StringComparison.OrdinalIgnoreCase) ||
-			   v.Equals("Blank", StringComparison.OrdinalIgnoreCase) ||
-			   v.Equals("BLANK", StringComparison.OrdinalIgnoreCase);
-	}
-
 	private static void AddIfMissing(List<string> headers, string header)
 	{
 		if (!headers.Contains(header, StringComparer.OrdinalIgnoreCase))
@@ -258,17 +249,11 @@ public sealed class DenialDatabaseBuilder
 		if (!string.IsNullOrWhiteSpace(exact))
 			return exact;
 
-		var desiredNorm = NormalizeHeader(desired);
-		var norm = headers.FirstOrDefault(h => NormalizeHeader(h) == desiredNorm);
+		var desiredNorm = CoverageIcdNormalizer.NormalizeGeneral(desired);
+		var norm = headers.FirstOrDefault(h => CoverageIcdNormalizer.NormalizeGeneral(h) == desiredNorm);
 		if (!string.IsNullOrWhiteSpace(norm))
 			return norm;
 
 		return desired;
-	}
-
-	private static string NormalizeHeader(string s)
-	{
-		if (string.IsNullOrWhiteSpace(s)) return "";
-		return new string(s.Where(char.IsLetterOrDigit).Select(char.ToLowerInvariant).ToArray());
 	}
 }

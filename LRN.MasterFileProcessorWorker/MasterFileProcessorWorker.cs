@@ -14,7 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using static SharePointDownloader;
-using LRN.SharePointClient.Models; 
+using LRN.SharePointClient.Models;
 
 public sealed class MasterFileProcessorWorker : BackgroundService
 {
@@ -394,7 +394,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				// PROCESSED OUTPUTS (Claim/Line) go under WatchFolder (LRN-Input):
 				// D:\LRN\Automation\LRN-Input\Beech_Tree\02.February\02.06.2026 - 02.12.2026\Beech_Tree_LineLevel.csv
-				var processedOutFolder = Path.Combine(_opt.WatchFolder, labPrefix, monthFolder, weekFolder);
+				var processedOutFolder = Path.Combine(_opt.WatchFolder, labPrefix, DateTime.Now.ToString("yyyy"), monthFolder, weekFolder);
 				Directory.CreateDirectory(processedOutFolder);
 
 				var sourceDateLabel = NormalizeWeekFolderForFileName(weekFolder);

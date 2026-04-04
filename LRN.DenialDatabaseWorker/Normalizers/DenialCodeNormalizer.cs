@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace DenialDatabaseProcessorWorker.Services;
+namespace DenialDatabaseProcessorWorker.Normalizers;
 
 public sealed class DenialCodeNormalizer
 {

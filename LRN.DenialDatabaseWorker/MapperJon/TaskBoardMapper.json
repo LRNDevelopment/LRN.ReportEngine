@@ -135,6 +135,66 @@
 			"ExcelColumn": "UniqueTrackId",
 			"SqlColumn": "UniqueTrackId",
 			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "SalesRepname",
+			"SqlColumn": "SalesRepname",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "ClinicName",
+			"SqlColumn": "ClinicName",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "ReferringProvider",
+			"SqlColumn": "ReferringProvider",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "PayerName Normalized",
+			"SqlColumn": "PayerNameNormalized",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Payer Name",
+			"SqlColumn": "PayerName",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Payer Code",
+			"SqlColumn": "PayerCode",
+			"DataType": "int"
+		},
+		{
+			"ExcelColumn": "Payer Type",
+			"SqlColumn": "PayerType",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "First Billed Date",
+			"SqlColumn": "FirstBilledDate",
+			"DataType": "date"
+		},
+		{
+			"ExcelColumn": "ChargeEnteredDate",
+			"SqlColumn": "ChargeEnteredDate",
+			"DataType": "date"
+		},
+		{
+			"ExcelColumn": "BillingProvider",
+			"SqlColumn": "BillingProvider",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Panel Name",
+			"SqlColumn": "PanelName",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Date of Service",
+			"SqlColumn": "DateOfService",
+			"DataType": "date"
 		}
 	]
 }

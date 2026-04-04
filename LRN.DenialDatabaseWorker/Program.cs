@@ -1,4 +1,7 @@
+using DenialDatabaseProcessorWorker.Builders;
+using DenialDatabaseProcessorWorker.BulkWriters;
 using DenialDatabaseProcessorWorker.Models;
+using DenialDatabaseProcessorWorker.Normalizers;
 using DenialDatabaseProcessorWorker.Notifications;
 using DenialDatabaseProcessorWorker.Services;
 using DenialDatabaseProcessorWorker.Services.SharePoint;
@@ -46,7 +49,7 @@ builder.Services.AddSingleton<DenialInsightBuilder>();
 // -------------------------------
 builder.Services.AddSingleton<FileResolver>();
 builder.Services.AddSingleton<OutputPathBuilder>();
-builder.Services.AddSingleton<TaskBoardBulkWriter>();
+builder.Services.AddSingleton<DenialTaskBoardBulkWriter>();
 builder.Services.AddSingleton<DenialAnalysisRunLogRepository>();
 builder.Services.AddSingleton<DenialTaskBoardRepository>();
 

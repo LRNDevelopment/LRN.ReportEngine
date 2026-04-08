@@ -502,6 +502,11 @@
 			"DataType": "string"
 		},
 		{
+			"ExcelColumn": "Denial Date",
+			"SqlColumn": "DenialDate",
+			"DataType": "date"
+		},
+		{
 			"ExcelColumn": "Task Status",
 			"SqlColumn": "TaskStatus",
 			"DataType": "string"

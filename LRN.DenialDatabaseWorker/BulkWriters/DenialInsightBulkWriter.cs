@@ -2,38 +2,42 @@
 using System.Data;
 
 namespace DenialDatabaseProcessorWorker.BulkWriters;
-
 public sealed class DenialInsightBulkWriter : BulkWriterBase
 {
-	public DenialInsightBulkWriter(string connectionString, string mapperPath)
-		: base(connectionString, mapperPath) { }
+    public DenialInsightBulkWriter(string connectionString, string mapperPath)
+        : base(connectionString, mapperPath) { }
 
-	public async Task WriteAsync(List<Dictionary<string, string>> rows, LabConfig lab, string runId)
-	{
-		var mapper = await LoadMapperAsync();
-		await DeleteExistingAsync(mapper.TargetTable, lab.LabId, runId);
+    public async Task WriteAsync(List<Dictionary<string, string>> rows, LabConfig lab, string runId)
+    {
+        var mapper = await LoadMapperAsync();
 
-		var table = new DataTable();
-		foreach (var col in mapper.Columns)
-			table.Columns.Add(col.SqlColumn, ResolveType(col.DataType));
+        // NEW: delete all rows for this lab, irrespective of RunId
+        await DeleteByLabAsync(mapper.TargetTable, lab.LabId);
 
-		foreach (var row in rows)
-		{
-			var dr = table.NewRow();
-			foreach (var col in mapper.Columns)
-			{
-				var val = row.GetValueOrDefault(col.ExcelColumn);
-				dr[col.SqlColumn] = ConvertValue(val, col.DataType);
-			}
+        var table = new DataTable();
 
-			dr["LabId"] = lab.LabId;
-			dr["LabName"] = lab.LabName;
-			dr["RunId"] = runId;
-			dr["CreatedOn"] = DateTime.UtcNow;
+        foreach (var col in mapper.Columns)
+            table.Columns.Add(col.SqlColumn, ResolveType(col.DataType));
 
-			table.Rows.Add(dr);
-		}
+        foreach (var row in rows)
+        {
+            var dr = table.NewRow();
 
-		await BulkInsertAsync(table, mapper.TargetTable);
-	}
+            foreach (var col in mapper.Columns)
+            {
+                var val = row.GetValueOrDefault(col.ExcelColumn);
+                dr[col.SqlColumn] = ConvertValue(val, col.DataType);
+            }
+
+            // Ensure these columns exist in mapper/DB
+            dr["LabId"] = lab.LabId;
+            dr["LabName"] = lab.LabName;
+            dr["RunId"] = runId;
+            dr["CreatedOn"] = DateTime.UtcNow;
+
+            table.Rows.Add(dr);
+        }
+
+        await BulkInsertAsync(table, mapper.TargetTable);
+    }
 }

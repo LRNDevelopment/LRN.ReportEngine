@@ -34,6 +34,7 @@ public sealed class TaskBoardBuilder
 
 			var visitNumber = line.GetValueOrDefault("Visit Number") ?? "";
 			var cptCode = line.GetValueOrDefault("CPTCode") ?? "";
+			var payStatus = line.GetValueOrDefault("Pay Status") ?? "";
 
 			var rawDesc = line.GetValueOrDefault("Denial Description") ?? "";
 			var rawClass = line.GetValueOrDefault("Denial Classification") ?? "";
@@ -44,7 +45,7 @@ public sealed class TaskBoardBuilder
 			var rawPriority = line.GetValueOrDefault("Priority") ?? "";
 			var rawSla = line.GetValueOrDefault("SLA (Days)") ?? "";
 
-			// Normalize Insurance Balance
+			// Insurance Balance
 			var rawInsBalance = line.GetValueOrDefault("Insurance Balance");
 			decimal insBalanceVal = 0;
 			if (!string.IsNullOrWhiteSpace(rawInsBalance))
@@ -68,13 +69,18 @@ public sealed class TaskBoardBuilder
 			{
 				var seg = taskSegments[i];
 				var denialCode = seg.DenialCode;
+
+				// Key = VisitNumber + CPT + DenialCode
 				var key = $"{visitNumber}|{cptCode}|{denialCode}";
 				currentKeys.Add(key);
+
+				// Try to get existing task
+				_existingTasks.TryGetValue(key, out var existing);
 
 				string taskId;
 				DateTime dateOpened;
 
-				if (_existingTasks.TryGetValue(key, out var existing))
+				if (existing != null)
 				{
 					taskId = existing.TaskId;
 					dateOpened = existing.DateOpened ?? today;
@@ -103,26 +109,68 @@ public sealed class TaskBoardBuilder
 				if (string.IsNullOrWhiteSpace(taskText) && !string.IsNullOrWhiteSpace(recAct))
 					taskText = recAct;
 
+				// ------------------------------
+				// STATUS + DATE COMPLETED LOGIC
+				// ------------------------------
+
 				string status = "Open";
 				DateTime? dateCompleted = null;
 
 				bool isRebill = taskText.Contains("rebill", StringComparison.OrdinalIgnoreCase);
 				bool isWriteOff = taskText.Contains("write off", StringComparison.OrdinalIgnoreCase);
 
-				if (isRebill && firstBilled.HasValue && firstBilled.Value > dateOpened)
+				// 1. Preserve existing Closed/Review tasks
+				if (existing != null &&
+					existing.Row.TryGetValue("Status", out var oldStatus) &&
+					!string.IsNullOrWhiteSpace(oldStatus) &&
+					(oldStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase) ||
+					 oldStatus.Equals("Review", StringComparison.OrdinalIgnoreCase)))
 				{
-					status = "Closed";
-					dateCompleted = firstBilled;
+					status = oldStatus;
+
+					if (existing.Row.TryGetValue("Date Completed", out var oldCompleted) &&
+						DateTime.TryParse(oldCompleted, out var parsed))
+					{
+						dateCompleted = parsed;
+					}
 				}
-				else if (isWriteOff && insBalanceVal == 0 && postedDate.HasValue && postedDate.Value > dateOpened)
+				else
 				{
-					status = "Closed";
-					dateCompleted = postedDate;
+					// 2. Rebill auto-close
+					if (isRebill && firstBilled.HasValue && firstBilled.Value > dateOpened)
+					{
+						status = "Closed";
+						dateCompleted = firstBilled;
+					}
+					// 3. Write-off auto-close
+					else if (isWriteOff && insBalanceVal == 0 && postedDate.HasValue && postedDate.Value > dateOpened)
+					{
+						status = "Closed";
+						dateCompleted = postedDate;
+					}
+					// 4. Write-off but not yet posted
+					else if (isWriteOff)
+					{
+						if (!string.Equals(payStatus, "Write Off", StringComparison.OrdinalIgnoreCase))
+						{
+							status = "Review";
+						}
+						else
+						{
+							status = "Closed";
+							dateCompleted = postedDate;
+						}
+					}
 				}
+
+				// ------------------------------
+				// SLA STATUS LOGIC
+				// ------------------------------
 
 				int daysRemaining = dueDate.HasValue ? (dueDate.Value - today).Days : 0;
 
 				string slaStatus = "";
+
 				if (dateCompleted.HasValue && dueDate.HasValue && dateCompleted.Value <= dueDate.Value)
 					slaStatus = "Met";
 				else if (status == "Open" && !dateCompleted.HasValue && dueDate.HasValue && today > dueDate.Value)
@@ -131,6 +179,10 @@ public sealed class TaskBoardBuilder
 					slaStatus = "Due Soon";
 				else if (status == "Open" && !dateCompleted.HasValue && dueDate.HasValue && daysRemaining > 3)
 					slaStatus = "On Track";
+
+				// ------------------------------
+				// BUILD ROW
+				// ------------------------------
 
 				var row = new Dictionary<string, string>
 				{
@@ -151,20 +203,18 @@ public sealed class TaskBoardBuilder
 					["Insurance Balance"] = insuranceBalance,
 					["IsCurrentDenial"] = "true",
 					["Assigned To"] = "",
-
 					["Date Opened"] = dateOpened.ToString("yyyy-MM-dd"),
 					["Due Date"] = dueDate?.ToString("yyyy-MM-dd") ?? "",
 					["Date Completed"] = dateCompleted?.ToString("yyyy-MM-dd") ?? "",
 					["Days Remaining"] = dueDate.HasValue ? daysRemaining.ToString() : "",
 					["SLA Status"] = slaStatus,
-
 					["LabId"] = _labId.ToString(),
 					["LabName"] = _labName,
 					["RunId"] = _runId,
 					["CreatedOn"] = DateTime.UtcNow.ToString("O"),
 					["UniqueTrackId"] = key,
 
-					// NEW: pulled from Denial Line Item
+					// Additional fields from Denial Line Item
 					["SalesRepname"] = line.GetValueOrDefault("SalesRepname") ?? "",
 					["ClinicName"] = line.GetValueOrDefault("ClinicName") ?? "",
 					["ReferringProvider"] = line.GetValueOrDefault("ReferringProvider") ?? "",
@@ -183,8 +233,12 @@ public sealed class TaskBoardBuilder
 			}
 		}
 
-		// Add old tasks not present in current file as closed
+		// -----------------------------------------
+		// OLD TASKS NOT PRESENT IN CURRENT RUN
+		// -----------------------------------------
+
 		var todayStr = DateTime.Today.ToString("yyyy-MM-dd");
+
 		foreach (var kvp in _existingTasks)
 		{
 			var key = kvp.Key;
@@ -216,6 +270,10 @@ public sealed class TaskBoardBuilder
 
 		return result;
 	}
+
+	// ------------------------------
+	// HELPERS
+	// ------------------------------
 
 	private static string GetAlignedValue(string raw, int index, List<string> denialCodes)
 	{
@@ -260,7 +318,6 @@ public sealed class TaskBoardBuilder
 		}
 
 		var currentCode = denialCodes[index];
-
 		if (codeToValue.TryGetValue(currentCode, out var mapped))
 			return mapped;
 
@@ -292,12 +349,10 @@ public sealed class TaskBoardBuilder
 		if (!string.IsNullOrWhiteSpace(taskGuidance))
 		{
 			var parts = taskGuidance.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-
 			if (parts.Length == denialCodes.Count)
 			{
 				for (int i = 0; i < denialCodes.Count; i++)
 					segments.Add(new TaskSegment(denialCodes[i], parts[i]));
-
 				return segments;
 			}
 		}
@@ -306,50 +361,5 @@ public sealed class TaskBoardBuilder
 			segments.Add(new TaskSegment(code, taskGuidance));
 
 		return segments;
-	}
-}
-
-public static class TaskBoardDiagnostics
-{
-	public static string Diagnose(string denialCode, string rawTask, string recAction)
-	{
-		if (string.IsNullOrWhiteSpace(rawTask))
-			return $"Task blank because Task Guidance is empty for {denialCode}.";
-
-		if (rawTask.Equals(denialCode, StringComparison.OrdinalIgnoreCase))
-			return $"Task blank because Task Guidance equals denial code ({denialCode}).";
-
-		if (!string.IsNullOrWhiteSpace(recAction))
-			return $"Task replaced with Recommended Action for {denialCode}.";
-
-		return $"Task blank due to unknown mapping issue for {denialCode}.";
-	}
-}
-
-public static class ClaimMapperValidator
-{
-	public static List<string> Validate(List<Dictionary<string, string>> rows)
-	{
-		var errors = new List<string>();
-		var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-		foreach (var r in rows)
-		{
-			var code = r.GetValueOrDefault("Denial Code") ?? "";
-			var cov = r.GetValueOrDefault("Coverage Status") ?? "";
-			var icd = r.GetValueOrDefault("ICD Compliance Status") ?? "";
-
-			if (string.IsNullOrWhiteSpace(code))
-				errors.Add("Missing Denial Code in classifier row.");
-
-			var key = $"{code}|{cov}|{icd}";
-			if (!seen.Add(key))
-				errors.Add($"Duplicate classifier entry: {key}");
-
-			if (string.IsNullOrWhiteSpace(cov) && string.IsNullOrWhiteSpace(icd))
-				errors.Add($"Classifier row for {code} has no coverage or ICD info.");
-		}
-
-		return errors;
 	}
 }

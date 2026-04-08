@@ -2,258 +2,244 @@ using DenialDatabaseProcessorWorker.Normalizers;
 using DenialDatabaseProcessorWorker.Services;
 
 namespace DenialDatabaseProcessorWorker.Builders;
-
 public sealed class DenialDatabaseBuilder
 {
-	private readonly DenialCodeNormalizer _normalizer;
+    private readonly DenialCodeNormalizer _normalizer;
 
-	public DenialDatabaseBuilder(DenialCodeNormalizer normalizer)
-	{
-		_normalizer = normalizer;
-	}
+    public DenialDatabaseBuilder(DenialCodeNormalizer normalizer)
+    {
+        _normalizer = normalizer;
+    }
 
-	public (List<string> Headers, List<Dictionary<string, string>> Rows) Build(
-		List<Dictionary<string, string>> payerPolicyRows,
-		ClaimActionMapperIndex claimMapperIndex,
-		string denialCodeHeader = "DenialCode")
-	{
-		if (payerPolicyRows == null || payerPolicyRows.Count == 0)
-			return (new List<string>(), payerPolicyRows ?? new List<Dictionary<string, string>>());
+    public (List<string> Headers, List<Dictionary<string, string>> Rows) Build(
+        List<Dictionary<string, string>> payerPolicyRows,
+        ClaimActionMapperIndex claimMapperIndex,
+        string denialCodeHeader = "DenialCode")
+    {
+        if (payerPolicyRows == null || payerPolicyRows.Count == 0)
+            return (new List<string>(), payerPolicyRows ?? new List<Dictionary<string, string>>());
 
-		var baseHeaders = payerPolicyRows[0].Keys.ToList();
-		var denialCodeKey = ResolveHeaderKey(baseHeaders, denialCodeHeader);
+        var baseHeaders = payerPolicyRows[0].Keys.ToList();
+        var denialCodeKey = ResolveHeaderKey(baseHeaders, denialCodeHeader);
 
-		var finalHeaders = new List<string>(baseHeaders);
+        var finalHeaders = new List<string>(baseHeaders);
 
-		// Insert normalized code columns
-		var denialIdx = finalHeaders.FindIndex(h => string.Equals(h, denialCodeKey, StringComparison.OrdinalIgnoreCase));
-		if (denialIdx >= 0)
-		{
-			InsertIfMissing(finalHeaders, denialIdx + 1, "DenialCode_Original");
-			InsertIfMissing(finalHeaders, denialIdx + 2, "DenialCode_Normalized");
-		}
-		else
-		{
-			AddIfMissing(finalHeaders, "DenialCode_Original");
-			AddIfMissing(finalHeaders, "DenialCode_Normalized");
-		}
+        // Insert normalized code columns
+        var denialIdx = finalHeaders.FindIndex(h => string.Equals(h, denialCodeKey, StringComparison.OrdinalIgnoreCase));
+        if (denialIdx >= 0)
+        {
+            InsertIfMissing(finalHeaders, denialIdx + 1, "DenialCode_Original");
+            InsertIfMissing(finalHeaders, denialIdx + 2, "DenialCode_Normalized");
+        }
+        else
+        {
+            AddIfMissing(finalHeaders, "DenialCode_Original");
+            AddIfMissing(finalHeaders, "DenialCode_Normalized");
+        }
 
-		// Add mapped columns
-		AddIfMissing(finalHeaders, "Denial Description");
-		AddIfMissing(finalHeaders, "Denial Classification");
-		AddIfMissing(finalHeaders, "Denial Type");
-		AddIfMissing(finalHeaders, "Denial Validity");
-		AddIfMissing(finalHeaders, "Action Category");
-		AddIfMissing(finalHeaders, "Action Code");
-		AddIfMissing(finalHeaders, "Status Action Code");
-		AddIfMissing(finalHeaders, "Recommended Action");
-		AddIfMissing(finalHeaders, "Task Guidance");
-		AddIfMissing(finalHeaders, "Task Status");
-		AddIfMissing(finalHeaders, "Short Category");
-		AddIfMissing(finalHeaders, "Priority");
-		AddIfMissing(finalHeaders, "SLA (Days)");
-		AddIfMissing(finalHeaders, "Notes / Comments");
+        // Add mapped columns
+        AddIfMissing(finalHeaders, "Denial Description");
+        AddIfMissing(finalHeaders, "Denial Classification");
+        AddIfMissing(finalHeaders, "Denial Type");
+        AddIfMissing(finalHeaders, "Denial Validity");
+        AddIfMissing(finalHeaders, "Action Category");
+        AddIfMissing(finalHeaders, "Action Code");
+        AddIfMissing(finalHeaders, "Status Action Code");
+        AddIfMissing(finalHeaders, "Recommended Action");
+        AddIfMissing(finalHeaders, "Task Guidance");
+        AddIfMissing(finalHeaders, "Task Status");
+        AddIfMissing(finalHeaders, "Short Category");
+        AddIfMissing(finalHeaders, "Priority");
+        AddIfMissing(finalHeaders, "SLA (Days)");
+        AddIfMissing(finalHeaders, "Notes / Comments");
 
-		foreach (var row in payerPolicyRows)
-		{
-			// Normalize denial code
-			row.TryGetValue(denialCodeKey, out var rawDenialCode);
-			rawDenialCode ??= "";
+        foreach (var row in payerPolicyRows)
+        {
+            // Normalize denial code
+            row.TryGetValue(denialCodeKey, out var rawDenialCode);
+            rawDenialCode ??= "";
+            var codes = _normalizer.SplitToCodes(rawDenialCode);
+            var normalized = string.Join(";", codes);
 
-			var codes = _normalizer.SplitToCodes(rawDenialCode);
-			var normalized = string.Join(";", codes);
+            row["DenialCode_Original"] = rawDenialCode;
+            row["DenialCode_Normalized"] = normalized;
+            row[denialCodeKey] = normalized;
 
-			row["DenialCode_Original"] = rawDenialCode;
-			row["DenialCode_Normalized"] = normalized;
-			row[denialCodeKey] = normalized;
+            // Extract payer fields
+            var payerCoverage = row.GetValueOrDefault("Coverage Status") ?? "";
+            var payerICD = row.GetValueOrDefault("ICD Compliance Status") ?? "";
+            var payerCovNorm = CoverageIcdNormalizer.NormalizeCoverage(payerCoverage);
+            var payerIcdNorm = CoverageIcdNormalizer.NormalizeICD(payerICD);
 
-			// Extract payer fields
-			var payerCoverage = row.GetValueOrDefault("Coverage Status") ?? "";
-			var payerICD = row.GetValueOrDefault("ICD Compliance Status") ?? "";
+            var expectedPaymentDateStr = row.GetValueOrDefault("Expected Payment Date");
+            var firstBilledDateStr = row.GetValueOrDefault("First Billed Date");
 
-			var payerCovNorm = CoverageIcdNormalizer.NormalizeCoverage(payerCoverage);
-			var payerIcdNorm = CoverageIcdNormalizer.NormalizeICD(payerICD);
+            DateTime? expectedPaymentDate = DateTime.TryParse(expectedPaymentDateStr, out var epd) ? epd : null;
+            DateTime? firstBilledDate = DateTime.TryParse(firstBilledDateStr, out var fbd) ? fbd : null;
 
-			var expectedPaymentDateStr = row.GetValueOrDefault("Expected Payment Date");
-			var firstBilledDateStr = row.GetValueOrDefault("First Billed Date");
+            string taskStatus = "Open";
 
-			DateTime? expectedPaymentDate = DateTime.TryParse(expectedPaymentDateStr, out var epd) ? epd : null;
-			DateTime? firstBilledDate = DateTime.TryParse(firstBilledDateStr, out var fbd) ? fbd : null;
+            // Aggregated per-code maps
+            var descMap = new Dictionary<string, string?>();
+            var classMap = new Dictionary<string, string?>();
+            var typeMap = new Dictionary<string, string?>();
+            var validityMap = new Dictionary<string, string?>();
+            var actionCodeMap = new Dictionary<string, string?>();
+            var recActionMap = new Dictionary<string, string?>();
+            var actionCatMap = new Dictionary<string, string?>();
+            var taskMap = new Dictionary<string, string?>();
+            var shortCatMap = new Dictionary<string, string?>();
+            var priorityMap = new Dictionary<string, string?>();
+            var slaMap = new Dictionary<string, string?>();
+            var notesMap = new Dictionary<string, string?>();
 
-			string taskStatus = "Open";
+            foreach (var code in codes)
+            {
+                var mapperRows = claimMapperIndex.FindByCode(code).ToList();
+                if (mapperRows.Count == 0)
+                    continue;
 
-			// Aggregated per-code maps
-			var descMap = new Dictionary<string, string?>();
-			var classMap = new Dictionary<string, string?>();
-			var typeMap = new Dictionary<string, string?>();
+                var first = mapperRows.First();
+                descMap[code] = first.DenialDescription;
+                classMap[code] = first.DenialClassification;
+                typeMap[code] = first.DenialClassification;
 
-			var validityMap = new Dictionary<string, string?>();
-			var actionCodeMap = new Dictionary<string, string?>();
-			var recActionMap = new Dictionary<string, string?>();
-			var actionCatMap = new Dictionary<string, string?>();
-			var taskMap = new Dictionary<string, string?>();
-			var shortCatMap = new Dictionary<string, string?>();
-			var priorityMap = new Dictionary<string, string?>();
-			var slaMap = new Dictionary<string, string?>();
-			var notesMap = new Dictionary<string, string?>();
+                // Matching logic
+                var match =
+                    mapperRows.FirstOrDefault(m =>
+                        CoverageIcdNormalizer.IsNA(m.CoverageStatus) &&
+                        CoverageIcdNormalizer.IsNA(m.IcdComplianceStatus))
+                    ??
+                    mapperRows.FirstOrDefault(m =>
+                        CoverageIcdNormalizer.NormalizeCoverage(m.CoverageStatus) == payerCovNorm &&
+                        CoverageIcdNormalizer.NormalizeICD(m.IcdComplianceStatus) == payerIcdNorm)
+                    ??
+                    mapperRows.FirstOrDefault(m =>
+                        CoverageIcdNormalizer.IsNA(m.CoverageStatus) &&
+                        CoverageIcdNormalizer.NormalizeICD(m.IcdComplianceStatus) == payerIcdNorm)
+                    ??
+                    mapperRows.FirstOrDefault(m =>
+                        string.IsNullOrWhiteSpace(payerCoverage) &&
+                        CoverageIcdNormalizer.IsNA(m.CoverageStatus) &&
+                        CoverageIcdNormalizer.NormalizeICD(m.IcdComplianceStatus) == payerIcdNorm);
 
-			foreach (var code in codes)
-			{
-				var mapperRows = claimMapperIndex.FindByCode(code).ToList();
-				if (mapperRows.Count == 0)
-					continue;
+                if (match == null)
+                    continue;
 
-				var first = mapperRows.First();
-				descMap[code] = first.DenialDescription;
-				classMap[code] = first.DenialClassification;
-				typeMap[code] = first.DenialClassification;
+                validityMap[code] = match.DenialValidity;
+                actionCodeMap[code] = match.ActionCode;
+                recActionMap[code] = ExtractActionEssence(match.RecommendedAction);
+                actionCatMap[code] = match.ActionCategory;
+                taskMap[code] = ExtractActionEssence(match.Task);
+                shortCatMap[code] = match.ShortCategory;
+                priorityMap[code] = match.Priority;
+                slaMap[code] = match.SlaDays;
+                notesMap[code] = ExtractActionEssence(match.NotesComments);
 
-				// MATCHING LOGIC (FIXED)
-		
-				var match =
-					// CASE 1 — Coverage=N/A & ICD=N/A
-					mapperRows.FirstOrDefault(m =>
-						CoverageIcdNormalizer.IsNA(m.CoverageStatus) &&
-						CoverageIcdNormalizer.IsNA(m.IcdComplianceStatus)
-					)
-					??
-					// CASE 2 — Exact normalized match
-					mapperRows.FirstOrDefault(m =>
-						CoverageIcdNormalizer.NormalizeCoverage(m.CoverageStatus) == payerCovNorm &&
-						CoverageIcdNormalizer.NormalizeICD(m.IcdComplianceStatus) == payerIcdNorm
-					)
-					??
-					// CASE 3 — Coverage=N/A & ICD matches
-					mapperRows.FirstOrDefault(m =>
-						CoverageIcdNormalizer.IsNA(m.CoverageStatus) &&
-						CoverageIcdNormalizer.NormalizeICD(m.IcdComplianceStatus) == payerIcdNorm
-					)
-					??
-					// CASE 4 — Payer coverage empty & mapper coverage N/A & ICD matches
-					mapperRows.FirstOrDefault(m =>
-						string.IsNullOrWhiteSpace(payerCoverage) &&
-						CoverageIcdNormalizer.IsNA(m.CoverageStatus) &&
-						CoverageIcdNormalizer.NormalizeICD(m.IcdComplianceStatus) == payerIcdNorm
-					);
+                // Task Status logic (rebill close)
+                bool isRebillTask =
+                    (!string.IsNullOrWhiteSpace(match.Task) &&
+                     match.Task.Contains("rebill", StringComparison.OrdinalIgnoreCase))
+                    ||
+                    string.Equals(match.ActionCode, "RB", StringComparison.OrdinalIgnoreCase);
 
-				if (match == null)
-					continue;
+                bool hasValidDates =
+                    expectedPaymentDate.HasValue &&
+                    firstBilledDate.HasValue &&
+                    firstBilledDate.Value > expectedPaymentDate.Value;
 
-				validityMap[code] = match.DenialValidity;
-				actionCodeMap[code] = match.ActionCode;
-				recActionMap[code] = ExtractActionEssence(match.RecommendedAction);
-				actionCatMap[code] = match.ActionCategory;
-				taskMap[code] = ExtractActionEssence(match.Task);
-				shortCatMap[code] = match.ShortCategory;
-				priorityMap[code] = match.Priority;
-				slaMap[code] = match.SlaDays;
-				notesMap[code] = ExtractActionEssence(match.NotesComments);
+                if (taskStatus != "Closed" && isRebillTask && hasValidDates)
+                {
+                    taskStatus = "Closed";
+                }
+            }
 
-				// Task Status logic
-				bool isRebillTask =
-					(!string.IsNullOrWhiteSpace(match.Task) &&
-					 match.Task.Contains("rebill", StringComparison.OrdinalIgnoreCase))
-					||
-					string.Equals(match.ActionCode, "RB", StringComparison.OrdinalIgnoreCase);
+            // Assign aggregated values
+            row["Denial Description"] = FormatGrouped(descMap);
+            row["Denial Classification"] = FormatGrouped(classMap);
+            row["Denial Type"] = FormatGrouped(typeMap);
+            row["Denial Validity"] = FormatGrouped(validityMap);
+            row["Action Code"] = FormatGrouped(actionCodeMap);
+            row["Status Action Code"] = FormatGrouped(actionCodeMap);
+            row["Recommended Action"] = FormatGrouped(recActionMap);
+            row["Action Category"] = FormatGrouped(actionCatMap);
+            row["Task Guidance"] = FormatGrouped(taskMap);
+            row["Task Status"] = taskStatus;
+            row["Short Category"] = FormatGrouped(shortCatMap);
+            row["Priority"] = FormatGrouped(priorityMap);
+            row["SLA (Days)"] = FormatGrouped(slaMap);
+            row["Notes / Comments"] = FormatGrouped(notesMap);
+        }
 
-				bool hasValidDates =
-					expectedPaymentDate.HasValue &&
-					firstBilledDate.HasValue &&
-					firstBilledDate.Value > expectedPaymentDate.Value;
+        return (finalHeaders, payerPolicyRows);
+    }
 
-				if (taskStatus != "Closed" && isRebillTask && hasValidDates)
-				{
-					taskStatus = "Closed";
-				}
-			}
+    private static string ExtractActionEssence(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return "";
 
-			// Assign aggregated values
-			row["Denial Description"] = FormatGrouped(descMap);
-			row["Denial Classification"] = FormatGrouped(classMap);
-			row["Denial Type"] = FormatGrouped(typeMap);
+        var parts = text.Split('.', StringSplitOptions.RemoveEmptyEntries)
+            .Select(p => p.Trim())
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .ToList();
 
-			row["Denial Validity"] = FormatGrouped(validityMap);
-			row["Action Code"] = FormatGrouped(actionCodeMap);
-			row["Status Action Code"] = FormatGrouped(actionCodeMap);
-			row["Recommended Action"] = FormatGrouped(recActionMap);
-			row["Action Category"] = FormatGrouped(actionCatMap);
-			row["Task Guidance"] = FormatGrouped(taskMap);
-			row["Task Status"] = taskStatus;
-			row["Short Category"] = FormatGrouped(shortCatMap);
-			row["Priority"] = FormatGrouped(priorityMap);
-			row["SLA (Days)"] = FormatGrouped(slaMap);
-			row["Notes / Comments"] = FormatGrouped(notesMap);
-		}
+        if (parts.Count == 0)
+            return "";
 
-		return (finalHeaders, payerPolicyRows);
-	}
+        var essence = parts.Last().Trim().TrimEnd('.');
+        return essence;
+    }
 
-	private static string ExtractActionEssence(string? text)
-	{
-		if (string.IsNullOrWhiteSpace(text))
-			return "";
+    private static string FormatGrouped(Dictionary<string, string?> codeToValue)
+    {
+        if (codeToValue.Count == 0)
+            return "";
 
-		var parts = text.Split('.', StringSplitOptions.RemoveEmptyEntries)
-						.Select(p => p.Trim())
-						.Where(p => !string.IsNullOrWhiteSpace(p))
-						.ToList();
+        var groups = codeToValue
+            .GroupBy(kv => string.IsNullOrWhiteSpace(kv.Value) ? "" : kv.Value!.Trim())
+            .ToList();
 
-		if (parts.Count == 0)
-			return "";
+        var results = new List<string>();
 
-		var essence = parts.Last().Trim().TrimEnd('.');
-		return essence;
-	}
+        foreach (var g in groups)
+        {
+            if (string.IsNullOrWhiteSpace(g.Key))
+                continue;
 
-	private static string FormatGrouped(Dictionary<string, string?> codeToValue)
-	{
-		if (codeToValue.Count == 0)
-			return "";
+            var codes = string.Join(", ", g.Select(x => x.Key));
+            results.Add($"{codes}: {g.Key}");
+        }
 
-		var groups = codeToValue
-			.GroupBy(kv => string.IsNullOrWhiteSpace(kv.Value) ? "" : kv.Value!.Trim())
-			.ToList();
+        return string.Join(", ", results);
+    }
 
-		var results = new List<string>();
+    private static void AddIfMissing(List<string> headers, string header)
+    {
+        if (!headers.Contains(header, StringComparer.OrdinalIgnoreCase))
+            headers.Add(header);
+    }
 
-		foreach (var g in groups)
-		{
-			if (string.IsNullOrWhiteSpace(g.Key))
-				continue;
+    private static void InsertIfMissing(List<string> headers, int index, string header)
+    {
+        if (headers.Contains(header, StringComparer.OrdinalIgnoreCase))
+            return;
 
-			var codes = string.Join(", ", g.Select(x => x.Key));
-			results.Add($"{codes}: {g.Key}");
-		}
+        index = Math.Clamp(index, 0, headers.Count);
+        headers.Insert(index, header);
+    }
 
-		return string.Join(", ", results);
-	}
+    private static string ResolveHeaderKey(List<string> headers, string desired)
+    {
+        var exact = headers.FirstOrDefault(h => string.Equals(h, desired, StringComparison.OrdinalIgnoreCase));
+        if (!string.IsNullOrWhiteSpace(exact))
+            return exact;
 
-	private static void AddIfMissing(List<string> headers, string header)
-	{
-		if (!headers.Contains(header, StringComparer.OrdinalIgnoreCase))
-			headers.Add(header);
-	}
+        var desiredNorm = CoverageIcdNormalizer.NormalizeGeneral(desired);
+        var norm = headers.FirstOrDefault(h => CoverageIcdNormalizer.NormalizeGeneral(h) == desiredNorm);
+        if (!string.IsNullOrWhiteSpace(norm))
+            return norm;
 
-	private static void InsertIfMissing(List<string> headers, int index, string header)
-	{
-		if (headers.Contains(header, StringComparer.OrdinalIgnoreCase))
-			return;
-
-		index = Math.Clamp(index, 0, headers.Count);
-		headers.Insert(index, header);
-	}
-
-	private static string ResolveHeaderKey(List<string> headers, string desired)
-	{
-		var exact = headers.FirstOrDefault(h => string.Equals(h, desired, StringComparison.OrdinalIgnoreCase));
-		if (!string.IsNullOrWhiteSpace(exact))
-			return exact;
-
-		var desiredNorm = CoverageIcdNormalizer.NormalizeGeneral(desired);
-		var norm = headers.FirstOrDefault(h => CoverageIcdNormalizer.NormalizeGeneral(h) == desiredNorm);
-		if (!string.IsNullOrWhiteSpace(norm))
-			return norm;
-
-		return desired;
-	}
+        return desired;
+    }
 }

@@ -19,7 +19,6 @@ public sealed class ClaimActionMapperIndex
 		string NotesComments
 	);
 
-	// Fast lookup:
 	// _map[DenialCode][ICD] = List<MapperRow>
 	private readonly Dictionary<string, Dictionary<string, List<MapperRow>>> _map;
 
@@ -33,7 +32,6 @@ public sealed class ClaimActionMapperIndex
 		denialCode = (denialCode ?? "").Trim().ToUpperInvariant();
 		if (_map.TryGetValue(denialCode, out var icdMap))
 		{
-			// Flatten all ICD groups
 			return icdMap.Values.SelectMany(x => x).ToList();
 		}
 
@@ -73,7 +71,8 @@ public sealed class ClaimActionMapperIndex
 					var key = r.Keys.FirstOrDefault(k =>
 					{
 						var nk = Normalize(k);
-						return nk == nn || nk.StartsWith(nn);
+						// FIX: allow header cells that *contain* the token, not just equal/starts-with
+						return nk == nn || nk.StartsWith(nn) || nk.Contains(nn);
 					});
 
 					if (key != null && r.TryGetValue(key, out var v))
@@ -91,21 +90,21 @@ public sealed class ClaimActionMapperIndex
 				icd = "N/A";
 
 			var row = new MapperRow(
-		DenialCode: denialCode,
-		DenialDescription: Get("Denial Description"),
-		DenialClassification: Get("Denial Classification"),
-		CoverageStatus: Get("Coverage Status"),
-		IcdComplianceStatus: icd,
-		DenialValidity: Get("Denial Validity"),
-		ActionCode: Get("Action Code", "Status Action Code"),
-		RecommendedAction: Get("Recommended Action"),
-		ActionCategory: Get("Action Category"),
-		Task: Get("Task", "Task Guidance"),
-		ShortCategory: Get("Short Category"),
-		Priority: Get("Priority"),
-		SlaDays: Get("SLA (Days)", "SLA Days"),
-		NotesComments: Get("Notes / Comments", "Notes Comments")
-	);
+				DenialCode: denialCode,
+				DenialDescription: Get("Denial Description"),
+				DenialClassification: Get("Denial Classification"),
+				CoverageStatus: Get("Coverage Status"),
+				IcdComplianceStatus: icd,
+				DenialValidity: Get("Denial Validity"),
+				ActionCode: Get("Action Code", "Status Action Code"),
+				RecommendedAction: Get("Recommended Action"),
+				ActionCategory: Get("Action Category"),
+				Task: Get("Task", "Task Guidance"),
+				ShortCategory: Get("Short Category"),
+				Priority: Get("Priority"),
+				SlaDays: Get("SLA (Days)", "SLA Days"),
+				NotesComments: Get("Notes / Comments", "Notes Comments")
+			);
 
 			if (!map.TryGetValue(denialCode, out var icdMap))
 			{

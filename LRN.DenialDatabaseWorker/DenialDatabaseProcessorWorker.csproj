@@ -22,11 +22,20 @@
 	  <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0" />
 
   </ItemGroup>
-
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
 	</ItemGroup>
-
+	<ItemGroup>
+		<None Update="DenialLineItemMapper.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="DenialTaskBoardMapper.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="DenialInsightMapper.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
 	<ItemGroup>
     <None Include="MapperJon\DenialTaskBoardMapper.json">

@@ -1,112 +1,89 @@
-﻿using Microsoft.Data.SqlClient;
-using System.Data;
+﻿using System.Data;
 using System.Text.Json;
 using DenialDatabaseProcessorWorker.Models;
-using DenialDatabaseProcessorWorker.Normalizers;
-using static DenialDatabaseProcessorWorker.Services.DenialTaskBoardRepository;
+using Microsoft.Data.SqlClient;
 
 namespace DenialDatabaseProcessorWorker.BulkWriters;
 
 public abstract class BulkWriterBase
 {
-    protected readonly string _connectionString;
-    protected readonly string _mapperPath;
+	private readonly string _connectionString;
 
-    protected BulkWriterBase(string connectionString, string mapperPath)
-    {
-        _connectionString = connectionString;
-        _mapperPath = mapperPath;
-    }
+	protected BulkWriterBase(string connectionString)
+	{
+		_connectionString = connectionString;
+	}
 
-    protected async Task<BulkMapperDefinition> LoadMapperAsync()
-    {
-        var json = await File.ReadAllTextAsync(_mapperPath);
-        return JsonSerializer.Deserialize<BulkMapperDefinition>(json)
-               ?? throw new InvalidOperationException("Invalid mapper JSON");
-    }
+	protected async Task BulkInsertAsync(
+		DataTable table,
+		string targetTable,
+		TableMapperConfig mapper)
+	{
+		if (table == null)
+			throw new ArgumentNullException(nameof(table));
 
-    protected static Type ResolveType(string type) =>
-        type.ToLower() switch
-        {
-            "int" => typeof(int),
-            "decimal" => typeof(decimal),
-            "datetime" => typeof(DateTime),
-            "date" => typeof(DateTime),
-            "boolean" => typeof(bool),
-            _ => typeof(string)
-        };
+		if (mapper == null)
+			throw new ArgumentNullException(nameof(mapper));
 
-    protected static object ConvertValue(string? val, string type)
-    {
-        if (string.IsNullOrWhiteSpace(val))
-            return DBNull.Value;
+		using var conn = new SqlConnection(_connectionString);
+		await conn.OpenAsync();
 
-        return type.ToLower() switch
-        {
-            "int" => int.TryParse(val, out var i) ? i : DBNull.Value,
-            "decimal" => decimal.TryParse(val, out var d) ? d : DBNull.Value,
-            "datetime" => DateTime.TryParse(val, out var dt) ? dt : DBNull.Value,
-            "date" => DateTime.TryParse(val, out var dt2) ? dt2 : DBNull.Value,
-            "boolean" => bool.TryParse(val, out var b) ? b : DBNull.Value,
-            _ => val
-        };
-    }
+		using var bulk = new SqlBulkCopy(
+			conn,
+			SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.CheckConstraints,
+			null)
+		{
+			DestinationTableName = targetTable,
+			BatchSize = 500000,
+			BulkCopyTimeout = 0
+		};
 
-    /// <summary>
-    /// Old behavior: delete by LabId + RunId. Kept for compatibility if needed elsewhere.
-    /// </summary>
-    protected async Task DeleteExistingAsync(string table, int labId, string runId)
-    {
-        using var conn = new SqlConnection(_connectionString);
-        await conn.OpenAsync();
+		foreach (var map in mapper.Columns)
+		{
+			string? sourceColumn = null;
 
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = $"DELETE FROM {table} WHERE LabId=@LabId AND RunId=@RunId";
-        cmd.Parameters.AddWithValue("@LabId", labId);
-        cmd.Parameters.AddWithValue("@RunId", runId);
-        await cmd.ExecuteNonQueryAsync();
-    }
+			// Case 1: builder already created SQL column names
+			if (table.Columns.Contains(map.SqlColumn))
+			{
+				sourceColumn = map.SqlColumn;
+			}
+			// Case 2: source table still has Excel/display column names
+			else if (table.Columns.Contains(map.ExcelColumn))
+			{
+				sourceColumn = map.ExcelColumn;
+			}
 
-    /// <summary>
-    /// New behavior: delete all rows for a lab, irrespective of RunId.
-    /// </summary>
-    protected async Task DeleteByLabAsync(string table, int labId)
-    {
-        using var conn = new SqlConnection(_connectionString);
-        await conn.OpenAsync();
+			if (sourceColumn != null)
+			{
+				bulk.ColumnMappings.Add(sourceColumn, map.SqlColumn);
+			}
+		}
 
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = $"DELETE FROM {table} WHERE LabId=@LabId";
-        cmd.Parameters.AddWithValue("@LabId", labId);
-        await cmd.ExecuteNonQueryAsync();
-    }
+		if (bulk.ColumnMappings.Count == 0)
+		{
+			throw new InvalidOperationException(
+				$"No valid column mappings found for target table '{targetTable}'.");
+		}
 
-    protected async Task BulkInsertAsync(DataTable table, string targetTable)
-    {
-        using var conn = new SqlConnection(_connectionString);
-        await conn.OpenAsync();
+		await bulk.WriteToServerAsync(table);
+	}
 
-        using var bulk = new SqlBulkCopy(conn)
-        {
-            DestinationTableName = targetTable
-        };
+	protected static TableMapperConfig LoadMapper(string mapperFileName)
+	{
+		var basePath = AppContext.BaseDirectory;
+		var fullPath = Path.Combine(basePath, mapperFileName);
 
-        foreach (DataColumn col in table.Columns)
-            bulk.ColumnMappings.Add(col.ColumnName, col.ColumnName);
+		if (!File.Exists(fullPath))
+			throw new FileNotFoundException($"Mapper file not found: {fullPath}");
 
-        await bulk.WriteToServerAsync(table);
-    }
-}
+		var json = File.ReadAllText(fullPath);
+		var mapper = JsonSerializer.Deserialize<TableMapperConfig>(
+			json,
+			new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-public sealed class BulkMapperDefinition
-{
-    public string TargetTable { get; set; } = "";
-    public List<BulkColumnMap> Columns { get; set; } = new();
-}
+		if (mapper == null)
+			throw new InvalidOperationException($"Failed to deserialize mapper: {fullPath}");
 
-public sealed class BulkColumnMap
-{
-    public string ExcelColumn { get; set; } = "";
-    public string SqlColumn { get; set; } = "";
-    public string DataType { get; set; } = "";
+		return mapper;
+	}
 }

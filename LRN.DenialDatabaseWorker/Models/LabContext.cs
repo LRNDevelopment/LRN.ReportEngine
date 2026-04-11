@@ -13,3 +13,16 @@
 		ConnectionString = connectionString;
 	}
 }
+
+public sealed class TableMapperConfig
+{
+	public string TargetTable { get; set; } = string.Empty;
+	public List<ColumnMapperConfig> Columns { get; set; } = new();
+}
+
+public sealed class ColumnMapperConfig
+{
+	public string ExcelColumn { get; set; } = string.Empty;
+	public string SqlColumn { get; set; } = string.Empty;
+	public string DataType { get; set; } = string.Empty;
+}

@@ -121,17 +121,26 @@ public sealed class TaskBoardBuilder
 
 				// 1. Preserve existing Closed/Review tasks
 				if (existing != null &&
-					existing.Row.TryGetValue("Status", out var oldStatus) &&
-					!string.IsNullOrWhiteSpace(oldStatus) &&
-					(oldStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase) ||
-					 oldStatus.Equals("Review", StringComparison.OrdinalIgnoreCase)))
+						existing.Row.TryGetValue("Status", out var oldStatusRaw))
 				{
-					status = oldStatus;
+					var oldStatus = oldStatusRaw?.Trim()
+						.Replace("\u00A0", "")   // non-breaking space
+						.Replace("\u200B", "")   // zero-width space
+						.Replace("\r", "")
+						.Replace("\n", "")
+						.Trim();
 
-					if (existing.Row.TryGetValue("Date Completed", out var oldCompleted) &&
-						DateTime.TryParse(oldCompleted, out var parsed))
+					if (!string.IsNullOrWhiteSpace(oldStatus) &&
+						(oldStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase) ||
+						 oldStatus.Equals("Review", StringComparison.OrdinalIgnoreCase)))
 					{
-						dateCompleted = parsed;
+						status = oldStatus;
+
+						if (existing.Row.TryGetValue("Date Completed", out var oldCompleted) &&
+							DateTime.TryParse(oldCompleted, out var parsed))
+						{
+							dateCompleted = parsed;
+						}
 					}
 				}
 				else

@@ -64,17 +64,26 @@ public sealed class ErrorLogger : IErrorLogger
             );
         ";
 
-		await using var conn = new SqlConnection(_connectionString);
-		await using var cmd = new SqlCommand(sql, conn);
+		try
+		{
+			await using var conn = new SqlConnection(_connectionString);
+			await using var cmd = new SqlCommand(sql, conn);
 
-		cmd.Parameters.AddWithValue("@RunID", runId);
-		cmd.Parameters.AddWithValue("@LabName", labName);
-		cmd.Parameters.AddWithValue("@StepName", stepName);
-		cmd.Parameters.AddWithValue("@ErrorSummary", exception.ToString());
-		cmd.Parameters.AddWithValue("@FileName", payerPolicyFile);
-		cmd.Parameters.AddWithValue("@FilePath", payerPolicyPath);
+			cmd.Parameters.AddWithValue("@RunID", runId);
+			cmd.Parameters.AddWithValue("@LabName", labName);
+			cmd.Parameters.AddWithValue("@StepName", stepName);
+			cmd.Parameters.AddWithValue("@ErrorSummary", exception.ToString());
+			cmd.Parameters.AddWithValue("@FileName", payerPolicyFile);
+			cmd.Parameters.AddWithValue("@FilePath", payerPolicyPath);
 
-		await conn.OpenAsync(ct);
-		await cmd.ExecuteNonQueryAsync(ct);
+			// Do NOT let cancellation kill error logging; swallow OperationCanceledException
+			await conn.OpenAsync(CancellationToken.None);
+			await cmd.ExecuteNonQueryAsync(CancellationToken.None);
+		}
+		catch (Exception)
+		{
+			// Last line of defense: never throw from error logger
+			// You can optionally write to Windows Event Log here if needed.
+		}
 	}
 }

@@ -286,7 +286,6 @@ public static class StandardCsvExporter
 			}
 
 
-
 			string rolling = "";
 			if (daysToDos.HasValue)
 			{
@@ -294,6 +293,8 @@ public static class StandardCsvExporter
 				else if (daysToDos.Value >= 91 && daysToDos.Value <= 180) rolling = "Rolling180";
 				else if (daysToDos.Value >= 181) rolling = "YTD";
 			}
+
+
 
 			var outFields = new List<string>(commonSchema.Columns.Count);
 
@@ -1075,5 +1076,196 @@ public static class StandardCsvExporter
 			return s;
 
 		return $"\"{s.Replace("\"", "\"\"")}\"";
+	}
+
+	public static void EnrichClaimLevelWithLineLevelCptSummary(
+	string claimCsvPath,
+	string lineCsvPath)
+	{
+		if (string.IsNullOrWhiteSpace(claimCsvPath))
+			throw new ArgumentException("Claim CSV path is required.", nameof(claimCsvPath));
+
+		if (string.IsNullOrWhiteSpace(lineCsvPath))
+			throw new ArgumentException("Line CSV path is required.", nameof(lineCsvPath));
+
+		if (!File.Exists(claimCsvPath))
+			throw new FileNotFoundException("Claim CSV not found.", claimCsvPath);
+
+		if (!File.Exists(lineCsvPath))
+			throw new FileNotFoundException("Line CSV not found.", lineCsvPath);
+
+		// Build lookup from LineLevel CSV:
+		// ClaimID => "CPTCode-Modifier*Units,CPTCode-Modifier*Units"
+		var claimToCptSummary = BuildClaimLevelCptSummaryLookup(lineCsvPath);
+
+		var tempPath = Path.Combine(
+			Path.GetDirectoryName(claimCsvPath)!,
+			$"{Path.GetFileNameWithoutExtension(claimCsvPath)}_tmp{Path.GetExtension(claimCsvPath)}");
+
+		using var parser = new TextFieldParser(claimCsvPath)
+		{
+			TextFieldType = FieldType.Delimited,
+			HasFieldsEnclosedInQuotes = true,
+			TrimWhiteSpace = false
+		};
+		parser.SetDelimiters(",");
+
+		using var sw = new StreamWriter(tempPath, false, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+
+		if (parser.EndOfData)
+			throw new InvalidOperationException($"Claim CSV is empty: {claimCsvPath}");
+
+		var headers = parser.ReadFields() ?? Array.Empty<string>();
+		if (headers.Length == 0)
+			throw new InvalidOperationException($"Claim CSV header row is empty: {claimCsvPath}");
+
+		var headerList = headers.ToList();
+
+		int claimIdIndex = FindHeaderIndex(headerList, "ClaimID");
+		if (claimIdIndex < 0)
+			throw new InvalidOperationException("Claim CSV does not contain ClaimID column.");
+
+		int targetIndex = FindHeaderIndex(headerList, "ClaimLevelCPTCodexUnitsxModifier");
+
+		if (targetIndex < 0)
+		{
+			headerList.Add("ClaimLevelCPTCodexUnitsxModifier");
+			targetIndex = headerList.Count - 1;
+		}
+
+		sw.WriteLine(string.Join(",", headerList.Select(Escape)));
+
+		while (!parser.EndOfData)
+		{
+			var row = parser.ReadFields();
+			if (row == null)
+				continue;
+
+			var rowList = row.ToList();
+
+			while (rowList.Count < headerList.Count)
+				rowList.Add(string.Empty);
+
+			var claimId = claimIdIndex < rowList.Count ? (rowList[claimIdIndex] ?? "").Trim() : "";
+
+			rowList[targetIndex] = claimToCptSummary.TryGetValue(claimId, out var summary)
+				? summary
+				: string.Empty;
+
+			sw.WriteLine(string.Join(",", rowList.Select(Escape)));
+		}
+
+		File.Copy(tempPath, claimCsvPath, overwrite: true);
+		File.Delete(tempPath);
+	}
+
+	private static Dictionary<string, string> BuildClaimLevelCptSummaryLookup(string lineCsvPath)
+	{
+		var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+		var grouped = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+
+		using var parser = new TextFieldParser(lineCsvPath)
+		{
+			TextFieldType = FieldType.Delimited,
+			HasFieldsEnclosedInQuotes = true,
+			TrimWhiteSpace = false
+		};
+		parser.SetDelimiters(",");
+
+		if (parser.EndOfData)
+			return result;
+
+		var headers = parser.ReadFields() ?? Array.Empty<string>();
+		var headerList = headers.ToList();
+
+		int claimIdIndex = FindHeaderIndex(headerList, "ClaimID");
+		int cptIndex = FindHeaderIndex(headerList, "CPTCode");
+		int unitsIndex = FindHeaderIndex(headerList, "Units");
+		int modifierIndex = FindHeaderIndex(headerList, "Modifier");
+
+		if (claimIdIndex < 0)
+			throw new InvalidOperationException("Line CSV does not contain ClaimID column.");
+		if (cptIndex < 0)
+			throw new InvalidOperationException("Line CSV does not contain CPTCode column.");
+		if (unitsIndex < 0)
+			throw new InvalidOperationException("Line CSV does not contain Units column.");
+		if (modifierIndex < 0)
+			throw new InvalidOperationException("Line CSV does not contain Modifier column.");
+
+		while (!parser.EndOfData)
+		{
+			var row = parser.ReadFields();
+			if (row == null || row.All(string.IsNullOrWhiteSpace))
+				continue;
+
+			string claimId = GetField(row, claimIdIndex);
+			string cptCode = GetField(row, cptIndex);
+			string units = GetField(row, unitsIndex);
+			string modifier = GetField(row, modifierIndex);
+
+			if (string.IsNullOrWhiteSpace(claimId) || string.IsNullOrWhiteSpace(cptCode))
+				continue;
+
+			string formatted = FormatCptModifierUnits(cptCode, modifier, units);
+
+			if (!grouped.TryGetValue(claimId, out var items))
+			{
+				items = new List<string>();
+				grouped[claimId] = items;
+			}
+
+			items.Add(formatted);
+		}
+
+		foreach (var kvp in grouped)
+		{
+			result[kvp.Key] = string.Join(",", kvp.Value);
+		}
+
+		return result;
+	}
+
+	private static string FormatCptModifierUnits(string cptCode, string modifier, string units)
+	{
+		cptCode = (cptCode ?? "").Trim();
+		modifier = (modifier ?? "").Trim();
+		units = (units ?? "").Trim();
+
+		if (string.IsNullOrWhiteSpace(cptCode))
+			return string.Empty;
+
+		if (!string.IsNullOrWhiteSpace(modifier) && !string.IsNullOrWhiteSpace(units))
+			return $"{cptCode}-{modifier}*{units}";
+
+		if (!string.IsNullOrWhiteSpace(modifier))
+			return $"{cptCode}-{modifier}";
+
+		if (!string.IsNullOrWhiteSpace(units))
+			return $"{cptCode}*{units}";
+
+		return cptCode;
+	}
+
+	private static int FindHeaderIndex(List<string> headers, string expectedName)
+	{
+		for (int i = 0; i < headers.Count; i++)
+		{
+			var current = headers[i] ?? "";
+			if (current.Equals(expectedName, StringComparison.OrdinalIgnoreCase))
+				return i;
+
+			if (NormKey(current).Equals(NormKey(expectedName), StringComparison.OrdinalIgnoreCase))
+				return i;
+		}
+
+		return -1;
+	}
+
+	private static string GetField(string[] row, int index)
+	{
+		if (index < 0 || index >= row.Length)
+			return string.Empty;
+
+		return (row[index] ?? "").Trim();
 	}
 }

@@ -352,7 +352,7 @@
 			]
 		},
 		{
-			"Name": "Posting Date",
+			"Name": "Payment Posted Date",
 			"DataType": "date",
 			"Aliases": [
 				"Posted Date",
@@ -389,7 +389,8 @@
 			"Aliases": [
 				"Denial Date",
 				"DenialDate",
-				"Denial Posted Date"
+				"Denial Posted Date",
+				"Posted Date"
 			]
 		},
 		{

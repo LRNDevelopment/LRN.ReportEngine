@@ -123,7 +123,7 @@
       "DataType": "string"
     },
     {
-      "Name": "DenialDate",
+      "Name": "Denial Date",
       "Required": true,
       "DataType": "date"
     },

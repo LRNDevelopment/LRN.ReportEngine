@@ -209,13 +209,17 @@
 			]
 		},
 		{
-			"Name": "CPT Code X Units X Modifier",
+			"Name": "CPT Code X Units X Modifier Orginal",
 			"DataType": "string",
 			"Aliases": [
 				"Claim Level CPT",
 				"CPTs",
 				"CPT"
 			]
+		},
+		{
+			"Name": "ClaimLevelCPTCodexUnitsxModifier",
+			"DataType": "string"
 		},
 		{
 			"Name": "POS",

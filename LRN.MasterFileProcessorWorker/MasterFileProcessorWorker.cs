@@ -627,6 +627,9 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					ingestedOnLocal: DateTime.Now,
 					labSchema: labLineSchema,
 					insuranceMaster: _insuranceMaster);
+
+		
+
 				step60.EndTimeIST = _processLog.NowIST();
 				step60.Status = "SUCCESS";
 				await _processLog.StepEndAsync(runCtx, step60, ct);
@@ -717,6 +720,11 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					ingestedOnLocal: DateTime.Now,
 					labSchema: labClaimSchema,
 					insuranceMaster: _insuranceMaster);
+
+				StandardCsvExporter.EnrichClaimLevelWithLineLevelCptSummary(
+					claimCsvPath: claimOutPath,
+					lineCsvPath: lineOutPath);
+
 				step80.EndTimeIST = _processLog.NowIST();
 				step80.Status = "SUCCESS";
 				await _processLog.StepEndAsync(runCtx, step80, ct);

@@ -638,8 +638,8 @@ public sealed class SharePointDownloader
 
 	private async Task<string> GetItemIdByPathAsync(string driveId, string path, CancellationToken ct)
 	{
-		var normalized = Uri.EscapeDataString(path).Replace("%2F", "/");
-		var url = $"https://graph.microsoft.com/v1.0/drives/{driveId}/root:/{normalized}";
+		var normalized = EncodeGraphPath(path);
+		var url = $"https://graph.microsoft.com/v1.0/drives/{driveId}/root:/{normalized}:";
 		var json = await _http.GetStringAsync(url, ct);
 
 		using var doc = JsonDocument.Parse(json);
@@ -648,8 +648,8 @@ public sealed class SharePointDownloader
 
 	private async Task<string> GetItemIdByPathUnderItemAsync(string driveId, string parentItemId, string relativePath, CancellationToken ct)
 	{
-		var normalized = Uri.EscapeDataString(relativePath).Replace("%2F", "/");
-		var url = $"https://graph.microsoft.com/v1.0/drives/{driveId}/items/{parentItemId}:/{normalized}";
+		var normalized = EncodeGraphPath(relativePath);
+		var url = $"https://graph.microsoft.com/v1.0/drives/{driveId}/items/{parentItemId}:/{normalized}:";
 		var json = await _http.GetStringAsync(url, ct);
 
 		using var doc = JsonDocument.Parse(json);
@@ -711,9 +711,29 @@ public sealed class SharePointDownloader
 		if (string.IsNullOrWhiteSpace(name))
 			return null;
 
-		return int.TryParse(name.Trim(), out var year) && year is >= 2000 and <= 2100
-			? year
-			: null;
+		name = name.Trim();
+
+		// Case 1: 2026
+		if (int.TryParse(name, out var year) && year is >= 2000 and <= 2100)
+			return year;
+
+		// Case 2: 02.2026
+		var match = Regex.Match(name, @"^(?<month>\d{1,2})\.(?<year>\d{4})$");
+		if (match.Success &&
+			int.TryParse(match.Groups["year"].Value, out var dottedYear))
+		{
+			return dottedYear;
+		}
+
+		// Case 3: any folder containing year (fallback)
+		var anyYear = Regex.Match(name, @"(?<!\d)(20\d{2})(?!\d)");
+		if (anyYear.Success &&
+			int.TryParse(anyYear.Value, out var extractedYear))
+		{
+			return extractedYear;
+		}
+
+		return null;
 	}
 
 	private static int? TryParseMonthFolder(string name)

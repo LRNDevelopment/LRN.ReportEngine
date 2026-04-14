@@ -1077,10 +1077,9 @@ public static class StandardCsvExporter
 
 		return $"\"{s.Replace("\"", "\"\"")}\"";
 	}
-
 	public static void EnrichClaimLevelWithLineLevelCptSummary(
-	string claimCsvPath,
-	string lineCsvPath)
+		string claimCsvPath,
+		string lineCsvPath)
 	{
 		if (string.IsNullOrWhiteSpace(claimCsvPath))
 			throw new ArgumentException("Claim CSV path is required.", nameof(claimCsvPath));
@@ -1094,69 +1093,73 @@ public static class StandardCsvExporter
 		if (!File.Exists(lineCsvPath))
 			throw new FileNotFoundException("Line CSV not found.", lineCsvPath);
 
-		// Build lookup from LineLevel CSV:
-		// ClaimID => "CPTCode-Modifier*Units,CPTCode-Modifier*Units"
 		var claimToCptSummary = BuildClaimLevelCptSummaryLookup(lineCsvPath);
 
 		var tempPath = Path.Combine(
 			Path.GetDirectoryName(claimCsvPath)!,
 			$"{Path.GetFileNameWithoutExtension(claimCsvPath)}_tmp{Path.GetExtension(claimCsvPath)}");
 
-		using var parser = new TextFieldParser(claimCsvPath)
+		if (File.Exists(tempPath))
+			File.Delete(tempPath);
+
+		using (var parser = new TextFieldParser(claimCsvPath))
+		using (var sw = new StreamWriter(tempPath, false, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true)))
 		{
-			TextFieldType = FieldType.Delimited,
-			HasFieldsEnclosedInQuotes = true,
-			TrimWhiteSpace = false
-		};
-		parser.SetDelimiters(",");
+			parser.TextFieldType = FieldType.Delimited;
+			parser.HasFieldsEnclosedInQuotes = true;
+			parser.TrimWhiteSpace = false;
+			parser.SetDelimiters(",");
 
-		using var sw = new StreamWriter(tempPath, false, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+			if (parser.EndOfData)
+				throw new InvalidOperationException($"Claim CSV is empty: {claimCsvPath}");
 
-		if (parser.EndOfData)
-			throw new InvalidOperationException($"Claim CSV is empty: {claimCsvPath}");
+			var headers = parser.ReadFields() ?? Array.Empty<string>();
+			if (headers.Length == 0)
+				throw new InvalidOperationException($"Claim CSV header row is empty: {claimCsvPath}");
 
-		var headers = parser.ReadFields() ?? Array.Empty<string>();
-		if (headers.Length == 0)
-			throw new InvalidOperationException($"Claim CSV header row is empty: {claimCsvPath}");
+			var headerList = headers.ToList();
 
-		var headerList = headers.ToList();
+			int claimIdIndex = FindHeaderIndex(headerList, "ClaimID");
+			if (claimIdIndex < 0)
+				throw new InvalidOperationException("Claim CSV does not contain ClaimID column.");
 
-		int claimIdIndex = FindHeaderIndex(headerList, "ClaimID");
-		if (claimIdIndex < 0)
-			throw new InvalidOperationException("Claim CSV does not contain ClaimID column.");
+			int targetIndex = FindHeaderIndex(headerList, "ClaimLevelCPTCodexUnitsxModifier");
 
-		int targetIndex = FindHeaderIndex(headerList, "ClaimLevelCPTCodexUnitsxModifier");
+			if (targetIndex < 0)
+			{
+				headerList.Add("ClaimLevelCPTCodexUnitsxModifier");
+				targetIndex = headerList.Count - 1;
+			}
 
-		if (targetIndex < 0)
-		{
-			headerList.Add("ClaimLevelCPTCodexUnitsxModifier");
-			targetIndex = headerList.Count - 1;
+			sw.WriteLine(string.Join(",", headerList.Select(Escape)));
+
+			while (!parser.EndOfData)
+			{
+				var row = parser.ReadFields();
+				if (row == null)
+					continue;
+
+				var rowList = row.ToList();
+
+				while (rowList.Count < headerList.Count)
+					rowList.Add(string.Empty);
+
+				var claimId = claimIdIndex < rowList.Count
+					? (rowList[claimIdIndex] ?? "").Trim()
+					: "";
+
+				rowList[targetIndex] = claimToCptSummary.TryGetValue(claimId, out var summary)
+					? summary
+					: string.Empty;
+
+				sw.WriteLine(string.Join(",", rowList.Select(Escape)));
+			}
 		}
 
-		sw.WriteLine(string.Join(",", headerList.Select(Escape)));
+		if (File.Exists(claimCsvPath))
+			File.Delete(claimCsvPath);
 
-		while (!parser.EndOfData)
-		{
-			var row = parser.ReadFields();
-			if (row == null)
-				continue;
-
-			var rowList = row.ToList();
-
-			while (rowList.Count < headerList.Count)
-				rowList.Add(string.Empty);
-
-			var claimId = claimIdIndex < rowList.Count ? (rowList[claimIdIndex] ?? "").Trim() : "";
-
-			rowList[targetIndex] = claimToCptSummary.TryGetValue(claimId, out var summary)
-				? summary
-				: string.Empty;
-
-			sw.WriteLine(string.Join(",", rowList.Select(Escape)));
-		}
-
-		File.Copy(tempPath, claimCsvPath, overwrite: true);
-		File.Delete(tempPath);
+		File.Move(tempPath, claimCsvPath);
 	}
 
 	private static Dictionary<string, string> BuildClaimLevelCptSummaryLookup(string lineCsvPath)
@@ -1187,10 +1190,6 @@ public static class StandardCsvExporter
 			throw new InvalidOperationException("Line CSV does not contain ClaimID column.");
 		if (cptIndex < 0)
 			throw new InvalidOperationException("Line CSV does not contain CPTCode column.");
-		if (unitsIndex < 0)
-			throw new InvalidOperationException("Line CSV does not contain Units column.");
-		if (modifierIndex < 0)
-			throw new InvalidOperationException("Line CSV does not contain Modifier column.");
 
 		while (!parser.EndOfData)
 		{
@@ -1200,13 +1199,16 @@ public static class StandardCsvExporter
 
 			string claimId = GetField(row, claimIdIndex);
 			string cptCode = GetField(row, cptIndex);
-			string units = GetField(row, unitsIndex);
-			string modifier = GetField(row, modifierIndex);
+			string units = unitsIndex >= 0 ? GetField(row, unitsIndex) : "";
+			string modifier = modifierIndex >= 0 ? GetField(row, modifierIndex) : "";
 
 			if (string.IsNullOrWhiteSpace(claimId) || string.IsNullOrWhiteSpace(cptCode))
 				continue;
 
 			string formatted = FormatCptModifierUnits(cptCode, modifier, units);
+
+			if (string.IsNullOrWhiteSpace(formatted))
+				continue;
 
 			if (!grouped.TryGetValue(claimId, out var items))
 			{
@@ -1234,16 +1236,110 @@ public static class StandardCsvExporter
 		if (string.IsNullOrWhiteSpace(cptCode))
 			return string.Empty;
 
-		if (!string.IsNullOrWhiteSpace(modifier) && !string.IsNullOrWhiteSpace(units))
-			return $"{cptCode}-{modifier}*{units}";
+		var modifiers = new List<string>();
+
+		string baseCpt = cptCode;
+
+		if (cptCode.Contains("-"))
+		{
+			var dashParts = cptCode.Split('-', 2, StringSplitOptions.None);
+			baseCpt = dashParts[0].Trim();
+
+			var modFromCpt = dashParts.Length > 1 ? NormalizeModifierValue(dashParts[1]) : "";
+			if (!string.IsNullOrWhiteSpace(modFromCpt))
+				modifiers.Add(modFromCpt);
+		}
+
+		baseCpt = NormalizeCptCode(baseCpt);
 
 		if (!string.IsNullOrWhiteSpace(modifier))
-			return $"{cptCode}-{modifier}";
+		{
+			var splitMods = modifier.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
 
-		if (!string.IsNullOrWhiteSpace(units))
-			return $"{cptCode}*{units}";
+			foreach (var mod in splitMods)
+			{
+				var clean = NormalizeModifierValue(mod);
+				if (!string.IsNullOrWhiteSpace(clean))
+					modifiers.Add(clean);
+			}
+		}
 
-		return cptCode;
+		var finalModifiers = new List<string>();
+		var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+		foreach (var mod in modifiers)
+		{
+			if (seen.Add(mod))
+				finalModifiers.Add(mod);
+		}
+
+		string finalUnits = NormalizeUnits(units);
+
+		string modPart = finalModifiers.Count > 0
+			? $"({string.Join(",", finalModifiers)})"
+			: "";
+
+		if (!string.IsNullOrWhiteSpace(finalUnits))
+			return $"{baseCpt}*{finalUnits}{modPart}";
+
+		return $"{baseCpt}{modPart}";
+	}
+
+	private static string NormalizeCptCode(string value)
+	{
+		value = (value ?? "").Trim();
+
+		if (string.IsNullOrWhiteSpace(value))
+			return "";
+
+		// remove decimal only when numeric-like, e.g. 80307.00 -> 80307
+		if (decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var d))
+		{
+			if (d == Math.Truncate(d))
+				return Convert.ToInt64(d).ToString(CultureInfo.InvariantCulture);
+
+			return d.ToString("0.##", CultureInfo.InvariantCulture);
+		}
+
+		return value;
+	}
+
+	private static string NormalizeModifierValue(string value)
+	{
+		value = (value ?? "").Trim();
+
+		if (string.IsNullOrWhiteSpace(value))
+			return "";
+
+		value = value.TrimStart(';').Trim();
+
+		if (decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var d))
+		{
+			if (d == Math.Truncate(d))
+				return Convert.ToInt64(d).ToString(CultureInfo.InvariantCulture);
+
+			return d.ToString("0.##", CultureInfo.InvariantCulture);
+		}
+
+		return value;
+	}
+
+	private static string NormalizeUnits(string value)
+	{
+		value = (value ?? "").Trim();
+
+		if (string.IsNullOrWhiteSpace(value))
+			return "";
+
+		if (decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var d))
+		{
+			if (d == Math.Truncate(d))
+				return Convert.ToInt64(d).ToString(CultureInfo.InvariantCulture);
+
+			return d.ToString("0.##", CultureInfo.InvariantCulture);
+		}
+
+		return value;
 	}
 
 	private static int FindHeaderIndex(List<string> headers, string expectedName)

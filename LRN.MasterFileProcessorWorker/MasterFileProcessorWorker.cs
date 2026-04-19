@@ -392,10 +392,16 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				// Lab prefix (Beech_Tree style) used for local folder + file names
 				var labPrefix = GetLabOutputPrefix(lab); // e.g. Beech_Tree
 
+				var yearFolder = TryParseYearFromSharePointPath(selected.SharePointPath)
+					?? DateTime.Now.ToString("yyyy", CultureInfo.InvariantCulture);
+
 				// PROCESSED OUTPUTS (Claim/Line) go under WatchFolder (LRN-Input):
-				// D:\LRN\Automation\LRN-Input\Beech_Tree\02.February\02.06.2026 - 02.12.2026\Beech_Tree_LineLevel.csv
-				var processedOutFolder = Path.Combine(_opt.WatchFolder, labPrefix, DateTime.Now.ToString("yyyy"), monthFolder, weekFolder);
+				// D:\LRN\Automation\LRN-Input\Beech_Tree\2026\02.February\02.06.2026 - 02.12.2026\Beech_Tree_LineLevel.csv
+				var processedOutFolder = Path.Combine(_opt.WatchFolder, labPrefix, yearFolder, monthFolder, weekFolder);
 				Directory.CreateDirectory(processedOutFolder);
+
+				var rawMasterFolder = Path.Combine(processedOutFolder, "RawMaster");
+				Directory.CreateDirectory(rawMasterFolder);
 
 				var sourceDateLabel = NormalizeWeekFolderForFileName(weekFolder);
 
@@ -418,11 +424,23 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				// Download XLSX into RAW ROOT
 				var stagingFileName = $"{labPrefix}_{SanitizeFileName(selected.Name)}";
 				var stagingPath = Path.Combine(rawRoot, stagingFileName);
+				var productionRawMasterPath = Path.Combine(rawMasterFolder, SanitizeFileName(selected.Name));
 
 				_logger.LogInformation("Lab {LabId}: downloading {SpPath} -> {Local}", lab.LabId, selected.SharePointPath, stagingPath);
 				_fileLog.Info($"Lab {lab.LabId}: downloading {selected.SharePointPath} -> {stagingPath}");
 
 				await _sp.DownloadFileAsync(selected.DriveId, selected.ItemId, stagingPath, ct);
+
+				File.Copy(stagingPath, productionRawMasterPath, overwrite: true);
+
+				_logger.LogInformation(
+					"Lab {LabId}: Production raw master copied to WatchFolder RawMaster -> {Path}",
+					lab.LabId,
+					productionRawMasterPath);
+
+				_fileLog.Info($"Lab {lab.LabId}: Production raw master copied to WatchFolder RawMaster -> {productionRawMasterPath}");
+
+				await TryDownloadSiblingRawMasterAsync(lab, selected, rawMasterFolder, ct);
 
 				// Update file size after download
 				try
@@ -628,7 +646,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					labSchema: labLineSchema,
 					insuranceMaster: _insuranceMaster);
 
-		
+
 
 				step60.EndTimeIST = _processLog.NowIST();
 				step60.Status = "SUCCESS";
@@ -1557,6 +1575,368 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 				return p;
 		}
 		return null;
+	}
+
+	private async Task TryDownloadSiblingRawMasterAsync(
+		LabFileMap lab,
+		SharePointDownloader.SelectedFile selected,
+		string rawMasterFolder,
+		CancellationToken ct)
+	{
+		var limsPattern = GetLabConfigValue(lab, "LimsMasterFilePattern");
+
+		if (string.IsNullOrWhiteSpace(limsPattern))
+			return;
+
+		try
+		{
+			var sibling = await TryFindSiblingFileByPatternAsync(selected, limsPattern!, ct);
+
+			if (sibling == null)
+			{
+				_logger.LogWarning(
+					"Lab {LabId}: no LIMS master file matched pattern '{Pattern}' in the same SharePoint folder.",
+					lab.LabId,
+					limsPattern);
+
+				_fileLog.Warn($"Lab {lab.LabId}: no LIMS master file matched pattern '{limsPattern}' in the same SharePoint folder.");
+				return;
+			}
+
+			var limsRawMasterPath = Path.Combine(rawMasterFolder, SanitizeFileName(sibling.Name));
+			await _sp.DownloadFileAsync(sibling.DriveId, sibling.ItemId, limsRawMasterPath, ct);
+
+			_logger.LogInformation(
+				"Lab {LabId}: LIMS raw master downloaded -> {Path}",
+				lab.LabId,
+				limsRawMasterPath);
+
+			_fileLog.Info($"Lab {lab.LabId}: LIMS raw master downloaded -> {limsRawMasterPath}");
+		}
+		catch (Exception ex)
+		{
+			_logger.LogWarning(ex, "Lab {LabId}: failed to download LIMS raw master file.", lab.LabId);
+			_fileLog.Error($"Lab {lab.LabId}: failed to download LIMS raw master file.", ex);
+		}
+	}
+
+	private async Task<SharePointDownloader.SelectedFile?> TryFindSiblingFileByPatternAsync(
+		SharePointDownloader.SelectedFile selected,
+		string filePattern,
+		CancellationToken ct)
+	{
+		var downloaderType = _sp.GetType();
+		var folderPath = GetFolderPath(selected.SharePointPath);
+		if (string.IsNullOrWhiteSpace(folderPath))
+			return null;
+
+		_logger.LogInformation(
+			"Lab {LabId}: finding sibling raw master. DriveId={DriveId}, FolderPath={FolderPath}, Pattern={Pattern}",
+			selected.LabId,
+			selected.DriveId,
+			folderPath,
+			filePattern);
+
+		// 1) Preferred: direct helper on SharePointDownloader if available.
+		var directMethod = downloaderType.GetMethod(
+			"TryGetSiblingFileByPatternAsync",
+			System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+
+		if (directMethod != null)
+		{
+			var directArgs = BuildMethodArgs(directMethod, selected, filePattern, ct);
+			var directResult = await InvokeMethodAsync(_sp, directMethod, directArgs);
+			var directSelected = ConvertToSelectedFile(directResult);
+			if (directSelected != null)
+			{
+				_logger.LogInformation("Lab {LabId}: sibling file found by direct helper -> {Name}", selected.LabId, directSelected.Name);
+				return directSelected;
+			}
+		}
+
+		// 2) Fallback: try several likely list methods and argument orders.
+		var listMethodCandidates = new[]
+		{
+			"ListFolderItemsByPathAsync",
+			"ListChildrenByPathAsync",
+			"ListFolderChildrenByPathAsync",
+			"ListItemsByFolderPathAsync",
+			"GetChildrenByPathAsync",
+			"GetFolderChildrenAsync"
+		};
+
+		var attempted = new List<string>();
+		foreach (var methodName in listMethodCandidates)
+		{
+			var methods = downloaderType
+				.GetMethods(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)
+				.Where(m => string.Equals(m.Name, methodName, StringComparison.Ordinal))
+				.ToArray();
+
+			foreach (var method in methods)
+			{
+				var candidateArgSets = new[]
+				{
+					BuildMethodArgs(method, selected.DriveId, folderPath, ct),
+					BuildMethodArgs(method, folderPath, selected.DriveId, ct),
+					BuildMethodArgs(method, folderPath, ct),
+					BuildMethodArgs(method, selected.DriveId, ct),
+					BuildMethodArgs(method, selected, folderPath, ct)
+				};
+
+				for (var i = 0; i < candidateArgSets.Length; i++)
+				{
+					try
+					{
+						attempted.Add($"{method.Name}#{i + 1}");
+						var invokeResult = await InvokeMethodAsync(_sp, method, candidateArgSets[i]);
+						var sibling = FindBestPatternMatchFromEnumerable(invokeResult as System.Collections.IEnumerable, selected, filePattern);
+						if (sibling != null)
+						{
+							_logger.LogInformation("Lab {LabId}: sibling file found by {Method} -> {Name}", selected.LabId, method.Name, sibling.Name);
+							return sibling;
+						}
+					}
+					catch (Exception ex)
+					{
+						_logger.LogDebug(ex, "Lab {LabId}: sibling lookup attempt failed. Method={Method}, Attempt={Attempt}", selected.LabId, method.Name, i + 1);
+					}
+				}
+			}
+		}
+
+		_logger.LogWarning(
+			"Lab {LabId}: sibling file not found. DriveId={DriveId}, FolderPath={FolderPath}, Pattern={Pattern}, Attempts={Attempts}",
+			selected.LabId,
+			selected.DriveId,
+			folderPath,
+			filePattern,
+			string.Join(", ", attempted));
+
+		return null;
+	}
+
+	private static object?[] BuildMethodArgs(System.Reflection.MethodInfo method, params object?[] suppliedValues)
+	{
+		var parameters = method.GetParameters();
+		var args = new object?[parameters.Length];
+		var used = new bool[suppliedValues.Length];
+
+		for (var i = 0; i < parameters.Length; i++)
+		{
+			var parameter = parameters[i];
+			var parameterType = parameter.ParameterType;
+			var matched = false;
+
+			for (var j = 0; j < suppliedValues.Length; j++)
+			{
+				if (used[j])
+					continue;
+
+				var supplied = suppliedValues[j];
+				if (supplied == null)
+					continue;
+
+				if (parameterType.IsInstanceOfType(supplied))
+				{
+					args[i] = supplied;
+					used[j] = true;
+					matched = true;
+					break;
+				}
+
+				if (parameterType == typeof(string) && supplied is string s)
+				{
+					args[i] = s;
+					used[j] = true;
+					matched = true;
+					break;
+				}
+			}
+
+			if (!matched)
+				args[i] = parameter.HasDefaultValue ? parameter.DefaultValue : GetDefault(parameterType);
+		}
+
+		return args;
+	}
+
+	private static async Task<object?> InvokeMethodAsync(object target, System.Reflection.MethodInfo method, object?[] args)
+	{
+		var raw = method.Invoke(method.IsStatic ? null : target, args);
+
+		if (raw is Task task)
+		{
+			await task.ConfigureAwait(false);
+			var taskType = task.GetType();
+			if (taskType.IsGenericType)
+				return taskType.GetProperty("Result")?.GetValue(task);
+			return null;
+		}
+
+		return raw;
+	}
+
+	private static SharePointDownloader.SelectedFile? FindBestPatternMatchFromEnumerable(
+		System.Collections.IEnumerable? items,
+		SharePointDownloader.SelectedFile selected,
+		string filePattern)
+	{
+		if (items == null)
+			return null;
+
+		var regex = WildcardToRegex(filePattern);
+		SharePointDownloader.SelectedFile? best = null;
+		DateTimeOffset? bestModified = null;
+
+		foreach (var item in items)
+		{
+			if (item == null)
+				continue;
+
+			var name = GetPropertyValue<string>(item, "Name");
+			if (string.IsNullOrWhiteSpace(name))
+				continue;
+
+			var isFolder = GetPropertyValue<bool?>(item, "IsFolder") ?? false;
+			if (isFolder)
+				continue;
+
+			if (string.Equals(name, selected.Name, StringComparison.OrdinalIgnoreCase))
+				continue;
+
+			if (!regex.IsMatch(name))
+				continue;
+
+			var candidate = ConvertToSelectedFile(item, selected.DriveId, CombinePath(GetFolderPath(selected.SharePointPath), name));
+			if (candidate == null)
+				continue;
+
+			var modified = candidate.LastModifiedUtc;
+			if (best == null || CompareNullableDateTimeOffset(modified, bestModified) > 0)
+			{
+				best = candidate;
+				bestModified = modified;
+			}
+		}
+
+		return best;
+	}
+
+	private string? GetLabConfigValue(LabFileMap lab, string key)
+	{
+		var labsSection = _configuration.GetSection("MasterFileProcessor:Labs");
+		foreach (var section in labsSection.GetChildren())
+		{
+			var sectionLabId = section.GetValue<int?>("LabId");
+			var sectionLabName = section.GetValue<string>("LabName");
+
+			if (sectionLabId == lab.LabId ||
+				string.Equals(sectionLabName, lab.LabName, StringComparison.OrdinalIgnoreCase))
+			{
+				return section.GetValue<string>(key);
+			}
+		}
+
+		return null;
+	}
+
+	private static SharePointDownloader.SelectedFile? ConvertToSelectedFile(object? source, string? fallbackDriveId = null, string? fallbackSharePointPath = null)
+	{
+		if (source == null)
+			return null;
+
+		if (source is SharePointDownloader.SelectedFile selected)
+			return selected;
+
+		var name = GetPropertyValue<string>(source, "Name");
+		var itemId = GetPropertyValue<string>(source, "ItemId") ?? GetPropertyValue<string>(source, "Id");
+		var driveId = GetPropertyValue<string>(source, "DriveId") ?? fallbackDriveId ?? string.Empty;
+		var sharePointPath = GetPropertyValue<string>(source, "SharePointPath") ?? fallbackSharePointPath ?? string.Empty;
+		var etag = GetPropertyValue<string>(source, "ETagKey") ?? GetPropertyValue<string>(source, "ETag") ?? string.Empty;
+		var lastModified = GetPropertyValue<DateTimeOffset?>(source, "LastModifiedUtc")
+			?? GetPropertyValue<DateTimeOffset?>(source, "LastModifiedDateTime")
+			?? GetPropertyValue<DateTimeOffset?>(source, "ModifiedUtc");
+
+		if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(itemId))
+			return null;
+
+		return new SharePointDownloader.SelectedFile(
+			GetPropertyValue<int?>(source, "LabId") ?? 0,
+			name,
+			driveId,
+			itemId,
+			sharePointPath,
+			lastModified,
+			etag);
+	}
+
+	private static T? GetPropertyValue<T>(object source, string propertyName)
+	{
+		var prop = source.GetType().GetProperty(propertyName, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+		if (prop == null)
+			return default;
+
+		var value = prop.GetValue(source);
+		if (value == null)
+			return default;
+
+		if (value is T typed)
+			return typed;
+
+		try
+		{
+			return (T?)Convert.ChangeType(value, Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T), CultureInfo.InvariantCulture);
+		}
+		catch
+		{
+			return default;
+		}
+	}
+
+	private static object? GetDefault(Type type)
+	{
+		if (!type.IsValueType || Nullable.GetUnderlyingType(type) != null)
+			return null;
+
+		return Activator.CreateInstance(type);
+	}
+
+	private static int CompareNullableDateTimeOffset(DateTimeOffset? left, DateTimeOffset? right)
+	{
+		if (left.HasValue && right.HasValue)
+			return left.Value.CompareTo(right.Value);
+
+		if (left.HasValue)
+			return 1;
+
+		if (right.HasValue)
+			return -1;
+
+		return 0;
+	}
+
+	private static string GetFolderPath(string filePath)
+	{
+		if (string.IsNullOrWhiteSpace(filePath))
+			return string.Empty;
+
+		var normalized = filePath.Replace("\\", "/").Trim('/');
+		var idx = normalized.LastIndexOf('/');
+		return idx <= 0 ? string.Empty : normalized.Substring(0, idx);
+	}
+
+	private static string CombinePath(string folder, string fileName)
+	{
+		folder = (folder ?? string.Empty).Trim().Trim('/');
+		fileName = (fileName ?? string.Empty).Trim().Trim('/');
+		return string.IsNullOrWhiteSpace(folder) ? fileName : $"{folder}/{fileName}";
+	}
+
+	private static Regex WildcardToRegex(string pattern)
+	{
+		var escaped = Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".");
+		return new Regex($"^{escaped}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 	}
 
 	private static string GetLabFolderName(LabFileMap lab)

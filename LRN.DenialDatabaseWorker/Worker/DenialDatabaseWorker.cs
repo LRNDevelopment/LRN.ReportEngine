@@ -179,7 +179,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
 
             // 8. Convert rows to DataTables (simple, column-per-key)
             var insightTable = ToDataTable(insight.Rows);
-            var lineItemTable = DenialLineItemTableBuilder.Build(filteredLineRows);
+            var lineItemTable = DenialLineItemTableBuilder.Build(filteredLineRows,lab,runId);
             var taskBoardTable = ToDataTable(taskRows);
 
             // 9. Bulk writers (manual, per-lab connection string)

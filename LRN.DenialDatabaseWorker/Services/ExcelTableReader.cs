@@ -1,10 +1,23 @@
 using System.Data;
+using System.Globalization;
 using ExcelDataReader;
 
 namespace DenialDatabaseProcessorWorker.Services
 {
 	public sealed class ExcelTableReader
 	{
+		private static readonly HashSet<string> DateHeaders = new(StringComparer.OrdinalIgnoreCase)
+		{
+			"Patient DOB",
+			"Date of Service",
+			"First Billed Date",
+			"Expected Payment Date",
+			"ChargeEnteredDate",
+			"CheckDate",
+			"Denial Date",
+			"CreatedOn"
+		};
+
 		public List<Dictionary<string, string>> Read(
 			string filePath,
 			string? sheetName = null,
@@ -62,37 +75,67 @@ namespace DenialDatabaseProcessorWorker.Services
 
 				for (int c = 0; c < headers.Count; c++)
 				{
-					object cellObj = c < dr.ItemArray.Length ? dr[c] : null;
-					string raw;
-
-					if (cellObj is double d)
-					{
-						try
-						{
-							var dt = DateTime.FromOADate(d);
-							raw = dt.ToString("MM/dd/yyyy");
-						}
-						catch
-						{
-							raw = d.ToString();
-						}
-					}
-					else if (cellObj is DateTime dt)
-					{
-						raw = dt.ToString("MM/dd/yyyy");
-					}
-					else
-					{
-						raw = cellObj?.ToString()?.Trim() ?? "";
-					}
-
-					dict[headers[c]] = raw;
+					object? cellObj = c < dr.ItemArray.Length ? dr[c] : null;
+					var header = headers[c];
+					dict[header] = ConvertCellToString(cellObj, header);
 				}
 
 				rows.Add(dict);
 			}
 
 			return rows;
+		}
+
+		private static string ConvertCellToString(object? cellObj, string header)
+		{
+			if (cellObj == null || cellObj == DBNull.Value)
+				return "";
+
+			if (cellObj is DateTime dt)
+				return dt.ToString("MM/dd/yyyy", CultureInfo.InvariantCulture);
+
+			if (cellObj is double d)
+			{
+				if (IsDateHeader(header) && IsValidOaDate(d))
+				{
+					try
+					{
+						return DateTime.FromOADate(d).ToString("MM/dd/yyyy", CultureInfo.InvariantCulture);
+					}
+					catch
+					{
+						// Fall through to numeric formatting.
+					}
+				}
+
+				return FormatNumber(d);
+			}
+
+			if (cellObj is float f)
+				return FormatNumber(Convert.ToDouble(f, CultureInfo.InvariantCulture));
+
+			if (cellObj is decimal m)
+				return m.ToString(CultureInfo.InvariantCulture);
+
+			if (cellObj is int or long or short or byte)
+				return Convert.ToString(cellObj, CultureInfo.InvariantCulture) ?? "";
+
+			return cellObj.ToString()?.Trim() ?? "";
+		}
+
+		private static bool IsDateHeader(string header) => DateHeaders.Contains(header.Trim());
+
+		private static bool IsValidOaDate(double value) => value >= 1 && value <= 2958465.99999999d;
+
+		private static string FormatNumber(double value)
+		{
+			if (double.IsNaN(value) || double.IsInfinity(value))
+				return "";
+
+			if (Math.Abs(value % 1) < 0.0000000001d)
+				return value.ToString("0", CultureInfo.InvariantCulture);
+
+			return value.ToString("0.############################", CultureInfo.InvariantCulture);
 		}
 
 		// For Claim Mapper and simple sheets
@@ -175,7 +218,7 @@ namespace DenialDatabaseProcessorWorker.Services
 						matches++;
 				}
 
-				if (matches >= 10) // enough headers to be confident
+				if (matches >= 10)
 					return r;
 			}
 

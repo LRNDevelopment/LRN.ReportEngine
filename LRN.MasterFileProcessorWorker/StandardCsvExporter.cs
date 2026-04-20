@@ -1079,7 +1079,8 @@ public static class StandardCsvExporter
 	}
 	public static void EnrichClaimLevelWithLineLevelCptSummary(
 		string claimCsvPath,
-		string lineCsvPath)
+		string lineCsvPath,
+		string? targetColumnName = null)
 	{
 		if (string.IsNullOrWhiteSpace(claimCsvPath))
 			throw new ArgumentException("Claim CSV path is required.", nameof(claimCsvPath));
@@ -1123,11 +1124,15 @@ public static class StandardCsvExporter
 			if (claimIdIndex < 0)
 				throw new InvalidOperationException("Claim CSV does not contain ClaimID column.");
 
-			int targetIndex = FindHeaderIndex(headerList, "ClaimLevelCPTCodexUnitsxModifier");
+			var effectiveTargetColumnName = string.IsNullOrWhiteSpace(targetColumnName)
+				? "CPT Code X Units X Modifier"
+				: targetColumnName.Trim();
+
+			int targetIndex = FindHeaderIndex(headerList, effectiveTargetColumnName);
 
 			if (targetIndex < 0)
 			{
-				headerList.Add("ClaimLevelCPTCodexUnitsxModifier");
+				headerList.Add(effectiveTargetColumnName);
 				targetIndex = headerList.Count - 1;
 			}
 

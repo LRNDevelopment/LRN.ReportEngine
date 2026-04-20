@@ -118,16 +118,18 @@ public sealed class SharePointDownloader
 				Message: $"No month folder found under year folder '{yearFolder.Name}'.");
 		}
 
-		var weekFolders = (await ListChildrenPagedAsync(driveId, monthFolder.Id, ct))
+		var monthChildren = await ListChildrenPagedAsync(driveId, monthFolder.Id, ct);
+		var weekFolders = monthChildren
 			.Where(x => x.IsFolder)
 			.Select(x => new
 			{
 				Item = x,
-				Range = TryParseDateRangeFolder(x.Name)
+				Range = TryParseDateRangeFolder(x.Name),
+				FirstDate = TryParseFirstDateFromName(NormalizeFolderName(x.Name))
 			})
-			.Where(x => x.Range.HasValue)
-			.OrderByDescending(x => x.Range!.Value.EndDate)
-			.ThenByDescending(x => x.Range!.Value.StartDate)
+			.Where(x => x.Range.HasValue || x.FirstDate.HasValue)
+			.OrderByDescending(x => x.Range?.EndDate ?? x.FirstDate ?? DateTime.MinValue)
+			.ThenByDescending(x => x.Range?.StartDate ?? x.FirstDate ?? DateTime.MinValue)
 			.ThenByDescending(x => x.Item.LastModifiedUtc ?? DateTimeOffset.MinValue)
 			.ToList();
 
@@ -147,8 +149,9 @@ public sealed class SharePointDownloader
 		// Current/recent week folder = folder that contains today
 		var currentWeekFolder = weekFolders
 			.FirstOrDefault(x =>
-				x.Range!.Value.StartDate.Date <= today &&
-				today <= x.Range!.Value.EndDate.Date);
+				x.Range.HasValue &&
+				x.Range.Value.StartDate.Date <= today &&
+				today <= x.Range.Value.EndDate.Date);
 
 		// If current week folder exists, only check that folder.
 		if (currentWeekFolder != null)
@@ -706,76 +709,96 @@ public sealed class SharePointDownloader
 
 	// ---------------- Sorting / parsing ----------------
 
+	private static string NormalizeFolderName(string name)
+	{
+		if (string.IsNullOrWhiteSpace(name))
+			return string.Empty;
+
+		name = name.Trim();
+		name = Regex.Replace(name, @"^\d+\s*\.\s*", "");
+		name = Regex.Replace(name, @"\s+", " ");
+		return name.Trim();
+	}
+
 	private static int? TryParseYearFolder(string name)
 	{
+		name = NormalizeFolderName(name);
 		if (string.IsNullOrWhiteSpace(name))
 			return null;
 
-		name = name.Trim();
-
-		// Case 1: 2026
-		if (int.TryParse(name, out var year) && year is >= 2000 and <= 2100)
-			return year;
-
-		// Case 2: 02.2026
-		var match = Regex.Match(name, @"^(?<month>\d{1,2})\.(?<year>\d{4})$");
-		if (match.Success &&
-			int.TryParse(match.Groups["year"].Value, out var dottedYear))
-		{
-			return dottedYear;
-		}
-
-		// Case 3: any folder containing year (fallback)
 		var anyYear = Regex.Match(name, @"(?<!\d)(20\d{2})(?!\d)");
-		if (anyYear.Success &&
-			int.TryParse(anyYear.Value, out var extractedYear))
-		{
+		if (anyYear.Success && int.TryParse(anyYear.Groups[1].Value, out var extractedYear))
 			return extractedYear;
-		}
 
 		return null;
 	}
 
 	private static int? TryParseMonthFolder(string name)
 	{
+		name = NormalizeFolderName(name);
 		if (string.IsNullOrWhiteSpace(name))
 			return null;
 
-		var match = Regex.Match(name.Trim(), @"^(?<month>\d{1,2})\.");
-		if (!match.Success)
-			return null;
+		var numeric = Regex.Match(name, @"^(?<month>0?[1-9]|1[0-2])\s*\.");
+		if (numeric.Success && int.TryParse(numeric.Groups["month"].Value, out var month1))
+			return month1;
 
-		return int.TryParse(match.Groups["month"].Value, out var month) && month is >= 1 and <= 12
-			? month
-			: null;
+		var months = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+		{
+			["January"] = 1,
+			["February"] = 2,
+			["March"] = 3,
+			["April"] = 4,
+			["May"] = 5,
+			["June"] = 6,
+			["July"] = 7,
+			["August"] = 8,
+			["September"] = 9,
+			["October"] = 10,
+			["November"] = 11,
+			["December"] = 12
+		};
+
+		foreach (var kv in months)
+		{
+			if (Regex.IsMatch(name, $@"\b{kv.Key}\b", RegexOptions.IgnoreCase))
+				return kv.Value;
+		}
+
+		return null;
 	}
 
 	private static (DateTime StartDate, DateTime EndDate)? TryParseDateRangeFolder(string name)
 	{
+		name = NormalizeFolderName(name);
 		if (string.IsNullOrWhiteSpace(name))
 			return null;
 
-		var matches = Regex.Matches(name, @"\d{2}\.\d{2}\.\d{4}");
-		if (matches.Count < 2)
-			return null;
+		var fullMatches = Regex.Matches(name, @"\d{1,2}\.\d{1,2}\.\d{4}");
+		if (fullMatches.Count >= 2)
+		{
+			if (DateTime.TryParseExact(fullMatches[0].Value, "MM.dd.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var startDate) &&
+				DateTime.TryParseExact(fullMatches[1].Value, "MM.dd.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var endDate))
+			{
+				return (startDate, endDate);
+			}
+		}
 
-		if (!DateTime.TryParseExact(
-				matches[0].Value,
-				"MM.dd.yyyy",
-				CultureInfo.InvariantCulture,
-				DateTimeStyles.None,
-				out var startDate))
-			return null;
+		var partial = Regex.Match(name, @"(?<sm>\d{1,2})\.(?<sd>\d{1,2})\.(?<sy>\d{4})\s*-\s*(?<em>\d{1,2})\.(?<ed>\d{1,2})(?:\.(?<ey>\d{4}))?");
+		if (partial.Success)
+		{
+			var sy = int.Parse(partial.Groups["sy"].Value);
+			var ey = partial.Groups["ey"].Success ? int.Parse(partial.Groups["ey"].Value) : sy;
+			try
+			{
+				var startDate = new DateTime(sy, int.Parse(partial.Groups["sm"].Value), int.Parse(partial.Groups["sd"].Value));
+				var endDate = new DateTime(ey, int.Parse(partial.Groups["em"].Value), int.Parse(partial.Groups["ed"].Value));
+				return (startDate, endDate);
+			}
+			catch { }
+		}
 
-		if (!DateTime.TryParseExact(
-				matches[1].Value,
-				"MM.dd.yyyy",
-				CultureInfo.InvariantCulture,
-				DateTimeStyles.None,
-				out var endDate))
-			return null;
-
-		return (startDate, endDate);
+		return null;
 	}
 
 	private static int MonthSortKey(DriveChild item)
@@ -851,12 +874,46 @@ public sealed class SharePointDownloader
 		value = value.Trim();
 		value = Regex.Replace(value, @"\s+", " ");
 		return value;
-	} 
+	}
 	private static string BuildSpPath(params string[] parts)
 	{
 		return string.Join('/', parts.Select(p => p.Trim().Trim('/')).Where(p => !string.IsNullOrWhiteSpace(p)));
 	}
 
+	public async Task<SelectedFile?> TryGetSiblingFileByPatternAsync(SelectedFile currentFile, string filePattern, CancellationToken ct)
+	{
+		if (currentFile == null || string.IsNullOrWhiteSpace(currentFile.SharePointPath) || string.IsNullOrWhiteSpace(filePattern))
+			return null;
+
+		var folderPath = GetFolderPath(currentFile.SharePointPath);
+		if (string.IsNullOrWhiteSpace(folderPath))
+			return null;
+
+		var folderId = await GetItemIdByPathAsync(currentFile.DriveId, folderPath, ct);
+		var children = await ListChildrenPagedAsync(currentFile.DriveId, folderId, ct);
+		var match = children
+			.Where(x => !x.IsFolder)
+			.Where(x => !string.Equals(x.Name, currentFile.Name, StringComparison.OrdinalIgnoreCase))
+			.Where(x => WildcardMatch(x.Name, filePattern))
+			.OrderByDescending(x => x.LastModifiedUtc ?? DateTimeOffset.MinValue)
+			.ThenByDescending(x => x.Name)
+			.FirstOrDefault();
+
+		if (match == null)
+			return null;
+
+		return new SelectedFile(currentFile.LabId, currentFile.DriveId, match.Id, match.Name, match.ETag ?? string.Empty, match.LastModifiedUtc, BuildSpPath(folderPath, match.Name));
+	}
+
+	private static string GetFolderPath(string sharePointPath)
+	{
+		if (string.IsNullOrWhiteSpace(sharePointPath))
+			return string.Empty;
+
+		var normalized = sharePointPath.Replace('\\', '/').Trim('/');
+		var idx = normalized.LastIndexOf('/');
+		return idx <= 0 ? string.Empty : normalized.Substring(0, idx);
+	}
 	// ---------------- Shared URL support ----------------
 
 	private static string EncodeSharingUrlToShareId(string sharingUrl)

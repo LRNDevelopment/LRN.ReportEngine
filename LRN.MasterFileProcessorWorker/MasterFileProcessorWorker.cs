@@ -400,8 +400,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				var processedOutFolder = Path.Combine(_opt.WatchFolder, labPrefix, yearFolder, monthFolder, weekFolder);
 				Directory.CreateDirectory(processedOutFolder);
 
-				var rawMasterFolder = Path.Combine(processedOutFolder, "RawMaster");
-				Directory.CreateDirectory(rawMasterFolder);
+				var rawMasterFolder = processedOutFolder;
 
 				var sourceDateLabel = NormalizeWeekFolderForFileName(weekFolder);
 
@@ -434,11 +433,11 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				File.Copy(stagingPath, productionRawMasterPath, overwrite: true);
 
 				_logger.LogInformation(
-					"Lab {LabId}: Production raw master copied to WatchFolder RawMaster -> {Path}",
+					"Lab {LabId}: Production raw master copied to WatchFolder week folder -> {Path}",
 					lab.LabId,
 					productionRawMasterPath);
 
-				_fileLog.Info($"Lab {lab.LabId}: Production raw master copied to WatchFolder RawMaster -> {productionRawMasterPath}");
+				_fileLog.Info($"Lab {lab.LabId}: Production raw master copied to WatchFolder week folder -> {productionRawMasterPath}");
 
 				await TryDownloadSiblingRawMasterAsync(lab, selected, rawMasterFolder, ct);
 
@@ -741,7 +740,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				StandardCsvExporter.EnrichClaimLevelWithLineLevelCptSummary(
 					claimCsvPath: claimOutPath,
-					lineCsvPath: lineOutPath);
+					lineCsvPath: lineOutPath,
+					targetColumnName: ResolveClaimLevelCptSummaryColumnName(claimSchemaPath));
 
 				step80.EndTimeIST = _processLog.NowIST();
 				step80.Status = "SUCCESS";
@@ -1540,30 +1540,37 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 
 	private static (string MonthFolder, string DateFolder) ParseMonthAndDateFolder(string sharePointPath)
 	{
-		// Expected: .../<Year>/<Month>/<DateRange>/<File>
 		var parts = sharePointPath.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		if (parts.Length == 0)
+			return ("UnknownMonth", "UnknownDate");
 
-		// Try to locate a 4-digit year segment
-		int yearIndex = -1;
+		string monthFolder = "UnknownMonth";
+		string weekFolder = "UnknownDate";
+
 		for (int i = 0; i < parts.Length; i++)
 		{
-			if (Regex.IsMatch(parts[i], @"^\d{4}$"))
+			var normalized = NormalizeFolderLabel(parts[i]);
+
+			if (monthFolder == "UnknownMonth" && LooksLikeMonthFolder(normalized))
 			{
-				yearIndex = i;
+				monthFolder = parts[i];
+				if (i + 1 < parts.Length)
+				{
+					var nextNormalized = NormalizeFolderLabel(parts[i + 1]);
+					if (LooksLikeWeekFolder(nextNormalized))
+						weekFolder = parts[i + 1];
+				}
 				break;
 			}
 		}
 
-		if (yearIndex >= 0 && yearIndex + 2 < parts.Length)
-		{
-			return (parts[yearIndex + 1], parts[yearIndex + 2]);
-		}
+		if (monthFolder == "UnknownMonth" && parts.Length >= 3)
+			monthFolder = parts[^3];
 
-		// Fallback: assume last segments
-		if (parts.Length >= 3)
-			return (parts[^3], parts[^2]);
+		if (weekFolder == "UnknownDate" && parts.Length >= 2)
+			weekFolder = parts[^2];
 
-		return ("UnknownMonth", "UnknownDate");
+		return (monthFolder, weekFolder);
 	}
 
 	private static string? TryParseYearFromSharePointPath(string sharePointPath)
@@ -1571,10 +1578,72 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		var parts = sharePointPath.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 		foreach (var p in parts)
 		{
-			if (Regex.IsMatch(p, @"^\d{4}$"))
-				return p;
+			var normalized = NormalizeFolderLabel(p);
+			var m = Regex.Match(normalized, @"(?<!\d)(20\d{2})(?!\d)");
+			if (m.Success)
+				return m.Groups[1].Value;
 		}
 		return null;
+	}
+
+	private static string NormalizeFolderLabel(string value)
+	{
+		if (string.IsNullOrWhiteSpace(value))
+			return string.Empty;
+
+		value = value.Trim().Trim('/');
+		value = Regex.Replace(value, @"^\d+\s*\.\s*", "");
+		value = Regex.Replace(value, @"\s+", " ").Trim();
+		return value;
+	}
+
+	private static bool LooksLikeMonthFolder(string value)
+	{
+		if (string.IsNullOrWhiteSpace(value))
+			return false;
+
+		if (Regex.IsMatch(value, @"^(0?[1-9]|1[0-2])\s*\.\s*[A-Za-z]+", RegexOptions.IgnoreCase))
+			return true;
+
+		if (Regex.IsMatch(value, @"^(January|February|March|April|May|June|July|August|September|October|November|December)$", RegexOptions.IgnoreCase))
+			return true;
+
+		return false;
+	}
+
+	private static bool LooksLikeWeekFolder(string value)
+	{
+		if (string.IsNullOrWhiteSpace(value))
+			return false;
+
+		return Regex.IsMatch(value, @"\d{1,2}\.\d{1,2}\.\d{4}\s*-\s*\d{1,2}\.\d{1,2}(\.\d{4})?", RegexOptions.IgnoreCase);
+	}
+
+	private static string ResolveClaimLevelCptSummaryColumnName(string? claimSchemaPath)
+	{
+		const string fallback = "CPT Code X Units X Modifier";
+		if (string.IsNullOrWhiteSpace(claimSchemaPath) || !File.Exists(claimSchemaPath))
+			return fallback;
+
+		try
+		{
+			using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(claimSchemaPath));
+			if (!doc.RootElement.TryGetProperty("Columns", out var columns) || columns.ValueKind != System.Text.Json.JsonValueKind.Array)
+				return fallback;
+
+			foreach (var col in columns.EnumerateArray())
+			{
+				if (!col.TryGetProperty("Name", out var nameProp))
+					continue;
+				var name = nameProp.GetString() ?? string.Empty;
+				var normalized = Regex.Replace(name, @"[^A-Za-z0-9]", "").ToLowerInvariant();
+				if (normalized.Contains("cpt") && normalized.Contains("units") && normalized.Contains("modifier"))
+					return name;
+			}
+		}
+		catch { }
+
+		return fallback;
 	}
 
 	private async Task TryDownloadSiblingRawMasterAsync(

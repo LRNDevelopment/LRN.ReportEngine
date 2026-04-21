@@ -733,42 +733,56 @@ public sealed class SharePointDownloader
 		return null;
 	}
 
-	private static int? TryParseMonthFolder(string name)
-	{
-		name = NormalizeFolderName(name);
-		if (string.IsNullOrWhiteSpace(name))
-			return null;
+    private static int? TryParseMonthFolder(string name)
+    {
+        name = NormalizeFolderName(name);
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
 
-		var numeric = Regex.Match(name, @"^(?<month>0?[1-9]|1[0-2])\s*\.");
-		if (numeric.Success && int.TryParse(numeric.Groups["month"].Value, out var month1))
-			return month1;
+        // 1) numeric prefix like 04.Apr / 04.Apr.2026 / 04.April / 04. April
+        var numeric = Regex.Match(name, @"^(?<month>0?[1-9]|1[0-2])\s*\.");
+        if (numeric.Success && int.TryParse(numeric.Groups["month"].Value, out var month1))
+            return month1;
 
-		var months = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
-		{
-			["January"] = 1,
-			["February"] = 2,
-			["March"] = 3,
-			["April"] = 4,
-			["May"] = 5,
-			["June"] = 6,
-			["July"] = 7,
-			["August"] = 8,
-			["September"] = 9,
-			["October"] = 10,
-			["November"] = 11,
-			["December"] = 12
-		};
+        // 2) full and short month names
+        var months = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["January"] = 1,
+            ["Jan"] = 1,
+            ["February"] = 2,
+            ["Feb"] = 2,
+            ["March"] = 3,
+            ["Mar"] = 3,
+            ["April"] = 4,
+            ["Apr"] = 4,
+            ["May"] = 5,
+            ["June"] = 6,
+            ["Jun"] = 6,
+            ["July"] = 7,
+            ["Jul"] = 7,
+            ["August"] = 8,
+            ["Aug"] = 8,
+            ["September"] = 9,
+            ["Sep"] = 9,
+            ["Sept"] = 9,
+            ["October"] = 10,
+            ["Oct"] = 10,
+            ["November"] = 11,
+            ["Nov"] = 11,
+            ["December"] = 12,
+            ["Dec"] = 12
+        };
 
-		foreach (var kv in months)
-		{
-			if (Regex.IsMatch(name, $@"\b{kv.Key}\b", RegexOptions.IgnoreCase))
-				return kv.Value;
-		}
+        foreach (var kv in months)
+        {
+            if (Regex.IsMatch(name, $@"\b{Regex.Escape(kv.Key)}\b", RegexOptions.IgnoreCase))
+                return kv.Value;
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	private static (DateTime StartDate, DateTime EndDate)? TryParseDateRangeFolder(string name)
+    private static (DateTime StartDate, DateTime EndDate)? TryParseDateRangeFolder(string name)
 	{
 		name = NormalizeFolderName(name);
 		if (string.IsNullOrWhiteSpace(name))
@@ -854,16 +868,31 @@ public sealed class SharePointDownloader
 			return false;
 
 		var normalizedFileName = NormalizeFileMatchText(fileName);
-		var normalizedPattern = NormalizeFileMatchText(pattern);
 
-		var regexPattern = "^" + Regex.Escape(normalizedPattern)
-			.Replace(@"\*", ".*")
-			.Replace(@"\?", ".") + "$";
+		// Support multiple patterns separated by ':'
+		// Example:
+		// "Inhealth_Master File*.xlsx:*Inhealth Production Report*.xlsx"
+		var patterns = pattern
+			.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+			.Select(NormalizeFileMatchText)
+			.Where(p => !string.IsNullOrWhiteSpace(p));
 
-		return Regex.IsMatch(
-			normalizedFileName,
-			regexPattern,
-			RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+		foreach (var singlePattern in patterns)
+		{
+			var regexPattern = "^" + Regex.Escape(singlePattern)
+				.Replace(@"\*", ".*")
+				.Replace(@"\?", ".") + "$";
+
+			if (Regex.IsMatch(
+				normalizedFileName,
+				regexPattern,
+				RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private static string NormalizeFileMatchText(string value)

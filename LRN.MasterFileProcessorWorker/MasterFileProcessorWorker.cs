@@ -633,6 +633,12 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				};
 				activeStep = step60;
 				await _processLog.StepStartAsync(runCtx, step60, ct);
+
+				var lineAugmentation = StandardCsvExporter.BuildAugmentationContext(
+						lab.LabName,
+						true,
+						_opt.PanelMasterFilePath);
+
 				StandardCsvExporter.Generate(
 					sourceCsvPath: lineRawPath,
 					headerRow: _commonLineSchema!.HeaderRow,
@@ -643,7 +649,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					sourceFileName: selected.Name,
 					ingestedOnLocal: DateTime.Now,
 					labSchema: labLineSchema,
-					insuranceMaster: _insuranceMaster);
+					insuranceMaster: _insuranceMaster,
+					augmentation: lineAugmentation);
 
 
 
@@ -726,17 +733,24 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				};
 				activeStep = step80;
 				await _processLog.StepStartAsync(runCtx, step80, ct);
+
+				var claimAugmentation = StandardCsvExporter.BuildAugmentationContext(
+							lab.LabName,
+							false,
+							_opt.PanelMasterFilePath);
+
 				StandardCsvExporter.Generate(
-					sourceCsvPath: claimRawPath,
-					headerRow: _commonClaimSchema!.HeaderRow,
-					outputCsvPath: claimOutPath,
-					commonSchema: _commonClaimSchema!,
-					labId: lab.LabId,
-					labName: lab.LabName,
-					sourceFileName: selected.Name,
-					ingestedOnLocal: DateTime.Now,
-					labSchema: labClaimSchema,
-					insuranceMaster: _insuranceMaster);
+							sourceCsvPath: claimRawPath,
+							headerRow: _commonClaimSchema!.HeaderRow,
+							outputCsvPath: claimOutPath,
+							commonSchema: _commonClaimSchema!,
+							labId: lab.LabId,
+							labName: lab.LabName,
+							sourceFileName: selected.Name,
+							ingestedOnLocal: DateTime.Now,
+							labSchema: labClaimSchema,
+							insuranceMaster: _insuranceMaster,
+							augmentation: claimAugmentation);
 
 				StandardCsvExporter.EnrichClaimLevelWithLineLevelCptSummary(
 					claimCsvPath: claimOutPath,

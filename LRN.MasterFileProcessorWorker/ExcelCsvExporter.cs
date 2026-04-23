@@ -111,42 +111,99 @@ public static class ExcelCsvExporter
 
         await using var fs = new FileStream(csvPath, FileMode.Create, FileAccess.Write, FileShare.Read);
         await using var sw = new StreamWriter(fs, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+		string[]? headers = null;
+		var isHeaderRow = true;
 
-        while (reader.Read())
-        {
-            ct.ThrowIfCancellationRequested();
+		while (reader.Read())
+		{
+			ct.ThrowIfCancellationRequested();
 
-            int cols = reader.FieldCount;
-            for (int i = 0; i < cols; i++)
-            {
-                if (i > 0) await sw.WriteAsync(",");
+			int cols = reader.FieldCount;
+			var rowValues = new string[cols];
 
-                var val = reader.GetValue(i);
-                var text = ConvertCellToString(val);
-                await sw.WriteAsync(CsvEscape(text));
-            }
-            await sw.WriteLineAsync();
-        }
+			for (int i = 0; i < cols; i++)
+			{
+				var val = reader.GetValue(i);
+				var headerName = headers != null && i < headers.Length ? headers[i] : null;
+				rowValues[i] = ConvertCellToString(val, headerName, isHeaderRow);
+			}
 
-        await sw.FlushAsync();
+			if (isHeaderRow)
+			{
+				headers = rowValues;
+				isHeaderRow = false;
+			}
+
+			for (int i = 0; i < cols; i++)
+			{
+				if (i > 0) await sw.WriteAsync(",");
+				await sw.WriteAsync(CsvEscape(rowValues[i]));
+			}
+
+			await sw.WriteLineAsync();
+		}
+
+		await sw.FlushAsync();
     }
 
-    private static string ConvertCellToString(object? val)
-    {
-        if (val == null || val == DBNull.Value) return "";
+	private static string ConvertCellToString(object? val, string? headerName = null, bool isHeaderRow = false)
+	{
+		if (val == null || val == DBNull.Value)
+			return "";
 
-        return val switch
-        {
-            DateTime dt => dt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
-            double d => d.ToString("0.00"),
-            float f => f.ToString("0.00"),
-            decimal m => m.ToString("0.00"),
-            bool b => b ? "true" : "false",
-            _ => Convert.ToString(val, CultureInfo.InvariantCulture) ?? ""
-        };
-    }
+		if (isHeaderRow)
+			return Convert.ToString(val, CultureInfo.InvariantCulture) ?? "";
 
-    private static string CsvEscape(string value)
+		return val switch
+		{
+			DateTime dt => dt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+
+			double d => FormatNumericCell(d, headerName),
+			float f => FormatNumericCell((double)f, headerName),
+			decimal m => FormatNumericCell((double)m, headerName),
+
+			bool b => b ? "true" : "false",
+			_ => Convert.ToString(val, CultureInfo.InvariantCulture) ?? ""
+		};
+	}
+
+	private static string FormatNumericCell(double value, string? headerName)
+	{
+		// Keep amount / payment / balance / charge style columns as decimal
+		if (IsDecimalAmountColumn(headerName))
+			return value.ToString("0.00", CultureInfo.InvariantCulture);
+
+		// For identifier-like integer values, do not append .00
+		if (Math.Abs(value % 1) < 0.0000001)
+			return value.ToString("0", CultureInfo.InvariantCulture);
+
+		// For genuine non-integer numeric values, preserve actual value without forcing 2 decimals
+		return value.ToString("0.###############", CultureInfo.InvariantCulture);
+	}
+
+	private static bool IsDecimalAmountColumn(string? headerName)
+	{
+		if (string.IsNullOrWhiteSpace(headerName))
+			return false;
+
+		var h = headerName.Trim().ToLowerInvariant();
+
+		return h.Contains("amount")
+			|| h.Contains("payment")
+			|| h.Contains("balance")
+			|| h.Contains("charge")
+			|| h.Contains("allowed")
+			|| h.Contains("paid")
+			|| h.Contains("coinsurance")
+			|| h.Contains("copay")
+			|| h.Contains("deductible")
+			|| h.Contains("adjustment")
+			|| h.Contains("reimbursement")
+			|| h.Contains("rate")
+			|| h.Contains("fee")
+			|| h.Contains("billed");
+	}
+	private static string CsvEscape(string value)
     {
 		if (string.IsNullOrEmpty(value))
 			return "";

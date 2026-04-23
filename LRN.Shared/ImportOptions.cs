@@ -43,6 +43,7 @@ public sealed class ImportOptions
 
     // Consolidated Lab Insurance Master (CSV) for payer normalization
     public string InsuranceMasterCsvPath { get; set; } = "";
+    public string PanelMasterFilePath { get; set; } = "";
 
     // Local folder for filestatus_*.csv
     public string FileStatusLogLocalFolder { get; set; } = "";
@@ -127,3 +128,4 @@ public sealed class LabFileMap
 
 	public string? LimsMasterFilePattern { get; set; }
 }
+

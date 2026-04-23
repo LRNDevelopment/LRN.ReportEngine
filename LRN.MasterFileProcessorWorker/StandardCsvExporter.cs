@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using LRN.ExcelValidator.Models;
 using Microsoft.VisualBasic.FileIO;
 using System.Globalization;
@@ -79,27 +80,28 @@ public static class StandardCsvExporter
     }
 
 
-    /// <summary>
-    /// Generates a standardized CSV from a raw CSV (exported from Excel sheet) using a COMMON schema JSON:
-    /// - Uses Aliases to map source headers to each common column.
-    /// - Normalizes all date/datetime columns to MM/dd/yyyy.
-    /// - Fills metadata columns: LabID, LabName, SourceFileID (SharePoint file name), IngestedOn, RowHash.
-    /// - Supports Calculation: "A + B" (A/B are COMMON schema column names).
-    /// - Computes DaystoDOS/RollingDays/DaystoBill/DaystoPost using Today() and DateofService/FirstBilledDate/CheckDate.
-    /// </summary>
-    public static void Generate(
-        string sourceCsvPath,
-        int headerRow,
-        string outputCsvPath,
-        ColumnSchema commonSchema,
-        int labId,
-        string labName,
-        string sourceFileName,
-        DateTime ingestedOnLocal,
-        ColumnSchema? labSchema = null,
-        Dictionary<string, InsuranceMasterEntry>? insuranceMaster = null,
-        bool appendUnmappedSourceColumns = true)
-    {
+	/// <summary>
+	/// Generates a standardized CSV from a raw CSV (exported from Excel sheet) using a COMMON schema JSON:
+	/// - Uses Aliases to map source headers to each common column.
+	/// - Normalizes all date/datetime columns to MM/dd/yyyy.
+	/// - Fills metadata columns: LabID, LabName, SourceFileID (SharePoint file name), IngestedOn, RowHash.
+	/// - Supports Calculation: "A + B" (A/B are COMMON schema column names).
+	/// - Computes DaystoDOS/RollingDays/DaystoBill/DaystoPost using Today() and DateofService/FirstBilledDate/CheckDate.
+	/// </summary>
+	public static void Generate(
+		string sourceCsvPath,
+		int headerRow,
+		string outputCsvPath,
+		ColumnSchema commonSchema,
+		int labId,
+		string labName,
+		string sourceFileName,
+		DateTime ingestedOnLocal,
+		ColumnSchema? labSchema = null,
+		Dictionary<string, InsuranceMasterEntry>? insuranceMaster = null,
+		bool appendUnmappedSourceColumns = true,
+		ExportAugmentationContext? augmentation = null)
+	{
         if (!File.Exists(sourceCsvPath))
             throw new FileNotFoundException("Source CSV not found", sourceCsvPath);
 
@@ -153,10 +155,19 @@ public static class StandardCsvExporter
             ? FindExtraSourceColumnIndexes(header, commonSchema, headerExact, headerNorm, labOv)
             : new List<int>();
 
-        var finalOutputHeaders = commonSchema.Columns.Select(c => c.Name).ToList();
-        finalOutputHeaders.AddRange(extraSourceColumnIndexes.Select(i => header[i] ?? string.Empty));
+		var finalOutputHeaders = commonSchema.Columns.Select(c => c.Name).ToList();
 
-        using var sw = new StreamWriter(outputCsvPath, false, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+		if (augmentation?.IsAugustus == true)
+		{
+			if (augmentation.IncludeEncounterPlusPaymentPostedDate)
+				finalOutputHeaders.Add("Encounter + PaymentPostedDate");
+
+			finalOutputHeaders.Add("PanelNew");
+		}
+
+		finalOutputHeaders.AddRange(extraSourceColumnIndexes.Select(i => header[i] ?? string.Empty));
+
+		using var sw = new StreamWriter(outputCsvPath, false, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
         sw.WriteLine(string.Join(",", finalOutputHeaders.Select(Escape)));
 
         int rowNumber = 0;
@@ -363,7 +374,17 @@ public static class StandardCsvExporter
                 outFields.Add(Escape(val));
             }
 
-            foreach (var extraIndex in extraSourceColumnIndexes)
+			if (augmentation?.IsAugustus == true)
+			{
+				if (augmentation.IncludeEncounterPlusPaymentPostedDate)
+				{
+					outFields.Add(Escape(BuildEncounterPlusPaymentPostedDate(row, headerExact, headerNorm)));
+				}
+
+				outFields.Add(Escape(ResolvePanelNew(row, headerExact, headerNorm, augmentation)));
+			}
+
+			foreach (var extraIndex in extraSourceColumnIndexes)
             {
                 outFields.Add(Escape(Get(row, extraIndex)));
             }
@@ -1484,4 +1505,116 @@ public static class StandardCsvExporter
 
         return (row[index] ?? "").Trim();
     }
+
+	public static ExportAugmentationContext BuildAugmentationContext(
+	string labName,
+	bool isLineLevel,
+	string? panelMasterFilePath)
+	{
+		var ctx = new ExportAugmentationContext
+		{
+			IsAugustus = !string.IsNullOrWhiteSpace(labName) &&
+						 labName.Contains("Augustus", StringComparison.OrdinalIgnoreCase),
+			IncludeEncounterPlusPaymentPostedDate = !string.IsNullOrWhiteSpace(labName) &&
+						 labName.Contains("Augustus", StringComparison.OrdinalIgnoreCase) &&
+						 isLineLevel
+		};
+
+		if (!ctx.IsAugustus)
+			return ctx;
+
+		if (string.IsNullOrWhiteSpace(panelMasterFilePath) || !File.Exists(panelMasterFilePath))
+			return ctx;
+
+		using var wb = new XLWorkbook(panelMasterFilePath);
+		var ws = wb.Worksheets.FirstOrDefault();
+		if (ws == null)
+			return ctx;
+
+		var used = ws.RangeUsed();
+		if (used == null)
+			return ctx;
+
+		var headerRow = used.FirstRow();
+		var headers = headerRow.Cells()
+			.Select((c, i) => new { Name = c.GetString()?.Trim() ?? "", Index = i + 1 })
+			.ToDictionary(x => x.Name, x => x.Index, StringComparer.OrdinalIgnoreCase);
+
+		if (!headers.TryGetValue("Panel Name", out var panelNameCol) ||
+			!headers.TryGetValue("Panel New", out var panelNewCol))
+			return ctx;
+
+		foreach (var row in used.RowsUsed().Skip(1))
+		{
+			var panelName = row.Cell(panelNameCol).GetString()?.Trim() ?? "";
+			var panelNew = row.Cell(panelNewCol).GetString()?.Trim() ?? "";
+
+			if (string.IsNullOrWhiteSpace(panelName))
+				continue;
+
+			if (!ctx.PanelNewMapping.ContainsKey(panelName))
+				ctx.PanelNewMapping[panelName] = panelNew;
+		}
+
+		return ctx;
+	}
+
+	private static string GetSourceValue(
+	string[] row,
+	Dictionary<string, int> headerExact,
+	Dictionary<string, int> headerNorm,
+	string sourceColumnName)
+	{
+		if (headerExact.TryGetValue(sourceColumnName, out var idx))
+			return Get(row, idx);
+
+		var norm = NormKey(sourceColumnName);
+		if (!string.IsNullOrWhiteSpace(norm) && headerNorm.TryGetValue(norm, out idx))
+			return Get(row, idx);
+
+		return string.Empty;
+	}
+
+	private static string BuildEncounterPlusPaymentPostedDate(
+		string[] row,
+		Dictionary<string, int> headerExact,
+		Dictionary<string, int> headerNorm)
+	{
+		var enc = GetSourceValue(row, headerExact, headerNorm, "Enc")?.Trim() ?? "";
+		var postedRaw = GetSourceValue(row, headerExact, headerNorm, "Posted Date");
+
+		if (string.IsNullOrWhiteSpace(enc))
+			return "";
+
+		if (DateTime.TryParse(postedRaw, out var postedDate))
+			return enc + postedDate.ToString("MMddyyyy");
+
+		return enc;
+	}
+
+	private static string ResolvePanelNew(
+		string[] row,
+		Dictionary<string, int> headerExact,
+		Dictionary<string, int> headerNorm,
+		ExportAugmentationContext? augmentation)
+	{
+		if (augmentation == null || !augmentation.IsAugustus || augmentation.PanelNewMapping.Count == 0)
+			return "";
+
+		var panelName = GetSourceValue(row, headerExact, headerNorm, "Panel Name")?.Trim() ?? "";
+		if (string.IsNullOrWhiteSpace(panelName))
+			return "";
+
+		return augmentation.PanelNewMapping.TryGetValue(panelName, out var mapped)
+			? mapped ?? ""
+			: "";
+	}
+}
+
+public sealed class ExportAugmentationContext
+{
+	public bool IsAugustus { get; set; }
+	public bool IncludeEncounterPlusPaymentPostedDate { get; set; }
+	public Dictionary<string, string> PanelNewMapping { get; set; }
+		= new(StringComparer.OrdinalIgnoreCase);
 }

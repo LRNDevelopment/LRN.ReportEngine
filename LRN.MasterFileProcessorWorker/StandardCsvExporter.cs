@@ -165,6 +165,11 @@ public static class StandardCsvExporter
 			finalOutputHeaders.Add("PanelNew");
 		}
 
+		if (augmentation?.IsNorthWest == true)
+		{
+			finalOutputHeaders.Add("Panel Type");
+		}
+
 		finalOutputHeaders.AddRange(extraSourceColumnIndexes.Select(i => header[i] ?? string.Empty));
 
 		using var sw = new StreamWriter(outputCsvPath, false, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
@@ -382,6 +387,10 @@ public static class StandardCsvExporter
 				}
 
 				outFields.Add(Escape(ResolvePanelNew(row, headerExact, headerNorm, augmentation)));
+			}
+			if (augmentation?.IsNorthWest == true)
+			{
+				outFields.Add(Escape(ResolvePanelType(row, headerExact, headerNorm, augmentation)));
 			}
 
 			foreach (var extraIndex in extraSourceColumnIndexes)
@@ -1511,16 +1520,20 @@ public static class StandardCsvExporter
 	bool isLineLevel,
 	string? panelMasterFilePath)
 	{
+		var isAugustus = !string.IsNullOrWhiteSpace(labName) &&
+						 labName.Contains("Augustus", StringComparison.OrdinalIgnoreCase);
+
+		var isNorthWest = !string.IsNullOrWhiteSpace(labName) &&
+						  labName.Contains("NorthWest", StringComparison.OrdinalIgnoreCase);
+
 		var ctx = new ExportAugmentationContext
 		{
-			IsAugustus = !string.IsNullOrWhiteSpace(labName) &&
-						 labName.Contains("Augustus", StringComparison.OrdinalIgnoreCase),
-			IncludeEncounterPlusPaymentPostedDate = !string.IsNullOrWhiteSpace(labName) &&
-						 labName.Contains("Augustus", StringComparison.OrdinalIgnoreCase) &&
-						 isLineLevel
+			IsAugustus = isAugustus,
+			IsNorthWest = isNorthWest,
+			IncludeEncounterPlusPaymentPostedDate = isAugustus && isLineLevel
 		};
 
-		if (!ctx.IsAugustus)
+		if (!isAugustus && !isNorthWest)
 			return ctx;
 
 		if (string.IsNullOrWhiteSpace(panelMasterFilePath) || !File.Exists(panelMasterFilePath))
@@ -1540,20 +1553,31 @@ public static class StandardCsvExporter
 			.Select((c, i) => new { Name = c.GetString()?.Trim() ?? "", Index = i + 1 })
 			.ToDictionary(x => x.Name, x => x.Index, StringComparer.OrdinalIgnoreCase);
 
-		if (!headers.TryGetValue("Panel Name", out var panelNameCol) ||
-			!headers.TryGetValue("Panel New", out var panelNewCol))
+		if (!headers.TryGetValue("Panel Name", out var panelNameCol))
 			return ctx;
+
+		headers.TryGetValue("Panel New", out var panelNewCol);
+		headers.TryGetValue("Panel Type", out var panelTypeCol);
 
 		foreach (var row in used.RowsUsed().Skip(1))
 		{
 			var panelName = row.Cell(panelNameCol).GetString()?.Trim() ?? "";
-			var panelNew = row.Cell(panelNewCol).GetString()?.Trim() ?? "";
-
 			if (string.IsNullOrWhiteSpace(panelName))
 				continue;
 
-			if (!ctx.PanelNewMapping.ContainsKey(panelName))
-				ctx.PanelNewMapping[panelName] = panelNew;
+			if (isAugustus && panelNewCol > 0)
+			{
+				var panelNew = row.Cell(panelNewCol).GetString()?.Trim() ?? "";
+				if (!ctx.PanelNewMapping.ContainsKey(panelName))
+					ctx.PanelNewMapping[panelName] = panelNew;
+			}
+
+			if (isNorthWest && panelTypeCol > 0)
+			{
+				var panelType = row.Cell(panelTypeCol).GetString()?.Trim() ?? "";
+				if (!ctx.PanelTypeMapping.ContainsKey(panelName))
+					ctx.PanelTypeMapping[panelName] = panelType;
+			}
 		}
 
 		return ctx;
@@ -1609,12 +1633,36 @@ public static class StandardCsvExporter
 			? mapped ?? ""
 			: "";
 	}
+
+	private static string ResolvePanelType(
+	string[] row,
+	Dictionary<string, int> headerExact,
+	Dictionary<string, int> headerNorm,
+	ExportAugmentationContext? augmentation)
+	{
+		if (augmentation == null || !augmentation.IsNorthWest || augmentation.PanelTypeMapping.Count == 0)
+			return "";
+
+		var panelName = GetSourceValue(row, headerExact, headerNorm, "Panel Name")?.Trim() ?? "";
+		if (string.IsNullOrWhiteSpace(panelName))
+			return "";
+
+		return augmentation.PanelTypeMapping.TryGetValue(panelName, out var mapped)
+			? mapped ?? ""
+			: "";
+	}
 }
 
 public sealed class ExportAugmentationContext
 {
 	public bool IsAugustus { get; set; }
+	public bool IsNorthWest { get; set; }
+
 	public bool IncludeEncounterPlusPaymentPostedDate { get; set; }
+
 	public Dictionary<string, string> PanelNewMapping { get; set; }
+		= new(StringComparer.OrdinalIgnoreCase);
+
+	public Dictionary<string, string> PanelTypeMapping { get; set; }
 		= new(StringComparer.OrdinalIgnoreCase);
 }

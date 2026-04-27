@@ -98,4 +98,7 @@ public sealed class LabFileMap
     // Optional per-lab schema overrides (relative to app base)
     public string? LineLevelSchemaJsonPath { get; set; }
     public string? ClaimLevelSchemaJsonPath { get; set; }
+    public string? PanelMasterFilePath { get; set; }
+
+
 }

@@ -439,7 +439,12 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				_fileLog.Info($"Lab {lab.LabId}: Production raw master copied to WatchFolder week folder -> {productionRawMasterPath}");
 
-				await TryDownloadSiblingRawMasterAsync(lab, selected, rawMasterFolder, ct);
+				var limsRawMasterPath = await TryDownloadSiblingRawMasterAsync(lab, selected, rawMasterFolder, ct);
+
+				if (!string.IsNullOrWhiteSpace(limsRawMasterPath))
+				{
+					await TryImportLimsMasterAsync(lab, limsRawMasterPath, runCtx, ct);
+				}
 
 				// Update file size after download
 				try
@@ -1660,7 +1665,7 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		return fallback;
 	}
 
-	private async Task TryDownloadSiblingRawMasterAsync(
+	private async Task<string?> TryDownloadSiblingRawMasterAsync(
 		LabFileMap lab,
 		SharePointDownloader.SelectedFile selected,
 		string rawMasterFolder,
@@ -1669,7 +1674,7 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		var limsPattern = GetLabConfigValue(lab, "LimsMasterFilePattern");
 
 		if (string.IsNullOrWhiteSpace(limsPattern))
-			return;
+			return null;
 
 		try
 		{
@@ -1683,7 +1688,7 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 					limsPattern);
 
 				_fileLog.Warn($"Lab {lab.LabId}: no LIMS master file matched pattern '{limsPattern}' in the same SharePoint folder.");
-				return;
+				return null;
 			}
 
 			var limsRawMasterPath = Path.Combine(rawMasterFolder, SanitizeFileName(sibling.Name));
@@ -1695,11 +1700,74 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 				limsRawMasterPath);
 
 			_fileLog.Info($"Lab {lab.LabId}: LIMS raw master downloaded -> {limsRawMasterPath}");
+			return limsRawMasterPath;
 		}
 		catch (Exception ex)
 		{
 			_logger.LogWarning(ex, "Lab {LabId}: failed to download LIMS raw master file.", lab.LabId);
 			_fileLog.Error($"Lab {lab.LabId}: failed to download LIMS raw master file.", ex);
+			return null;
+		}
+	}
+
+	private async Task TryImportLimsMasterAsync(
+		LabFileMap lab,
+		string limsFilePath,
+		ProcessRunContext runCtx,
+		CancellationToken ct)
+	{
+		var limsSchemaPath = GetLabConfigValue(lab, "LIMSSchemaJsonPath");
+		if (string.IsNullOrWhiteSpace(limsSchemaPath))
+			return;
+
+		limsSchemaPath = ResolvePath(limsSchemaPath);
+		if (!File.Exists(limsSchemaPath))
+		{
+			_logger.LogWarning("Lab {LabId}: LIMS schema not found: {SchemaPath}", lab.LabId, limsSchemaPath);
+			_fileLog.Warn($"Lab {lab.LabId}: LIMS schema not found: {limsSchemaPath}");
+			return;
+		}
+
+		var step = new StepLogRow
+		{
+			StepSeq = 25,
+			StepName = "Import LIMS Master",
+			StepCategory = "Ingestion",
+			SourceSystem = "Local",
+			StartTimeIST = _processLog.NowIST(),
+			Status = "IN_PROGRESS",
+			FileNameIn = Path.GetFileName(limsFilePath),
+			PathIn = limsFilePath
+		};
+
+		await _processLog.StepStartAsync(runCtx, step, ct);
+
+		try
+		{
+			var connectionString = _configuration.GetConnectionString("DefaultConnection");
+			if (string.IsNullOrWhiteSpace(connectionString))
+				throw new InvalidOperationException("ConnectionStrings:DefaultConnection is missing for LIMS import.");
+
+			var result = await LimsMasterBulkImporter.ImportAsync(limsFilePath, limsSchemaPath, connectionString, ct);
+
+			step.EndTimeIST = _processLog.NowIST();
+			step.Status = "SUCCESS";
+			step.FileNameOut = result.TableName;
+			step.PathOut = $"Inserted={result.InsertedRows}; Skipped={result.SkippedRows}";
+			await _processLog.StepEndAsync(runCtx, step, ct);
+
+			_logger.LogInformation("Lab {LabId}: LIMS import completed. Table={Table}, Inserted={Inserted}, Skipped={Skipped}", lab.LabId, result.TableName, result.InsertedRows, result.SkippedRows);
+			_fileLog.Info($"Lab {lab.LabId}: LIMS import completed. Table={result.TableName}, Inserted={result.InsertedRows}, Skipped={result.SkippedRows}");
+		}
+		catch (Exception ex)
+		{
+			step.EndTimeIST = _processLog.NowIST();
+			step.Status = "FAILED";
+			step.ErrorMessage = ex.Message;
+			await _processLog.StepEndAsync(runCtx, step, ct);
+
+			_logger.LogError(ex, "Lab {LabId}: LIMS import failed for {Path}", lab.LabId, limsFilePath);
+			_fileLog.Error($"Lab {lab.LabId}: LIMS import failed for {limsFilePath}", ex);
 		}
 	}
 

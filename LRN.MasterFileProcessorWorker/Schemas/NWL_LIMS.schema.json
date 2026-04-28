@@ -1,0 +1,73 @@
+{
+  "SchemaName": "LIMSMaster",
+  "SheetName": "Masterfile",
+  "HeaderRow": 1,
+  "Columns": [
+    {
+      "ExcelColName": "REQ_ACCESSION",
+      "Required": true,
+      "DataType": "string",
+      "SQLColName": "Accession"
+    },
+    {
+      "ExcelColName": "Patient Name",
+      "Required": false,
+      "DataType": "string",
+      "SQLColName": "PatientName"
+    },
+    {
+      "ExcelColName": "REQ_COLLECT_DATE",
+      "Required": true,
+      "DataType": "date",
+      "SQLColName": "RequestCollectDate"
+    },
+    {
+      "ExcelColName": "Incorrect DOS",
+      "Required": false,
+      "DataType": "string",
+      "SQLColName": "IncorrectDOS"
+    },
+    {
+      "ExcelColName": "REQ_RECEIVED_DATE",
+      "Required": false,
+      "DataType": "date",
+      "SQLColName": "RequestReceivedDate"
+    },
+    {
+      "ExcelColName": "BILL_TYPE",
+      "Required": false,
+      "DataType": "string",
+      "SQLColName": "BillType"
+    },
+    {
+      "ExcelColName": "Result Status",
+      "Required": false,
+      "DataType": "string",
+      "SQLColName": "ResultStatus"
+    },
+    {
+      "ExcelColName": "Bill to",
+      "Required": true,
+      "DataType": "string",
+      "SQLColName": "BilledTo"
+    },
+    {
+      "ExcelColName": "Bill status",
+      "Required": false,
+      "DataType": "string",
+      "SQLColName": "BillStatus"
+    },
+    {
+      "ExcelColName": "Final Status",
+      "Required": false,
+      "DataType": "string",
+      "SQLColName": "FinalStatus"
+    },
+    {
+      "ExcelColName": "Category",
+      "Required": false,
+      "DataType": "string",
+      "SQLColName": "Category"
+    }
+  ]
+}

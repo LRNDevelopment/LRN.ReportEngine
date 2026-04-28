@@ -152,7 +152,7 @@ public static class StandardCsvExporter
             .ToDictionary(c => c.Name, c => c, StringComparer.OrdinalIgnoreCase);
 
         var extraSourceColumnIndexes = appendUnmappedSourceColumns
-            ? FindExtraSourceColumnIndexes(header, commonSchema, headerExact, headerNorm, labOv)
+            ? FindExtraSourceColumnIndexes(header, commonSchema, labSchema, headerExact, headerNorm, labOv)
             : new List<int>();
 
 		var finalOutputHeaders = commonSchema.Columns.Select(c => c.Name).ToList();
@@ -763,22 +763,37 @@ public static class StandardCsvExporter
     private static List<int> FindExtraSourceColumnIndexes(
         string[] header,
         ColumnSchema commonSchema,
+        ColumnSchema? labSchema,
         Dictionary<string, int> headerExact,
         Dictionary<string, int> headerNorm,
         LabOverrides labOv)
     {
         var usedIndexes = new HashSet<int>();
 
+        // Mark source headers consumed by COMMON schema aliases.
+        // Example: CarrierPayment -> InsurancePayment must not be appended as extra.
         foreach (var col in commonSchema.Columns)
         {
             if (col == null)
                 continue;
 
-            // metadata / computed columns are not source-backed
             if (IsMetadata(col.Name) || IsDays(col.Name) || !string.IsNullOrWhiteSpace(col.Calculation))
                 continue;
 
             MarkReferencedSourceIndexes(col, headerExact, headerNorm, labOv, usedIndexes);
+        }
+
+        // Mark source headers declared in the lab input schema as known/mapped.
+        // Only Excel columns not referenced by COMMON or LAB schema should be appended.
+        if (labSchema?.Columns != null)
+        {
+            foreach (var col in labSchema.Columns)
+            {
+                if (col == null)
+                    continue;
+
+                MarkLabSchemaSourceIndexes(col, headerExact, headerNorm, usedIndexes);
+            }
         }
 
         var commonTargetNorms = new HashSet<string>(
@@ -798,7 +813,6 @@ public static class StandardCsvExporter
             if (usedIndexes.Contains(i))
                 continue;
 
-            // If source header itself is already a standard/common output column, do not append it again.
             var normalizedSourceHeader = NormKey(sourceHeader);
             if (!string.IsNullOrWhiteSpace(normalizedSourceHeader) && commonTargetNorms.Contains(normalizedSourceHeader))
                 continue;
@@ -807,6 +821,40 @@ public static class StandardCsvExporter
         }
 
         return extras;
+    }
+
+    private static void MarkLabSchemaSourceIndexes(
+        ColumnSpec col,
+        Dictionary<string, int> headerExact,
+        Dictionary<string, int> headerNorm,
+        HashSet<int> usedIndexes)
+    {
+        var rawName = (col.Name ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(rawName))
+            return;
+
+        if (TryParseComposite(rawName, out var tpl))
+        {
+            foreach (var seg in tpl.Segments.Where(s => s.IsColumn))
+            {
+                if (TryResolveHeaderIndex(seg.Text, headerExact, headerNorm, out var idx))
+                    usedIndexes.Add(idx);
+            }
+
+            return;
+        }
+
+        if (TryResolveHeaderIndex(rawName, headerExact, headerNorm, out var nameIdx))
+            usedIndexes.Add(nameIdx);
+
+        if (col.Aliases == null)
+            return;
+
+        foreach (var alias in col.Aliases.Where(a => !string.IsNullOrWhiteSpace(a)))
+        {
+            if (TryResolveHeaderIndex(alias, headerExact, headerNorm, out var aliasIdx))
+                usedIndexes.Add(aliasIdx);
+        }
     }
 
     private static void MarkReferencedSourceIndexes(

@@ -1,3 +1,4 @@
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.Data.SqlClient;
@@ -49,28 +50,16 @@ public static class LimsMasterBulkImporter
             throw new InvalidOperationException($"LIMS schema has no columns: {schemaJsonPath}");
 
         var tableName = NormalizeDestinationTable(schema.SchemaName);
-        var table = BuildDataTable(schema);
-        var skippedRows = FillDataTableFromExcel(limsExcelPath, schema, table);
 
-        if (table.Rows.Count > 0)
-        {
-            await using var conn = new SqlConnection(connectionString);
-            await conn.OpenAsync(ct);
+        await using var conn = new SqlConnection(connectionString);
+        await conn.OpenAsync(ct);
 
-            using var bulkCopy = new SqlBulkCopy(conn)
-            {
-                DestinationTableName = tableName,
-                BatchSize = 5000,
-                BulkCopyTimeout = 0
-            };
-
-            foreach (DataColumn col in table.Columns)
-                bulkCopy.ColumnMappings.Add(col.ColumnName, col.ColumnName);
-
-            await bulkCopy.WriteToServerAsync(table, ct);
-        }
-
-        return new ImportResult(tableName, table.Rows.Count, skippedRows);
+        return await StreamExcelAndBulkCopyAsync(
+            limsExcelPath,
+            schema,
+            tableName,
+            conn,
+            ct);
     }
 
     private static DataTable BuildDataTable(LimsSchema schema)
@@ -90,9 +79,16 @@ public static class LimsMasterBulkImporter
 
     // Do not use ClosedXML here. Some LIMS workbooks throw:
     // XLWorkbook.LoadSpreadsheetDocument -> NotImplementedException.
-    // OpenXML reads the sheet values safely and is enough for schema-based bulk import.
-    private static int FillDataTableFromExcel(string path, LimsSchema schema, DataTable table)
+    // This streams OpenXML rows and bulk copies in batches, so 350k+ rows are not kept in memory.
+    private static async Task<ImportResult> StreamExcelAndBulkCopyAsync(
+        string path,
+        LimsSchema schema,
+        string tableName,
+        SqlConnection conn,
+        CancellationToken ct)
     {
+        const int batchSize = 25000;
+
         using var document = SpreadsheetDocument.Open(path, false);
         var workbookPart = document.WorkbookPart
             ?? throw new InvalidOperationException($"Invalid LIMS workbook: {path}");
@@ -103,20 +99,34 @@ public static class LimsMasterBulkImporter
 
         var sharedStrings = workbookPart.SharedStringTablePart?.SharedStringTable;
         var selected = FindLimsWorksheet(workbookPart, sheets, schema, sharedStrings, path);
-        var sheet = selected.Sheet;
-        var rows = selected.Rows;
-        var headerRowNumber = selected.HeaderRowNumber;
-        var headerLookup = selected.HeaderLookup;
 
         foreach (var col in schema.Columns)
         {
-            if (col.Required && !headerLookup.ContainsKey(NormKey(col.SourceName)))
-                throw new InvalidOperationException($"LIMS sheet '{sheet.Name}' missing required column: {col.SourceName}");
+            if (col.Required && !selected.HeaderLookup.ContainsKey(NormKey(col.SourceName)))
+                throw new InvalidOperationException($"LIMS sheet '{selected.Sheet.Name}' missing required column: {col.SourceName}");
         }
 
+        var worksheetPart = (WorksheetPart)workbookPart.GetPartById(selected.Sheet.Id!);
+        var table = BuildDataTable(schema);
+
+        var insertedRows = 0;
         var skippedRows = 0;
-        foreach (var row in rows.Where(r => (int)(r.RowIndex?.Value ?? 0) > headerRowNumber))
+
+        using var reader = OpenXmlReader.Create(worksheetPart);
+
+        while (reader.Read())
         {
+            if (reader.ElementType != typeof(Row) || !reader.IsStartElement)
+                continue;
+
+            ct.ThrowIfCancellationRequested();
+
+            var row = (Row)reader.LoadCurrentElement();
+            var rowNumber = (int)(row.RowIndex?.Value ?? 0);
+
+            if (rowNumber <= selected.HeaderRowNumber)
+                continue;
+
             var cellsByIndex = row.Elements<Cell>()
                 .Where(c => c.CellReference != null)
                 .ToDictionary(c => GetColumnIndex(c.CellReference!.Value!), c => c);
@@ -129,10 +139,11 @@ public static class LimsMasterBulkImporter
             {
                 object? value = null;
 
-                if (headerLookup.TryGetValue(NormKey(col.SourceName), out var excelColumnIndex) &&
+                if (selected.HeaderLookup.TryGetValue(NormKey(col.SourceName), out var excelColumnIndex) &&
                     cellsByIndex.TryGetValue(excelColumnIndex, out var cell))
                 {
                     value = ConvertCellValue(cell, sharedStrings, col.DataType);
+
                     if (value != null && value != DBNull.Value && !string.IsNullOrWhiteSpace(value.ToString()))
                         hasAnyValue = true;
                 }
@@ -152,15 +163,50 @@ public static class LimsMasterBulkImporter
                 continue;
             }
 
-             table.Rows.Add(dataRow);
+            table.Rows.Add(dataRow);
+
+            if (table.Rows.Count >= batchSize)
+            {
+                var currentBatchRows = table.Rows.Count;
+                await BulkCopyAsync(conn, tableName, table, ct);
+                insertedRows += currentBatchRows;
+                table.Clear();
+            }
         }
 
-        return skippedRows;
+        if (table.Rows.Count > 0)
+        {
+            var currentBatchRows = table.Rows.Count;
+            await BulkCopyAsync(conn, tableName, table, ct);
+            insertedRows += currentBatchRows;
+            table.Clear();
+        }
+
+        return new ImportResult(tableName, insertedRows, skippedRows);
+    }
+
+    private static async Task BulkCopyAsync(
+        SqlConnection conn,
+        string tableName,
+        DataTable table,
+        CancellationToken ct)
+    {
+        using var bulkCopy = new SqlBulkCopy(conn, SqlBulkCopyOptions.TableLock, null)
+        {
+            DestinationTableName = tableName,
+            BatchSize = table.Rows.Count,
+            BulkCopyTimeout = 0,
+            EnableStreaming = true
+        };
+
+        foreach (DataColumn col in table.Columns)
+            bulkCopy.ColumnMappings.Add(col.ColumnName, col.ColumnName);
+
+        await bulkCopy.WriteToServerAsync(table, ct);
     }
 
     private sealed record LimsWorksheetMatch(
         Sheet Sheet,
-        List<Row> Rows,
         int HeaderRowNumber,
         Dictionary<string, int> HeaderLookup);
 
@@ -207,12 +253,11 @@ public static class LimsMasterBulkImporter
         foreach (var candidateSheet in sheets)
         {
             var worksheetPart = (WorksheetPart)workbookPart.GetPartById(candidateSheet.Id!);
-            var rows = worksheetPart.Worksheet.Descendants<Row>().ToList();
 
-            foreach (var headerRowNo in GetHeaderRowsToTry(rows, configuredHeaderRow))
+            foreach (var headerRow in GetHeaderRowsToTry(worksheetPart, configuredHeaderRow))
             {
-                var headerRow = rows.FirstOrDefault(r => (int)(r.RowIndex?.Value ?? 0) == headerRowNo);
-                if (headerRow == null) continue;
+                var headerRowNo = (int)(headerRow.RowIndex?.Value ?? 0);
+                if (headerRowNo <= 0) continue;
 
                 var lookup = BuildHeaderLookup(headerRow, sharedStrings);
                 var score = CountSchemaHeaderMatches(lookup, schema);
@@ -220,11 +265,11 @@ public static class LimsMasterBulkImporter
                 if (score > bestScore)
                 {
                     bestScore = score;
-                    bestMatch = new LimsWorksheetMatch(candidateSheet, rows, headerRowNo, lookup);
+                    bestMatch = new LimsWorksheetMatch(candidateSheet, headerRowNo, lookup);
                 }
 
                 if (HasEnoughSchemaHeaders(lookup, schema, requireRequiredColumns: true))
-                    return new LimsWorksheetMatch(candidateSheet, rows, headerRowNo, lookup);
+                    return new LimsWorksheetMatch(candidateSheet, headerRowNo, lookup);
             }
         }
 
@@ -242,25 +287,39 @@ public static class LimsMasterBulkImporter
         SharedStringTable? sharedStrings)
     {
         var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
-        var rows = worksheetPart.Worksheet.Descendants<Row>().ToList();
-        var headerRow = rows.FirstOrDefault(r => (int)(r.RowIndex?.Value ?? 0) == headerRowNumber);
+        var headerRow = FindRowByNumber(worksheetPart, headerRowNumber);
         if (headerRow == null) return null;
 
         var headerLookup = BuildHeaderLookup(headerRow, sharedStrings);
-        return new LimsWorksheetMatch(sheet, rows, headerRowNumber, headerLookup);
+        return new LimsWorksheetMatch(sheet, headerRowNumber, headerLookup);
     }
 
-    private static IEnumerable<int> GetHeaderRowsToTry(List<Row> rows, int configuredHeaderRow)
+    private static Row? FindRowByNumber(WorksheetPart worksheetPart, int rowNumber)
     {
-        yield return configuredHeaderRow;
+        return worksheetPart.Worksheet
+            .Elements<SheetData>()
+            .FirstOrDefault()?
+            .Elements<Row>()
+            .FirstOrDefault(r => (int)(r.RowIndex?.Value ?? 0) == rowNumber);
+    }
 
-        foreach (var rowNo in rows
-            .Select(r => (int)(r.RowIndex?.Value ?? 0))
-            .Where(x => x > 0 && x != configuredHeaderRow)
-            .OrderBy(x => x)
-            .Take(20))
+    private static IEnumerable<Row> GetHeaderRowsToTry(WorksheetPart worksheetPart, int configuredHeaderRow)
+    {
+        var emitted = new HashSet<int>();
+
+        var configuredRow = FindRowByNumber(worksheetPart, configuredHeaderRow);
+        if (configuredRow != null && emitted.Add(configuredHeaderRow))
+            yield return configuredRow;
+
+        var sheetData = worksheetPart.Worksheet.Elements<SheetData>().FirstOrDefault();
+        if (sheetData == null)
+            yield break;
+
+        foreach (var row in sheetData.Elements<Row>().Take(20))
         {
-            yield return rowNo;
+            var rowNo = (int)(row.RowIndex?.Value ?? 0);
+            if (rowNo > 0 && emitted.Add(rowNo))
+                yield return row;
         }
     }
 

@@ -1744,9 +1744,14 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 
 		try
 		{
-			var connectionString = _configuration.GetConnectionString("DefaultConnection");
+			// LIMS must be imported into the individual lab database when configured.
+			// Example: NorthWest LIMS -> NWL_LRN using MasterFileProcessor:Labs[n]:LabDbConnectionString.
+			var connectionString = GetLabConfigValue(lab, "LabDbConnectionString");
 			if (string.IsNullOrWhiteSpace(connectionString))
-				throw new InvalidOperationException("ConnectionStrings:DefaultConnection is missing for LIMS import.");
+				connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+			if (string.IsNullOrWhiteSpace(connectionString))
+				throw new InvalidOperationException($"Lab {lab.LabId}: LabDbConnectionString is missing and ConnectionStrings:DefaultConnection is also missing for LIMS import.");
 
 			var result = await LimsMasterBulkImporter.ImportAsync(limsFilePath, limsSchemaPath, connectionString, ct);
 

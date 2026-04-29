@@ -306,8 +306,13 @@ public static class ModeMedianPaymentReportWriter
 	IReadOnlyList<PaymentRow> rows)
 	{
 		var winner = rows
-			.Where(x => x.AllowedAmount.HasValue && x.InsurancePaymentAmount.HasValue)
-			.GroupBy(BuildDistinctRowKey)
+			.Where(x => x.InsurancePaymentAmount.HasValue)
+			.GroupBy(x => string.Join("|",
+				NormalizeKey(x.PayerName),
+				NormalizeKey(x.Panel),
+				NormalizeKey(x.CPTCode),
+				x.AllowedAmount?.ToString("0.##############", CultureInfo.InvariantCulture) ?? string.Empty,
+				x.InsurancePaymentAmount?.ToString("0.##############", CultureInfo.InvariantCulture) ?? string.Empty))
 			.Select(g =>
 			{
 				var first = g.First();
@@ -329,11 +334,16 @@ public static class ModeMedianPaymentReportWriter
 	}
 
 	private static (decimal? AllowedAmountPerUnit, decimal? InsurancePaymentPerUnit) SelectWinningPerUnitMode(
-		IReadOnlyList<PaymentRow> rows)
+	IReadOnlyList<PaymentRow> rows)
 	{
 		var winner = rows
-			.Where(x => x.AllowedAmountPerUnit.HasValue && x.InsurancePaymentPerUnit.HasValue)
-			.GroupBy(BuildPerUnitDistinctRowKey)
+			.Where(x => x.InsurancePaymentPerUnit.HasValue)
+			.GroupBy(x => string.Join("|",
+				NormalizeKey(x.PayerName),
+				NormalizeKey(x.Panel),
+				NormalizeKey(x.CPTCode),
+				x.AllowedAmountPerUnit?.ToString("0.##############", CultureInfo.InvariantCulture) ?? string.Empty,
+				x.InsurancePaymentPerUnit?.ToString("0.##############", CultureInfo.InvariantCulture) ?? string.Empty))
 			.Select(g =>
 			{
 				var first = g.First();

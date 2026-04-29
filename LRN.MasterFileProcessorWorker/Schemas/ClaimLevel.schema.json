@@ -245,7 +245,8 @@
 				"Proc-Charge Amount $",
 				"TotalCharge",
 				"Biilled Amounts",
-				"Charge amount"
+				"Charge amount",
+				"Billed Amounts"
 			]
 		},
 		{
@@ -263,7 +264,8 @@
 				"InsurancePayment",
 				"CarrierPayment",
 				"Ins. Payment",
-				"ProcTotal Payments $"
+				"ProcTotal Payments $",
+				"Insurance Payments"
 			]
 		},
 		{
@@ -291,7 +293,8 @@
 				"CarrierWO",
 				"Denial Adj Amount",
 				"Proc-Adjustment $",
-				"adj_amount"
+				"adj_amount",
+				"Adjustments"
 			]
 		},
 		{
@@ -315,7 +318,8 @@
 				"CarrierBalance",
 				"Proc-Ins Balance",
 				"CarrierBalance",
-				"Ins Balance"
+				"Ins Balance",
+				"Insurance Balance"
 			]
 		},
 		{
@@ -324,7 +328,8 @@
 			"Aliases": [
 				"PatientBalance",
 				"Proc-Pt Balance",
-				"Pat Balance"
+				"Pat Balance",
+				"Patient Balance"
 			]
 		},
 		{

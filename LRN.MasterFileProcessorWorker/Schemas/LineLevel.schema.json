@@ -237,7 +237,8 @@
 				"Proc-Charge Amount $",
 				"TotalCharge",
 				"Biilled Amounts",
-				"Billed Amount"
+				"Billed Amount",
+				"Billed Amounts "
 			]
 		},
 		{
@@ -263,7 +264,8 @@
 				"InsurancePayment",
 				"CarrierPayment",
 				"Ins. Payment",
-				"ProcTotal Payments $"
+				"ProcTotal Payments $",
+				"Insurance Payments"
 			]
 		},
 		{

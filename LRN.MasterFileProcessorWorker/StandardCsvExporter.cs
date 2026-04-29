@@ -152,7 +152,7 @@ public static class StandardCsvExporter
             .ToDictionary(c => c.Name, c => c, StringComparer.OrdinalIgnoreCase);
 
         var extraSourceColumnIndexes = appendUnmappedSourceColumns
-            ? FindExtraSourceColumnIndexes(header, commonSchema, labSchema, headerExact, headerNorm, labOv)
+            ? FindExtraSourceColumnIndexes(header, commonSchema, headerExact, headerNorm, labOv)
             : new List<int>();
 
 		var finalOutputHeaders = commonSchema.Columns.Select(c => c.Name).ToList();
@@ -712,6 +712,7 @@ public static class StandardCsvExporter
     {
         var candidates = (col.Aliases ?? new List<string>())
             .Where(a => !string.IsNullOrWhiteSpace(a))
+            .Concat(GetBuiltInSourceAliases(col.Name))
             .Concat(new[] { col.Name })
             .Select(a => (a ?? "").Trim())
             .Where(a => !string.IsNullOrWhiteSpace(a))
@@ -763,37 +764,22 @@ public static class StandardCsvExporter
     private static List<int> FindExtraSourceColumnIndexes(
         string[] header,
         ColumnSchema commonSchema,
-        ColumnSchema? labSchema,
         Dictionary<string, int> headerExact,
         Dictionary<string, int> headerNorm,
         LabOverrides labOv)
     {
         var usedIndexes = new HashSet<int>();
 
-        // Mark source headers consumed by COMMON schema aliases.
-        // Example: CarrierPayment -> InsurancePayment must not be appended as extra.
         foreach (var col in commonSchema.Columns)
         {
             if (col == null)
                 continue;
 
+            // metadata / computed columns are not source-backed
             if (IsMetadata(col.Name) || IsDays(col.Name) || !string.IsNullOrWhiteSpace(col.Calculation))
                 continue;
 
             MarkReferencedSourceIndexes(col, headerExact, headerNorm, labOv, usedIndexes);
-        }
-
-        // Mark source headers declared in the lab input schema as known/mapped.
-        // Only Excel columns not referenced by COMMON or LAB schema should be appended.
-        if (labSchema?.Columns != null)
-        {
-            foreach (var col in labSchema.Columns)
-            {
-                if (col == null)
-                    continue;
-
-                MarkLabSchemaSourceIndexes(col, headerExact, headerNorm, usedIndexes);
-            }
         }
 
         var commonTargetNorms = new HashSet<string>(
@@ -814,6 +800,17 @@ public static class StandardCsvExporter
                 continue;
 
             var normalizedSourceHeader = NormKey(sourceHeader);
+
+            // Do not append columns already declared in the LAB schema.
+            // The extra-column rule should only append truly unknown Excel columns:
+            // not mapped by COMMON schema and not declared in lab-specific schema.
+            // Example: Certus source column "Billed Amounts" is declared in Certus_LineLevel.schema.json
+            // and maps to ChargeAmount, so it must not be added again as an extra output column.
+            if (labOv.PreferredExact.Contains(sourceHeader) ||
+                (!string.IsNullOrWhiteSpace(normalizedSourceHeader) && labOv.PreferredNorm.Contains(normalizedSourceHeader)))
+                continue;
+
+            // If source header itself is already a standard/common output column, do not append it again.
             if (!string.IsNullOrWhiteSpace(normalizedSourceHeader) && commonTargetNorms.Contains(normalizedSourceHeader))
                 continue;
 
@@ -821,40 +818,6 @@ public static class StandardCsvExporter
         }
 
         return extras;
-    }
-
-    private static void MarkLabSchemaSourceIndexes(
-        ColumnSpec col,
-        Dictionary<string, int> headerExact,
-        Dictionary<string, int> headerNorm,
-        HashSet<int> usedIndexes)
-    {
-        var rawName = (col.Name ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(rawName))
-            return;
-
-        if (TryParseComposite(rawName, out var tpl))
-        {
-            foreach (var seg in tpl.Segments.Where(s => s.IsColumn))
-            {
-                if (TryResolveHeaderIndex(seg.Text, headerExact, headerNorm, out var idx))
-                    usedIndexes.Add(idx);
-            }
-
-            return;
-        }
-
-        if (TryResolveHeaderIndex(rawName, headerExact, headerNorm, out var nameIdx))
-            usedIndexes.Add(nameIdx);
-
-        if (col.Aliases == null)
-            return;
-
-        foreach (var alias in col.Aliases.Where(a => !string.IsNullOrWhiteSpace(a)))
-        {
-            if (TryResolveHeaderIndex(alias, headerExact, headerNorm, out var aliasIdx))
-                usedIndexes.Add(aliasIdx);
-        }
     }
 
     private static void MarkReferencedSourceIndexes(
@@ -876,6 +839,7 @@ public static class StandardCsvExporter
 
         var candidates = (col.Aliases ?? new List<string>())
             .Where(a => !string.IsNullOrWhiteSpace(a))
+            .Concat(GetBuiltInSourceAliases(col.Name))
             .Concat(new[] { col.Name })
             .Select(a => (a ?? string.Empty).Trim())
             .Where(a => !string.IsNullOrWhiteSpace(a))
@@ -907,6 +871,74 @@ public static class StandardCsvExporter
             return true;
 
         return false;
+    }
+
+
+
+    private static IEnumerable<string> GetBuiltInSourceAliases(string? commonColumnName)
+    {
+        var name = (commonColumnName ?? string.Empty).Trim();
+
+        if (name.Equals("ChargeAmount", StringComparison.OrdinalIgnoreCase))
+        {
+            yield return "Billed Amounts";
+            yield return "Biilled Amounts";
+            yield return "Billed Amount";
+            yield return "Claim Amount";
+            yield return "Charge Amount";
+            yield return "Total Charge";
+            yield return "Total Charges";
+            yield return "TotalCharge";
+            yield break;
+        }
+
+        if (name.Equals("InsurancePayment", StringComparison.OrdinalIgnoreCase))
+        {
+            yield return "Insurance Payments";
+            yield return "Insurance Payment";
+            yield return "CarrierPayment";
+            yield return "Carrier Payment";
+            yield return "Ins. Payment";
+            yield break;
+        }
+
+        if (name.Equals("PatientPayment", StringComparison.OrdinalIgnoreCase))
+        {
+            yield return "Patient Payments";
+            yield return "Patient Payment";
+            yield return "PatientPayment";
+            yield return "Pat Payments";
+            yield return "Pat. Payments";
+            yield break;
+        }
+
+        if (name.Equals("InsuranceAdjustments", StringComparison.OrdinalIgnoreCase))
+        {
+            yield return "Adjustments";
+            yield return "Adjustment";
+            yield return "Insurance Adjustment";
+            yield return "InsuranceAdjustment";
+            yield return "CarrierWO";
+            yield break;
+        }
+
+        if (name.Equals("InsuranceBalance", StringComparison.OrdinalIgnoreCase))
+        {
+            yield return "Insurance Balance";
+            yield return "InsuranceBalance";
+            yield return "Ins Balance";
+            yield return "CarrierBalance";
+            yield return "Carrier Balance";
+            yield break;
+        }
+
+        if (name.Equals("PatientBalance", StringComparison.OrdinalIgnoreCase))
+        {
+            yield return "Patient Balance";
+            yield return "PatientBalance";
+            yield return "Pat Balance";
+            yield break;
+        }
     }
 
     private static bool LabProvidesTargetColumn(ColumnSpec col, LabOverrides labOv)
@@ -964,6 +996,7 @@ public static class StandardCsvExporter
 
         var candidates = (col.Aliases ?? new List<string>())
             .Where(a => !string.IsNullOrWhiteSpace(a))
+            .Concat(GetBuiltInSourceAliases(col.Name))
             .Concat(new[] { col.Name })
             .Select(a => (a ?? "").Trim())
             .Where(a => !string.IsNullOrWhiteSpace(a))

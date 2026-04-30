@@ -113,6 +113,7 @@ public static class InsuranceMasterExcelReader
 
 		int idxRaw = idxByNorm.TryGetValue(NormKey("Payer_Name_Raw"), out var iRaw) ? iRaw : -1;
 		int idxNorm = idxByNorm.TryGetValue(NormKey("Payer_Name_Normalized"), out var iNorm) ? iNorm : -1;
+		int idxLabName = idxByNorm.TryGetValue(NormKey("Lab Name"), out var iLabName) ? iLabName : -1;
 		int idxGpid = idxByNorm.TryGetValue(NormKey("Global_Payer_ID"), out var iGpid) ? iGpid : -1;
 		int idxPayerCode = idxByNorm.TryGetValue(NormKey("Payer_Code"), out var iPc) ? iPc : -1;
 		int idxPayerCommonCode = idxByNorm.TryGetValue(NormKey("Payer_Common_Code"), out var iPcc) ? iPcc : -1;
@@ -129,11 +130,12 @@ public static class InsuranceMasterExcelReader
 			if (string.IsNullOrWhiteSpace(raw))
 				continue;
 
-			var key = NormKey(raw);
+			var normalized = idxNorm > 0 ? GetCellText(worksheet, row, idxNorm) : "";
+			var labNameFromMaster = idxLabName > 0 ? GetCellText(worksheet, row, idxLabName) : "";
+
+			var key = BuildInsuranceLookupKey(labNameFromMaster, raw);
 			if (string.IsNullOrWhiteSpace(key))
 				continue;
-
-			var normalized = idxNorm > 0 ? GetCellText(worksheet, row, idxNorm) : "";
 			var globalPayerId = idxGpid > 0 ? GetCellText(worksheet, row, idxGpid) : "";
 			var payerCode = idxPayerCode > 0 ? GetCellText(worksheet, row, idxPayerCode) : "";
 			var payerCommonCode = idxPayerCommonCode > 0 ? GetCellText(worksheet, row, idxPayerCommonCode) : "";
@@ -147,7 +149,20 @@ public static class InsuranceMasterExcelReader
 					normalized,
 					payerCode,
 					payerCommonCode,
-					payerGroupCode);
+					payerGroupCode,
+					labNameFromMaster);
+
+				var payerOnlyKey = BuildInsuranceLookupKey("", raw);
+				if (string.IsNullOrWhiteSpace(labNameFromMaster) && !map.ContainsKey(payerOnlyKey))
+				{
+					map[payerOnlyKey] = new StandardCsvExporter.InsuranceMasterEntry(
+						globalPayerId,
+						normalized,
+						payerCode,
+						payerCommonCode,
+						payerGroupCode,
+						labNameFromMaster);
+				}
 			}
 		}
 
@@ -197,6 +212,16 @@ public static class InsuranceMasterExcelReader
 			numbers.Add(0);
 
 		return new Version(numbers[0], numbers[1], numbers[2], numbers[3]);
+	}
+
+	private static string BuildInsuranceLookupKey(string? labName, string? payerRaw)
+	{
+		var payerKey = NormKey(payerRaw ?? "");
+		if (string.IsNullOrWhiteSpace(payerKey))
+			return "";
+
+		var labKey = NormKey(labName ?? "");
+		return string.IsNullOrWhiteSpace(labKey) ? payerKey : $"{labKey}|{payerKey}";
 	}
 
 	private static string NormKey(string s)

@@ -107,6 +107,11 @@ public static class LimsMasterBulkImporter
         }
 
         var worksheetPart = (WorksheetPart)workbookPart.GetPartById(selected.Sheet.Id!);
+
+        // Each LIMS import is a full refresh for that lab/table.
+        // Clear existing rows once before the first SqlBulkCopy batch is written.
+        await TruncateDestinationTableAsync(conn, tableName, ct);
+
         var table = BuildDataTable(schema);
 
         var insertedRows = 0;
@@ -183,6 +188,19 @@ public static class LimsMasterBulkImporter
         }
 
         return new ImportResult(tableName, insertedRows, skippedRows);
+    }
+
+    private static async Task TruncateDestinationTableAsync(
+        SqlConnection conn,
+        string tableName,
+        CancellationToken ct)
+    {
+        var safeTableName = ToSqlSafeTableName(tableName);
+
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = $"TRUNCATE TABLE {safeTableName};";
+        cmd.CommandTimeout = 0;
+        await cmd.ExecuteNonQueryAsync(ct);
     }
 
     private static async Task BulkCopyAsync(
@@ -444,5 +462,23 @@ public static class LimsMasterBulkImporter
             return name;
 
         return $"dbo.{name}";
+    }
+
+    private static string ToSqlSafeTableName(string tableName)
+    {
+        if (string.IsNullOrWhiteSpace(tableName))
+            throw new ArgumentException("Destination table name is required.", nameof(tableName));
+
+        static string QuotePart(string value) => $"[{value.Replace("]", "]]")}]";
+
+        var parts = tableName
+            .Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        return parts.Length switch
+        {
+            1 => QuotePart(parts[0]),
+            2 => $"{QuotePart(parts[0])}.{QuotePart(parts[1])}",
+            _ => throw new InvalidOperationException($"Invalid destination table name: {tableName}")
+        };
     }
 }

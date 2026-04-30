@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 public static class StandardCsvExporter
 {
 
-    public sealed record InsuranceMasterEntry(string GlobalPayerId, string PayerNameNormalized, string payercode, string payercommoncode, string payerGroupCode);
+    public sealed record InsuranceMasterEntry(string GlobalPayerId, string PayerNameNormalized, string payercode, string payercommoncode, string payerGroupCode, string LabName = "");
 
     /// <summary>
     /// Loads the Consolidated Lab Insurance Master CSV into a lookup keyed by normalized Payer_Name_Raw.
@@ -44,6 +44,7 @@ public static class StandardCsvExporter
 
         int idxRaw = idxByNorm.TryGetValue(NormKey("Payer_Name_Raw"), out var iRaw) ? iRaw : -1;
         int idxNorm = idxByNorm.TryGetValue(NormKey("Payer_Name_Normalized"), out var iNorm) ? iNorm : -1;
+        int idxLabName = idxByNorm.TryGetValue(NormKey("Lab Name"), out var iLabName) ? iLabName : -1;
         int idxGpid = idxByNorm.TryGetValue(NormKey("Global_Payer_ID"), out var iG) ? iG : -1;
         int idxPc = idxByNorm.TryGetValue(NormKey("Payer_Code"), out var PC) ? PC : -1;
         int idxPCC = idxByNorm.TryGetValue(NormKey("Payer_Common_Code"), out var PCC) ? PCC : -1;
@@ -62,10 +63,11 @@ public static class StandardCsvExporter
             var raw = idxRaw >= 0 && idxRaw < row.Length ? (row[idxRaw] ?? "").Trim() : "";
             if (string.IsNullOrWhiteSpace(raw)) continue;
 
-            var key = NormKey(raw);
-            if (string.IsNullOrWhiteSpace(key)) continue;
-
             var normalized = idxNorm >= 0 && idxNorm < row.Length ? (row[idxNorm] ?? "").Trim() : "";
+            var labNameFromMaster = idxLabName >= 0 && idxLabName < row.Length ? (row[idxLabName] ?? "").Trim() : "";
+
+            var key = BuildInsuranceLookupKey(labNameFromMaster, raw);
+            if (string.IsNullOrWhiteSpace(key)) continue;
             var gpid = idxGpid >= 0 && idxGpid < row.Length ? (row[idxGpid] ?? "").Trim() : "";
             var payCode = idxPc >= 0 && idxPc < row.Length ? (row[idxPc] ?? "").Trim() : "";
             var paycmcode = idxPCC >= 0 && idxPCC < row.Length ? (row[idxPCC] ?? "").Trim() : "";
@@ -73,7 +75,11 @@ public static class StandardCsvExporter
 
             // First win
             if (!map.ContainsKey(key))
-                map[key] = new InsuranceMasterEntry(gpid, normalized, payCode, paycmcode, pygrCode);
+                map[key] = new InsuranceMasterEntry(gpid, normalized, payCode, paycmcode, pygrCode, labNameFromMaster);
+
+            var payerOnlyKey = BuildInsuranceLookupKey("", raw);
+            if (string.IsNullOrWhiteSpace(labNameFromMaster) && !map.ContainsKey(payerOnlyKey))
+                map[payerOnlyKey] = new InsuranceMasterEntry(gpid, normalized, payCode, paycmcode, pygrCode, labNameFromMaster);
         }
 
         return map;
@@ -216,8 +222,9 @@ public static class StandardCsvExporter
 
                 if (!string.IsNullOrWhiteSpace(payerRaw))
                 {
-                    var key = NormKey(payerRaw);
-                    if (!string.IsNullOrWhiteSpace(key) && insuranceMaster.TryGetValue(key, out var ins))
+                    var ins = FindInsuranceMasterEntry(insuranceMaster, labName, payerRaw);
+
+                    if (ins != null)
                     {
                         // Fill normalized payer name & global payer id if those columns exist in the COMMON schema
                         extracted["PayerName"] = ins.PayerNameNormalized ?? "";
@@ -1284,6 +1291,73 @@ public static class StandardCsvExporter
 
     private static string Get(string[] row, int idx)
         => idx >= 0 && idx < row.Length ? (row[idx] ?? "") : "";
+
+    private static InsuranceMasterEntry? FindInsuranceMasterEntry(
+        Dictionary<string, InsuranceMasterEntry> insuranceMaster,
+        string? labName,
+        string? payerRaw)
+    {
+        var payerKey = NormKey(payerRaw ?? "");
+        if (string.IsNullOrWhiteSpace(payerKey))
+            return null;
+
+        var labKey = NormKey(labName ?? "");
+
+        // 1) Prefer exact lab + payer match when available.
+        var exactKey = BuildInsuranceLookupKey(labName, payerRaw);
+        if (!string.IsNullOrWhiteSpace(exactKey) && insuranceMaster.TryGetValue(exactKey, out var exactMatch))
+            return exactMatch;
+
+        // 2) If lab names are not exactly the same, match by payer and lab contains either way.
+        // Example: source lab "NorthWest" can match master lab "Northwest Labs".
+        if (!string.IsNullOrWhiteSpace(labKey))
+        {
+            foreach (var item in insuranceMaster)
+            {
+                if (!InsuranceKeyHasPayer(item.Key, payerKey))
+                    continue;
+
+                var masterLabKey = NormKey(item.Value.LabName ?? "");
+                if (string.IsNullOrWhiteSpace(masterLabKey))
+                    continue;
+
+                if (masterLabKey.Contains(labKey, StringComparison.OrdinalIgnoreCase)
+                    || labKey.Contains(masterLabKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    return item.Value;
+                }
+            }
+        }
+
+        // 3) Fallback only to payer-only records where insurance master has no Lab Name.
+        var payerOnlyKey = BuildInsuranceLookupKey("", payerRaw);
+        return insuranceMaster.TryGetValue(payerOnlyKey, out var payerOnlyMatch) ? payerOnlyMatch : null;
+    }
+
+    private static bool InsuranceKeyHasPayer(string lookupKey, string payerKey)
+    {
+        if (string.IsNullOrWhiteSpace(lookupKey) || string.IsNullOrWhiteSpace(payerKey))
+            return false;
+
+        if (lookupKey.Equals(payerKey, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        var splitIndex = lookupKey.LastIndexOf('|');
+        if (splitIndex < 0 || splitIndex == lookupKey.Length - 1)
+            return false;
+
+        return lookupKey[(splitIndex + 1)..].Equals(payerKey, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string BuildInsuranceLookupKey(string? labName, string? payerRaw)
+    {
+        var payerKey = NormKey(payerRaw ?? "");
+        if (string.IsNullOrWhiteSpace(payerKey))
+            return "";
+
+        var labKey = NormKey(labName ?? "");
+        return string.IsNullOrWhiteSpace(labKey) ? payerKey : $"{labKey}|{payerKey}";
+    }
 
     private static string NormKey(string s)
     {

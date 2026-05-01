@@ -2,483 +2,702 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 using System.Data;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-public static class LimsMasterBulkImporter
+public sealed class LimsMasterBulkImporter
 {
-    public sealed record ImportResult(string TableName, int InsertedRows, int SkippedRows);
-
-    private sealed class LimsSchema
-    {
-        public string SchemaName { get; set; } = "LIMSMaster";
-        public int HeaderRow { get; set; } = 1;
-        public string? SheetName { get; set; }
-        public List<LimsColumn> Columns { get; set; } = new();
-    }
-
-    private sealed class LimsColumn
-    {
-        public string? ExcelColName { get; set; }
-        public string? ExcelCoName { get; set; } // supports typo in current schema JSON
-        public bool Required { get; set; }
-        public string DataType { get; set; } = "string";
-        public string SQLColName { get; set; } = "";
-        public string SourceName => !string.IsNullOrWhiteSpace(ExcelColName) ? ExcelColName! : (ExcelCoName ?? "");
-    }
-
-    public static async Task<ImportResult> ImportAsync(
-        string limsExcelPath,
-        string schemaJsonPath,
-        string connectionString,
-        CancellationToken ct)
-    {
-        if (!File.Exists(limsExcelPath))
-            throw new FileNotFoundException("LIMS Excel file not found.", limsExcelPath);
-
-        if (!File.Exists(schemaJsonPath))
-            throw new FileNotFoundException("LIMS schema JSON file not found.", schemaJsonPath);
-
-        var schema = JsonSerializer.Deserialize<LimsSchema>(
-            File.ReadAllText(schemaJsonPath),
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-            ?? throw new InvalidOperationException($"Invalid LIMS schema JSON: {schemaJsonPath}");
-
-        if (schema.Columns.Count == 0)
-            throw new InvalidOperationException($"LIMS schema has no columns: {schemaJsonPath}");
-
-        var tableName = NormalizeDestinationTable(schema.SchemaName);
-
-        await using var conn = new SqlConnection(connectionString);
-        await conn.OpenAsync(ct);
-
-        return await StreamExcelAndBulkCopyAsync(
-            limsExcelPath,
-            schema,
-            tableName,
-            conn,
-            ct);
-    }
-
-    private static DataTable BuildDataTable(LimsSchema schema)
-    {
-        var table = new DataTable(schema.SchemaName);
-
-        foreach (var col in schema.Columns)
-        {
-            if (string.IsNullOrWhiteSpace(col.SQLColName))
-                throw new InvalidOperationException("LIMS schema column missing SQLColName.");
-
-            table.Columns.Add(col.SQLColName.Trim(), GetNetType(col.DataType));
-        }
-
-        return table;
-    }
-
-    // Do not use ClosedXML here. Some LIMS workbooks throw:
-    // XLWorkbook.LoadSpreadsheetDocument -> NotImplementedException.
-    // This streams OpenXML rows and bulk copies in batches, so 350k+ rows are not kept in memory.
-    private static async Task<ImportResult> StreamExcelAndBulkCopyAsync(
-        string path,
-        LimsSchema schema,
-        string tableName,
-        SqlConnection conn,
-        CancellationToken ct)
-    {
-        const int batchSize = 25000;
-
-        using var document = SpreadsheetDocument.Open(path, false);
-        var workbookPart = document.WorkbookPart
-            ?? throw new InvalidOperationException($"Invalid LIMS workbook: {path}");
-
-        var sheets = workbookPart.Workbook.Sheets?.Elements<Sheet>().ToList() ?? new List<Sheet>();
-        if (sheets.Count == 0)
-            throw new InvalidOperationException($"LIMS workbook has no worksheet: {path}");
-
-        var sharedStrings = workbookPart.SharedStringTablePart?.SharedStringTable;
-        var selected = FindLimsWorksheet(workbookPart, sheets, schema, sharedStrings, path);
-
-        foreach (var col in schema.Columns)
-        {
-            if (col.Required && !selected.HeaderLookup.ContainsKey(NormKey(col.SourceName)))
-                throw new InvalidOperationException($"LIMS sheet '{selected.Sheet.Name}' missing required column: {col.SourceName}");
-        }
-
-        var worksheetPart = (WorksheetPart)workbookPart.GetPartById(selected.Sheet.Id!);
-
-        // Each LIMS import is a full refresh for that lab/table.
-        // Clear existing rows once before the first SqlBulkCopy batch is written.
-        await TruncateDestinationTableAsync(conn, tableName, ct);
-
-        var table = BuildDataTable(schema);
-
-        var insertedRows = 0;
-        var skippedRows = 0;
-
-        using var reader = OpenXmlReader.Create(worksheetPart);
-
-        while (reader.Read())
-        {
-            if (reader.ElementType != typeof(Row) || !reader.IsStartElement)
-                continue;
-
-            ct.ThrowIfCancellationRequested();
-
-            var row = (Row)reader.LoadCurrentElement();
-            var rowNumber = (int)(row.RowIndex?.Value ?? 0);
-
-            if (rowNumber <= selected.HeaderRowNumber)
-                continue;
-
-            var cellsByIndex = row.Elements<Cell>()
-                .Where(c => c.CellReference != null)
-                .ToDictionary(c => GetColumnIndex(c.CellReference!.Value!), c => c);
-
-            var dataRow = table.NewRow();
-            var hasAnyValue = false;
-            var missingRequiredValue = false;
-
-            foreach (var col in schema.Columns)
-            {
-                object? value = null;
-
-                if (selected.HeaderLookup.TryGetValue(NormKey(col.SourceName), out var excelColumnIndex) &&
-                    cellsByIndex.TryGetValue(excelColumnIndex, out var cell))
-                {
-                    value = ConvertCellValue(cell, sharedStrings, col.DataType);
-
-                    if (value != null && value != DBNull.Value && !string.IsNullOrWhiteSpace(value.ToString()))
-                        hasAnyValue = true;
-                }
-
-                if (col.Required && (value == null || value == DBNull.Value || string.IsNullOrWhiteSpace(value.ToString())))
-                    missingRequiredValue = true;
-
-                dataRow[col.SQLColName.Trim()] = value ?? DBNull.Value;
-            }
-
-            if (!hasAnyValue)
-                continue;
-
-            if (missingRequiredValue)
-            {
-                skippedRows++;
-                continue;
-            }
-
-            table.Rows.Add(dataRow);
-
-            if (table.Rows.Count >= batchSize)
-            {
-                var currentBatchRows = table.Rows.Count;
-                await BulkCopyAsync(conn, tableName, table, ct);
-                insertedRows += currentBatchRows;
-                table.Clear();
-            }
-        }
-
-        if (table.Rows.Count > 0)
-        {
-            var currentBatchRows = table.Rows.Count;
-            await BulkCopyAsync(conn, tableName, table, ct);
-            insertedRows += currentBatchRows;
-            table.Clear();
-        }
-
-        return new ImportResult(tableName, insertedRows, skippedRows);
-    }
-
-    private static async Task TruncateDestinationTableAsync(
-        SqlConnection conn,
-        string tableName,
-        CancellationToken ct)
-    {
-        var safeTableName = ToSqlSafeTableName(tableName);
-
-        await using var cmd = conn.CreateCommand();
-        cmd.CommandText = $"TRUNCATE TABLE {safeTableName};";
-        cmd.CommandTimeout = 0;
-        await cmd.ExecuteNonQueryAsync(ct);
-    }
-
-    private static async Task BulkCopyAsync(
-        SqlConnection conn,
-        string tableName,
-        DataTable table,
-        CancellationToken ct)
-    {
-        using var bulkCopy = new SqlBulkCopy(conn, SqlBulkCopyOptions.TableLock, null)
-        {
-            DestinationTableName = tableName,
-            BatchSize = table.Rows.Count,
-            BulkCopyTimeout = 0,
-            EnableStreaming = true
-        };
-
-        foreach (DataColumn col in table.Columns)
-            bulkCopy.ColumnMappings.Add(col.ColumnName, col.ColumnName);
-
-        await bulkCopy.WriteToServerAsync(table, ct);
-    }
-
-    private sealed record LimsWorksheetMatch(
-        Sheet Sheet,
-        int HeaderRowNumber,
-        Dictionary<string, int> HeaderLookup);
-
-    private static LimsWorksheetMatch FindLimsWorksheet(
-        WorkbookPart workbookPart,
-        List<Sheet> sheets,
-        LimsSchema schema,
-        SharedStringTable? sharedStrings,
-        string path)
-    {
-        var configuredHeaderRow = schema.HeaderRow <= 0 ? 1 : schema.HeaderRow;
-
-        // 1) Prefer exact configured sheet name, for example "Masterfile".
-        if (!string.IsNullOrWhiteSpace(schema.SheetName))
-        {
-            var configuredSheet = sheets.FirstOrDefault(s =>
-                string.Equals(s.Name?.Value?.Trim(), schema.SheetName.Trim(), StringComparison.OrdinalIgnoreCase));
-
-            if (configuredSheet != null)
-            {
-                var match = TryBuildWorksheetMatch(workbookPart, configuredSheet, configuredHeaderRow, sharedStrings);
-                if (match != null && HasEnoughSchemaHeaders(match.HeaderLookup, schema, requireRequiredColumns: true))
-                    return match;
-            }
-        }
-
-        // 2) Common LIMS sheet name fallback.
-        var masterfileSheet = sheets.FirstOrDefault(s =>
-            string.Equals(s.Name?.Value?.Trim(), "Masterfile", StringComparison.OrdinalIgnoreCase));
-
-        if (masterfileSheet != null)
-        {
-            var match = TryBuildWorksheetMatch(workbookPart, masterfileSheet, configuredHeaderRow, sharedStrings);
-            if (match != null && HasEnoughSchemaHeaders(match.HeaderLookup, schema, requireRequiredColumns: true))
-                return match;
-        }
-
-        // 3) Scan all sheets and identify the valid sheet by schema header columns.
-        // HeaderRow from JSON is still preferred, but this also checks the first 20 rows
-        // because some LIMS files have a blank/title row before the real header.
-        LimsWorksheetMatch? bestMatch = null;
-        var bestScore = -1;
-
-        foreach (var candidateSheet in sheets)
-        {
-            var worksheetPart = (WorksheetPart)workbookPart.GetPartById(candidateSheet.Id!);
-
-            foreach (var headerRow in GetHeaderRowsToTry(worksheetPart, configuredHeaderRow))
-            {
-                var headerRowNo = (int)(headerRow.RowIndex?.Value ?? 0);
-                if (headerRowNo <= 0) continue;
-
-                var lookup = BuildHeaderLookup(headerRow, sharedStrings);
-                var score = CountSchemaHeaderMatches(lookup, schema);
-
-                if (score > bestScore)
-                {
-                    bestScore = score;
-                    bestMatch = new LimsWorksheetMatch(candidateSheet, headerRowNo, lookup);
-                }
-
-                if (HasEnoughSchemaHeaders(lookup, schema, requireRequiredColumns: true))
-                    return new LimsWorksheetMatch(candidateSheet, headerRowNo, lookup);
-            }
-        }
-
-        if (bestMatch != null && HasEnoughSchemaHeaders(bestMatch.HeaderLookup, schema, requireRequiredColumns: false))
-            return bestMatch;
-
-        var expectedHeaders = string.Join(", ", schema.Columns.Select(c => c.SourceName).Where(x => !string.IsNullOrWhiteSpace(x)));
-        throw new InvalidOperationException($"No valid LIMS worksheet found in '{path}'. Expected headers: {expectedHeaders}");
-    }
-
-    private static LimsWorksheetMatch? TryBuildWorksheetMatch(
-        WorkbookPart workbookPart,
-        Sheet sheet,
-        int headerRowNumber,
-        SharedStringTable? sharedStrings)
-    {
-        var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
-        var headerRow = FindRowByNumber(worksheetPart, headerRowNumber);
-        if (headerRow == null) return null;
-
-        var headerLookup = BuildHeaderLookup(headerRow, sharedStrings);
-        return new LimsWorksheetMatch(sheet, headerRowNumber, headerLookup);
-    }
-
-    private static Row? FindRowByNumber(WorksheetPart worksheetPart, int rowNumber)
-    {
-        return worksheetPart.Worksheet
-            .Elements<SheetData>()
-            .FirstOrDefault()?
-            .Elements<Row>()
-            .FirstOrDefault(r => (int)(r.RowIndex?.Value ?? 0) == rowNumber);
-    }
-
-    private static IEnumerable<Row> GetHeaderRowsToTry(WorksheetPart worksheetPart, int configuredHeaderRow)
-    {
-        var emitted = new HashSet<int>();
-
-        var configuredRow = FindRowByNumber(worksheetPart, configuredHeaderRow);
-        if (configuredRow != null && emitted.Add(configuredHeaderRow))
-            yield return configuredRow;
-
-        var sheetData = worksheetPart.Worksheet.Elements<SheetData>().FirstOrDefault();
-        if (sheetData == null)
-            yield break;
-
-        foreach (var row in sheetData.Elements<Row>().Take(20))
-        {
-            var rowNo = (int)(row.RowIndex?.Value ?? 0);
-            if (rowNo > 0 && emitted.Add(rowNo))
-                yield return row;
-        }
-    }
-
-    private static bool HasEnoughSchemaHeaders(
-        Dictionary<string, int> headerLookup,
-        LimsSchema schema,
-        bool requireRequiredColumns)
-    {
-        if (headerLookup.Count == 0) return false;
-
-        var requiredColumns = schema.Columns.Where(c => c.Required).ToList();
-        if (requireRequiredColumns && requiredColumns.Any(c => !headerLookup.ContainsKey(NormKey(c.SourceName))))
-            return false;
-
-        var matched = CountSchemaHeaderMatches(headerLookup, schema);
-        var expected = schema.Columns.Count(c => !string.IsNullOrWhiteSpace(c.SourceName));
-
-        // Accept when all required columns exist and at least 2 schema columns match,
-        // or when 50% of configured schema headers match.
-        return matched >= Math.Min(2, expected) || matched >= Math.Ceiling(expected * 0.50m);
-    }
-
-    private static int CountSchemaHeaderMatches(Dictionary<string, int> headerLookup, LimsSchema schema)
-    {
-        return schema.Columns.Count(c =>
-            !string.IsNullOrWhiteSpace(c.SourceName) &&
-            headerLookup.ContainsKey(NormKey(c.SourceName)));
-    }
-
-    private static Dictionary<string, int> BuildHeaderLookup(Row headerRow, SharedStringTable? sharedStrings)
-    {
-        var lookup = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var cell in headerRow.Elements<Cell>())
-        {
-            if (cell.CellReference == null) continue;
-
-            var header = ReadCellText(cell, sharedStrings).Trim();
-            var key = NormKey(header);
-            var colIndex = GetColumnIndex(cell.CellReference.Value!);
-
-            if (!string.IsNullOrWhiteSpace(key) && !lookup.ContainsKey(key))
-                lookup[key] = colIndex;
-        }
-
-        return lookup;
-    }
-
-    private static object? ConvertCellValue(Cell cell, SharedStringTable? sharedStrings, string dataType)
-    {
-        var raw = ReadCellText(cell, sharedStrings).Trim();
-        if (string.IsNullOrWhiteSpace(raw))
-            return null;
-
-        if (IsDateType(dataType))
-        {
-            // Excel often stores dates as OA serial numbers.
-            if (double.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var oaNumber))
-            {
-                try { return DateTime.FromOADate(oaNumber).Date; }
-                catch { return null; }
-            }
-
-            if (DateTime.TryParse(raw, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed) ||
-                DateTime.TryParse(raw, CultureInfo.CurrentCulture, DateTimeStyles.None, out parsed))
-                return parsed.Date;
-
-            return null;
-        }
-
-        return raw;
-    }
-
-    private static string ReadCellText(Cell cell, SharedStringTable? sharedStrings)
-    {
-        if (cell.DataType?.Value == CellValues.SharedString)
-        {
-            var rawIndex = cell.CellValue?.Text;
-            if (int.TryParse(rawIndex, out var sharedStringIndex) && sharedStrings != null)
-                return sharedStrings.ElementAt(sharedStringIndex).InnerText ?? string.Empty;
-
-            return string.Empty;
-        }
-
-        if (cell.DataType?.Value == CellValues.InlineString)
-            return cell.InlineString?.Text?.Text ?? cell.InnerText ?? string.Empty;
-
-        return cell.CellValue?.Text ?? cell.InnerText ?? string.Empty;
-    }
-
-    private static int GetColumnIndex(string cellReference)
-    {
-        var letters = Regex.Match(cellReference, "^[A-Za-z]+").Value.ToUpperInvariant();
-        var sum = 0;
-
-        foreach (var ch in letters)
-            sum = (sum * 26) + (ch - 'A' + 1);
-
-        return sum;
-    }
-
-    private static Type GetNetType(string dataType)
-    {
-        if (IsDateType(dataType)) return typeof(DateTime);
-        return typeof(string);
-    }
-
-    private static bool IsDateType(string dataType) =>
-        string.Equals(dataType, "date", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(dataType, "datetime", StringComparison.OrdinalIgnoreCase);
-
-    private static string NormKey(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value)) return string.Empty;
-        return Regex.Replace(value.Trim(), @"[^A-Za-z0-9]", "").ToLowerInvariant();
-    }
-
-    private static string NormalizeDestinationTable(string? schemaName)
-    {
-        var name = string.IsNullOrWhiteSpace(schemaName) ? "LIMSMaster" : schemaName.Trim();
-        if (name.Contains('.', StringComparison.Ordinal))
-            return name;
-
-        return $"dbo.{name}";
-    }
-
-    private static string ToSqlSafeTableName(string tableName)
-    {
-        if (string.IsNullOrWhiteSpace(tableName))
-            throw new ArgumentException("Destination table name is required.", nameof(tableName));
-
-        static string QuotePart(string value) => $"[{value.Replace("]", "]]")}]";
-
-        var parts = tableName
-            .Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-        return parts.Length switch
-        {
-            1 => QuotePart(parts[0]),
-            2 => $"{QuotePart(parts[0])}.{QuotePart(parts[1])}",
-            _ => throw new InvalidOperationException($"Invalid destination table name: {tableName}")
-        };
-    }
+	private readonly ILogger _logger;
+	private const int DefaultBatchSize = 50000;
+
+	public LimsMasterBulkImporter(ILogger logger)
+	{
+		_logger = logger;
+	}
+
+	public async Task<LimsImportResult> ImportAsync(LimsImportRequest request, CancellationToken ct)
+	{
+		if (string.IsNullOrWhiteSpace(request.ExcelPath) || !File.Exists(request.ExcelPath))
+			throw new FileNotFoundException("LIMS Excel file not found.", request.ExcelPath);
+
+		if (string.IsNullOrWhiteSpace(request.ConnectionString))
+			throw new InvalidOperationException("LIMS lab DB connection string is missing. Configure LabDbConnectionString for the lab.");
+
+		var tableName = string.IsNullOrWhiteSpace(request.DestinationTable) ? "dbo.LIMSMaster" : request.DestinationTable!;
+		var batchSize = request.BatchSize <= 0 ? DefaultBatchSize : request.BatchSize;
+		var runCreatedOn = request.CreatedOn == default ? DateTime.Now : request.CreatedOn;
+
+		var mappingsFromSchema = LimsSchemaMapping.Load(request.SchemaJsonPath);
+		await using var connection = new SqlConnection(request.ConnectionString);
+		await connection.OpenAsync(ct);
+
+		var destinationColumns = await LoadDestinationColumnsAsync(connection, tableName, ct);
+		if (destinationColumns.Count == 0)
+			throw new InvalidOperationException($"Destination table '{tableName}' was not found or has no columns.");
+
+		var disabledIndexes = new List<string>();
+		var triggersDisabled = false;
+
+		try
+		{
+			if (request.TruncateBeforeLoad)
+			{
+				await ExecuteNonQueryAsync(connection, $"TRUNCATE TABLE {QuoteTableName(tableName)};", ct);
+				_logger.LogInformation("LIMS import: truncated {TableName}", tableName);
+			}
+
+			if (request.DisableTriggersDuringLoad)
+			{
+				await ExecuteNonQueryAsync(connection, $"DISABLE TRIGGER ALL ON {QuoteTableName(tableName)};", ct);
+				triggersDisabled = true;
+				_logger.LogInformation("LIMS import: disabled triggers on {TableName}", tableName);
+			}
+
+			if (request.DisableNonClusteredIndexesDuringLoad)
+			{
+				disabledIndexes = await DisableNonClusteredIndexesAsync(connection, tableName, ct);
+				if (disabledIndexes.Count > 0)
+					_logger.LogInformation("LIMS import: disabled {Count} non-clustered indexes on {TableName}", disabledIndexes.Count, tableName);
+			}
+
+			var result = await StreamExcelToSqlAsync(
+				request,
+				connection,
+				tableName,
+				destinationColumns,
+				mappingsFromSchema,
+				batchSize,
+				runCreatedOn,
+				ct);
+
+			return result;
+		}
+		finally
+		{
+			if (triggersDisabled)
+			{
+				try { await ExecuteNonQueryAsync(connection, $"ENABLE TRIGGER ALL ON {QuoteTableName(tableName)};", CancellationToken.None); }
+				catch (Exception ex) { _logger.LogWarning(ex, "LIMS import: failed to re-enable triggers on {TableName}", tableName); }
+			}
+
+			foreach (var indexName in disabledIndexes)
+			{
+				try { await ExecuteNonQueryAsync(connection, $"ALTER INDEX {QuoteIdentifier(indexName)} ON {QuoteTableName(tableName)} REBUILD;", CancellationToken.None); }
+				catch (Exception ex) { _logger.LogWarning(ex, "LIMS import: failed to rebuild index {IndexName} on {TableName}", indexName, tableName); }
+			}
+		}
+	}
+
+	private async Task<LimsImportResult> StreamExcelToSqlAsync(
+		LimsImportRequest request,
+		SqlConnection connection,
+		string tableName,
+		List<SqlDestinationColumn> destinationColumns,
+		List<LimsColumnMapping> schemaMappings,
+		int batchSize,
+		DateTime runCreatedOn,
+		CancellationToken ct)
+	{
+		using var document = SpreadsheetDocument.Open(request.ExcelPath, false);
+		var workbookPart = document.WorkbookPart ?? throw new InvalidOperationException("Invalid workbook. WorkbookPart is missing.");
+		var sharedStrings = LoadSharedStrings(workbookPart);
+		var selectedSheet = SelectWorksheet(workbookPart, sharedStrings, request.PreferredSheetName, schemaMappings, destinationColumns);
+
+		_logger.LogInformation("LIMS import: selected worksheet '{SheetName}' from {File}", selectedSheet.SheetName, Path.GetFileName(request.ExcelPath));
+
+		var headerMap = selectedSheet.Headers
+			.Where(h => !string.IsNullOrWhiteSpace(h.Value))
+			.GroupBy(h => NormalizeName(h.Value))
+			.ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+		var destinationByNormalized = destinationColumns.ToDictionary(c => NormalizeName(c.Name), c => c, StringComparer.OrdinalIgnoreCase);
+		var columnsToLoad = BuildLoadColumns(destinationColumns, schemaMappings, headerMap, request);
+
+		if (columnsToLoad.Count == 0)
+			throw new InvalidOperationException("No matching LIMS columns found between Excel/schema and destination table.");
+
+		var table = CreateDataTable(columnsToLoad);
+		var totalRows = 0;
+		var copiedRows = 0;
+		var firstDataRowNumber = selectedSheet.HeaderRowNumber + 1;
+
+		using var reader = OpenXmlReader.Create(selectedSheet.WorksheetPart);
+		while (reader.Read())
+		{
+			ct.ThrowIfCancellationRequested();
+			if (reader.ElementType != typeof(Row) || !reader.IsStartElement)
+				continue;
+
+			var row = (Row)reader.LoadCurrentElement();
+			var rowNumber = (int)(row.RowIndex?.Value ?? 0);
+			if (rowNumber < firstDataRowNumber)
+				continue;
+
+			var valuesByColumnIndex = ReadRowValues(row, sharedStrings);
+			if (IsBlankDataRow(valuesByColumnIndex))
+				continue;
+
+			var dataRow = table.NewRow();
+			var hasAnyMappedValue = false;
+
+			foreach (var loadColumn in columnsToLoad)
+			{
+				object? value = null;
+
+				if (loadColumn.SpecialColumn == LimsSpecialColumn.CreatedOn)
+					value = runCreatedOn;
+				else if (loadColumn.SpecialColumn == LimsSpecialColumn.LabId)
+					value = request.LabId;
+				else if (loadColumn.SpecialColumn == LimsSpecialColumn.LabName)
+					value = request.LabName;
+				else if (loadColumn.SpecialColumn == LimsSpecialColumn.SourceFileName)
+					value = Path.GetFileName(request.ExcelPath);
+				else if (loadColumn.ExcelColumnIndex.HasValue && valuesByColumnIndex.TryGetValue(loadColumn.ExcelColumnIndex.Value, out var text))
+				{
+					value = ConvertValue(text, loadColumn.DestinationColumn);
+					if (!string.IsNullOrWhiteSpace(text))
+						hasAnyMappedValue = true;
+				}
+
+				dataRow[loadColumn.DestinationColumn.Name] = value ?? DBNull.Value;
+			}
+
+			if (!hasAnyMappedValue)
+				continue;
+
+			table.Rows.Add(dataRow);
+			totalRows++;
+
+			if (table.Rows.Count >= batchSize)
+			{
+				copiedRows += await BulkCopyAsync(connection, tableName, table, batchSize, ct);
+				table.Clear();
+			}
+		}
+
+		if (table.Rows.Count > 0)
+		{
+			copiedRows += await BulkCopyAsync(connection, tableName, table, batchSize, ct);
+			table.Clear();
+		}
+
+		return new LimsImportResult
+		{
+			FilePath = request.ExcelPath,
+			SheetName = selectedSheet.SheetName,
+			HeaderRowNumber = selectedSheet.HeaderRowNumber,
+			TotalRowsRead = totalRows,
+			TotalRowsCopied = copiedRows,
+			CreatedOn = runCreatedOn,
+			DestinationTable = tableName
+		};
+	}
+
+	private static List<LimsLoadColumn> BuildLoadColumns(
+		List<SqlDestinationColumn> destinationColumns,
+		List<LimsColumnMapping> schemaMappings,
+		Dictionary<string, ExcelHeaderInfo> headerMap,
+		LimsImportRequest request)
+	{
+		var schemaByDestination = schemaMappings
+			.GroupBy(m => NormalizeName(m.DestinationName))
+			.ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+		var loadColumns = new List<LimsLoadColumn>();
+
+		foreach (var dest in destinationColumns.Where(c => !c.IsIdentity && !c.IsComputed))
+		{
+			var normalizedDest = NormalizeName(dest.Name);
+			var special = GetSpecialColumn(dest.Name);
+
+			if (special != LimsSpecialColumn.None)
+			{
+				loadColumns.Add(new LimsLoadColumn(dest, null, special));
+				continue;
+			}
+
+			var candidateNames = new List<string> { dest.Name };
+			if (schemaByDestination.TryGetValue(normalizedDest, out var mapping))
+			{
+				candidateNames.Add(mapping.DestinationName);
+				candidateNames.AddRange(mapping.SourceNames);
+			}
+
+			ExcelHeaderInfo? matchedHeader = null;
+			foreach (var candidate in candidateNames.Where(x => !string.IsNullOrWhiteSpace(x)))
+			{
+				if (headerMap.TryGetValue(NormalizeName(candidate), out matchedHeader))
+					break;
+			}
+
+			if (matchedHeader != null)
+				loadColumns.Add(new LimsLoadColumn(dest, matchedHeader.ColumnIndex, LimsSpecialColumn.None));
+		}
+
+		return loadColumns;
+	}
+
+	private static LimsSpecialColumn GetSpecialColumn(string columnName)
+	{
+		var n = NormalizeName(columnName);
+		if (n == "createdon" || n == "ingestedon") return LimsSpecialColumn.CreatedOn;
+		if (n == "labid") return LimsSpecialColumn.LabId;
+		if (n == "labname") return LimsSpecialColumn.LabName;
+		if (n == "sourcefileid" || n == "sourcefilename" || n == "filename") return LimsSpecialColumn.SourceFileName;
+		return LimsSpecialColumn.None;
+	}
+
+	private static DataTable CreateDataTable(List<LimsLoadColumn> columns)
+	{
+		var table = new DataTable();
+		foreach (var col in columns)
+			table.Columns.Add(col.DestinationColumn.Name, GetClrType(col.DestinationColumn.SqlTypeName));
+		return table;
+	}
+
+	private static async Task<int> BulkCopyAsync(SqlConnection connection, string tableName, DataTable table, int batchSize, CancellationToken ct)
+	{
+		using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.KeepNulls, null)
+		{
+			DestinationTableName = tableName,
+			BatchSize = batchSize,
+			BulkCopyTimeout = 0,
+			EnableStreaming = true
+		};
+
+		foreach (DataColumn col in table.Columns)
+			bulkCopy.ColumnMappings.Add(col.ColumnName, col.ColumnName);
+
+		await bulkCopy.WriteToServerAsync(table, ct);
+		return table.Rows.Count;
+	}
+
+	private static object? ConvertValue(string? value, SqlDestinationColumn destinationColumn)
+	{
+		if (string.IsNullOrWhiteSpace(value))
+			return null;
+
+		value = value.Trim();
+		var type = destinationColumn.SqlTypeName.ToLowerInvariant();
+
+		try
+		{
+			if (type.Contains("date") || type.Contains("time"))
+			{
+				if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var oa))
+					return DateTime.FromOADate(oa);
+
+				if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+					return dt;
+
+				if (DateTime.TryParse(value, CultureInfo.CurrentCulture, DateTimeStyles.None, out dt))
+					return dt;
+
+				return null;
+			}
+
+			if (type is "int")
+				return int.TryParse(RemoveExcelDecimal(value), NumberStyles.Any, CultureInfo.InvariantCulture, out var i) ? i : null;
+
+			if (type is "bigint")
+				return long.TryParse(RemoveExcelDecimal(value), NumberStyles.Any, CultureInfo.InvariantCulture, out var l) ? l : null;
+
+			if (type is "smallint")
+				return short.TryParse(RemoveExcelDecimal(value), NumberStyles.Any, CultureInfo.InvariantCulture, out var s) ? s : null;
+
+			if (type is "tinyint")
+				return byte.TryParse(RemoveExcelDecimal(value), NumberStyles.Any, CultureInfo.InvariantCulture, out var b) ? b : null;
+
+			if (type is "bit")
+			{
+				if (bool.TryParse(value, out var boolValue)) return boolValue;
+				if (value == "1") return true;
+				if (value == "0") return false;
+				return null;
+			}
+
+			if (type is "decimal" or "numeric" or "money" or "smallmoney")
+				return decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var d) ? d : null;
+
+			if (type is "float")
+				return double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var dbl) ? dbl : null;
+
+			if (type is "real")
+				return float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var f) ? f : null;
+		}
+		catch
+		{
+			return null;
+		}
+
+		if (destinationColumn.MaxLength > 0 && value.Length > destinationColumn.MaxLength)
+			return value[..destinationColumn.MaxLength];
+
+		return value;
+	}
+
+	private static string RemoveExcelDecimal(string value)
+	{
+		return Regex.IsMatch(value, @"^-?\d+\.0+$") ? value[..value.IndexOf('.', StringComparison.Ordinal)] : value;
+	}
+
+	private static Type GetClrType(string sqlTypeName)
+	{
+		return sqlTypeName.ToLowerInvariant() switch
+		{
+			"int" => typeof(int),
+			"bigint" => typeof(long),
+			"smallint" => typeof(short),
+			"tinyint" => typeof(byte),
+			"bit" => typeof(bool),
+			"decimal" or "numeric" or "money" or "smallmoney" => typeof(decimal),
+			"float" => typeof(double),
+			"real" => typeof(float),
+			"date" or "datetime" or "datetime2" or "smalldatetime" => typeof(DateTime),
+			_ => typeof(string)
+		};
+	}
+
+	private static LimsWorksheetSelection SelectWorksheet(
+		WorkbookPart workbookPart,
+		IReadOnlyList<string> sharedStrings,
+		string? preferredSheetName,
+		List<LimsColumnMapping> schemaMappings,
+		List<SqlDestinationColumn> destinationColumns)
+	{
+		var sheets = workbookPart.Workbook.Sheets?.Elements<Sheet>().ToList() ?? new List<Sheet>();
+		if (sheets.Count == 0)
+			throw new InvalidOperationException("Workbook does not contain sheets.");
+
+		var preferredNames = new[] { preferredSheetName, "Masterfile", "Master File", "LIMS", "LIMS Master" }
+			.Where(x => !string.IsNullOrWhiteSpace(x))
+			.Select(NormalizeName)
+			.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+		LimsWorksheetSelection? best = null;
+
+		foreach (var sheet in sheets)
+		{
+			if (sheet.Id == null) continue;
+			var part = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
+			var selection = InspectWorksheet(part, sheet.Name?.Value ?? string.Empty, sharedStrings, schemaMappings, destinationColumns);
+
+			if (preferredNames.Contains(NormalizeName(selection.SheetName)) && selection.Headers.Count > 0)
+				return selection;
+
+			if (best == null || selection.MatchScore > best.MatchScore)
+				best = selection;
+		}
+
+		return best ?? throw new InvalidOperationException("No valid worksheet found in LIMS workbook.");
+	}
+
+	private static LimsWorksheetSelection InspectWorksheet(
+		WorksheetPart part,
+		string sheetName,
+		IReadOnlyList<string> sharedStrings,
+		List<LimsColumnMapping> schemaMappings,
+		List<SqlDestinationColumn> destinationColumns)
+	{
+		var expected = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		foreach (var c in destinationColumns) expected.Add(NormalizeName(c.Name));
+		foreach (var m in schemaMappings)
+		{
+			expected.Add(NormalizeName(m.DestinationName));
+			foreach (var s in m.SourceNames) expected.Add(NormalizeName(s));
+		}
+
+		using var reader = OpenXmlReader.Create(part);
+		var checkedRows = 0;
+		var bestHeaders = new List<ExcelHeaderInfo>();
+		var bestScore = -1;
+		var bestRow = 1;
+
+		while (reader.Read() && checkedRows < 20)
+		{
+			if (reader.ElementType != typeof(Row) || !reader.IsStartElement)
+				continue;
+
+			var row = (Row)reader.LoadCurrentElement();
+			checkedRows++;
+			var headers = ReadRowValues(row, sharedStrings)
+				.Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
+				.Select(kv => new ExcelHeaderInfo(kv.Key, kv.Value.Trim()))
+				.ToList();
+
+			var score = headers.Count(h => expected.Contains(NormalizeName(h.Value)));
+			if (score > bestScore)
+			{
+				bestScore = score;
+				bestHeaders = headers;
+				bestRow = (int)(row.RowIndex?.Value ?? 0);
+			}
+		}
+
+		return new LimsWorksheetSelection(part, sheetName, bestRow, bestHeaders, bestScore);
+	}
+
+	private static Dictionary<int, string> ReadRowValues(Row row, IReadOnlyList<string> sharedStrings)
+	{
+		var result = new Dictionary<int, string>();
+		foreach (var cell in row.Elements<Cell>())
+		{
+			var index = GetColumnIndex(cell.CellReference?.Value);
+			if (index <= 0) continue;
+			result[index] = GetCellValue(cell, sharedStrings);
+		}
+		return result;
+	}
+
+	private static bool IsBlankDataRow(Dictionary<int, string> values)
+	{
+		return values.Count == 0 || values.Values.All(string.IsNullOrWhiteSpace);
+	}
+
+	private static string GetCellValue(Cell cell, IReadOnlyList<string> sharedStrings)
+	{
+		var raw = cell.CellValue?.Text ?? cell.InnerText ?? string.Empty;
+		if (cell.DataType == null)
+			return raw;
+
+		if (cell.DataType.Value == CellValues.SharedString && int.TryParse(raw, out var sharedIndex))
+			return sharedIndex >= 0 && sharedIndex < sharedStrings.Count ? sharedStrings[sharedIndex] : string.Empty;
+
+		if (cell.DataType.Value == CellValues.InlineString)
+			return cell.InlineString?.Text?.Text ?? cell.InnerText ?? string.Empty;
+
+		if (cell.DataType.Value == CellValues.Boolean)
+			return raw == "1" ? "true" : "false";
+
+		return raw;
+	}
+
+	private static List<string> LoadSharedStrings(WorkbookPart workbookPart)
+	{
+		return workbookPart.SharedStringTablePart?.SharedStringTable
+			.Elements<SharedStringItem>()
+			.Select(x => x.InnerText ?? string.Empty)
+			.ToList() ?? new List<string>();
+	}
+
+	private static int GetColumnIndex(string? cellReference)
+	{
+		if (string.IsNullOrWhiteSpace(cellReference)) return 0;
+		var columnName = Regex.Replace(cellReference.ToUpperInvariant(), "[^A-Z]", "");
+		var sum = 0;
+		foreach (var c in columnName)
+			sum = (sum * 26) + (c - 'A' + 1);
+		return sum;
+	}
+
+	private static async Task<List<SqlDestinationColumn>> LoadDestinationColumnsAsync(SqlConnection connection, string tableName, CancellationToken ct)
+	{
+		var (schema, table) = SplitTableName(tableName);
+		const string sql = @"
+SELECT
+    c.name AS ColumnName,
+    t.name AS SqlTypeName,
+    c.max_length AS MaxLength,
+    c.is_identity AS IsIdentity,
+    c.is_computed AS IsComputed
+FROM sys.columns c
+INNER JOIN sys.types t ON c.user_type_id = t.user_type_id
+INNER JOIN sys.tables tb ON c.object_id = tb.object_id
+INNER JOIN sys.schemas s ON tb.schema_id = s.schema_id
+WHERE s.name = @schema AND tb.name = @table
+ORDER BY c.column_id;";
+
+		var result = new List<SqlDestinationColumn>();
+		await using var cmd = new SqlCommand(sql, connection);
+		cmd.Parameters.AddWithValue("@schema", schema);
+		cmd.Parameters.AddWithValue("@table", table);
+		await using var reader = await cmd.ExecuteReaderAsync(ct);
+		while (await reader.ReadAsync(ct))
+		{
+			var maxLength = Convert.ToInt32(reader["MaxLength"], CultureInfo.InvariantCulture);
+			var typeName = Convert.ToString(reader["SqlTypeName"], CultureInfo.InvariantCulture) ?? "nvarchar";
+			if ((typeName == "nvarchar" || typeName == "nchar") && maxLength > 0) maxLength /= 2;
+			result.Add(new SqlDestinationColumn(
+				Convert.ToString(reader["ColumnName"], CultureInfo.InvariantCulture)!,
+				typeName,
+				maxLength,
+				Convert.ToBoolean(reader["IsIdentity"], CultureInfo.InvariantCulture),
+				Convert.ToBoolean(reader["IsComputed"], CultureInfo.InvariantCulture)));
+		}
+		return result;
+	}
+
+	private static async Task<List<string>> DisableNonClusteredIndexesAsync(SqlConnection connection, string tableName, CancellationToken ct)
+	{
+		var (schema, table) = SplitTableName(tableName);
+		const string sql = @"
+							SELECT i.name
+							FROM sys.indexes i
+							INNER JOIN sys.tables t ON i.object_id = t.object_id
+							INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
+							WHERE s.name = @schema
+							  AND t.name = @table
+							  AND i.type_desc = 'NONCLUSTERED'
+							  AND i.is_primary_key = 0
+							  AND i.is_unique_constraint = 0
+							  AND i.name IS NOT NULL;";
+
+		var indexes = new List<string>();
+		await using (var cmd = new SqlCommand(sql, connection))
+		{
+			cmd.Parameters.AddWithValue("@schema", schema);
+			cmd.Parameters.AddWithValue("@table", table);
+			await using var reader = await cmd.ExecuteReaderAsync(ct);
+			while (await reader.ReadAsync(ct))
+				indexes.Add(reader.GetString(0));
+		}
+
+		foreach (var index in indexes)
+			await ExecuteNonQueryAsync(connection, $"ALTER INDEX {QuoteIdentifier(index)} ON {QuoteTableName(tableName)} DISABLE;", ct);
+
+		return indexes;
+	}
+
+	private static async Task ExecuteNonQueryAsync(SqlConnection connection, string sql, CancellationToken ct)
+	{
+		await using var cmd = new SqlCommand(sql, connection) { CommandTimeout = 0 };
+		await cmd.ExecuteNonQueryAsync(ct);
+	}
+
+	private static (string Schema, string Table) SplitTableName(string tableName)
+	{
+		var parts = tableName.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		return parts.Length == 2 ? (CleanIdentifier(parts[0]), CleanIdentifier(parts[1])) : ("dbo", CleanIdentifier(tableName));
+	}
+
+	private static string QuoteTableName(string tableName)
+	{
+		var (schema, table) = SplitTableName(tableName);
+		return $"{QuoteIdentifier(schema)}.{QuoteIdentifier(table)}";
+	}
+
+	private static string QuoteIdentifier(string value)
+	{
+		return $"[{CleanIdentifier(value).Replace("]", "]]", StringComparison.Ordinal)}]";
+	}
+
+	private static string CleanIdentifier(string value)
+	{
+		return value.Trim().Trim('[', ']');
+	}
+
+	private static string NormalizeName(string? value)
+	{
+		if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+		return Regex.Replace(value.Trim(), @"[^A-Za-z0-9]", "").ToLowerInvariant();
+	}
+
+	private sealed record LimsWorksheetSelection(WorksheetPart WorksheetPart, string SheetName, int HeaderRowNumber, List<ExcelHeaderInfo> Headers, int MatchScore);
+	private sealed record ExcelHeaderInfo(int ColumnIndex, string Value);
+	private sealed record SqlDestinationColumn(string Name, string SqlTypeName, int MaxLength, bool IsIdentity, bool IsComputed);
+	private sealed record LimsLoadColumn(SqlDestinationColumn DestinationColumn, int? ExcelColumnIndex, LimsSpecialColumn SpecialColumn);
+	private enum LimsSpecialColumn { None, CreatedOn, LabId, LabName, SourceFileName }
+
+	private sealed class LimsSchemaMapping
+	{
+		public string DestinationName { get; set; } = string.Empty;
+		public List<string> SourceNames { get; set; } = new();
+
+		public static List<LimsColumnMapping> Load(string? schemaPath)
+		{
+			var result = new List<LimsColumnMapping>();
+
+			if (string.IsNullOrWhiteSpace(schemaPath) || !File.Exists(schemaPath))
+				return result;
+
+			using var doc = JsonDocument.Parse(File.ReadAllText(schemaPath));
+
+			if (!doc.RootElement.TryGetProperty("Columns", out var columns) ||
+				columns.ValueKind != JsonValueKind.Array)
+				return result;
+
+			foreach (var col in columns.EnumerateArray())
+			{
+				var sqlColName =
+					ReadString(col, "SQLColName")
+					?? ReadString(col, "Name")
+					?? ReadString(col, "ColumnName")
+					?? ReadString(col, "Destination");
+
+				if (string.IsNullOrWhiteSpace(sqlColName))
+					continue;
+
+				var mapping = new LimsColumnMapping
+				{
+					DestinationName = sqlColName.Trim()
+				};
+
+				AddIfNotBlank(mapping.SourceNames, ReadString(col, "ExcelColName"));
+				AddIfNotBlank(mapping.SourceNames, ReadString(col, "ExcelCoName"));
+				AddIfNotBlank(mapping.SourceNames, ReadString(col, "Source"));
+				AddIfNotBlank(mapping.SourceNames, ReadString(col, "SourceName"));
+				AddIfNotBlank(mapping.SourceNames, ReadString(col, "Header"));
+				AddIfNotBlank(mapping.SourceNames, ReadString(col, "ExcelHeader"));
+
+				foreach (var prop in new[] { "Aliases", "SourceColumns", "SourceNames" })
+				{
+					if (col.TryGetProperty(prop, out var arr) && arr.ValueKind == JsonValueKind.Array)
+					{
+						foreach (var item in arr.EnumerateArray())
+							AddIfNotBlank(mapping.SourceNames, item.GetString());
+					}
+				}
+
+				result.Add(mapping);
+			}
+
+			return result;
+		}
+
+		private static string? ReadString(JsonElement element, string propertyName)
+		{
+			return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind == JsonValueKind.String ? prop.GetString() : null;
+		}
+
+		private static void AddIfNotBlank(List<string> list, string? value)
+		{
+			if (!string.IsNullOrWhiteSpace(value)) list.Add(value.Trim());
+		}
+	}
+}
+
+public sealed class LimsImportRequest
+{
+	public string ExcelPath { get; set; } = string.Empty;
+	public string ConnectionString { get; set; } = string.Empty;
+	public string DestinationTable { get; set; } = "dbo.LIMSMaster";
+	public string? SchemaJsonPath { get; set; }
+	public string PreferredSheetName { get; set; } = "Masterfile";
+	public int BatchSize { get; set; } = 50000;
+	public bool TruncateBeforeLoad { get; set; } = true;
+	public bool DisableNonClusteredIndexesDuringLoad { get; set; } = true;
+	public bool DisableTriggersDuringLoad { get; set; } = true;
+	public DateTime CreatedOn { get; set; } = DateTime.Now;
+	public int? LabId { get; set; }
+	public string? LabName { get; set; }
+}
+
+public sealed class LimsImportResult
+{
+	public string FilePath { get; set; } = string.Empty;
+	public string SheetName { get; set; } = string.Empty;
+	public int HeaderRowNumber { get; set; }
+	public int TotalRowsRead { get; set; }
+	public int TotalRowsCopied { get; set; }
+	public DateTime CreatedOn { get; set; }
+	public string DestinationTable { get; set; } = string.Empty;
+}
+
+public sealed class LimsColumnMapping
+{
+	public string DestinationName { get; set; } = string.Empty;
+	public List<string> SourceNames { get; set; } = new();
 }

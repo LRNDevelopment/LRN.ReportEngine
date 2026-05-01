@@ -352,6 +352,23 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						logMessage: "already processed (etag unchanged)",
 						ct: ct);
 
+					// IMPORTANT FIX:
+					// Do not skip LIMS import just because the billing/master file eTag was already processed.
+					// LIMS is a separate sibling file and may need to be reloaded while testing or when only LIMS changed.
+					if (ParseBool(GetLabConfigValue(lab, "LimsSqlImportEnabled"), false))
+					{
+						var (limsMonthFolder, limsWeekFolder) = ParseMonthAndDateFolder(selected.SharePointPath);
+						var limsYearFolder = TryParseYearFromSharePointPath(selected.SharePointPath)
+							?? DateTime.Now.ToString("yyyy", CultureInfo.InvariantCulture);
+						var limsRawMasterFolder = Path.Combine(_opt.WatchFolder, GetLabOutputPrefix(lab), limsYearFolder, limsMonthFolder, limsWeekFolder);
+						Directory.CreateDirectory(limsRawMasterFolder);
+
+						_logger.LogInformation("Lab {LabId}: master file already processed, but LIMS SQL import is enabled. Checking sibling LIMS file.", lab.LabId);
+						_fileLog.Info($"Lab {lab.LabId}: master file already processed, but LIMS SQL import is enabled. Checking sibling LIMS file.");
+
+						await TryDownloadSiblingRawMasterAsync(lab, selected, limsRawMasterFolder, ct);
+					}
+
 					continue;
 				}
 
@@ -428,7 +445,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				_logger.LogInformation("Lab {LabId}: downloading {SpPath} -> {Local}", lab.LabId, selected.SharePointPath, stagingPath);
 				_fileLog.Info($"Lab {lab.LabId}: downloading {selected.SharePointPath} -> {stagingPath}");
 
-				await _sp.DownloadFileAsync(selected.DriveId, selected.ItemId, stagingPath, ct);
+				await DownloadSharePointFileWithRetryAsync(selected.DriveId, selected.ItemId, stagingPath, ct);
 
 				File.Copy(stagingPath, productionRawMasterPath, overwrite: true);
 
@@ -439,12 +456,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				_fileLog.Info($"Lab {lab.LabId}: Production raw master copied to WatchFolder week folder -> {productionRawMasterPath}");
 
-				var limsRawMasterPath = await TryDownloadSiblingRawMasterAsync(lab, selected, rawMasterFolder, ct);
-
-				if (!string.IsNullOrWhiteSpace(limsRawMasterPath))
-				{
-					await TryImportLimsMasterAsync(lab, limsRawMasterPath, runCtx, ct);
-				}
+				await TryDownloadSiblingRawMasterAsync(lab, selected, rawMasterFolder, ct);
 
 				// Update file size after download
 				try
@@ -1665,7 +1677,60 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		return fallback;
 	}
 
-	private async Task<string?> TryDownloadSiblingRawMasterAsync(
+	private async Task DownloadSharePointFileWithRetryAsync(
+		string driveId,
+		string itemId,
+		string localPath,
+		CancellationToken ct)
+	{
+		const int maxAttempts = 4;
+		var tempPath = localPath + ".download";
+
+		Directory.CreateDirectory(Path.GetDirectoryName(localPath) ?? AppContext.BaseDirectory);
+
+		for (var attempt = 1; attempt <= maxAttempts; attempt++)
+		{
+			try
+			{
+				ct.ThrowIfCancellationRequested();
+
+				if (File.Exists(tempPath))
+					File.Delete(tempPath);
+
+				await _sp.DownloadFileAsync(driveId, itemId, tempPath, ct);
+
+				if (File.Exists(localPath))
+					File.Delete(localPath);
+
+				File.Move(tempPath, localPath);
+				return;
+			}
+			catch (OperationCanceledException) when (ct.IsCancellationRequested)
+			{
+				throw;
+			}
+			catch (Exception ex) when (IsTransientDownloadException(ex) && attempt < maxAttempts)
+			{
+				var delay = TimeSpan.FromSeconds(Math.Min(60, attempt * attempt * 5));
+				_logger.LogWarning(ex, "SharePoint download failed. Attempt {Attempt}/{MaxAttempts}. Retrying in {DelaySeconds}s. Target={LocalPath}", attempt, maxAttempts, delay.TotalSeconds, localPath);
+				_fileLog.Warn($"SharePoint download failed. Attempt {attempt}/{maxAttempts}. Retrying in {delay.TotalSeconds:n0}s. Target={localPath}. Error={ex.Message}");
+				await Task.Delay(delay, ct);
+			}
+		}
+	}
+
+	private static bool IsTransientDownloadException(Exception ex)
+	{
+		for (var current = ex; current != null; current = current.InnerException)
+		{
+			if (current is IOException || current is HttpRequestException || current is TaskCanceledException || current is TimeoutException)
+				return true;
+		}
+
+		return false;
+	}
+
+	private async Task TryDownloadSiblingRawMasterAsync(
 		LabFileMap lab,
 		SharePointDownloader.SelectedFile selected,
 		string rawMasterFolder,
@@ -1674,7 +1739,7 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		var limsPattern = GetLabConfigValue(lab, "LimsMasterFilePattern");
 
 		if (string.IsNullOrWhiteSpace(limsPattern))
-			return null;
+			return;
 
 		try
 		{
@@ -1688,11 +1753,11 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 					limsPattern);
 
 				_fileLog.Warn($"Lab {lab.LabId}: no LIMS master file matched pattern '{limsPattern}' in the same SharePoint folder.");
-				return null;
+				return;
 			}
 
 			var limsRawMasterPath = Path.Combine(rawMasterFolder, SanitizeFileName(sibling.Name));
-			await _sp.DownloadFileAsync(sibling.DriveId, sibling.ItemId, limsRawMasterPath, ct);
+			await DownloadSharePointFileWithRetryAsync(sibling.DriveId, sibling.ItemId, limsRawMasterPath, ct);
 
 			_logger.LogInformation(
 				"Lab {LabId}: LIMS raw master downloaded -> {Path}",
@@ -1700,80 +1765,82 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 				limsRawMasterPath);
 
 			_fileLog.Info($"Lab {lab.LabId}: LIMS raw master downloaded -> {limsRawMasterPath}");
-			return limsRawMasterPath;
+
+			await TryImportLimsMasterAsync(lab, limsRawMasterPath, ct);
 		}
 		catch (Exception ex)
 		{
 			_logger.LogWarning(ex, "Lab {LabId}: failed to download LIMS raw master file.", lab.LabId);
 			_fileLog.Error($"Lab {lab.LabId}: failed to download LIMS raw master file.", ex);
-			return null;
 		}
 	}
 
-	private async Task TryImportLimsMasterAsync(
-		LabFileMap lab,
-		string limsFilePath,
-		ProcessRunContext runCtx,
-		CancellationToken ct)
+	private async Task TryImportLimsMasterAsync(LabFileMap lab, string limsRawMasterPath, CancellationToken ct)
 	{
-		var limsSchemaPath = GetLabConfigValue(lab, "LIMSSchemaJsonPath");
-		if (string.IsNullOrWhiteSpace(limsSchemaPath))
-			return;
-
-		limsSchemaPath = ResolvePath(limsSchemaPath);
-		if (!File.Exists(limsSchemaPath))
+		var enabled = _configuration.GetValue<bool?>("MasterFileProcessor:LimsSqlImportEnabled") ?? true;
+		if (!enabled)
 		{
-			_logger.LogWarning("Lab {LabId}: LIMS schema not found: {SchemaPath}", lab.LabId, limsSchemaPath);
-			_fileLog.Warn($"Lab {lab.LabId}: LIMS schema not found: {limsSchemaPath}");
+			_logger.LogInformation("Lab {LabId}: LIMS SQL import disabled by MasterFileProcessor:LimsSqlImportEnabled.", lab.LabId);
 			return;
 		}
-
-		var step = new StepLogRow
-		{
-			StepSeq = 25,
-			StepName = "Import LIMS Master",
-			StepCategory = "Ingestion",
-			SourceSystem = "Local",
-			StartTimeIST = _processLog.NowIST(),
-			Status = "IN_PROGRESS",
-			FileNameIn = Path.GetFileName(limsFilePath),
-			PathIn = limsFilePath
-		};
-
-		await _processLog.StepStartAsync(runCtx, step, ct);
 
 		try
 		{
-			// LIMS must be imported into the individual lab database when configured.
-			// Example: NorthWest LIMS -> NWL_LRN using MasterFileProcessor:Labs[n]:LabDbConnectionString.
-			var connectionString = GetLabConfigValue(lab, "LabDbConnectionString");
-			if (string.IsNullOrWhiteSpace(connectionString))
-				connectionString = _configuration.GetConnectionString("DefaultConnection");
+			var connectionString =
+				GetLabConfigValue(lab, "LabDbConnectionString")
+				?? GetLabConfigValue(lab, "LimsDbConnectionString")
+				?? _configuration.GetConnectionString(GetLabConfigValue(lab, "LabDbConnectionKey") ?? string.Empty)
+				?? _configuration.GetConnectionString("DefaultConnection");
 
 			if (string.IsNullOrWhiteSpace(connectionString))
-				throw new InvalidOperationException($"Lab {lab.LabId}: LabDbConnectionString is missing and ConnectionStrings:DefaultConnection is also missing for LIMS import.");
+				throw new InvalidOperationException($"Lab {lab.LabId}: LIMS connection string missing.");
 
-			var result = await LimsMasterBulkImporter.ImportAsync(limsFilePath, limsSchemaPath, connectionString, ct);
+			var schemaPath = GetLabConfigValue(lab, "LIMSSchemaJsonPath");
+			if (!string.IsNullOrWhiteSpace(schemaPath))
+				schemaPath = ResolvePath(schemaPath);
 
-			step.EndTimeIST = _processLog.NowIST();
-			step.Status = "SUCCESS";
-			step.FileNameOut = result.TableName;
-			step.PathOut = $"Inserted={result.InsertedRows}; Skipped={result.SkippedRows}";
-			await _processLog.StepEndAsync(runCtx, step, ct);
+			var importer = new LimsMasterBulkImporter(_logger);
 
-			_logger.LogInformation("Lab {LabId}: LIMS import completed. Table={Table}, Inserted={Inserted}, Skipped={Skipped}", lab.LabId, result.TableName, result.InsertedRows, result.SkippedRows);
-			_fileLog.Info($"Lab {lab.LabId}: LIMS import completed. Table={result.TableName}, Inserted={result.InsertedRows}, Skipped={result.SkippedRows}");
+			var result = await importer.ImportAsync(new LimsImportRequest
+			{
+				ExcelPath = limsRawMasterPath,
+				ConnectionString = connectionString,
+				DestinationTable = _configuration["MasterFileProcessor:LimsDestinationTable"] ?? "dbo.LIMSMaster",
+				SchemaJsonPath = schemaPath,
+				PreferredSheetName = _configuration["MasterFileProcessor:LimsSheetName"] ?? "Masterfile",
+				BatchSize = _configuration.GetValue<int?>("MasterFileProcessor:LimsBulkCopyBatchSize") ?? 50000,
+				TruncateBeforeLoad = _configuration.GetValue<bool?>("MasterFileProcessor:LimsTruncateBeforeLoad") ?? true,
+				DisableNonClusteredIndexesDuringLoad = _configuration.GetValue<bool?>("MasterFileProcessor:LimsDisableNonClusteredIndexesDuringLoad") ?? true,
+				DisableTriggersDuringLoad = _configuration.GetValue<bool?>("MasterFileProcessor:LimsDisableTriggersDuringLoad") ?? true,
+				CreatedOn = DateTime.Now,
+				LabId = lab.LabId,
+				LabName = lab.LabName
+			}, ct);
+
+			_logger.LogInformation(
+				"Lab {LabId}: LIMS SQL import completed. Sheet={Sheet}, RowsCopied={Rows}, CreatedOn={CreatedOn}",
+				lab.LabId,
+				result.SheetName,
+				result.TotalRowsCopied,
+				result.CreatedOn);
+
+			_fileLog.Info($"Lab {lab.LabId}: LIMS SQL import completed. Sheet={result.SheetName}, RowsCopied={result.TotalRowsCopied}, CreatedOn={result.CreatedOn:yyyy-MM-dd HH:mm:ss.fffffff}");
 		}
 		catch (Exception ex)
 		{
-			step.EndTimeIST = _processLog.NowIST();
-			step.Status = "FAILED";
-			step.ErrorMessage = ex.Message;
-			await _processLog.StepEndAsync(runCtx, step, ct);
-
-			_logger.LogError(ex, "Lab {LabId}: LIMS import failed for {Path}", lab.LabId, limsFilePath);
-			_fileLog.Error($"Lab {lab.LabId}: LIMS import failed for {limsFilePath}", ex);
+			_logger.LogError(ex, "Lab {LabId}: LIMS SQL import failed for {Path}", lab.LabId, limsRawMasterPath);
+			_fileLog.Error($"Lab {lab.LabId}: LIMS SQL import failed for {limsRawMasterPath}", ex);
 		}
+	}
+
+	private static int ParseInt(string? value, int defaultValue)
+	{
+		return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) ? parsed : defaultValue;
+	}
+
+	private static bool ParseBool(string? value, bool defaultValue)
+	{
+		return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
 	}
 
 	private async Task<SharePointDownloader.SelectedFile?> TryFindSiblingFileByPatternAsync(

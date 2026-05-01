@@ -1,0 +1,151 @@
+{
+	"SchemaName": "LIMSMaster",
+	"SheetName": "LIMS Master",
+	"HeaderRow": 1,
+	"Columns": [
+		{
+			"ExcelColName": "TestOrderHistory82_Id",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "OrderID"
+		},
+		{
+			"ExcelColName": "SampleID",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "Accession"
+		},
+		{
+			"ExcelColName": "PayerCodeLookup_Label",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "PayerCodeLookup"
+		},
+		{
+			"ExcelColName": "HCPCS",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "HCPCS"
+		},
+		{
+			"ExcelColName": "ICD10",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "ICD10"
+		},
+		{
+			"ExcelColName": "NonCoveredToxCodes",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "NonCoveredToxCodes"
+		},
+		{
+			"ExcelColName": "PracticeType",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "PracticeType"
+		},
+		{
+			"ExcelColName": "RegisteredDate",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "RegisteredDate"
+		},
+		{
+			"ExcelColName": "Medications",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "Medications"
+		},
+		{
+			"ExcelColName": "OrderReason",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "OrderReason"
+		},
+		{
+			"ExcelColName": "SpecimenType",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "SpecimenType"
+		},
+		{
+			"ExcelColName": "Components",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "Components"
+		},
+		{
+			"ExcelColName": "InsuranceCode",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "InsuranceCode"
+		},
+		{
+			"ExcelColName": "Entry_DateCreated",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "Entry_DateCreated"
+		},
+		{
+			"ExcelColName": "Entry_DateSubmitted",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "Entry_DateSubmitted"
+		},
+		{
+			"ExcelColName": "Entry_DateUpdated",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "Entry_DateUpdated"
+		},
+		{
+			"ExcelColName": "Account",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "Account"
+		},
+		{
+			"ExcelColName": "LRN Panel Name",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "LRNPanelName"
+		},
+		{
+			"ExcelColName": "LRN Result Status",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "ResultStatus"
+		},
+		{
+			"ExcelColName": "LRN Sample Status",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "SampleStatus"
+		},
+		{
+			"ExcelColName": "LRN Bill Category",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "BillCategory"
+		},
+		{
+			"ExcelColName": "SubStatus",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "PatientLastName"
+		},
+		{
+			"ExcelColName": "Nexum Status",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "Nexum Status"
+		},
+		{
+			"ExcelColName": "Billed Date",
+			"Required": false,
+			"DataType": "date",
+			"SQLColName": "BilledDate"
+		}
+	]
+}

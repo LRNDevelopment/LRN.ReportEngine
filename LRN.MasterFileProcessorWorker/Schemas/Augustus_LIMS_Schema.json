@@ -1,0 +1,91 @@
+{
+	"SchemaName": "LIMSMaster",
+	"SheetName": "Masterfile",
+	"HeaderRow": 1,
+	"Columns": [
+		{
+			"ExcelColName": "REQ_ACCESSION",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "Accession"
+		},
+		{
+			"ExcelColName": "Patient Full Name",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "PatientFullName"
+		},
+		{
+			"ExcelColName": "Doctor Full Name",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "DoctorFullName"
+		},
+		{
+			"ExcelColName": "REQ_COLLECT_DATE",
+			"Required": true,
+			"DataType": "date",
+			"SQLColName": "ReqCollectDate"
+		},
+		{
+			"ExcelColName": "REQ_RECEIVED_DATE",
+			"Required": true,
+			"DataType": "date",
+			"SQLColName": "ReqReceivedDate"
+		},
+		{
+			"ExcelColName": "BILL_TYPE",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "BillType"
+		},
+		{
+			"ExcelColName": "Panel Name",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "PanelName"
+		},
+		{
+			"ExcelColName": "Panel Type",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "PanelType"
+		},
+		{
+			"ExcelColName": "INSURANCE_NAME",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "InsuranceName"
+		},
+		{
+			"ExcelColName": "Result Status",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "ResultStatus"
+		},
+		{
+			"ExcelColName": "Bill to",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "BillTo"
+		},
+		{
+			"ExcelColName": "Bill status",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "BillingStatus"
+		},
+		{
+			"ExcelColName": "Claim Status",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "ClaimStatus"
+		},
+		{
+			"ExcelColName": "Final Status",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "FinalStatus"
+		}
+	]
+}

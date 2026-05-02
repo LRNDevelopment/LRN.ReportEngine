@@ -1,0 +1,163 @@
+{
+	"SchemaName": "LIMSMaster",
+	"SheetName": "LIMS Master",
+	"HeaderRow": 1,
+	"Columns": [
+		{
+			"ExcelColName": "RecordId",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "OrderID"
+		},
+		{
+			"ExcelColName": "AccessionNo",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "Accession"
+		},
+		{
+			"ExcelColName": "PhysicianName",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "PhysicianName"
+		},
+		{
+			"ExcelColName": "Medications",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "Medications"
+		},
+		{
+			"ExcelColName": "FacilityName",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "FacilityName"
+		},
+		{
+			"ExcelColName": "ICDCodes",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "ICDCodes"
+		},
+		{
+			"ExcelColName": "DateofService",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "DateofService"
+		},
+		{
+			"ExcelColName": "SaleRepName",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "SaleRepName"
+		},
+		{
+			"ExcelColName": "FirstName",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "FirstName"
+		},
+		{
+			"ExcelColName": "LastName",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "LastName"
+		},
+		{
+			"ExcelColName": "LabCode",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "LabCode"
+		},
+		{
+			"ExcelColName": "ProviderName",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "ProviderName"
+		},
+		{
+			"ExcelColName": "Received_Date",
+			"Required": false,
+			"DataType": "date",
+			"SQLColName": "ReceivedDate"
+		},
+		{
+			"ExcelColName": "Validated_Date",
+			"Required": false,
+			"DataType": "date",
+			"SQLColName": "ValidatedDate"
+		},
+		{
+			"ExcelColName": "DateOfCollection",
+			"Required": false,
+			"DataType": "date",
+			"SQLColName": "DateOfCollection"
+		},
+		{
+			"ExcelColName": "Status",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "Status"
+		},
+		{
+			"ExcelColName": "PrimaryInsuranceProvider",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "PrimaryInsuranceProvider"
+		},
+		{
+			"ExcelColName": "Insurance_Type",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "Insurance_Type"
+		},
+		{
+			"ExcelColName": "Requistion_Type",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "Requistion_Type"
+		},
+		{
+			"ExcelColName": "Panel",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "Panel"
+		},
+		{
+			"ExcelColName": "Panel type",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "Panel type"
+		},
+		{
+			"ExcelColName": "Client Status",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "ClientStatus"
+		},
+		{
+			"ExcelColName": "New Status ",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "New Status "
+		},
+		{
+			"ExcelColName": "Bill Category",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "BillCategory"
+		},
+		{
+			"ExcelColName": "Sub Status",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "SubStatus"
+		},
+		{
+			"ExcelColName": "Billed Date",
+			"Required": false,
+			"DataType": "date",
+			"SQLColName": "BilledDate"
+		}
+	]
+}

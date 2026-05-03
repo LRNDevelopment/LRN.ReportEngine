@@ -40,6 +40,12 @@
 			"SQLColName": "BillType"
 		},
 		{
+			"ExcelColName": "Bill to",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "BillTo"
+		},
+		{
 			"ExcelColName": "PANEL_NAME",
 			"Required": true,
 			"DataType": "string",

@@ -38,7 +38,11 @@ public sealed class ModeMedianReportPublisher
 
 		var sharePointSection = GetSharePointSection();
 
-		var sharePointEnabled = ParseBool(sharePointSection["Enabled"]);
+		var uploadFilesToSharePoint = _configuration.GetValue<bool?>("MasterFileProcessor:UploadFilesToSharePoint")
+			?? _configuration.GetValue<bool?>("MasterFileProcessor:SharePoint:UploadFilesToSharePoint")
+			?? true;
+
+		var sharePointEnabled = uploadFilesToSharePoint && ParseBool(sharePointSection["Enabled"]);
 		var medianServerFolderPath = sharePointSection["MedianServerFolderPath"] ?? string.Empty;
 		var modeServerFolderPath = sharePointSection["ModeServerFolderPath"] ?? string.Empty;
 		var sharePointMedianFolder = sharePointSection["SharePointMedianFolder"] ?? string.Empty;

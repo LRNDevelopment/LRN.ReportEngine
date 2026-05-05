@@ -675,7 +675,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				var lineAugmentation = StandardCsvExporter.BuildAugmentationContext(
 						lab.LabName,
 						true,
-						_opt.PanelMasterFilePath);
+						ResolvePanelMasterFilePath(lab));
 
 				StandardCsvExporter.Generate(
 					sourceCsvPath: lineRawPath,
@@ -775,7 +775,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				var claimAugmentation = StandardCsvExporter.BuildAugmentationContext(
 							lab.LabName,
 							false,
-							_opt.PanelMasterFilePath);
+							ResolvePanelMasterFilePath(lab));
 
 				StandardCsvExporter.Generate(
 							sourceCsvPath: claimRawPath,
@@ -794,6 +794,13 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					claimCsvPath: claimOutPath,
 					lineCsvPath: lineOutPath,
 					targetColumnName: ResolveClaimLevelCptSummaryColumnName(claimSchemaPath));
+
+				if (ShouldCopyClaimStatusToLineLevel(lab))
+				{
+					StandardCsvExporter.CopyClaimStatusFromClaimLevelToLineLevel(
+						claimCsvPath: claimOutPath,
+						lineCsvPath: lineOutPath);
+				}
 
 				step80.EndTimeIST = _processLog.NowIST();
 				step80.Status = "SUCCESS";
@@ -1677,6 +1684,20 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		return Regex.IsMatch(value, @"\d{1,2}\.\d{1,2}\.\d{4}\s*-\s*\d{1,2}\.\d{1,2}(\.\d{4})?", RegexOptions.IgnoreCase);
 	}
 
+	private static bool ShouldCopyClaimStatusToLineLevel(LabFileMap lab)
+	{
+		if (lab == null) return false;
+
+		var labName = lab.LabName ?? string.Empty;
+
+		return lab.LabId == 19
+			|| lab.LabId == 20
+			|| labName.Contains("Augustus", StringComparison.OrdinalIgnoreCase)
+			|| labName.Contains("Certus", StringComparison.OrdinalIgnoreCase)
+			|| labName.Contains("NorthWest", StringComparison.OrdinalIgnoreCase)
+			|| labName.Contains("Northwest", StringComparison.OrdinalIgnoreCase);
+	}
+
 	private static string ResolveClaimLevelCptSummaryColumnName(string? claimSchemaPath)
 	{
 		const string fallback = "CPT Code X Units X Modifier";
@@ -2204,6 +2225,18 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		}
 
 		return best;
+	}
+
+	private string? ResolvePanelMasterFilePath(LabFileMap lab)
+	{
+		// Prefer lab-level PanelMasterFilePath from appsettings.json.
+		// This is required because Augustus and NorthWest use different mapping workbooks.
+		var labPanelPath = GetLabConfigValue(lab, "PanelMasterFilePath");
+
+		if (!string.IsNullOrWhiteSpace(labPanelPath))
+			return labPanelPath;
+
+		return _opt.PanelMasterFilePath;
 	}
 
 	private string? GetLabConfigValue(LabFileMap lab, string key)

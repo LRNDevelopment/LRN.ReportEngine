@@ -1,4 +1,4 @@
-using ClosedXML.Excel;
+﻿using ClosedXML.Excel;
 using LRN.ExcelValidator.Models;
 using Microsoft.VisualBasic.FileIO;
 using System.Globalization;
@@ -408,6 +408,178 @@ public static class StandardCsvExporter
             sw.WriteLine(string.Join(",", outFields));
         }
     }
+    /// <summary>
+    /// Copies ClaimStatus from the generated claim-level CSV into the generated line-level CSV.
+    /// Used only by selected labs from MasterFileProcessorWorker.
+    /// Match priority: ClaimID, VisitNumber, Encounter ID, AccessionNumber, Accession.
+    /// </summary>
+    public static void CopyClaimStatusFromClaimLevelToLineLevel(
+        string claimCsvPath,
+        string lineCsvPath,
+        string targetColumnName = "ClaimStatus")
+    {
+        if (string.IsNullOrWhiteSpace(claimCsvPath) || !File.Exists(claimCsvPath))
+            throw new FileNotFoundException("ClaimLevel CSV not found.", claimCsvPath);
+
+        if (string.IsNullOrWhiteSpace(lineCsvPath) || !File.Exists(lineCsvPath))
+            throw new FileNotFoundException("LineLevel CSV not found.", lineCsvPath);
+
+        var claimStatusByKey = LoadClaimStatusLookup(claimCsvPath);
+        if (claimStatusByKey.Count == 0)
+            return;
+
+        var tempPath = lineCsvPath + ".claimstatus.tmp";
+
+        using var parser = new TextFieldParser(lineCsvPath)
+        {
+            TextFieldType = FieldType.Delimited,
+            HasFieldsEnclosedInQuotes = true,
+            TrimWhiteSpace = false
+        };
+        parser.SetDelimiters(",");
+
+        if (parser.EndOfData)
+            return;
+
+        var headers = parser.ReadFields() ?? Array.Empty<string>();
+        var outputHeaders = headers.ToList();
+
+		// Try to find existing column (both formats)
+		var targetIndex = FindHeaderIndex(outputHeaders, "Claim Status", "ClaimStatus");
+
+		string finalColumnName;
+
+		// If column exists, preserve original name
+		if (targetIndex >= 0)
+		{
+			finalColumnName = outputHeaders[targetIndex];
+		}
+		else
+		{
+			// Default naming (recommended standard)
+			finalColumnName = "Claim Status";
+			targetIndex = outputHeaders.Count;
+			outputHeaders.Add(finalColumnName);
+		}
+
+		using var sw = new StreamWriter(tempPath, false, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+        sw.WriteLine(string.Join(",", outputHeaders.Select(Escape)));
+
+        while (!parser.EndOfData)
+        {
+            var row = (parser.ReadFields() ?? Array.Empty<string>()).ToList();
+            if (row.Count == 0)
+                continue;
+
+            while (row.Count < outputHeaders.Count)
+                row.Add(string.Empty);
+
+            var existing = targetIndex < row.Count ? row[targetIndex] : string.Empty;
+            if (string.IsNullOrWhiteSpace(existing))
+            {
+                foreach (var key in BuildClaimStatusMatchKeys(headers, row))
+                {
+                    if (claimStatusByKey.TryGetValue(key, out var status) && !string.IsNullOrWhiteSpace(status))
+                    {
+                        row[targetIndex] = status;
+                        break;
+                    }
+                }
+            }
+
+            sw.WriteLine(string.Join(",", row.Take(outputHeaders.Count).Select(Escape)));
+        }
+
+        sw.Dispose();
+        parser.Dispose();
+
+        File.Copy(tempPath, lineCsvPath, overwrite: true);
+        File.Delete(tempPath);
+    }
+
+    private static Dictionary<string, string> LoadClaimStatusLookup(string claimCsvPath)
+    {
+        var lookup = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        using var parser = new TextFieldParser(claimCsvPath)
+        {
+            TextFieldType = FieldType.Delimited,
+            HasFieldsEnclosedInQuotes = true,
+            TrimWhiteSpace = false
+        };
+        parser.SetDelimiters(",");
+
+        if (parser.EndOfData)
+            return lookup;
+
+        var headers = parser.ReadFields() ?? Array.Empty<string>();
+        var statusIndex = FindHeaderIndex(headers, "ClaimStatus", "Claim Status");
+        if (statusIndex < 0)
+            return lookup;
+
+        while (!parser.EndOfData)
+        {
+            var row = parser.ReadFields() ?? Array.Empty<string>();
+            var status = Get(row, statusIndex).Trim();
+            if (string.IsNullOrWhiteSpace(status))
+                continue;
+
+            foreach (var key in BuildClaimStatusMatchKeys(headers, row))
+            {
+                if (!lookup.ContainsKey(key))
+                    lookup[key] = status;
+            }
+        }
+
+        return lookup;
+    }
+
+    private static IEnumerable<string> BuildClaimStatusMatchKeys(IReadOnlyList<string> headers, IReadOnlyList<string> row)
+    {
+        var keyGroups = new (string GroupName, string[] ColumnNames)[]
+        {
+            ("claim", new[] { "ClaimID", "VisitNumber", "Visit No", "VisitNum", "Encounter ID", "Enc" }),
+            ("accession", new[] { "AccessionNumber", "Accession", "Accession No", "Accession# Without Letters", "Specimen ID" })
+        };
+
+        foreach (var group in keyGroups)
+        {
+            foreach (var columnName in group.ColumnNames)
+            {
+                var idx = FindHeaderIndex(headers, columnName);
+                if (idx < 0) continue;
+
+                var value = idx < row.Count ? (row[idx] ?? string.Empty).Trim() : string.Empty;
+                if (string.IsNullOrWhiteSpace(value)) continue;
+
+                var normalizedValue = NormKey(value);
+                if (!string.IsNullOrWhiteSpace(normalizedValue))
+                    yield return group.GroupName + ":" + normalizedValue;
+            }
+        }
+    }
+
+    private static int FindHeaderIndex(IReadOnlyList<string> headers, params string[] names)
+    {
+        if (headers == null || names == null || names.Length == 0)
+            return -1;
+
+        for (int i = 0; i < headers.Count; i++)
+        {
+            var header = headers[i] ?? string.Empty;
+            foreach (var name in names)
+            {
+                if (header.Equals(name, StringComparison.OrdinalIgnoreCase) ||
+                    NormKey(header).Equals(NormKey(name), StringComparison.OrdinalIgnoreCase))
+                {
+                    return i;
+                }
+            }
+        }
+
+        return -1;
+    }
+
     public static string ExtractIcdCodes(string input)
     {
         if (string.IsNullOrWhiteSpace(input))
@@ -1647,22 +1819,24 @@ public static class StandardCsvExporter
         return value;
     }
 
-    private static int FindHeaderIndex(List<string> headers, string expectedName)
-    {
-        for (int i = 0; i < headers.Count; i++)
-        {
-            var current = headers[i] ?? "";
-            if (current.Equals(expectedName, StringComparison.OrdinalIgnoreCase))
-                return i;
+	private static int FindHeaderIndex(List<string> headers, params string[] names)
+	{
+		for (int i = 0; i < headers.Count; i++)
+		{
+			var header = headers[i]?.Trim().Replace(" ", "").ToLower();
 
-            if (NormKey(current).Equals(NormKey(expectedName), StringComparison.OrdinalIgnoreCase))
-                return i;
-        }
+			foreach (var name in names)
+			{
+				var normalized = name.Trim().Replace(" ", "").ToLower();
 
-        return -1;
-    }
+				if (header == normalized)
+					return i;
+			}
+		}
+		return -1;
+	}
 
-    private static string GetField(string[] row, int index)
+	private static string GetField(string[] row, int index)
     {
         if (index < 0 || index >= row.Length)
             return string.Empty;
@@ -1723,15 +1897,13 @@ public static class StandardCsvExporter
 			if (isAugustus && panelNewCol > 0)
 			{
 				var panelNew = row.Cell(panelNewCol).GetString()?.Trim() ?? "";
-				if (!ctx.PanelNewMapping.ContainsKey(panelName))
-					ctx.PanelNewMapping[panelName] = panelNew;
+				AddPanelMapping(ctx.PanelNewMapping, panelName, panelNew);
 			}
 
 			if (isNorthWest && panelTypeCol > 0)
 			{
 				var panelType = row.Cell(panelTypeCol).GetString()?.Trim() ?? "";
-				if (!ctx.PanelTypeMapping.ContainsKey(panelName))
-					ctx.PanelTypeMapping[panelName] = panelType;
+				AddPanelMapping(ctx.PanelTypeMapping, panelName, panelType);
 			}
 		}
 
@@ -1780,13 +1952,11 @@ public static class StandardCsvExporter
 		if (augmentation == null || !augmentation.IsAugustus || augmentation.PanelNewMapping.Count == 0)
 			return "";
 
-		var panelName = GetSourceValue(row, headerExact, headerNorm, "Panel Name")?.Trim() ?? "";
+		var panelName = GetPanelNameFromSource(row, headerExact, headerNorm);
 		if (string.IsNullOrWhiteSpace(panelName))
 			return "";
 
-		return augmentation.PanelNewMapping.TryGetValue(panelName, out var mapped)
-			? mapped ?? ""
-			: "";
+		return ResolvePanelMapping(augmentation.PanelNewMapping, panelName);
 	}
 
 	private static string ResolvePanelType(
@@ -1798,13 +1968,79 @@ public static class StandardCsvExporter
 		if (augmentation == null || !augmentation.IsNorthWest || augmentation.PanelTypeMapping.Count == 0)
 			return "";
 
-		var panelName = GetSourceValue(row, headerExact, headerNorm, "Panel Name")?.Trim() ?? "";
+		var panelName = GetPanelNameFromSource(row, headerExact, headerNorm);
 		if (string.IsNullOrWhiteSpace(panelName))
 			return "";
 
-		return augmentation.PanelTypeMapping.TryGetValue(panelName, out var mapped)
-			? mapped ?? ""
-			: "";
+		return ResolvePanelMapping(augmentation.PanelTypeMapping, panelName);
+	}
+
+	private static string GetPanelNameFromSource(
+		string[] row,
+		Dictionary<string, int> headerExact,
+		Dictionary<string, int> headerNorm)
+	{
+		var candidates = new[]
+		{
+			"Panel Name",
+			"Panelname",
+			"PanelName",
+			"Panel Group",
+			"Panel"
+		};
+
+		foreach (var candidate in candidates)
+		{
+			var value = GetSourceValue(row, headerExact, headerNorm, candidate)?.Trim() ?? "";
+			if (!string.IsNullOrWhiteSpace(value))
+				return value;
+		}
+
+		return "";
+	}
+
+	private static void AddPanelMapping(Dictionary<string, string> map, string panelName, string mappedValue)
+	{
+		if (string.IsNullOrWhiteSpace(panelName))
+			return;
+
+		var key = panelName.Trim();
+		if (!map.ContainsKey(key))
+			map[key] = mappedValue ?? "";
+
+		var normalizedKey = NormKey(key);
+		if (!string.IsNullOrWhiteSpace(normalizedKey) && !map.ContainsKey(normalizedKey))
+			map[normalizedKey] = mappedValue ?? "";
+	}
+
+	private static string ResolvePanelMapping(Dictionary<string, string> map, string panelName)
+	{
+		if (map.Count == 0 || string.IsNullOrWhiteSpace(panelName))
+			return "";
+
+		var key = panelName.Trim();
+		if (map.TryGetValue(key, out var exact))
+			return exact ?? "";
+
+		var normalizedKey = NormKey(key);
+		if (!string.IsNullOrWhiteSpace(normalizedKey) && map.TryGetValue(normalizedKey, out var normalized))
+			return normalized ?? "";
+
+		// Last fallback for real-world master file differences like extra words/spaces.
+		foreach (var kvp in map)
+		{
+			var mapKey = NormKey(kvp.Key);
+			if (string.IsNullOrWhiteSpace(mapKey))
+				continue;
+
+			if (normalizedKey.Contains(mapKey, StringComparison.OrdinalIgnoreCase) ||
+				mapKey.Contains(normalizedKey, StringComparison.OrdinalIgnoreCase))
+			{
+				return kvp.Value ?? "";
+			}
+		}
+
+		return "";
 	}
 }
 

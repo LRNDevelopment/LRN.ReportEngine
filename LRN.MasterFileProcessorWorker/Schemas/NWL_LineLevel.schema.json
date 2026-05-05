@@ -124,7 +124,7 @@
 		},
 		{
 			"Name": "Denial Posted Date",
-			"Required": true,
+			"Required": false,
 			"DataType": "date"
 		}
 	]

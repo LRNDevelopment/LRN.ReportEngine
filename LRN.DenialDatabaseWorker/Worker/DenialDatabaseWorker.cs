@@ -144,6 +144,12 @@ public sealed class DenialDatabaseWorker : BackgroundService
             // 4. Normalize + map
             await _stepLogger.LogAsync(lab, "Normalize DenialCode + map fields", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
             var (headers, finalRows) = _builder.Build(payerRows, claimMapperIndex);
+
+            // Lab-specific insurance amount rule:
+            // Augustus (19), Certus (18), and NorthWest (20) must use Billed Amount
+            // as Insurance Balance for insight, task-board creation, Excel export, and DB inserts.
+            ApplyLabSpecificInsuranceBalanceRule(lab, finalRows);
+
             await _stepLogger.LogAsync(lab, "Normalize DenialCode + map fields", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
             // 5. Build insight
@@ -296,6 +302,55 @@ public sealed class DenialDatabaseWorker : BackgroundService
         }
 
         return table;
+    }
+
+    private static void ApplyLabSpecificInsuranceBalanceRule(LabConfig lab, List<Dictionary<string, string>> rows)
+    {
+        if (!ShouldUseBilledAmountAsInsuranceBalance(lab) || rows == null || rows.Count == 0)
+            return;
+
+        foreach (var row in rows)
+        {
+            var billedAmount = GetValueByAnyKey(row, "Billed Amount", "BilledAmount");
+
+            // Keep the target Excel-style key because builders/export mapping read "Insurance Balance".
+            row["Insurance Balance"] = billedAmount;
+
+            // Keep the SQL-style key in sync in case a later mapper/table builder reads this form.
+            row["InsuranceBalance"] = billedAmount;
+        }
+    }
+
+    private static bool ShouldUseBilledAmountAsInsuranceBalance(LabConfig lab)
+    {
+        if (lab == null)
+            return false;
+
+        if (lab.LabId is 18 or 19 or 20)
+            return true;
+
+        var labName = lab.LabName?.Trim() ?? string.Empty;
+
+        return labName.Contains("Certus", StringComparison.OrdinalIgnoreCase)
+            || labName.Contains("Augustus", StringComparison.OrdinalIgnoreCase)
+            || labName.Contains("NorthWest", StringComparison.OrdinalIgnoreCase)
+            || labName.Contains("Northwest", StringComparison.OrdinalIgnoreCase)
+            || labName.Contains("North West", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetValueByAnyKey(Dictionary<string, string> row, params string[] keys)
+    {
+        foreach (var key in keys)
+        {
+            if (row.TryGetValue(key, out var value))
+                return value ?? string.Empty;
+
+            var actualKey = row.Keys.FirstOrDefault(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
+            if (actualKey != null && row.TryGetValue(actualKey, out value))
+                return value ?? string.Empty;
+        }
+
+        return string.Empty;
     }
 
     private Task NotifyFileSynchronizedAsync(string fileType, string remotePath, string localPath, CancellationToken ct)

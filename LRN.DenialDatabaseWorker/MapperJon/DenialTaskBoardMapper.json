@@ -195,6 +195,26 @@
 			"ExcelColumn": "Date of Service",
 			"SqlColumn": "DateOfService",
 			"DataType": "date"
+		},
+		{
+			"ExcelColumn": "ICDCodes",
+			"SqlColumn": "ICDCodes",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "CoverageStatus",
+			"SqlColumn": "CoverageStatus",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "ICDComplianceStatus",
+			"SqlColumn": "ICDComplianceStatus",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "DenialValidity",
+			"SqlColumn": "DenialValidity",
+			"DataType": "string"
 		}
 	]
 }

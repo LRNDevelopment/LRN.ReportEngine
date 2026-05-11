@@ -16,6 +16,16 @@ public sealed class DenialTaskBoardRepository
 							?? throw new InvalidOperationException("Connection string 'DenialDatabase' not found.");
 	}
 
+	// Use this constructor when reading/writing lab-level tables.
+	// Example: NorthWest must read dbo.DenialTaskBoard from NWL_Lab / NWL_LRN, not LRNMaster.
+	public DenialTaskBoardRepository(string connectionString)
+	{
+		if (string.IsNullOrWhiteSpace(connectionString))
+			throw new ArgumentException("Lab database connection string is required.", nameof(connectionString));
+
+		_connectionString = connectionString;
+	}
+
 	public sealed class ExistingTaskInfo
 	{
 		public string TaskId { get; set; } = "";
@@ -32,7 +42,8 @@ SELECT TaskID, ClaimID, PatientId, CPTCode, DenialCode,
        Task, ActionCategory, Priority, SLADays, Status,
        InsuranceBalance, IsCurrentDenial, AssignedTo,
        DateOpened, DueDate, DateCompleted, DaysRemaining, SLAStatus,
-       LabId, LabName, RunId, CreatedOn, UniqueTrackId
+       LabId, LabName, RunId, CreatedOn, UniqueTrackId,
+       ICDCodes, CoverageStatus, ICDComplianceStatus, DenialValidity
 FROM dbo.DenialTaskBoard
 WHERE LabId = @LabId";
 
@@ -82,7 +93,11 @@ WHERE LabId = @LabId";
 					["LabName"] = reader["LabName"]?.ToString() ?? "",
 					["RunId"] = reader["RunId"]?.ToString() ?? "",
 					["CreatedOn"] = reader["CreatedOn"] is DateTime coDt ? coDt.ToString("O") : "",
-					["UniqueTrackId"] = uniqueTrackId
+					["UniqueTrackId"] = uniqueTrackId,
+					["ICDCodes"] = reader["ICDCodes"]?.ToString() ?? "",
+					["CoverageStatus"] = reader["CoverageStatus"]?.ToString() ?? "",
+					["ICDComplianceStatus"] = reader["ICDComplianceStatus"]?.ToString() ?? "",
+					["DenialValidity"] = reader["DenialValidity"]?.ToString() ?? ""
 				}
 			};
 

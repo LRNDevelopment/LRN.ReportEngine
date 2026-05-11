@@ -1,4 +1,4 @@
-﻿using DenialDatabaseProcessorWorker.Normalizers;
+using DenialDatabaseProcessorWorker.Normalizers;
 using static DenialDatabaseProcessorWorker.Services.DenialTaskBoardRepository;
 
 namespace DenialDatabaseProcessorWorker.Builders;
@@ -101,6 +101,13 @@ public sealed class TaskBoardBuilder
 				string taskText = GetAlignedValue(seg.TaskText, i, denialCodes);
 				string actCategory = GetAlignedValue(rawActionCategory, i, denialCodes);
 				string priority = GetAlignedValue(rawPriority, i, denialCodes);
+
+				// New fields from DenialLineItem. DenialValidity must be aligned per denial code
+				// and the denial-code prefix must be removed before loading to Task Board.
+				string icdCodes = line.GetValueOrDefault("BilledICDCodesNotAvailableInPayerPolicy") ?? "";
+				string coverageStatus = line.GetValueOrDefault("CoverageStatus") ?? "";
+				string icdComplianceStatus = line.GetValueOrDefault("ICDComplianceStatus") ?? "";
+				string denialValidity = GetValueForDenialCode(line.GetValueOrDefault("DenialValidity"), denialCode, denialCodes, i);
 
 				// Normalize task text
 				taskText = TaskGuidanceNormalizer.Normalize(taskText, denialCode);
@@ -235,7 +242,11 @@ public sealed class TaskBoardBuilder
 					["ChargeEnteredDate"] = line.GetValueOrDefault("ChargeEnteredDate") ?? "",
 					["BillingProvider"] = line.GetValueOrDefault("BillingProvider") ?? "",
 					["Panel Name"] = line.GetValueOrDefault("Panel Name") ?? "",
-					["Date of Service"] = line.GetValueOrDefault("Date of Service") ?? ""
+					["Date of Service"] = line.GetValueOrDefault("Date of Service") ?? "",
+					["ICDCodes"] = icdCodes,
+					["CoverageStatus"] = coverageStatus,
+					["ICDComplianceStatus"] = icdComplianceStatus,
+					["DenialValidity"] = denialValidity
 				};
 
 				result.Add(row);
@@ -346,10 +357,54 @@ public sealed class TaskBoardBuilder
 		return idx > 0 ? value[(idx + 1)..].Trim() : value.Trim();
 	}
 
+	private static string GetValueForDenialCode(string? raw, string denialCode, List<string> denialCodes, int index)
+	{
+		if (string.IsNullOrWhiteSpace(raw))
+			return "";
+
+		var text = raw.Trim();
+
+		// Best case: DenialValidity is stored like "CO16: Valid, CO197: Invalid".
+		// Split by denial-code markers, not only comma, because the validity text itself may contain commas.
+		var markers = denialCodes
+			.Where(c => !string.IsNullOrWhiteSpace(c))
+			.Select(c => new { Code = c, Index = text.IndexOf(c + ":", StringComparison.OrdinalIgnoreCase) })
+			.Where(x => x.Index >= 0)
+			.OrderBy(x => x.Index)
+			.ToList();
+
+		if (markers.Count > 0)
+		{
+			for (int i = 0; i < markers.Count; i++)
+			{
+				var current = markers[i];
+				var valueStart = current.Index + current.Code.Length + 1;
+				var valueEnd = i + 1 < markers.Count ? markers[i + 1].Index : text.Length;
+				var value = text[valueStart..valueEnd].Trim().Trim(',', ';', '|').Trim();
+
+				if (current.Code.Equals(denialCode, StringComparison.OrdinalIgnoreCase))
+					return value;
+			}
+		}
+
+		// Fallback for simple comma/semicolon aligned values.
+		return GetAlignedValue(text, index, denialCodes);
+	}
+
 	private static DateTime? TryParseDate(string? v)
 		=> DateTime.TryParse(v, out var dt) ? dt : null;
 
-	private sealed record TaskSegment(string DenialCode, string TaskText);
+	private sealed class TaskSegment
+	{
+		public TaskSegment(string denialCode, string taskText)
+		{
+			DenialCode = denialCode;
+			TaskText = taskText;
+		}
+
+		public string DenialCode { get; }
+		public string TaskText { get; }
+	}
 
 	private static List<TaskSegment> ParseTaskSegments(string taskGuidance, List<string> denialCodes)
 	{

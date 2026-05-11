@@ -7,6 +7,8 @@ using DenialDatabaseProcessorWorker.Normalizers;
 using DenialDatabaseProcessorWorker.Notifications;
 using DenialDatabaseProcessorWorker.Services;
 using DenialDatabaseProcessorWorker.Services.SharePoint;
+using DenialDatabaseProcessorWorker.Services.Workflow;
+using DenialDatabaseProcessorWorker.Models.Workflow;
 using DenialDatabaseProcessorWorker.Utils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -30,6 +32,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
     private readonly OutputPathBuilder _outputPathBuilder;
     private readonly DenialAnalysisRunLogRepository _runLogRepo;
     private readonly DenialTaskBoardRepository _denialTaskBoardRepo;
+    private readonly IDenialWorkflowApiClient _workflowApiClient;
     private readonly SharePointGraphOptions _spOpt;
 
     public DenialDatabaseWorker(
@@ -46,6 +49,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
         OutputPathBuilder outputPathBuilder,
         DenialAnalysisRunLogRepository runLogRepo,
         DenialTaskBoardRepository denialTaskBoardRepo,
+        IDenialWorkflowApiClient workflowApiClient,
         ISharePointUploader uploader,
         IOptions<SharePointGraphOptions> spOpt)
     {
@@ -61,6 +65,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
         _outputPathBuilder = outputPathBuilder;
         _runLogRepo = runLogRepo;
         _denialTaskBoardRepo = denialTaskBoardRepo;
+        _workflowApiClient = workflowApiClient;
         _uploader = uploader;
         _spOpt = spOpt.Value;
         _teamsNotifier = teamsNotifier;
@@ -127,8 +132,11 @@ public sealed class DenialDatabaseWorker : BackgroundService
 
             await _stepLogger.LogAsync(lab, "Start", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
-            // 1. Load existing tasks
-            var existingTasks = await _denialTaskBoardRepo.GetExistingTasksAsync(lab.LabId);
+            // 1. Load existing tasks from the selected LAB database, not LRNMaster.
+            // DenialTaskBoard is lab-level, so NorthWest must read from NWL_Lab / NWL_LRN,
+            // Augustus from Augustus_LRN, Certus from Certus_LRN, etc.
+            var labTaskBoardRepo = new DenialTaskBoardRepository(lab.LabConnectionString);
+            var existingTasks = await labTaskBoardRepo.GetExistingTasksAsync(lab.LabId);
 
             // 2. Load Claim Action Mapper
             await _stepLogger.LogAsync(lab, "Load ClaimActionMapper excel", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
@@ -193,14 +201,20 @@ public sealed class DenialDatabaseWorker : BackgroundService
             var lineItemWriter = new DenialLineItemBulkWriter(lab.LabConnectionString);
             var taskBoardWriter = new DenialTaskBoardBulkWriter(lab.LabConnectionString);
 
-            // 10. Write DB tables
-            await _stepLogger.LogAsync(lab, "Write Denial tables", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
+            // 10. Write DB tables into the selected LAB database.
+            // DenialTaskBoard must be copied here also; do not depend on Workflow API for this worker run.
+            await _stepLogger.LogAsync(lab, "Write Denial insight/line/task-board tables", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
             await insightWriter.WriteAsync(insightTable, lab, runId);
             await lineItemWriter.WriteAsync(lineItemTable, lab, runId);
             await taskBoardWriter.WriteAsync(taskBoardTable, lab, runId);
 
-            await _stepLogger.LogAsync(lab, "Write Denial tables", "Completed", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
+            await _stepLogger.LogAsync(lab, "Write Denial insight/line/task-board tables", "Completed", payerPolicyFile, claimActionMapperFile, outFile,
+                $"InsightRows={insightTable.Rows.Count}, LineRows={lineItemTable.Rows.Count}, TaskBoardRows={taskBoardTable.Rows.Count}", ct);
+
+            // Workflow API sync is disabled in this worker path because task-board rows are bulk copied directly.
+            // Keeping both direct bulk copy and API sync can create duplicates or fail when LRN.ReportsApi is not running.
+            // If workflow/history processing is required later, call the API from a separate controlled flow after bulk copy.
 
             // 11. Insert RunLog
             await _runLogRepo.InsertAsync(runId, lab.LabId, exportResult.ZipPath);
@@ -218,6 +232,56 @@ public sealed class DenialDatabaseWorker : BackgroundService
             await _stepLogger.LogAsync(lab, "Failed", "Failed", payerPolicyFile, claimActionMapperFile, outFile, ex.ToString(), ct);
         }
     }
+
+    private static DenialTaskImportRequest BuildWorkflowImportRequest(LabConfig lab, string runId, List<Dictionary<string, string>> taskRows)
+    {
+        return new DenialTaskImportRequest
+        {
+            LabId = lab.LabId,
+            LabName = lab.LabName,
+            RunId = runId,
+            Tasks = taskRows.Select(r => new DenialTaskImportRow
+            {
+                UniqueTrackId = GetValueByAnyKey(r, "UniqueTrackId"),
+                ClaimId = GetValueByAnyKey(r, "Claim ID", "ClaimID"),
+                PatientId = GetValueByAnyKey(r, "Patient / Acct #", "PatientId"),
+                CptCode = GetValueByAnyKey(r, "CPT Code", "CPTCode"),
+                DenialCode = GetValueByAnyKey(r, "Denial Code", "DenialCode"),
+                DenialDescription = GetValueByAnyKey(r, "Denial Description", "DenialDescription"),
+                DenialClassification = GetValueByAnyKey(r, "Denial Classification", "DenialClassification"),
+                ActionCode = GetValueByAnyKey(r, "Action Code", "ActionCode"),
+                RecommendedAction = GetValueByAnyKey(r, "Recommended Action", "RecommendedAction"),
+                ActionCategory = GetValueByAnyKey(r, "Action Category", "ActionCategory"),
+                Task = GetValueByAnyKey(r, "Task"),
+                Priority = GetValueByAnyKey(r, "Priority"),
+                InsuranceBalance = TryDecimal(GetValueByAnyKey(r, "Insurance Balance", "InsuranceBalance")),
+                SlaDays = TryInt(GetValueByAnyKey(r, "SLA (Days)", "SLADays")),
+                DateOpened = TryDate(GetValueByAnyKey(r, "Date Opened", "DateOpened")),
+                DueDate = TryDate(GetValueByAnyKey(r, "Due Date", "DueDate")),
+                DateCompleted = TryDate(GetValueByAnyKey(r, "Date Completed", "DateCompleted")),
+                SalesRepname = GetValueByAnyKey(r, "SalesRepname"),
+                ClinicName = GetValueByAnyKey(r, "ClinicName"),
+                ReferringProvider = GetValueByAnyKey(r, "ReferringProvider"),
+                PayerName = GetValueByAnyKey(r, "Payer Name", "PayerName"),
+                PayerNameNormalized = GetValueByAnyKey(r, "PayerName Normalized", "PayerNameNormalized"),
+                PayerCode = TryInt(GetValueByAnyKey(r, "Payer Code", "PayerCode")),
+                PayerType = GetValueByAnyKey(r, "Payer Type", "PayerType"),
+                FirstBilledDate = TryDate(GetValueByAnyKey(r, "First Billed Date", "FirstBilledDate")),
+                ChargeEnteredDate = TryDate(GetValueByAnyKey(r, "ChargeEnteredDate")),
+                BillingProvider = GetValueByAnyKey(r, "BillingProvider"),
+                PanelName = GetValueByAnyKey(r, "Panel Name", "PanelName"),
+                DateOfService = TryDate(GetValueByAnyKey(r, "Date of Service", "DateOfService")),
+                IcdCodes = GetValueByAnyKey(r, "ICDCodes"),
+                CoverageStatus = GetValueByAnyKey(r, "CoverageStatus"),
+                IcdComplianceStatus = GetValueByAnyKey(r, "ICDComplianceStatus"),
+                DenialValidity = GetValueByAnyKey(r, "DenialValidity")
+            }).Where(x => !string.IsNullOrWhiteSpace(x.UniqueTrackId)).ToList()
+        };
+    }
+
+    private static decimal TryDecimal(string? value) => decimal.TryParse(value, out var parsed) ? parsed : 0;
+    private static int? TryInt(string? value) => int.TryParse(value, out var parsed) ? parsed : null;
+    private static DateTime? TryDate(string? value) => DateTime.TryParse(value, out var parsed) ? parsed : null;
 
     private static DataTable ToDataTable(List<Dictionary<string, string>> rows)
     {

@@ -4,6 +4,8 @@ using DenialDatabaseProcessorWorker.Models;
 using DenialDatabaseProcessorWorker.Normalizers;
 using DenialDatabaseProcessorWorker.Notifications;
 using DenialDatabaseProcessorWorker.Services;
+using DenialDatabaseProcessorWorker.Services.Workflow;
+using DenialDatabaseProcessorWorker.Models.Workflow;
 using DenialDatabaseProcessorWorker.Services.SharePoint;
 using DenialDatabaseProcessorWorker.Worker;
 
@@ -18,6 +20,7 @@ builder.Services.PostConfigure<ProcessorOptions>(options =>
 
 // Labs
 builder.Services.Configure<List<LabConfig>>(builder.Configuration.GetSection("Labs"));
+builder.Services.Configure<DenialWorkflowApiOptions>(builder.Configuration.GetSection(DenialWorkflowApiOptions.SectionName));
 
 // Logging
 builder.Logging.ClearProviders();
@@ -38,6 +41,7 @@ builder.Services.AddSingleton<FileResolver>();
 builder.Services.AddSingleton<OutputPathBuilder>();
 builder.Services.AddSingleton<DenialAnalysisRunLogRepository>();
 builder.Services.AddSingleton<DenialTaskBoardRepository>();
+builder.Services.AddHttpClient<IDenialWorkflowApiClient, DenialWorkflowApiClient>();
 
 // SharePoint
 builder.Services.AddHttpClient<SharePointGraphClient>();

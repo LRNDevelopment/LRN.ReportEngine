@@ -215,6 +215,14 @@
 			"ExcelColumn": "DenialValidity",
 			"SqlColumn": "DenialValidity",
 			"DataType": "string"
+		},
+		{
+			"SourceColumn": "Units",
+			"TargetColumn": "Units"
+		},
+		{
+			"SourceColumn": "Modifier",
+			"TargetColumn": "Modifier"
 		}
 	]
 }

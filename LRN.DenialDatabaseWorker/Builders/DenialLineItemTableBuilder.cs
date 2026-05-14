@@ -101,6 +101,7 @@ namespace DenialDatabaseProcessorWorker.Builders
             new() { ExcelColumn = "ClinicName", SqlColumn = "ClinicName", DataType = "string" },
             new() { ExcelColumn = "SalesRepname", SqlColumn = "SalesRepname", DataType = "string" },
             new() { ExcelColumn = "PatientID", SqlColumn = "PatientID", DataType = "string" },
+            new() { ExcelColumn = "Patient Name", SqlColumn = "PatientName", DataType = "string" },
             new() { ExcelColumn = "ChargeEnteredDate", SqlColumn = "ChargeEnteredDate", DataType = "date" },
             new() { ExcelColumn = "POS", SqlColumn = "POS", DataType = "string" },
             new() { ExcelColumn = "TOS", SqlColumn = "TOS", DataType = "string" },
@@ -126,6 +127,26 @@ namespace DenialDatabaseProcessorWorker.Builders
             new() { ExcelColumn = "RunId", SqlColumn = "RunId", DataType = "string" },
             new() { ExcelColumn = "CreatedOn", SqlColumn = "CreatedOn", DataType = "datetime" }
         };
+
+
+        private static string NormalizeIdentifier(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            value = value.Trim();
+
+            if (value.EndsWith(".00", StringComparison.OrdinalIgnoreCase))
+                value = value[..^3];
+
+            if (decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var number))
+            {
+                if (number == Math.Truncate(number))
+                    return ((long)number).ToString(CultureInfo.InvariantCulture);
+            }
+
+            return value;
+        }
 
         public static DataTable Build(List<Dictionary<string, string>> excelRows, LabConfig lab, string runid)
         {
@@ -166,6 +187,13 @@ namespace DenialDatabaseProcessorWorker.Builders
                         {
                             dr[col.SqlColumn] = DBNull.Value;
                             continue;
+                        }
+
+
+                        // Remove trailing .00 from identifier-style fields
+                        if (col.SqlColumn is "VisitNumber" or "AccessionNo" or "PatientID")
+                        {
+                            raw = NormalizeIdentifier(raw);
                         }
 
                         switch (col.DataType.ToLowerInvariant())

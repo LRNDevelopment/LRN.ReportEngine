@@ -101,13 +101,67 @@ public sealed class TaskBoardBuilder
 				string taskText = GetAlignedValue(seg.TaskText, i, denialCodes);
 				string actCategory = GetAlignedValue(rawActionCategory, i, denialCodes);
 				string priority = GetAlignedValue(rawPriority, i, denialCodes);
+				// ------------------------------
+				// New fields from DenialLineItem
+				// IMPORTANT: Source column names are from DenialLineItem mapping
+				// ------------------------------
 
-				// New fields from DenialLineItem. DenialValidity must be aligned per denial code
-				// and the denial-code prefix must be removed before loading to Task Board.
-				string icdCodes = line.GetValueOrDefault("BilledICDCodesNotAvailableInPayerPolicy") ?? "";
-				string coverageStatus = line.GetValueOrDefault("CoverageStatus") ?? "";
-				string icdComplianceStatus = line.GetValueOrDefault("ICDComplianceStatus") ?? "";
-				string denialValidity = GetValueForDenialCode(line.GetValueOrDefault("DenialValidity"), denialCode, denialCodes, i);
+				var icdCodes = GetFirstValue(
+					line,
+					"CoveredICD10CodesBilled",
+					"ICDCodes",
+					"ICD Codes"
+				);
+
+				var coverageStatus = GetFirstValue(
+					line,
+					"CoverageStatus",
+					"Coverage Status"
+				);
+
+				var icdComplianceStatus = GetFirstValue(
+					line,
+					"ICDComplianceStatus",
+					"ICD Compliance Status"
+				);
+
+				var denialValidity = GetDenialValidityForCode(
+					GetFirstValue(line, "DenialValidity", "Denial Validity"),
+					denialCode,
+					denialCodes,
+					i
+				);
+
+				var units = GetFirstValue(
+									line,
+									"Units",
+									"Unit",
+									"unit",
+									"units",
+									"NoOfUnits",
+									"No Of Units",
+									"No. Of Units",
+									"Quantity",
+									"Qty",
+									"BilledUnits",
+									"Billed Units"
+								);
+
+				var modifier = GetFirstValue(
+					line,
+					"Modifier",
+					"modifier",
+					"Modifiers",
+					"modifiers",
+					"Mod",
+					"MOD",
+					"CPTModifier",
+					"CPT Modifier",
+					"CPT Mod",
+					"ProcedureModifier",
+					"Procedure Modifier"
+				);
+
 
 				// Normalize task text
 				taskText = TaskGuidanceNormalizer.Normalize(taskText, denialCode);
@@ -294,6 +348,157 @@ public sealed class TaskBoardBuilder
 	// ------------------------------
 	// HELPERS
 	// ------------------------------
+	private static string NormalizeUnits(string? value)
+	{
+		if (string.IsNullOrWhiteSpace(value))
+			return "";
+
+		var text = value.Trim();
+
+		if (decimal.TryParse(text, out var decimalValue))
+			return Convert.ToInt32(decimalValue).ToString();
+
+		if (int.TryParse(text, out var intValue))
+			return intValue.ToString();
+
+		return text;
+	}
+	private static string GetFirstValue(Dictionary<string, string> row, params string[] keys)
+	{
+		if (row == null || keys == null || keys.Length == 0)
+			return "";
+
+		foreach (var key in keys)
+		{
+			if (string.IsNullOrWhiteSpace(key))
+				continue;
+
+			if (row.TryGetValue(key, out var exactValue) && !string.IsNullOrWhiteSpace(exactValue))
+				return exactValue.Trim();
+
+			var normalizedKey = NormalizeColumnKey(key);
+
+			foreach (var kvp in row)
+			{
+				if (NormalizeColumnKey(kvp.Key).Equals(normalizedKey, StringComparison.OrdinalIgnoreCase) &&
+					!string.IsNullOrWhiteSpace(kvp.Value))
+				{
+					return kvp.Value.Trim();
+				}
+			}
+		}
+
+		return "";
+	}
+
+	private static string NormalizeColumnKey(string? key)
+	{
+		if (string.IsNullOrWhiteSpace(key))
+			return "";
+
+		return key
+			.Replace(" ", "")
+			.Replace("_", "")
+			.Replace("-", "")
+			.Replace("/", "")
+			.Replace(".", "")
+			.Replace("#", "")
+			.Trim();
+	}
+
+	private static string GetDenialValidityForCode(
+		string? raw,
+		string denialCode,
+		List<string> denialCodes,
+		int index)
+	{
+		if (string.IsNullOrWhiteSpace(raw) || string.IsNullOrWhiteSpace(denialCode))
+			return "";
+
+		var map = ParseDenialValidityMap(raw, denialCodes);
+
+		if (map.TryGetValue(denialCode, out var mapped))
+			return StripPrefix(mapped);
+
+		return GetAlignedValue(raw, index, denialCodes);
+	}
+
+	private static Dictionary<string, string> ParseDenialValidityMap(string raw, List<string> denialCodes)
+	{
+		var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+		if (string.IsNullOrWhiteSpace(raw))
+			return map;
+
+		var parts = raw.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+		foreach (var part in parts)
+		{
+			var item = part.Trim();
+
+			if (string.IsNullOrWhiteSpace(item))
+				continue;
+
+			var colonIndex = item.IndexOf(':');
+
+			if (colonIndex > 0)
+			{
+				var code = item[..colonIndex].Trim();
+				var text = item[(colonIndex + 1)..].Trim();
+
+				map[code] = string.IsNullOrWhiteSpace(text) ? "N/A" : StripPrefix(text);
+			}
+			else
+			{
+				var code = item.Trim();
+
+				if (IsKnownDenialCode(code, denialCodes))
+				{
+					map[code] = "N/A";
+				}
+			}
+		}
+
+		return map;
+	}
+
+	private static bool IsKnownDenialCode(string value, List<string> denialCodes)
+	{
+		if (string.IsNullOrWhiteSpace(value))
+			return false;
+
+		var clean = value.Trim();
+
+		return denialCodes.Any(x =>
+			x.Equals(clean, StringComparison.OrdinalIgnoreCase));
+	}
+
+	private static string GetByAnyKey(Dictionary<string, string> row, params string[] keys)
+	{
+		foreach (var key in keys)
+		{
+			if (row.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
+				return value.Trim();
+		}
+
+		foreach (var key in keys)
+		{
+			var normalizedKey = NormalizeHeader(key);
+			var actualKey = row.Keys.FirstOrDefault(k => NormalizeHeader(k) == normalizedKey);
+			if (actualKey != null && row.TryGetValue(actualKey, out var value) && !string.IsNullOrWhiteSpace(value))
+				return value.Trim();
+		}
+
+		return "";
+	}
+
+	private static string NormalizeHeader(string? value)
+	{
+		if (string.IsNullOrWhiteSpace(value))
+			return "";
+
+		return new string(value.Where(char.IsLetterOrDigit).Select(char.ToLowerInvariant).ToArray());
+	}
 
 	private static string GetAlignedValue(string raw, int index, List<string> denialCodes)
 	{

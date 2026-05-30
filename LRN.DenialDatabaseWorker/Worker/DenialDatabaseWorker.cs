@@ -152,6 +152,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
             // 4. Normalize + map
             await _stepLogger.LogAsync(lab, "Normalize DenialCode + map fields", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
             var (headers, finalRows) = _builder.Build(payerRows, claimMapperIndex);
+            ApplyClaimUid(finalRows);
 
             // Lab-specific insurance amount rule:
             // Augustus (19), Certus (18), and NorthWest (20) must use Billed Amount
@@ -205,6 +206,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
             // DenialTaskBoard must be copied here also; do not depend on Workflow API for this worker run.
             await _stepLogger.LogAsync(lab, "Write Denial insight/line/task-board tables", "InProgress", payerPolicyFile, claimActionMapperFile, outFile, null, ct);
 
+            await labTaskBoardRepo.ReconcileBeforeWriteAsync(lab.LabId, lab.LabName, runId, lineItemTable, taskRows, ct);
             await insightWriter.WriteAsync(insightTable, lab, runId);
             await lineItemWriter.WriteAsync(lineItemTable, lab, runId);
             await taskBoardWriter.WriteAsync(taskBoardTable, lab, runId);
@@ -243,6 +245,7 @@ public sealed class DenialDatabaseWorker : BackgroundService
             Tasks = taskRows.Select(r => new DenialTaskImportRow
             {
                 UniqueTrackId = GetValueByAnyKey(r, "UniqueTrackId"),
+                ClaimUid = GetValueByAnyKey(r, "ClaimUID"),
                 ClaimId = GetValueByAnyKey(r, "Claim ID", "ClaimID"),
                 PatientId = GetValueByAnyKey(r, "Patient / Acct #", "PatientId"),
                 CptCode = GetValueByAnyKey(r, "CPT Code", "CPTCode"),
@@ -359,6 +362,13 @@ public sealed class DenialDatabaseWorker : BackgroundService
                 }
 
                 // Default: keep as string
+                if (string.Equals(kv.Key, "Assigned To", StringComparison.OrdinalIgnoreCase) &&
+                    string.IsNullOrWhiteSpace(value))
+                {
+                    dr[kv.Key] = DBNull.Value;
+                    continue;
+                }
+
                 dr[kv.Key] = value;
             }
 
@@ -383,6 +393,59 @@ public sealed class DenialDatabaseWorker : BackgroundService
             // Keep the SQL-style key in sync in case a later mapper/table builder reads this form.
             row["InsuranceBalance"] = billedAmount;
         }
+    }
+
+    private static void ApplyClaimUid(List<Dictionary<string, string>> rows)
+    {
+        foreach (var row in rows)
+        {
+            var visitNumber = GetValueByAnyKey(row, "Visit Number", "VisitNumber");
+            var accessionNo = GetValueByAnyKey(row, "Accession No", "AccessionNo");
+            var dateOfService = GetValueByAnyKey(row, "Date of Service", "DateOfService", "DOS");
+
+            row["ClaimUID"] = BuildClaimUid(visitNumber, accessionNo, dateOfService);
+        }
+    }
+
+    private static string BuildClaimUid(string? visitNumber, string? accessionNo, string? dateOfService)
+    {
+        var visit = NormalizeClaimUidPart(visitNumber);
+        var accession = NormalizeClaimUidPart(accessionNo);
+        var dos = NormalizeDateOfServiceForClaimUid(dateOfService);
+
+        if (string.IsNullOrWhiteSpace(visit) &&
+            string.IsNullOrWhiteSpace(accession) &&
+            string.IsNullOrWhiteSpace(dos))
+        {
+            return string.Empty;
+        }
+
+        return $"{visit}_{accession}_{dos}";
+    }
+
+    private static string NormalizeClaimUidPart(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        var text = value.Trim();
+
+        if (text.EndsWith(".00", StringComparison.OrdinalIgnoreCase))
+            text = text[..^3];
+
+        return text;
+    }
+
+    private static string NormalizeDateOfServiceForClaimUid(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        var text = value.Trim();
+
+        return DateTime.TryParse(text, out var parsed)
+            ? parsed.ToString("yyyyMMdd")
+            : text;
     }
 
     private static bool ShouldUseBilledAmountAsInsuranceBalance(LabConfig lab)

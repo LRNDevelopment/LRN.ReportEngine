@@ -171,10 +171,10 @@ public static class StandardCsvExporter
 			finalOutputHeaders.Add("PanelNew");
 		}
 
-		//if (augmentation?.IsNorthWest == true)
-		//{
-		//	finalOutputHeaders.Add("Panel Type");
-		//}
+		if (augmentation?.IsNorthWest == true)
+		{
+			finalOutputHeaders.Add("LRN Panel Type");
+		}
 
 		finalOutputHeaders.AddRange(extraSourceColumnIndexes.Select(i => header[i] ?? string.Empty));
 

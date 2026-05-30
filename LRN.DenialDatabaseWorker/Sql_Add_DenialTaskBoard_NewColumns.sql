@@ -17,3 +17,57 @@ IF COL_LENGTH('dbo.DenialTaskBoard', 'DenialValidity') IS NULL
 BEGIN
     ALTER TABLE dbo.DenialTaskBoard ADD DenialValidity NVARCHAR(MAX) NULL;
 END;
+
+IF COL_LENGTH('dbo.DenialTaskBoard', 'ClaimUID') IS NULL
+BEGIN
+    ALTER TABLE dbo.DenialTaskBoard ADD ClaimUID NVARCHAR(600) NULL;
+END;
+
+IF COL_LENGTH('dbo.DenialLineItem', 'ClaimUID') IS NULL
+BEGIN
+    ALTER TABLE dbo.DenialLineItem ADD ClaimUID NVARCHAR(600) NULL;
+END;
+
+IF COL_LENGTH('dbo.DenialTaskBoard', 'WorkFlowStatus') IS NULL
+BEGIN
+    ALTER TABLE dbo.DenialTaskBoard ADD WorkFlowStatus NVARCHAR(100) NULL;
+END;
+
+IF COL_LENGTH('dbo.DenialTaskBoard', 'ClaimFrom') IS NULL
+BEGIN
+    ALTER TABLE dbo.DenialTaskBoard ADD ClaimFrom NVARCHAR(50) NULL;
+END;
+
+IF COL_LENGTH('dbo.DenialLineItem', 'AssignedTo') IS NULL
+BEGIN
+    ALTER TABLE dbo.DenialLineItem ADD AssignedTo NVARCHAR(200) NULL;
+END;
+
+IF COL_LENGTH('dbo.DenialLineItem', 'WorkFlowStatus') IS NULL
+BEGIN
+    ALTER TABLE dbo.DenialLineItem ADD WorkFlowStatus NVARCHAR(100) NULL;
+END;
+
+IF COL_LENGTH('dbo.DenialLineItem', 'ClaimFrom') IS NULL
+BEGIN
+    ALTER TABLE dbo.DenialLineItem ADD ClaimFrom NVARCHAR(50) NULL;
+END;
+
+IF OBJECT_ID('dbo.DenialVerification', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.DenialVerification
+    (
+        DenialVerificationId INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        ClaimUID NVARCHAR(600) NOT NULL,
+        TaskID NVARCHAR(100) NULL,
+        ClaimID NVARCHAR(100) NULL,
+        UniqueTrackId NVARCHAR(450) NULL,
+        LabId INT NOT NULL,
+        LabName NVARCHAR(200) NULL,
+        RunId NVARCHAR(100) NULL,
+        AssignedTo NVARCHAR(200) NULL,
+        Status NVARCHAR(100) NULL,
+        VerificationStatus NVARCHAR(100) NOT NULL,
+        CreatedOn DATETIME2 NOT NULL
+    );
+END;

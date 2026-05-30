@@ -12,6 +12,11 @@
 			"DataType": "string"
 		},
 		{
+			"ExcelColumn": "ClaimUID",
+			"SqlColumn": "ClaimUID",
+			"DataType": "string"
+		},
+		{
 			"ExcelColumn": "Patient / Acct #",
 			"SqlColumn": "PatientId",
 			"DataType": "string"
@@ -69,6 +74,16 @@
 		{
 			"ExcelColumn": "Status",
 			"SqlColumn": "Status",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "WorkFlowStatus",
+			"SqlColumn": "WorkFlowStatus",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "ClaimFrom",
+			"SqlColumn": "ClaimFrom",
 			"DataType": "string"
 		},
 		{

@@ -11,6 +11,7 @@ public sealed class DenialTaskImportRequest
 public sealed class DenialTaskImportRow
 {
     public string UniqueTrackId { get; set; } = string.Empty;
+    public string ClaimUid { get; set; } = string.Empty;
     public string ClaimId { get; set; } = string.Empty;
     public string PatientId { get; set; } = string.Empty;
     public string CptCode { get; set; } = string.Empty;

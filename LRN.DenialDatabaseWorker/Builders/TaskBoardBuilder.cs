@@ -24,8 +24,6 @@ public sealed class TaskBoardBuilder
 		var today = DateTime.Today;
 		int newTaskCounter = 1;
 
-		var currentKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
 		foreach (var line in lineRows)
 		{
 			var denialCodeNorm = line.GetValueOrDefault("DenialCode_Normalized") ?? "";
@@ -33,8 +31,10 @@ public sealed class TaskBoardBuilder
 				continue;
 
 			var visitNumber = line.GetValueOrDefault("Visit Number") ?? "";
+			var accessionNo = GetFirstValue(line, "Accession No", "AccessionNo");
+			var dateOfService = GetFirstValue(line, "Date of Service", "DateOfService", "DOS");
+			var claimUid = BuildClaimUid(visitNumber, accessionNo, dateOfService);
 			var cptCode = line.GetValueOrDefault("CPTCode") ?? "";
-			var payStatus = line.GetValueOrDefault("Pay Status") ?? "";
 
 			var rawDesc = line.GetValueOrDefault("Denial Description") ?? "";
 			var rawClass = line.GetValueOrDefault("Denial Classification") ?? "";
@@ -55,9 +55,6 @@ public sealed class TaskBoardBuilder
 
 			int slaDays = int.TryParse(StripPrefix(rawSla), out var s) ? s : 0;
 
-			DateTime? firstBilled = TryParseDate(line.GetValueOrDefault("First Billed Date"));
-			DateTime? postedDate = TryParseDate(line.GetValueOrDefault("Posted Date"));
-
 			var denialCodes = denialCodeNorm
 				.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
 				.Select(x => x.Trim())
@@ -70,9 +67,10 @@ public sealed class TaskBoardBuilder
 				var seg = taskSegments[i];
 				var denialCode = seg.DenialCode;
 
-				// Key = VisitNumber + CPT + DenialCode
-				var key = $"{visitNumber}|{cptCode}|{denialCode}";
-				currentKeys.Add(key);
+				// Key = ClaimUID + CPT + DenialCode
+				var key = BuildTaskKey(claimUid, cptCode, denialCode);
+				if (string.IsNullOrWhiteSpace(key))
+					continue;
 
 				// Try to get existing task
 				_existingTasks.TryGetValue(key, out var existing);
@@ -174,61 +172,39 @@ public sealed class TaskBoardBuilder
 				// STATUS + DATE COMPLETED LOGIC
 				// ------------------------------
 
-				string status = "Open";
+				string status = "New";
 				DateTime? dateCompleted = null;
-
-				bool isRebill = taskText.Contains("rebill", StringComparison.OrdinalIgnoreCase);
-				bool isWriteOff = taskText.Contains("write off", StringComparison.OrdinalIgnoreCase);
+				string assignedTo = "";
+				string workflowStatus = "";
 
 				// 1. Preserve existing Closed/Review tasks
-				if (existing != null &&
-						existing.Row.TryGetValue("Status", out var oldStatusRaw))
+				if (existing != null)
 				{
-					var oldStatus = oldStatusRaw?.Trim()
-						.Replace("\u00A0", "")   // non-breaking space
-						.Replace("\u200B", "")   // zero-width space
-						.Replace("\r", "")
-						.Replace("\n", "")
-						.Trim();
+					assignedTo = existing.Row.GetValueOrDefault("Assigned To")?.Trim() ?? "";
+					workflowStatus = existing.Row.GetValueOrDefault("WorkFlowStatus")?.Trim() ?? "";
 
-					if (!string.IsNullOrWhiteSpace(oldStatus) &&
-						(oldStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase) ||
-						 oldStatus.Equals("Review", StringComparison.OrdinalIgnoreCase)))
+					if (existing.Row.TryGetValue("Status", out var oldStatusRaw))
 					{
-						status = oldStatus;
+						var oldStatus = CleanStatus(oldStatusRaw);
 
-						if (existing.Row.TryGetValue("Date Completed", out var oldCompleted) &&
+						if (!string.IsNullOrWhiteSpace(assignedTo))
+						{
+							status = oldStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase)
+								? oldStatus
+								: "Review";
+						}
+						else if (!string.IsNullOrWhiteSpace(oldStatus) &&
+							(oldStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase) ||
+							 oldStatus.Equals("Review", StringComparison.OrdinalIgnoreCase)))
+						{
+							status = oldStatus;
+						}
+
+						if (status.Equals("Closed", StringComparison.OrdinalIgnoreCase) &&
+							existing.Row.TryGetValue("Date Completed", out var oldCompleted) &&
 							DateTime.TryParse(oldCompleted, out var parsed))
 						{
 							dateCompleted = parsed;
-						}
-					}
-				}
-				else
-				{
-					// 2. Rebill auto-close
-					if (isRebill && firstBilled.HasValue && firstBilled.Value > dateOpened)
-					{
-						status = "Closed";
-						dateCompleted = firstBilled;
-					}
-					// 3. Write-off auto-close
-					else if (isWriteOff && insBalanceVal == 0 && postedDate.HasValue && postedDate.Value > dateOpened)
-					{
-						status = "Closed";
-						dateCompleted = postedDate;
-					}
-					// 4. Write-off but not yet posted
-					else if (isWriteOff)
-					{
-						if (!string.Equals(payStatus, "Write Off", StringComparison.OrdinalIgnoreCase))
-						{
-							status = "Review";
-						}
-						else
-						{
-							status = "Closed";
-							dateCompleted = postedDate;
 						}
 					}
 				}
@@ -243,11 +219,11 @@ public sealed class TaskBoardBuilder
 
 				if (dateCompleted.HasValue && dueDate.HasValue && dateCompleted.Value <= dueDate.Value)
 					slaStatus = "Met";
-				else if (status == "Open" && !dateCompleted.HasValue && dueDate.HasValue && today > dueDate.Value)
+				else if ((status == "Open" || status == "New") && !dateCompleted.HasValue && dueDate.HasValue && today > dueDate.Value)
 					slaStatus = "Overdue";
-				else if (status == "Open" && !dateCompleted.HasValue && dueDate.HasValue && daysRemaining <= 3)
+				else if ((status == "Open" || status == "New") && !dateCompleted.HasValue && dueDate.HasValue && daysRemaining <= 3)
 					slaStatus = "Due Soon";
-				else if (status == "Open" && !dateCompleted.HasValue && dueDate.HasValue && daysRemaining > 3)
+				else if ((status == "Open" || status == "New") && !dateCompleted.HasValue && dueDate.HasValue && daysRemaining > 3)
 					slaStatus = "On Track";
 
 				// ------------------------------
@@ -257,7 +233,8 @@ public sealed class TaskBoardBuilder
 				var row = new Dictionary<string, string>
 				{
 					["Task ID"] = taskId,
-					["Claim ID"] = string.IsNullOrWhiteSpace(visitNumber) ? "" : $"CLM-{visitNumber}",
+					["Claim ID"] = visitNumber,
+					["ClaimUID"] = claimUid,
 					["Patient / Acct #"] = line.GetValueOrDefault("PatientID") ?? "",
 					["CPT Code"] = cptCode,
 					["Denial Code"] = denialCode,
@@ -270,9 +247,11 @@ public sealed class TaskBoardBuilder
 					["Priority"] = priority,
 					["SLA (Days)"] = slaDays > 0 ? slaDays.ToString() : "",
 					["Status"] = status,
+					["WorkFlowStatus"] = string.IsNullOrWhiteSpace(workflowStatus) ? status : workflowStatus,
+					["ClaimFrom"] = "Current Run",
 					["Insurance Balance"] = insuranceBalance,
 					["IsCurrentDenial"] = "true",
-					["Assigned To"] = "",
+					["Assigned To"] = assignedTo,
 					["Date Opened"] = dateOpened.ToString("yyyy-MM-dd"),
 					["Due Date"] = dueDate?.ToString("yyyy-MM-dd") ?? "",
 					["Date Completed"] = dateCompleted?.ToString("yyyy-MM-dd") ?? "",
@@ -305,41 +284,6 @@ public sealed class TaskBoardBuilder
 
 				result.Add(row);
 			}
-		}
-
-		// -----------------------------------------
-		// OLD TASKS NOT PRESENT IN CURRENT RUN
-		// -----------------------------------------
-
-		var todayStr = DateTime.Today.ToString("yyyy-MM-dd");
-
-		foreach (var kvp in _existingTasks)
-		{
-			var key = kvp.Key;
-			var info = kvp.Value;
-
-			if (currentKeys.Contains(key))
-				continue;
-
-			var row = new Dictionary<string, string>(info.Row, StringComparer.OrdinalIgnoreCase)
-			{
-				["IsCurrentDenial"] = "false",
-				["Status"] = "Closed",
-				["Date Completed"] = todayStr
-			};
-
-			if (DateTime.TryParse(row.GetValueOrDefault("Due Date"), out var dueDt))
-			{
-				int daysRemaining = (dueDt - DateTime.Today).Days;
-				row["Days Remaining"] = daysRemaining.ToString();
-
-				if (DateTime.TryParse(row.GetValueOrDefault("Date Completed"), out var dc))
-				{
-					row["SLA Status"] = dc <= dueDt ? "Met" : "Overdue";
-				}
-			}
-
-			result.Add(row);
 		}
 
 		return result;
@@ -490,6 +434,73 @@ public sealed class TaskBoardBuilder
 		}
 
 		return "";
+	}
+
+	private static string BuildClaimUid(string? visitNumber, string? accessionNo, string? dateOfService)
+	{
+		var visit = NormalizeClaimUidPart(visitNumber);
+		var accession = NormalizeClaimUidPart(accessionNo);
+		var dos = NormalizeDateOfServiceForClaimUid(dateOfService);
+
+		if (string.IsNullOrWhiteSpace(visit) &&
+			string.IsNullOrWhiteSpace(accession) &&
+			string.IsNullOrWhiteSpace(dos))
+		{
+			return "";
+		}
+
+		return $"{visit}_{accession}_{dos}";
+	}
+
+	private static string BuildTaskKey(string? claimUid, string? cptCode, string? denialCode)
+	{
+		var claim = claimUid?.Trim() ?? "";
+		var cpt = cptCode?.Trim() ?? "";
+		var denial = denialCode?.Trim() ?? "";
+
+		if (string.IsNullOrWhiteSpace(claim) ||
+			string.IsNullOrWhiteSpace(cpt) ||
+			string.IsNullOrWhiteSpace(denial))
+		{
+			return "";
+		}
+
+		return $"{claim}|{cpt}|{denial}";
+	}
+
+	private static string NormalizeClaimUidPart(string? value)
+	{
+		if (string.IsNullOrWhiteSpace(value))
+			return "";
+
+		var text = value.Trim();
+
+		if (text.EndsWith(".00", StringComparison.OrdinalIgnoreCase))
+			text = text[..^3];
+
+		return text;
+	}
+
+	private static string NormalizeDateOfServiceForClaimUid(string? value)
+	{
+		if (string.IsNullOrWhiteSpace(value))
+			return "";
+
+		var text = value.Trim();
+
+		return DateTime.TryParse(text, out var parsed)
+			? parsed.ToString("yyyyMMdd")
+			: text;
+	}
+
+	private static string CleanStatus(string? value)
+	{
+		return value?.Trim()
+			.Replace("\u00A0", "")
+			.Replace("\u200B", "")
+			.Replace("\r", "")
+			.Replace("\n", "")
+			.Trim() ?? "";
 	}
 
 	private static string NormalizeHeader(string? value)

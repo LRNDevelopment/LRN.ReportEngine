@@ -12,6 +12,11 @@
 			"DataType": "string"
 		},
 		{
+			"ExcelColumn": "ClaimUID",
+			"SqlColumn": "ClaimUID",
+			"DataType": "string"
+		},
+		{
 			"ExcelColumn": "CPTCode",
 			"SqlColumn": "CPTCode",
 			"DataType": "string"
@@ -509,6 +514,21 @@
 		{
 			"ExcelColumn": "Task Status",
 			"SqlColumn": "TaskStatus",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Assigned To",
+			"SqlColumn": "AssignedTo",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "WorkFlowStatus",
+			"SqlColumn": "WorkFlowStatus",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "ClaimFrom",
+			"SqlColumn": "ClaimFrom",
 			"DataType": "string"
 		},
 		{

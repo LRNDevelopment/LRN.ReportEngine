@@ -17,6 +17,7 @@ namespace DenialDatabaseProcessorWorker.Builders
         {
             new() { ExcelColumn = "Accession No", SqlColumn = "AccessionNo", DataType = "string" },
             new() { ExcelColumn = "Visit Number", SqlColumn = "VisitNumber", DataType = "string" },
+            new() { ExcelColumn = "ClaimUID", SqlColumn = "ClaimUID", DataType = "string" },
             new() { ExcelColumn = "CPTCode", SqlColumn = "CPTCode", DataType = "string" },
             new() { ExcelColumn = "Patient DOB", SqlColumn = "PatientDOB", DataType = "date" },
             new() { ExcelColumn = "Payer Code", SqlColumn = "PayerCode", DataType = "int" },
@@ -118,6 +119,9 @@ namespace DenialDatabaseProcessorWorker.Builders
             new() { ExcelColumn = "Task Guidance", SqlColumn = "TaskGuidance", DataType = "string" },
             new() { ExcelColumn = "Denial Date", SqlColumn = "DenialDate", DataType = "date" },
             new() { ExcelColumn = "Task Status", SqlColumn = "TaskStatus", DataType = "string" },
+            new() { ExcelColumn = "Assigned To", SqlColumn = "AssignedTo", DataType = "string" },
+            new() { ExcelColumn = "WorkFlowStatus", SqlColumn = "WorkFlowStatus", DataType = "string" },
+            new() { ExcelColumn = "ClaimFrom", SqlColumn = "ClaimFrom", DataType = "string" },
             new() { ExcelColumn = "Short Category", SqlColumn = "ShortCategory", DataType = "string" },
             new() { ExcelColumn = "Priority", SqlColumn = "Priority", DataType = "string" },
             new() { ExcelColumn = "SLA (Days)", SqlColumn = "SLADays", DataType = "string" },
@@ -178,6 +182,8 @@ namespace DenialDatabaseProcessorWorker.Builders
                         dr[col.SqlColumn] = lab.LabName;
                     else if (col.SqlColumn == "RunId")
                         dr[col.SqlColumn] = runid;
+                    else if (col.SqlColumn == "ClaimFrom")
+                        dr[col.SqlColumn] = "Current Run";
                     else
                     {
                         row.TryGetValue(col.ExcelColumn, out var raw);

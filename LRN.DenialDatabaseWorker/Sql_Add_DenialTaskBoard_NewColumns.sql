@@ -38,6 +38,31 @@ BEGIN
     ALTER TABLE dbo.DenialTaskBoard ADD ClaimFrom NVARCHAR(50) NULL;
 END;
 
+IF COL_LENGTH('dbo.DenialTaskBoard', 'Units') IS NULL
+BEGIN
+    ALTER TABLE dbo.DenialTaskBoard ADD Units INT NULL;
+END;
+
+IF COL_LENGTH('dbo.DenialTaskBoard', 'Modifier') IS NULL
+BEGIN
+    ALTER TABLE dbo.DenialTaskBoard ADD Modifier NVARCHAR(50) NULL;
+END;
+
+IF COL_LENGTH('dbo.DenialTaskBoard', 'Source') IS NULL
+BEGIN
+    ALTER TABLE dbo.DenialTaskBoard ADD Source NVARCHAR(50) NULL;
+END;
+
+IF COL_LENGTH('dbo.DenialTaskBoard', 'PatName') IS NULL
+BEGIN
+    ALTER TABLE dbo.DenialTaskBoard ADD PatName NVARCHAR(250) NULL;
+END;
+
+IF COL_LENGTH('dbo.DenialTaskBoard', 'SubscriberId') IS NULL
+BEGIN
+    ALTER TABLE dbo.DenialTaskBoard ADD SubscriberId NVARCHAR(50) NULL;
+END;
+
 IF COL_LENGTH('dbo.DenialLineItem', 'AssignedTo') IS NULL
 BEGIN
     ALTER TABLE dbo.DenialLineItem ADD AssignedTo NVARCHAR(200) NULL;
@@ -51,6 +76,21 @@ END;
 IF COL_LENGTH('dbo.DenialLineItem', 'ClaimFrom') IS NULL
 BEGIN
     ALTER TABLE dbo.DenialLineItem ADD ClaimFrom NVARCHAR(50) NULL;
+END;
+
+IF COL_LENGTH('dbo.DenialLineItem', 'Source') IS NULL
+BEGIN
+    ALTER TABLE dbo.DenialLineItem ADD Source NVARCHAR(50) NULL;
+END;
+
+IF COL_LENGTH('dbo.DenialLineItem', 'PatName') IS NULL
+BEGIN
+    ALTER TABLE dbo.DenialLineItem ADD PatName NVARCHAR(250) NULL;
+END;
+
+IF COL_LENGTH('dbo.DenialLineItem', 'SubscriberId') IS NULL
+BEGIN
+    ALTER TABLE dbo.DenialLineItem ADD SubscriberId NVARCHAR(50) NULL;
 END;
 
 IF OBJECT_ID('dbo.DenialVerification', 'U') IS NULL

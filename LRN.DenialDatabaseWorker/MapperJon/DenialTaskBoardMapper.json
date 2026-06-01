@@ -167,6 +167,21 @@
 			"DataType": "string"
 		},
 		{
+			"ExcelColumn": "Source",
+			"SqlColumn": "Source",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Pat name",
+			"SqlColumn": "PatName",
+			"DataType": "string"
+		},
+		{
+			"ExcelColumn": "Subscriber Id",
+			"SqlColumn": "SubscriberId",
+			"DataType": "string"
+		},
+		{
 			"ExcelColumn": "PayerName Normalized",
 			"SqlColumn": "PayerNameNormalized",
 			"DataType": "string"
@@ -232,12 +247,14 @@
 			"DataType": "string"
 		},
 		{
-			"SourceColumn": "Units",
-			"TargetColumn": "Units"
+			"ExcelColumn": "Units",
+			"SqlColumn": "Units",
+			"DataType": "int"
 		},
 		{
-			"SourceColumn": "Modifier",
-			"TargetColumn": "Modifier"
+			"ExcelColumn": "Modifier",
+			"SqlColumn": "Modifier",
+			"DataType": "string"
 		}
 	]
 }

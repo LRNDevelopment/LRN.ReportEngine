@@ -267,6 +267,9 @@ public sealed class TaskBoardBuilder
 					["SalesRepname"] = line.GetValueOrDefault("SalesRepname") ?? "",
 					["ClinicName"] = line.GetValueOrDefault("ClinicName") ?? "",
 					["ReferringProvider"] = line.GetValueOrDefault("ReferringProvider") ?? "",
+					["Source"] = GetFirstValue(line, "Source"),
+					["Pat name"] = GetFirstValue(line, "Pat name", "PatName", "Patient Name", "PatientName"),
+					["Subscriber Id"] = GetFirstValue(line, "Subscriber Id", "SubscriberId", "Subscriber ID", "SubscriberID"),
 					["PayerName Normalized"] = line.GetValueOrDefault("PayerName Normalized") ?? "",
 					["Payer Name"] = line.GetValueOrDefault("Payer Name") ?? "",
 					["Payer Code"] = line.GetValueOrDefault("Payer Code") ?? "",
@@ -279,7 +282,9 @@ public sealed class TaskBoardBuilder
 					["ICDCodes"] = icdCodes,
 					["CoverageStatus"] = coverageStatus,
 					["ICDComplianceStatus"] = icdComplianceStatus,
-					["DenialValidity"] = denialValidity
+					["DenialValidity"] = denialValidity,
+					["Units"] = NormalizeUnits(units),
+					["Modifier"] = modifier
 				};
 
 				result.Add(row);

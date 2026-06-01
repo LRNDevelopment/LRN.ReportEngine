@@ -31,6 +31,9 @@ public sealed class DenialTaskImportRow
     public string SalesRepname { get; set; } = string.Empty;
     public string ClinicName { get; set; } = string.Empty;
     public string ReferringProvider { get; set; } = string.Empty;
+    public string Source { get; set; } = string.Empty;
+    public string PatName { get; set; } = string.Empty;
+    public string SubscriberId { get; set; } = string.Empty;
     public string PayerName { get; set; } = string.Empty;
     public string PayerNameNormalized { get; set; } = string.Empty;
     public int? PayerCode { get; set; }

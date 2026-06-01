@@ -202,7 +202,8 @@ namespace DenialDatabaseProcessorWorker.Services
 				"Denial Rate", "Adjustment Rate", "Payment Days",
 				"Expected Payment Date", "Expected Payment Month",
 				"BillingProvider", "ReferringProvider", "ClinicName",
-				"SalesRepname", "PatientID", "ChargeEnteredDate",
+				"SalesRepname", "PatientID", "Source", "Pat name", "Subscriber Id",
+				"ChargeEnteredDate",
 				"POS", "TOS", "CheckDate", "DaystoDOS", "RollingDays",
 				"DaystoBill", "DaystoPost", "Denial Date"
 			};

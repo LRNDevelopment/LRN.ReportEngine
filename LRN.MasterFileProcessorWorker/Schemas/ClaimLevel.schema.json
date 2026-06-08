@@ -397,6 +397,34 @@
 			"Aliases": [
 				"Diag Pointer"
 			]
+		},
+		{
+			"Name": "Panel Name LIS",
+			"DataType": "string",
+			"Aliases": [
+				"Panel Name LIS"
+			]
+		},
+		{
+			"Name": "Panel Name Based on CPT",
+			"DataType": "string",
+			"Aliases": [
+				"Panel Name Based on CPT"
+			]
+		},
+		{
+			"Name": "Aging DOS",
+			"DataType": "string",
+			"Aliases": [
+				"Aging DOS"
+			]
+		},
+		{
+			"Name": "Aging DOE",
+			"DataType": "string",
+			"Aliases": [
+				"Aging DOE"
+			]
 		}
 	]
 }

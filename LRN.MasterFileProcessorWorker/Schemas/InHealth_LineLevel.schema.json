@@ -49,7 +49,7 @@
 		},
 		{
 			"Name": "Line Level ICD",
-			"Required": true,
+			"Required": false,
 			"DataType": "string"
 		},
 		{
@@ -69,7 +69,7 @@
 		},
 		{
 			"Name": "Account Name",
-			"Required": true,
+			"Required": false,
 			"DataType": "string"
 		},
 		{

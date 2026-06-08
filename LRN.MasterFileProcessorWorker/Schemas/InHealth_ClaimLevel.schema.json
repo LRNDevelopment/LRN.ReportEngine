@@ -23,7 +23,22 @@
 			"DataType": "string"
 		},
 		{
-			"Name": "Panel",
+			"Name": "Panel Name LIS",
+			"Required": true,
+			"DataType": "string"
+		},
+		{
+			"Name": "Panel Name Based on CPT",
+			"Required": true,
+			"DataType": "string"
+		},
+		{
+			"Name": "Aging DOS",
+			"Required": true,
+			"DataType": "string"
+		},
+		{
+			"Name": "Aging DOE",
 			"Required": true,
 			"DataType": "string"
 		},

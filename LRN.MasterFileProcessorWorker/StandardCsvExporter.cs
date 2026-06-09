@@ -785,6 +785,9 @@ public static class StandardCsvExporter
 		if (TryGetCompositeTemplate(col, labOv, out var tpl))
 			return EvaluateComposite(tpl, row, headerExact, headerNorm);
 
+		if (col.Name.Equals("CPTCode", StringComparison.OrdinalIgnoreCase))
+			return ReadCptCodeValue(col, row, headerExact, headerNorm, labOv);
+
 		return ReadByAliases(col, row, headerExact, headerNorm, labOv);
 	}
 
@@ -884,6 +887,32 @@ public static class StandardCsvExporter
 			return Get(row, idx);
 
 		return "";
+	}
+
+	private static string ReadCptCodeValue(
+		ColumnSpec col,
+		string[] row,
+		Dictionary<string, int> headerExact,
+		Dictionary<string, int> headerNorm,
+		LabOverrides labOv)
+	{
+		var preferredHeaders = new[]
+		{
+			"CPT",
+			"CPTCode",
+			"CPT Code",
+			"CPTs",
+			"Claim Level CPT"
+		};
+
+		foreach (var header in preferredHeaders)
+		{
+			var value = ReadHeaderValue(header, row, headerExact, headerNorm);
+			if (!string.IsNullOrWhiteSpace(value))
+				return value;
+		}
+
+		return ReadByAliases(col, row, headerExact, headerNorm, labOv);
 	}
 
 	private static string ReadByAliases(ColumnSpec col, string[] row, Dictionary<string, int> headerExact, Dictionary<string, int> headerNorm,
@@ -1717,14 +1746,12 @@ public static class StandardCsvExporter
 
 		string baseCpt = cptCode;
 
-		if (cptCode.Contains("-"))
+		if (TryExtractCptCodeAndModifier(cptCode, out var extractedCpt, out var extractedModifier))
 		{
-			var dashParts = cptCode.Split('-', 2, StringSplitOptions.None);
-			baseCpt = dashParts[0].Trim();
+			baseCpt = extractedCpt;
 
-			var modFromCpt = dashParts.Length > 1 ? NormalizeModifierValue(dashParts[1]) : "";
-			if (!string.IsNullOrWhiteSpace(modFromCpt))
-				modifiers.Add(modFromCpt);
+			if (!string.IsNullOrWhiteSpace(extractedModifier))
+				modifiers.Add(extractedModifier);
 		}
 
 		baseCpt = NormalizeCptCode(baseCpt);
@@ -1762,6 +1789,54 @@ public static class StandardCsvExporter
 		return $"{baseCpt}{modPart}";
 	}
 
+	private static bool TryExtractCptCodeAndModifier(string value, out string cptCode, out string modifier)
+	{
+		cptCode = "";
+		modifier = "";
+
+		value = (value ?? "").Trim();
+
+		if (string.IsNullOrWhiteSpace(value))
+			return false;
+
+		var match = Regex.Match(
+			value.ToUpperInvariant(),
+			@"(?<![A-Z0-9])(?<code>(?:[A-Z]\d{4}|\d{5}|\d{4}[A-Z]))(?:\s*-\s*(?<modifier>[A-Z0-9]{1,2}))?(?![A-Z0-9])",
+			RegexOptions.CultureInvariant);
+
+		if (match.Success)
+		{
+			cptCode = match.Groups["code"].Value.Trim();
+			modifier = NormalizeModifierValue(match.Groups["modifier"].Value);
+			return true;
+		}
+
+		var decimalMatch = Regex.Match(
+			value,
+			@"(?<!\d)(?<code>\d{5})\.0+\b",
+			RegexOptions.CultureInvariant);
+
+		if (decimalMatch.Success)
+		{
+			cptCode = decimalMatch.Groups["code"].Value.Trim();
+			return true;
+		}
+
+		var leadingTokenMatch = Regex.Match(
+			value.ToUpperInvariant(),
+			@"^\s*(?<code>[A-Z0-9]{4,})(?:\s*-\s*|\s+)",
+			RegexOptions.CultureInvariant);
+
+		if (leadingTokenMatch.Success)
+		{
+			var token = leadingTokenMatch.Groups["code"].Value.Trim();
+			cptCode = token.Length > 5 ? token.Substring(0, 5) : token;
+			return true;
+		}
+
+		return false;
+	}
+
 	private static string NormalizeCptCode(string value)
 	{
 		value = (value ?? "").Trim();
@@ -1778,6 +1853,9 @@ public static class StandardCsvExporter
 			return d.ToString("0.##", CultureInfo.InvariantCulture);
 		}
 
+		if (TryExtractCptCodeAndModifier(value, out var extractedCpt, out _))
+			return extractedCpt;
+
 		return value;
 	}
 
@@ -1788,17 +1866,30 @@ public static class StandardCsvExporter
 		if (string.IsNullOrWhiteSpace(value))
 			return "";
 
-		value = value.TrimStart(';').Trim();
+		value = value.Trim(';', ',', ' ', '\t', '(', ')').Trim();
+
+		if (string.IsNullOrWhiteSpace(value))
+			return "";
 
 		if (decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var d))
 		{
 			if (d == Math.Truncate(d))
-				return Convert.ToInt64(d).ToString(CultureInfo.InvariantCulture);
+			{
+				var whole = Convert.ToInt64(d).ToString(CultureInfo.InvariantCulture);
+				return whole.Length <= 2 ? whole : "";
+			}
 
-			return d.ToString("0.##", CultureInfo.InvariantCulture);
+			return "";
 		}
 
-		return value;
+		foreach (Match match in Regex.Matches(value.ToUpperInvariant(), @"\b[A-Z0-9]{1,2}\b", RegexOptions.CultureInvariant))
+		{
+			var token = match.Value.Trim();
+			if (token.Any(char.IsLetterOrDigit))
+				return token;
+		}
+
+		return "";
 	}
 
 	private static string NormalizeUnits(string value)

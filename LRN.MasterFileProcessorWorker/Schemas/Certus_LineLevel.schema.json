@@ -73,7 +73,7 @@
       "DataType": "string"
     },
     {
-      "Name": "Claim Amount",
+      "Name": "Billed Amounts",
       "Required": true,
       "DataType": "decimal"
     },

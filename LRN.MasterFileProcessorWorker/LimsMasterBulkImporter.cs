@@ -155,6 +155,8 @@ public sealed class LimsMasterBulkImporter
 					value = request.LabName;
 				else if (loadColumn.SpecialColumn == LimsSpecialColumn.SourceFileName)
 					value = Path.GetFileName(request.ExcelPath);
+				else if (loadColumn.SpecialColumn == LimsSpecialColumn.RunId)
+					value = request.RunId;
 				else if (loadColumn.ExcelColumnIndex.HasValue && valuesByColumnIndex.TryGetValue(loadColumn.ExcelColumnIndex.Value, out var text))
 				{
 					value = ConvertValue(text, loadColumn.DestinationColumn);
@@ -246,7 +248,8 @@ public sealed class LimsMasterBulkImporter
 		if (n == "createdon" || n == "ingestedon") return LimsSpecialColumn.CreatedOn;
 		if (n == "labid") return LimsSpecialColumn.LabId;
 		if (n == "labname") return LimsSpecialColumn.LabName;
-		if (n == "sourcefileid" || n == "sourcefilename" || n == "filename") return LimsSpecialColumn.SourceFileName;
+		if (n == "sourcefile" || n == "sourcefileid" || n == "sourcefilename" || n == "filename") return LimsSpecialColumn.SourceFileName;
+		if (n == "runid") return LimsSpecialColumn.RunId;
 		return LimsSpecialColumn.None;
 	}
 
@@ -599,7 +602,7 @@ ORDER BY c.column_id;";
 	private sealed record ExcelHeaderInfo(int ColumnIndex, string Value);
 	private sealed record SqlDestinationColumn(string Name, string SqlTypeName, int MaxLength, bool IsIdentity, bool IsComputed);
 	private sealed record LimsLoadColumn(SqlDestinationColumn DestinationColumn, int? ExcelColumnIndex, LimsSpecialColumn SpecialColumn);
-	private enum LimsSpecialColumn { None, CreatedOn, LabId, LabName, SourceFileName }
+	private enum LimsSpecialColumn { None, CreatedOn, LabId, LabName, SourceFileName, RunId }
 
 	private sealed class LimsSchemaMapping
 	{
@@ -683,6 +686,7 @@ public sealed class LimsImportRequest
 	public DateTime CreatedOn { get; set; } = DateTime.Now;
 	public int? LabId { get; set; }
 	public string? LabName { get; set; }
+	public string? RunId { get; set; }
 }
 
 public sealed class LimsImportResult

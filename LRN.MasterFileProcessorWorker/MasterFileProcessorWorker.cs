@@ -387,7 +387,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						_logger.LogInformation("Lab {LabId}: master file already processed, but LIMS SQL import is enabled. Checking sibling LIMS file.", lab.LabId);
 						_fileLog.Info($"Lab {lab.LabId}: master file already processed, but LIMS SQL import is enabled. Checking sibling LIMS file.");
 
-						await TryDownloadSiblingRawMasterAsync(lab, selected, limsRawMasterFolder, ct);
+						await TryDownloadSiblingRawMasterAsync(lab, selected, limsRawMasterFolder, runCtx.RunId, ct);
 					}
 
 					continue;
@@ -477,7 +477,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				_fileLog.Info($"Lab {lab.LabId}: Production raw master copied to WatchFolder week folder -> {productionRawMasterPath}");
 
-				await TryDownloadSiblingRawMasterAsync(lab, selected, rawMasterFolder, ct);
+				await TryDownloadSiblingRawMasterAsync(lab, selected, rawMasterFolder, runCtx.RunId, ct);
 
 				// Update file size after download
 				try
@@ -1864,7 +1864,7 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 
 			var limsRawMasterPath = Path.Combine(rawMasterFolder, SanitizeFileName(limsFile.Name));
 			await DownloadSharePointFileWithRetryAsync(limsFile.DriveId, limsFile.ItemId, limsRawMasterPath, ct);
-			await TryImportLimsMasterAsync(lab, limsRawMasterPath, ct);
+			await TryImportLimsMasterAsync(lab, limsRawMasterPath, runCtx.RunId, ct);
 
 			runRow.OverallStatus = "COMPLETED";
 			runRow.LatestMasterFileFound = "NO";
@@ -1908,6 +1908,7 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		LabFileMap lab,
 		SharePointDownloader.SelectedFile selected,
 		string rawMasterFolder,
+		string? runId,
 		CancellationToken ct)
 	{
 		var limsPattern = GetLabConfigValue(lab, "LimsMasterFilePattern");
@@ -1940,7 +1941,7 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 
 			_fileLog.Info($"Lab {lab.LabId}: LIMS raw master downloaded -> {limsRawMasterPath}");
 
-			await TryImportLimsMasterAsync(lab, limsRawMasterPath, ct);
+			await TryImportLimsMasterAsync(lab, limsRawMasterPath, runId, ct);
 		}
 		catch (Exception ex)
 		{
@@ -1949,7 +1950,7 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		}
 	}
 
-	private async Task TryImportLimsMasterAsync(LabFileMap lab, string limsRawMasterPath, CancellationToken ct)
+	private async Task TryImportLimsMasterAsync(LabFileMap lab, string limsRawMasterPath, string? runId, CancellationToken ct)
 	{
 		var enabled = _configuration.GetValue<bool?>("MasterFileProcessor:LimsSqlImportEnabled") ?? true;
 		if (!enabled)
@@ -1988,7 +1989,8 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 				DisableTriggersDuringLoad = _configuration.GetValue<bool?>("MasterFileProcessor:LimsDisableTriggersDuringLoad") ?? true,
 				CreatedOn = DateTime.Now,
 				LabId = lab.LabId,
-				LabName = lab.LabName
+				LabName = lab.LabName,
+				RunId = runId
 			}, ct);
 
 			_logger.LogInformation(

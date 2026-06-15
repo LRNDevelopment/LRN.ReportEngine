@@ -390,6 +390,12 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						await TryDownloadSiblingRawMasterAsync(lab, selected, limsRawMasterFolder, runCtx.RunId, ct);
 					}
 
+					var (clientPaidMonthFolder, clientPaidWeekFolder) = ParseMonthAndDateFolder(selected.SharePointPath);
+					var clientPaidYearFolder = TryParseYearFromSharePointPath(selected.SharePointPath)
+						?? DateTime.Now.ToString("yyyy", CultureInfo.InvariantCulture);
+					var clientPaidOutFolder = Path.Combine(_opt.WatchFolder, GetLabOutputPrefix(lab), clientPaidYearFolder, clientPaidMonthFolder, clientPaidWeekFolder);
+					await TrySyncClientPaidFileAsync(lab, selected, clientPaidOutFolder, runCtx.RunId, ct);
+
 					continue;
 				}
 
@@ -478,6 +484,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				_fileLog.Info($"Lab {lab.LabId}: Production raw master copied to WatchFolder week folder -> {productionRawMasterPath}");
 
 				await TryDownloadSiblingRawMasterAsync(lab, selected, rawMasterFolder, runCtx.RunId, ct);
+				await TrySyncClientPaidFileAsync(lab, selected, processedOutFolder, runCtx.RunId, ct);
 
 				// Update file size after download
 				try
@@ -1950,6 +1957,55 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		}
 	}
 
+	private async Task TrySyncClientPaidFileAsync(
+		LabFileMap lab,
+		SharePointDownloader.SelectedFile selected,
+		string outputFolder,
+		string runId,
+		CancellationToken ct)
+	{
+		var clientPaidPattern = lab.ClientPaidFileNamePattern ?? GetLabConfigValue(lab, "ClientPaidFileNamePattern");
+
+		if (string.IsNullOrWhiteSpace(clientPaidPattern))
+			return;
+
+		try
+		{
+			var sibling = await TryFindSiblingFileByPatternAsync(selected, clientPaidPattern!, ct);
+
+			if (sibling == null)
+			{
+				_logger.LogWarning(
+					"Lab {LabId}: no Client Paid file matched pattern '{Pattern}' in the same SharePoint folder.",
+					lab.LabId,
+					clientPaidPattern);
+
+				_fileLog.Warn($"Lab {lab.LabId}: no Client Paid file matched pattern '{clientPaidPattern}' in the same SharePoint folder.");
+				return;
+			}
+
+			Directory.CreateDirectory(outputFolder);
+
+			var clientPaidOutPath = Path.Combine(
+				outputFolder,
+				BuildRunPrefixedFileName(runId, sibling.Name));
+
+			await DownloadSharePointFileWithRetryAsync(sibling.DriveId, sibling.ItemId, clientPaidOutPath, ct);
+
+			_logger.LogInformation(
+				"Lab {LabId}: Client Paid file synchronized -> {Path}",
+				lab.LabId,
+				clientPaidOutPath);
+
+			_fileLog.Info($"Lab {lab.LabId}: Client Paid file synchronized -> {clientPaidOutPath}");
+		}
+		catch (Exception ex)
+		{
+			_logger.LogWarning(ex, "Lab {LabId}: failed to synchronize Client Paid file.", lab.LabId);
+			_fileLog.Error($"Lab {lab.LabId}: failed to synchronize Client Paid file.", ex);
+		}
+	}
+
 	private async Task TryImportLimsMasterAsync(LabFileMap lab, string limsRawMasterPath, string? runId, CancellationToken ct)
 	{
 		var enabled = _configuration.GetValue<bool?>("MasterFileProcessor:LimsSqlImportEnabled") ?? true;
@@ -2393,6 +2449,13 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		var datePart = string.IsNullOrWhiteSpace(sourceDateLabel) ? "UnknownDate" : sourceDateLabel.Trim();
 
 		var fileName = $"{runId}_{labPart}_Mode Median_{datePart}.xlsx";
+		return SanitizeFileNameKeepSpaces(fileName);
+	}
+
+	private static string BuildRunPrefixedFileName(string runId, string originalFileName)
+	{
+		var prefix = string.IsNullOrWhiteSpace(runId) ? "UnknownRun" : runId.Trim();
+		var fileName = $"{prefix}_{originalFileName}";
 		return SanitizeFileNameKeepSpaces(fileName);
 	}
 

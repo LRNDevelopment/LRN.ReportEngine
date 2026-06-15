@@ -112,6 +112,12 @@
 			"SQLColName": "LRNPanelName"
 		},
 		{
+			"ExcelColName": "NA",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "NA"
+		},
+		{
 			"ExcelColName": "LRN Result Status",
 			"Required": false,
 			"DataType": "string",
@@ -130,10 +136,10 @@
 			"SQLColName": "BillCategory"
 		},
 		{
-			"ExcelColName": "SubStatus",
+			"ExcelColName": "LRN Sub Status",
 			"Required": false,
 			"DataType": "string",
-			"SQLColName": "PatientLastName"
+			"SQLColName": "SubStatus"
 		},
 		{
 			"ExcelColName": "Nexum Status",

@@ -127,5 +127,5 @@ public sealed class LabFileMap
     public string? ClaimLevelSchemaJsonPath { get; set; }
 
 	public string? LimsMasterFilePattern { get; set; }
+	public string? ClientPaidFileNamePattern { get; set; }
 }
-

@@ -54,7 +54,7 @@
     },
     {
       "Name": "Panel Name",
-      "Required": true,
+      "Required": false,
       "DataType": "string"
     },
     {
@@ -94,7 +94,7 @@
     },
     {
       "Name": "Line Level Denials",
-      "Required": true,
+      "Required": false,
       "DataType": "string"
     },
     {

@@ -49,7 +49,7 @@
     },
     {
       "Name": "Panel Name",
-      "Required": true,
+      "Required": false,
       "DataType": "string"
     },
     {

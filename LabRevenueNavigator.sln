@@ -51,8 +51,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.SharePointSynchronizer"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DenialDatabaseProcessorWorker", "LRN.DenialDatabaseWorker\DenialDatabaseProcessorWorker.csproj", "{4FA42751-40A9-1BCD-5EE4-90FFEEDB1358}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FolderRetentionCleanupWorker", "FolderRetentionCleanupWorker\FolderRetentionCleanupWorker.csproj", "{ACC8F515-23D2-43B3-8E77-38F51A26BF15}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -351,18 +349,6 @@ Global
 		{4FA42751-40A9-1BCD-5EE4-90FFEEDB1358}.Release|x64.Build.0 = Release|Any CPU
 		{4FA42751-40A9-1BCD-5EE4-90FFEEDB1358}.Release|x86.ActiveCfg = Release|Any CPU
 		{4FA42751-40A9-1BCD-5EE4-90FFEEDB1358}.Release|x86.Build.0 = Release|Any CPU
-		{ACC8F515-23D2-43B3-8E77-38F51A26BF15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ACC8F515-23D2-43B3-8E77-38F51A26BF15}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ACC8F515-23D2-43B3-8E77-38F51A26BF15}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{ACC8F515-23D2-43B3-8E77-38F51A26BF15}.Debug|x64.Build.0 = Debug|Any CPU
-		{ACC8F515-23D2-43B3-8E77-38F51A26BF15}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{ACC8F515-23D2-43B3-8E77-38F51A26BF15}.Debug|x86.Build.0 = Debug|Any CPU
-		{ACC8F515-23D2-43B3-8E77-38F51A26BF15}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ACC8F515-23D2-43B3-8E77-38F51A26BF15}.Release|Any CPU.Build.0 = Release|Any CPU
-		{ACC8F515-23D2-43B3-8E77-38F51A26BF15}.Release|x64.ActiveCfg = Release|Any CPU
-		{ACC8F515-23D2-43B3-8E77-38F51A26BF15}.Release|x64.Build.0 = Release|Any CPU
-		{ACC8F515-23D2-43B3-8E77-38F51A26BF15}.Release|x86.ActiveCfg = Release|Any CPU
-		{ACC8F515-23D2-43B3-8E77-38F51A26BF15}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

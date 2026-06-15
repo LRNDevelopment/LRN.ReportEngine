@@ -22,6 +22,12 @@
 			"SQLColName": "PhysicianName"
 		},
 		{
+			"ExcelColName": "DOB",
+			"Required": true,
+			"DataType": "date",
+			"SQLColName": "DateOfBirth"
+		},
+		{
 			"ExcelColName": "FacilityName",
 			"Required": true,
 			"DataType": "string",

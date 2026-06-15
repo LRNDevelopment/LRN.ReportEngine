@@ -16,16 +16,40 @@
 			"SQLColName": "PatientFullName"
 		},
 		{
-			"ExcelColName": "Doctor Full Name",
+			"ExcelColName": "PATIENT_BIRTH",
 			"Required": true,
+			"DataType": "date",
+			"SQLColName": "PatientDOB"
+		},
+		{
+			"ExcelColName": "Doctor Full Name",
+			"Required": false,
 			"DataType": "string",
 			"SQLColName": "DoctorFullName"
 		},
 		{
-			"ExcelColName": "REQ_COLLECT_DATE",
+			"ExcelColName": "ORGANIZATION_NAME",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "ClinicName"
+		},
+		{
+			"ExcelColName": "DOCTOR_LAST_NAME",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "DoctorLastName"
+		},
+		{
+			"ExcelColName": "DOCTOR_FIRST_NAME",
+			"Required": true,
+			"DataType": "string",
+			"SQLColName": "DoctorFirstName"
+		},
+		{
+			  "ExcelColName": "REQ_REPORTED_DATE",
 			"Required": true,
 			"DataType": "date",
-			"SQLColName": "ReqCollectDate"
+			"SQLColName": "ReqReportedDate"
 		},
 		{
 			"ExcelColName": "REQ_RECEIVED_DATE",
@@ -86,6 +110,12 @@
 			"Required": false,
 			"DataType": "string",
 			"SQLColName": "FinalStatus"
+		},
+		{
+			"ExcelColName": "Client Status 2",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "ClientStatus"
 		}
 	]
 }

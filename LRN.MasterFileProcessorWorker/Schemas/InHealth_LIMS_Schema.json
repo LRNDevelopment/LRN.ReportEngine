@@ -142,6 +142,72 @@
 			"SQLColName": "Nexum Status"
 		},
 		{
+			"ExcelColName": "Entry_Status",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "EntryStatus"
+		},
+		{
+			"ExcelColName": "PrimaryPolicyInformation",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "PrimaryPolicyInformation"
+		},
+		{
+			"ExcelColName": "PrimaryInsurance",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "PrimaryInsurance"
+		},
+		{
+			"ExcelColName": "TestCategory",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "TestCategory"
+		},
+		{
+			"ExcelColName": "Order1",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "OrderInfo"
+		},
+		{
+			"ExcelColName": "DateOfBirth",
+			"Required": false,
+			"DataType": "date",
+			"SQLColName": "DateOfBirth"
+		},
+		{
+			"ExcelColName": "RepEmail",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "SalesRepEmail"
+		},
+		{
+			"ExcelColName": "ProviderLast",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "ProviderLastName"
+		},
+		{
+			"ExcelColName": "ProviderFirst",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "ProviderFirstName"
+		},
+		{
+			"ExcelColName": "FirstName",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "PatientFirstName"
+		},
+		{
+			"ExcelColName": "LastName",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "PatientLastName"
+		},
+		{
 			"ExcelColName": "Billed Date",
 			"Required": false,
 			"DataType": "date",

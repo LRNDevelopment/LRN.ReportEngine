@@ -194,6 +194,48 @@
 			"Required": false,
 			"DataType": "string",
 			"SQLColName": "ChargesNotEnteredStatus"
+		},
+		{
+			"ExcelColName": "Time to Result",
+			"Required": false,
+			"DataType": "int",
+			"SQLColName": "TimeToResult"
+		},
+		{
+			"ExcelColName": "Time to Bill",
+			"Required": false,
+			"DataType": "int",
+			"SQLColName": "TimetoBill"
+		},
+		{
+			"ExcelColName": "PATIENT_CODE",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "PATIENT_CODE"
+		},
+		{
+			"ExcelColName": "PATIENT_F_NAME",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "PATIENT_F_NAME"
+		},
+		{
+			"ExcelColName": "PATIENT_L_NAME",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "PATIENT_L_NAME"
+		},
+		{
+			"ExcelColName": "PATIENT_M_NAME",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "PATIENT_M_NAME"
+		},
+		{
+			"ExcelColName": "PATIENT_GENDER",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "PATIENT_GENDER"
 		}
 	]
 }

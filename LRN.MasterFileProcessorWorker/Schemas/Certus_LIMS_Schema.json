@@ -28,6 +28,12 @@
 			"SQLColName": "DoctorFullName"
 		},
 		{
+			"ExcelColName": "Incorrect DOS",
+			"Required": true,
+			"DataType": "date",
+			"SQLColName": "IncorrectDOS"
+		},
+		{
 			"ExcelColName": "REQ_LOCATION_NAME",
 			"Required": true,
 			"DataType": "string",
@@ -128,6 +134,12 @@
 			"Required": false,
 			"DataType": "string",
 			"SQLColName": "FinalStatus"
+		},
+		{
+			"ExcelColName": "ORGANIZATION_NAME",
+			"Required": false,
+			"DataType": "string",
+			"SQLColName": "ClinicName"
 		}
 	]
 }

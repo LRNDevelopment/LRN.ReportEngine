@@ -245,27 +245,6 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					_logger.LogInformation("Lab {LabId}: {Message}", lab.LabId, lookup.Message);
 					_fileLog.Info($"Lab {lab.LabId}: {lookup.Message}");
 
-					// NEW: If the billing/master file is not available for the latest SharePoint week,
-					// the worker can still process the LIMS file from that same latest week folder.
-					// Controlled by MasterFileProcessor:ProcessLimsAloneWhenMasterFileMissing.
-					if (IsProcessLimsAloneWhenMasterFileMissingEnabled())
-					{
-						var limsOnlyProcessed = await TryProcessLimsOnlyWhenMasterMissingAsync(
-							lab,
-							runCtx,
-							runRow,
-							siteDriveId,
-							lookup.YearFolderName,
-							lookup.MonthFolderName,
-							lookup.WeekFolderName,
-							runLocalNow,
-							masterLogFolder,
-							ct);
-
-						if (limsOnlyProcessed)
-							continue;
-					}
-
 					runRow.OverallStatus = "SKIPPED";
 					runRow.LatestMasterFileFound = "NO";
 					runRow.Notes = lookup.Message;
@@ -483,7 +462,9 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				_fileLog.Info($"Lab {lab.LabId}: Production raw master copied to WatchFolder week folder -> {productionRawMasterPath}");
 
-				await TryDownloadSiblingRawMasterAsync(lab, selected, rawMasterFolder, runCtx.RunId, ct);
+				if (!await TryDownloadSiblingRawMasterAsync(lab, selected, rawMasterFolder, runCtx.RunId, ct))
+					throw new InvalidOperationException("Required LIMS master file was not available in the same SharePoint week folder as the production master file.");
+
 				await TrySyncClientPaidFileAsync(lab, selected, processedOutFolder, runCtx.RunId, ct);
 
 				// Update file size after download
@@ -1799,119 +1780,7 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 			?? true;
 	}
 
-	private bool IsProcessLimsAloneWhenMasterFileMissingEnabled()
-	{
-		return _configuration.GetValue<bool?>("MasterFileProcessor:ProcessLimsAloneWhenMasterFileMissing")
-			?? _configuration.GetValue<bool?>("MasterFileProcessor:ProcessLimsAlone")
-			?? false;
-	}
-
-	private async Task<bool> TryProcessLimsOnlyWhenMasterMissingAsync(
-		LabFileMap lab,
-		ProcessRunContext runCtx,
-		RunLogRow runRow,
-		string? siteDriveId,
-		string? yearFolderName,
-		string? monthFolderName,
-		string? weekFolderName,
-		DateTime runLocalNow,
-		string masterLogFolder,
-		CancellationToken ct)
-	{
-		var limsPattern = GetLabConfigValue(lab, "LimsMasterFilePattern");
-		if (string.IsNullOrWhiteSpace(limsPattern))
-			return false;
-
-		if (!(_configuration.GetValue<bool?>("MasterFileProcessor:LimsSqlImportEnabled") ?? true))
-		{
-			_logger.LogInformation("Lab {LabId}: LIMS-only skipped because MasterFileProcessor:LimsSqlImportEnabled is false.", lab.LabId);
-			return false;
-		}
-
-		if (string.IsNullOrWhiteSpace(siteDriveId) || string.IsNullOrWhiteSpace(yearFolderName) || string.IsNullOrWhiteSpace(monthFolderName) || string.IsNullOrWhiteSpace(weekFolderName))
-		{
-			_logger.LogWarning("Lab {LabId}: LIMS-only skipped because latest SharePoint year/month/week folder was not resolved. Year={Year}, Month={Month}, Week={Week}", lab.LabId, yearFolderName, monthFolderName, weekFolderName);
-			return false;
-		}
-
-		var rootPath = GetLabConfigValue(lab, "SharePointRootPath");
-		if (string.IsNullOrWhiteSpace(rootPath))
-		{
-			_logger.LogWarning("Lab {LabId}: LIMS-only skipped because SharePointRootPath is missing.", lab.LabId);
-			return false;
-		}
-
-		try
-		{
-			// IMPORTANT: Use the actual SharePoint year folder name returned by the lookup.
-			// Some clients use folders like "02.2026" instead of plain "2026".
-			// Building the path with DateTime.Now.Year causes Graph 404 even when the LIMS file exists.
-			var yearFolder = yearFolderName!;
-			var latestWeekFolderPath = CombineSpPath(rootPath, yearFolder, monthFolderName!, weekFolderName!);
-
-			// Fake selected object is used only to reuse the existing sibling-file finder/listing logic.
-			var probe = new SharePointDownloader.SelectedFile(
-				LabId: lab.LabId,
-				DriveId: siteDriveId!,
-				ItemId: "__probe__",
-				Name: "__master_file_missing_probe__.xlsx",
-				ETagKey: string.Empty,
-				LastModifiedUtc: null,
-				SharePointPath: CombineSpPath(latestWeekFolderPath, "__master_file_missing_probe__.xlsx"));
-
-			var limsFile = await TryFindSiblingFileByPatternAsync(probe, limsPattern!, ct);
-			if (limsFile == null)
-			{
-				_logger.LogWarning("Lab {LabId}: master file missing and no LIMS file matched pattern '{Pattern}' in latest week folder '{Folder}'.", lab.LabId, limsPattern, latestWeekFolderPath);
-				return false;
-			}
-
-			var rawMasterFolder = Path.Combine(_opt.WatchFolder, GetLabOutputPrefix(lab), yearFolder, monthFolderName!, weekFolderName!);
-			Directory.CreateDirectory(rawMasterFolder);
-
-			var limsRawMasterPath = Path.Combine(rawMasterFolder, SanitizeFileName(limsFile.Name));
-			await DownloadSharePointFileWithRetryAsync(limsFile.DriveId, limsFile.ItemId, limsRawMasterPath, ct);
-			await TryImportLimsMasterAsync(lab, limsRawMasterPath, runCtx.RunId, ct);
-
-			runRow.OverallStatus = "COMPLETED";
-			runRow.LatestMasterFileFound = "NO";
-			runRow.Notes = $"Master file not found. LIMS-only process completed for '{limsFile.Name}'.";
-			await _processLog.CompleteRunAsync(runCtx, runRow, ct);
-
-			MasterProcessorLogCsv.Append(
-				folder: masterLogFolder,
-				localNow: runLocalNow,
-				labId: lab.LabId,
-				labName: lab.LabName,
-				sourceFileName: limsFile.Name,
-				sourceFileLocation: limsFile.SharePointPath,
-				status: "LIMS Only Completed",
-				message: "Master file missing; LIMS processed alone.",
-				claimOutput: "",
-				lineOutput: "");
-
-			await TryWriteAndUploadFileStatusLogAsync(
-				lab,
-				limsFile,
-				siteDriveId,
-				status: "LIMS Only Completed",
-				outputLocation: limsRawMasterPath,
-				logMessage: "Master file missing; LIMS processed alone.",
-				ct: ct);
-
-			_logger.LogInformation("Lab {LabId}: master file missing; LIMS-only process completed. File={File}", lab.LabId, limsFile.Name);
-			_fileLog.Info($"Lab {lab.LabId}: master file missing; LIMS-only process completed. File={limsFile.Name}");
-			return true;
-		}
-		catch (Exception ex)
-		{
-			_logger.LogWarning(ex, "Lab {LabId}: LIMS-only process failed while master file was missing.", lab.LabId);
-			_fileLog.Error($"Lab {lab.LabId}: LIMS-only process failed while master file was missing.", ex);
-			return false;
-		}
-	}
-
-	private async Task TryDownloadSiblingRawMasterAsync(
+	private async Task<bool> TryDownloadSiblingRawMasterAsync(
 		LabFileMap lab,
 		SharePointDownloader.SelectedFile selected,
 		string rawMasterFolder,
@@ -1921,7 +1790,7 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		var limsPattern = GetLabConfigValue(lab, "LimsMasterFilePattern");
 
 		if (string.IsNullOrWhiteSpace(limsPattern))
-			return;
+			return false;
 
 		try
 		{
@@ -1935,7 +1804,7 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 					limsPattern);
 
 				_fileLog.Warn($"Lab {lab.LabId}: no LIMS master file matched pattern '{limsPattern}' in the same SharePoint folder.");
-				return;
+				return false;
 			}
 
 			var limsRawMasterPath = Path.Combine(rawMasterFolder, SanitizeFileName(sibling.Name));
@@ -1949,11 +1818,13 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 			_fileLog.Info($"Lab {lab.LabId}: LIMS raw master downloaded -> {limsRawMasterPath}");
 
 			await TryImportLimsMasterAsync(lab, limsRawMasterPath, runId, ct);
+			return true;
 		}
 		catch (Exception ex)
 		{
 			_logger.LogWarning(ex, "Lab {LabId}: failed to download LIMS raw master file.", lab.LabId);
 			_fileLog.Error($"Lab {lab.LabId}: failed to download LIMS raw master file.", ex);
+			return false;
 		}
 	}
 

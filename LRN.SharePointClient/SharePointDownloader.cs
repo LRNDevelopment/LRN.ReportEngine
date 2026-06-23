@@ -165,11 +165,12 @@ public sealed class SharePointDownloader
 				.ToList();
 
 			_logger.LogInformation(
-				"Lab {LabId}: Current week folder '{WeekFolder}' found. MatchingFiles={Count}, Pattern='{Pattern}'.",
+				"Lab {LabId}: Current week folder '{WeekFolder}' found. MatchingFiles={Count}, Pattern='{Pattern}', LimsPattern='{LimsPattern}'.",
 				lab.LabId,
 				currentWeekFolder.Item.Name,
 				matchingFiles.Count,
-				lab.SharePointFilePattern);
+				lab.SharePointFilePattern,
+				lab.LimsMasterFilePattern);
 
 			if (matchingFiles.Count == 0)
 			{
@@ -183,6 +184,22 @@ public sealed class SharePointDownloader
 			}
 
 			var file = matchingFiles.First();
+			var limsFile = FindRequiredLimsFile(fileChildren, file, lab.LimsMasterFilePattern);
+			if (limsFile == null)
+			{
+				return new LatestFileLookupResult(
+					File: null,
+					Status: string.IsNullOrWhiteSpace(lab.LimsMasterFilePattern)
+						? LatestFileLookupStatus.LimsMasterFilePatternMissing
+						: LatestFileLookupStatus.NoLimsMasterFileInCurrentWeekFolder,
+					YearFolderName: yearFolder.Name,
+					MonthFolderName: monthFolder.Name,
+					WeekFolderName: currentWeekFolder.Item.Name,
+					Message: string.IsNullOrWhiteSpace(lab.LimsMasterFilePattern)
+						? $"LIMS master file pattern is not configured for lab '{lab.LabName}'."
+						: $"Production master file '{file.Name}' was found, but no LIMS master file matched pattern '{lab.LimsMasterFilePattern}' in week folder '{currentWeekFolder.Item.Name}'.");
+			}
+
 			var eTagKey = file.ETag ?? string.Empty;
 
 			var spPath = BuildSpPath(
@@ -220,11 +237,12 @@ public sealed class SharePointDownloader
 			.ToList();
 
 		_logger.LogInformation(
-			"Lab {LabId}: No current week folder found. Using latest available week folder '{WeekFolder}'. MatchingFiles={Count}, Pattern='{Pattern}'.",
+			"Lab {LabId}: No current week folder found. Using latest available week folder '{WeekFolder}'. MatchingFiles={Count}, Pattern='{Pattern}', LimsPattern='{LimsPattern}'.",
 			lab.LabId,
 			latestAvailableWeekFolder.Item.Name,
 			latestWeekMatchingFiles.Count,
-			lab.SharePointFilePattern);
+			lab.SharePointFilePattern,
+			lab.LimsMasterFilePattern);
 
 		if (latestWeekMatchingFiles.Count == 0)
 		{
@@ -238,6 +256,22 @@ public sealed class SharePointDownloader
 		}
 
 		var latestFile = latestWeekMatchingFiles.First();
+		var latestLimsFile = FindRequiredLimsFile(latestWeekFiles, latestFile, lab.LimsMasterFilePattern);
+		if (latestLimsFile == null)
+		{
+			return new LatestFileLookupResult(
+				File: null,
+				Status: string.IsNullOrWhiteSpace(lab.LimsMasterFilePattern)
+					? LatestFileLookupStatus.LimsMasterFilePatternMissing
+					: LatestFileLookupStatus.NoLimsMasterFileInLatestAvailableWeekFolder,
+				YearFolderName: yearFolder.Name,
+				MonthFolderName: monthFolder.Name,
+				WeekFolderName: latestAvailableWeekFolder.Item.Name,
+				Message: string.IsNullOrWhiteSpace(lab.LimsMasterFilePattern)
+					? $"LIMS master file pattern is not configured for lab '{lab.LabName}'."
+					: $"Production master file '{latestFile.Name}' was found, but no LIMS master file matched pattern '{lab.LimsMasterFilePattern}' in week folder '{latestAvailableWeekFolder.Item.Name}'.");
+		}
+
 		var latestETagKey = latestFile.ETag ?? string.Empty;
 
 		var latestSpPath = BuildSpPath(
@@ -909,6 +943,23 @@ public sealed class SharePointDownloader
 		return string.Join('/', parts.Select(p => p.Trim().Trim('/')).Where(p => !string.IsNullOrWhiteSpace(p)));
 	}
 
+	private static DriveChild? FindRequiredLimsFile(
+		IEnumerable<DriveChild> children,
+		DriveChild masterFile,
+		string? limsPattern)
+	{
+		if (string.IsNullOrWhiteSpace(limsPattern))
+			return null;
+
+		return children
+			.Where(x => !x.IsFolder)
+			.Where(x => !string.Equals(x.Name, masterFile.Name, StringComparison.OrdinalIgnoreCase))
+			.Where(x => WildcardMatch(x.Name, limsPattern))
+			.OrderByDescending(x => x.LastModifiedUtc ?? DateTimeOffset.MinValue)
+			.ThenByDescending(x => x.Name)
+			.FirstOrDefault();
+	}
+
 	public async Task<SelectedFile?> TryGetSiblingFileByPatternAsync(SelectedFile currentFile, string filePattern, CancellationToken ct)
 	{
 		if (currentFile == null || string.IsNullOrWhiteSpace(currentFile.SharePointPath) || string.IsNullOrWhiteSpace(filePattern))
@@ -977,7 +1028,10 @@ public sealed class SharePointDownloader
 		NoMonthFolder,
 		NoWeekFolder,
 		NoFileInCurrentWeekFolder,
-		NoFileInLatestAvailableWeekFolder
+		NoFileInLatestAvailableWeekFolder,
+		LimsMasterFilePatternMissing,
+		NoLimsMasterFileInCurrentWeekFolder,
+		NoLimsMasterFileInLatestAvailableWeekFolder
 	}
 
 	public sealed record LatestFileLookupResult(

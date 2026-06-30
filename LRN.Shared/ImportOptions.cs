@@ -128,4 +128,9 @@ public sealed class LabFileMap
 
 	public string? LimsMasterFilePattern { get; set; }
 	public string? ClientPaidFileNamePattern { get; set; }
+
+	// Comma-separated line-level sheet names for labs whose line-level data spans multiple sheets (e.g. NWL).
+	// When set, overrides the global SheetName for this lab. Multiple entries trigger a combined export
+	// with an added "Source" column; the value per row is the sheet name with " Line Level" suffix stripped.
+	public string? LineLevelSheetNames { get; set; }
 }

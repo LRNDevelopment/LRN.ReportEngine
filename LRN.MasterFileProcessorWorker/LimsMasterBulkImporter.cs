@@ -104,6 +104,7 @@ public sealed class LimsMasterBulkImporter
 		using var document = SpreadsheetDocument.Open(request.ExcelPath, false);
 		var workbookPart = document.WorkbookPart ?? throw new InvalidOperationException("Invalid workbook. WorkbookPart is missing.");
 		var sharedStrings = LoadSharedStrings(workbookPart);
+		var dateStyleIndexes = LoadDateStyleIndexes(workbookPart);
 		var selectedSheet = SelectWorksheet(workbookPart, sharedStrings, request.PreferredSheetName, schemaMappings, destinationColumns);
 
 		_logger.LogInformation("LIMS import: selected worksheet '{SheetName}' from {File}", selectedSheet.SheetName, Path.GetFileName(request.ExcelPath));
@@ -136,7 +137,7 @@ public sealed class LimsMasterBulkImporter
 			if (rowNumber < firstDataRowNumber)
 				continue;
 
-			var valuesByColumnIndex = ReadRowValues(row, sharedStrings);
+			var valuesByColumnIndex = ReadRowValues(row, sharedStrings, dateStyleIndexes);
 			if (IsBlankDataRow(valuesByColumnIndex))
 				continue;
 
@@ -443,14 +444,14 @@ public sealed class LimsMasterBulkImporter
 		return new LimsWorksheetSelection(part, sheetName, bestRow, bestHeaders, bestScore);
 	}
 
-	private static Dictionary<int, string> ReadRowValues(Row row, IReadOnlyList<string> sharedStrings)
+	private static Dictionary<int, string> ReadRowValues(Row row, IReadOnlyList<string> sharedStrings, HashSet<int>? dateStyleIndexes = null)
 	{
 		var result = new Dictionary<int, string>();
 		foreach (var cell in row.Elements<Cell>())
 		{
 			var index = GetColumnIndex(cell.CellReference?.Value);
 			if (index <= 0) continue;
-			result[index] = GetCellValue(cell, sharedStrings);
+			result[index] = GetCellValue(cell, sharedStrings, dateStyleIndexes);
 		}
 		return result;
 	}
@@ -460,11 +461,23 @@ public sealed class LimsMasterBulkImporter
 		return values.Count == 0 || values.Values.All(string.IsNullOrWhiteSpace);
 	}
 
-	private static string GetCellValue(Cell cell, IReadOnlyList<string> sharedStrings)
+	private static string GetCellValue(Cell cell, IReadOnlyList<string> sharedStrings, HashSet<int>? dateStyleIndexes = null)
 	{
 		var raw = cell.CellValue?.Text ?? cell.InnerText ?? string.Empty;
 		if (cell.DataType == null)
+		{
+			// Detect date-formatted cells: DataType is null for numeric cells; style index identifies date formats.
+			if (dateStyleIndexes != null
+				&& cell.StyleIndex?.HasValue == true
+				&& dateStyleIndexes.Contains((int)cell.StyleIndex.Value)
+				&& !string.IsNullOrEmpty(raw)
+				&& double.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var oaDate))
+			{
+				try { return DateTime.FromOADate(oaDate).ToString("MM/dd/yyyy", CultureInfo.InvariantCulture); }
+				catch { }
+			}
 			return raw;
+		}
 
 		if (cell.DataType.Value == CellValues.SharedString && int.TryParse(raw, out var sharedIndex))
 			return sharedIndex >= 0 && sharedIndex < sharedStrings.Count ? sharedStrings[sharedIndex] : string.Empty;
@@ -484,6 +497,53 @@ public sealed class LimsMasterBulkImporter
 			.Elements<SharedStringItem>()
 			.Select(x => x.InnerText ?? string.Empty)
 			.ToList() ?? new List<string>();
+	}
+
+	private static HashSet<int> LoadDateStyleIndexes(WorkbookPart workbookPart)
+	{
+		var result = new HashSet<int>();
+		var stylesheet = workbookPart.WorkbookStylesPart?.Stylesheet;
+		if (stylesheet == null) return result;
+
+		// ECMA-376 built-in date numFmtIds (14-17=date-only, 22=date+time; 18-21 and 45-47 are time-only)
+		var dateNumFmtIds = new HashSet<int> { 14, 15, 16, 17, 22 };
+
+		// Add any custom number formats whose format code represents a date
+		if (stylesheet.NumberingFormats != null)
+		{
+			foreach (var nf in stylesheet.NumberingFormats.Elements<NumberingFormat>())
+			{
+				var id = (int)(nf.NumberFormatId?.Value ?? 0);
+				var fmt = nf.FormatCode?.Value ?? string.Empty;
+				if (IsDateFormatCode(fmt))
+					dateNumFmtIds.Add(id);
+			}
+		}
+
+		// Map each CellFormat style index to whether its numFmtId is a date format
+		if (stylesheet.CellFormats != null)
+		{
+			var styleIdx = 0;
+			foreach (var cf in stylesheet.CellFormats.Elements<CellFormat>())
+			{
+				var numFmtId = (int)(cf.NumberFormatId?.Value ?? 0);
+				if (dateNumFmtIds.Contains(numFmtId))
+					result.Add(styleIdx);
+				styleIdx++;
+			}
+		}
+
+		return result;
+	}
+
+	private static bool IsDateFormatCode(string formatCode)
+	{
+		if (string.IsNullOrWhiteSpace(formatCode)) return false;
+		// Strip quoted literal text (e.g. "\"some text\"") and escaped chars (\x)
+		var cleaned = Regex.Replace(formatCode, "\"[^\"]*\"", string.Empty);
+		cleaned = Regex.Replace(cleaned, @"\\.", string.Empty);
+		// A date format code contains 'y' or 'Y' (year part)
+		return cleaned.IndexOf('y') >= 0 || cleaned.IndexOf('Y') >= 0;
 	}
 
 	private static int GetColumnIndex(string? cellReference)

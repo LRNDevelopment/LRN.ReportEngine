@@ -528,12 +528,13 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				activeStep = step40;
 				await _processLog.StepStartAsync(runCtx, step40, ct);
 
-				var lineValidation = _schemaValidator.Validate(stagingPath, _opt.SheetName, lineSchemaPath);
+				var effectiveLineCandidates = GetEffectiveLineSheetCandidates(lab);
+				var lineValidation = _schemaValidator.Validate(stagingPath, effectiveLineCandidates, lineSchemaPath);
 				var claimValidation = _schemaValidator.Validate(stagingPath, _opt.ClaimSheetName, claimSchemaPath);
 
 				if (!lineValidation.IsValid || !claimValidation.IsValid)
 				{
-					var msg = BuildSchemaErrorMessage(lineValidation, claimValidation, _opt.SheetName, _opt.ClaimSheetName);
+					var msg = BuildSchemaErrorMessage(lineValidation, claimValidation, effectiveLineCandidates, _opt.ClaimSheetName);
 
 					_logger.LogError("Lab {LabId}: schema validation failed for file {File}. {Msg}", lab.LabId, selected.Name, msg);
 					_fileLog.Error($"Lab {lab.LabId}: schema validation failed for {selected.Name}. {msg}");
@@ -634,7 +635,21 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				};
 				activeStep = step50;
 				await _processLog.StepStartAsync(runCtx, step50, ct);
-				await ExcelCsvExporter.ExportSingleSheetToCsvAsync(stagingPath, _opt.SheetName, lineRawPath, ct);
+				var lineSheetNames = effectiveLineCandidates
+					.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+				if (lineSheetNames.Length > 1)
+				{
+					var sheetSourcePairs = lineSheetNames
+						.Select(s => (SheetName: s, SourceValue: ExtractSourceLabel(s)))
+						.ToArray();
+					await ExcelCsvExporter.ExportMultiSheetCombinedToCsvAsync(stagingPath, sheetSourcePairs, "Source", lineRawPath, ct);
+				}
+				else
+				{
+					await ExcelCsvExporter.ExportSingleSheetToCsvAsync(stagingPath, effectiveLineCandidates, lineRawPath, ct);
+				}
+
 				step50.EndTimeIST = _processLog.NowIST();
 				step50.Status = "SUCCESS";
 				await _processLog.StepEndAsync(runCtx, step50, ct);
@@ -1670,6 +1685,23 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 			return false;
 
 		return Regex.IsMatch(value, @"\d{1,2}\.\d{1,2}\.\d{4}\s*-\s*\d{1,2}\.\d{1,2}(\.\d{4})?", RegexOptions.IgnoreCase);
+	}
+
+	private string GetEffectiveLineSheetCandidates(LabFileMap lab)
+	{
+		return !string.IsNullOrWhiteSpace(lab.LineLevelSheetNames)
+			? lab.LineLevelSheetNames
+			: _opt.SheetName;
+	}
+
+	private static string ExtractSourceLabel(string sheetName)
+	{
+		// "Webpm Line Level" -> "Webpm", "Daq Line Level" -> "Daq"
+		const string suffix = " Line Level";
+		var trimmed = sheetName.Trim();
+		if (trimmed.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+			return trimmed.Substring(0, trimmed.Length - suffix.Length).Trim();
+		return trimmed;
 	}
 
 	private static bool ShouldCopyClaimStatusToLineLevel(LabFileMap lab)

@@ -325,7 +325,7 @@ public static class StandardCsvExporter
 				else if (daysToDos.Value >= 181) rolling = "YTD";
 			}
 
-
+			extracted["ClaimUID"] = BuildClaimUID(extracted, dos);
 
 			var outFields = new List<string>(commonSchema.Columns.Count + extraSourceColumnIndexes.Count);
 
@@ -1432,6 +1432,17 @@ public static class StandardCsvExporter
 
 		return "";
 	}
+	private static string BuildClaimUID(Dictionary<string, string> extracted, DateTime? dos)
+	{
+		var claimId    = extracted.TryGetValue("ClaimID",         out var c)   ? c.Trim()   : "";
+		var accession  = extracted.TryGetValue("AccessionNumber", out var a)   ? a.Trim()   : "";
+		var cptCode    = extracted.TryGetValue("CPTCode",         out var cpt) ? cpt.Trim() : "";
+		var units      = extracted.TryGetValue("Units",           out var u)   ? u.Trim()   : "";
+		var icdCode    = extracted.TryGetValue("ICDCode",         out var icd) ? icd.Trim() : "";
+		var dosStr     = dos.HasValue ? dos.Value.ToString("MMddyyyy", CultureInfo.InvariantCulture) : "";
+		return $"{claimId}_{accession}_{cptCode}_{units}_{icdCode}_{dosStr}";
+	}
+
 	private static DateTime? ParseDateMaybe(string raw)
 	{
 		raw = (raw ?? "").Trim();

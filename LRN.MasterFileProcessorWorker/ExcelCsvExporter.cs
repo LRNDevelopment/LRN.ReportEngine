@@ -31,7 +31,14 @@ public static class ExcelCsvExporter
     /// Exports multiple named sheets from a single workbook into one combined CSV file.
     /// A "Source" column (named by <paramref name="sourceColumnName"/>) is appended to every row,
     /// filled with the <c>SourceValue</c> paired with each sheet name.
-    /// Headers are written once from the first matched sheet; subsequent sheets contribute data rows only.
+    /// <para>
+    /// The sheets may have DIFFERENT column layouts (e.g. NorthWest "Webpm LineLevel" vs
+    /// "Daq Line Level" come from different billing systems). Columns are therefore aligned by
+    /// HEADER NAME, not by position: the output header is the union of every sheet's headers
+    /// (in order of first appearance), and each row's cells are placed under their own sheet's
+    /// header names. A column that exists in only one sheet is left blank for rows from the
+    /// other sheet, rather than shifting/misaligning the data.
+    /// </para>
     /// Returns the sheet names that were actually found and exported.
     /// </summary>
     public static async Task<IReadOnlyList<string>> ExportMultiSheetCombinedToCsvAsync(
@@ -48,13 +55,37 @@ public static class ExcelCsvExporter
             throw new InvalidOperationException(
                 $"None of the configured sheets were found. Configured=[{string.Join(", ", sheets.Select(s => s.SheetName))}]. Available=[{string.Join(", ", availableSheets)}].");
 
+        // Pass 1: build the union of header names across all matched sheets (first-appearance order).
+        var unionHeaders = new List<string>();
+        var unionIndexByName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var (sheetName, _) in matched)
+        {
+            var headers = ReadSheetHeaderRow(xlsxPath, sheetName);
+            foreach (var h in headers)
+            {
+                var name = (h ?? string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(name)) continue;
+                if (!unionIndexByName.ContainsKey(name))
+                {
+                    unionIndexByName[name] = unionHeaders.Count;
+                    unionHeaders.Add(name);
+                }
+            }
+        }
+
         Directory.CreateDirectory(Path.GetDirectoryName(outputCsvPath)!);
 
         await using var fs = new FileStream(outputCsvPath, FileMode.Create, FileAccess.Write, FileShare.Read);
         await using var sw = new StreamWriter(fs, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
 
-        bool headerWritten = false;
+        // Write the unified header row + Source column once.
+        await sw.WriteAsync(string.Join(",", unionHeaders.Select(CsvEscape)));
+        if (unionHeaders.Count > 0) await sw.WriteAsync(",");
+        await sw.WriteAsync(CsvEscape(sourceColumnName));
+        await sw.WriteLineAsync();
 
+        // Pass 2: stream each sheet's data rows, aligning cells by their own header names.
         foreach (var (sheetName, sourceValue) in matched)
         {
             using var stream = File.Open(xlsxPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -73,7 +104,7 @@ public static class ExcelCsvExporter
 
             if (!found) continue;
 
-            string[]? headers = null;
+            string[]? sheetHeaders = null;
             bool isHeaderRow = true;
 
             while (reader.Read())
@@ -81,41 +112,39 @@ public static class ExcelCsvExporter
                 ct.ThrowIfCancellationRequested();
 
                 int cols = reader.FieldCount;
-                var rowValues = new string[cols];
-
-                for (int i = 0; i < cols; i++)
-                {
-                    var val = reader.GetValue(i);
-                    var headerName = headers != null && i < headers.Length ? headers[i] : null;
-                    rowValues[i] = ConvertCellToString(val, headerName, isHeaderRow);
-                }
 
                 if (isHeaderRow)
                 {
-                    headers = rowValues;
+                    sheetHeaders = new string[cols];
+                    for (int i = 0; i < cols; i++)
+                        sheetHeaders[i] = ConvertCellToString(reader.GetValue(i), null, isHeaderRow: true);
                     isHeaderRow = false;
-
-                    if (!headerWritten)
-                    {
-                        for (int i = 0; i < cols; i++)
-                        {
-                            if (i > 0) await sw.WriteAsync(",");
-                            await sw.WriteAsync(CsvEscape(rowValues[i]));
-                        }
-                        await sw.WriteAsync(",");
-                        await sw.WriteAsync(CsvEscape(sourceColumnName));
-                        await sw.WriteLineAsync();
-                        headerWritten = true;
-                    }
-                    continue; // skip header row for data; already written once
+                    continue; // header row consumed; do not emit as data
                 }
+
+                // Map this sheet's cells into the union column positions by header name.
+                var outFields = new string[unionHeaders.Count];
+                for (int u = 0; u < outFields.Length; u++)
+                    outFields[u] = string.Empty;
 
                 for (int i = 0; i < cols; i++)
                 {
-                    if (i > 0) await sw.WriteAsync(",");
-                    await sw.WriteAsync(CsvEscape(rowValues[i]));
+                    var headerName = sheetHeaders != null && i < sheetHeaders.Length ? (sheetHeaders[i] ?? string.Empty).Trim() : string.Empty;
+                    if (string.IsNullOrWhiteSpace(headerName)) continue;
+                    if (!unionIndexByName.TryGetValue(headerName, out var target)) continue;
+
+                    // First non-empty wins if a sheet repeats a header name.
+                    if (!string.IsNullOrEmpty(outFields[target])) continue;
+
+                    outFields[target] = ConvertCellToString(reader.GetValue(i), headerName, isHeaderRow: false);
                 }
-                await sw.WriteAsync(",");
+
+                for (int u = 0; u < outFields.Length; u++)
+                {
+                    if (u > 0) await sw.WriteAsync(",");
+                    await sw.WriteAsync(CsvEscape(outFields[u]));
+                }
+                if (outFields.Length > 0) await sw.WriteAsync(",");
                 await sw.WriteAsync(CsvEscape(sourceValue));
                 await sw.WriteLineAsync();
             }
@@ -123,6 +152,32 @@ public static class ExcelCsvExporter
 
         await sw.FlushAsync();
         return matched.Select(s => s.SheetName).ToList();
+    }
+
+    private static string[] ReadSheetHeaderRow(string xlsxPath, string sheetName)
+    {
+        using var stream = File.Open(xlsxPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var reader = ExcelReaderFactory.CreateReader(stream);
+
+        bool found = false;
+        do
+        {
+            if (string.Equals(reader.Name, sheetName, StringComparison.OrdinalIgnoreCase))
+            {
+                found = true;
+                break;
+            }
+        }
+        while (reader.NextResult());
+
+        if (!found || !reader.Read())
+            return Array.Empty<string>();
+
+        var headers = new string[reader.FieldCount];
+        for (int i = 0; i < reader.FieldCount; i++)
+            headers[i] = ConvertCellToString(reader.GetValue(i), null, isHeaderRow: true);
+
+        return headers;
     }
 
     public static async Task<(string? claimSheetUsed, string? lineSheetUsed)> ExportClaimAndLineCsvAsync(

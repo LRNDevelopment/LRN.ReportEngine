@@ -326,6 +326,7 @@ public static class StandardCsvExporter
 			}
 
 			extracted["ClaimUID"] = BuildClaimUID(extracted, dos);
+			extracted["LineLevelUID"] = BuildLineLevelUID(extracted, dos);
 
 			var outFields = new List<string>(commonSchema.Columns.Count + extraSourceColumnIndexes.Count);
 
@@ -430,13 +431,7 @@ public static class StandardCsvExporter
 
 		var tempPath = lineCsvPath + ".claimstatus.tmp";
 
-		using var parser = new TextFieldParser(lineCsvPath)
-		{
-			TextFieldType = FieldType.Delimited,
-			HasFieldsEnclosedInQuotes = true,
-			TrimWhiteSpace = false
-		};
-		parser.SetDelimiters(",");
+		using var parser = OpenCsvParser(lineCsvPath);
 
 		if (parser.EndOfData)
 			return;
@@ -497,17 +492,45 @@ public static class StandardCsvExporter
 		File.Delete(tempPath);
 	}
 
+	// Opens a CSV for reading with a tolerant share mode (FileShare.ReadWrite | Delete) and a
+	// short retry. This rides out transient locks (antivirus/search-indexer/another reader) that
+	// would otherwise abort the whole run with an IOException even when nothing is truly holding
+	// the file. The returned parser owns the underlying stream and closes it on Dispose.
+	private static TextFieldParser OpenCsvParser(string path)
+	{
+		const int maxAttempts = 6;
+		IOException? last = null;
+
+		for (int attempt = 1; attempt <= maxAttempts; attempt++)
+		{
+			try
+			{
+				var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+				var parser = new TextFieldParser(fs)
+				{
+					TextFieldType = FieldType.Delimited,
+					HasFieldsEnclosedInQuotes = true,
+					TrimWhiteSpace = false
+				};
+				parser.SetDelimiters(",");
+				return parser;
+			}
+			catch (IOException ex)
+			{
+				last = ex;
+				if (attempt < maxAttempts)
+					Thread.Sleep(Math.Min(3000, attempt * attempt * 200));
+			}
+		}
+
+		throw last ?? new IOException($"Unable to open CSV for reading: {path}");
+	}
+
 	private static Dictionary<string, string> LoadClaimStatusLookup(string claimCsvPath)
 	{
 		var lookup = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-		using var parser = new TextFieldParser(claimCsvPath)
-		{
-			TextFieldType = FieldType.Delimited,
-			HasFieldsEnclosedInQuotes = true,
-			TrimWhiteSpace = false
-		};
-		parser.SetDelimiters(",");
+		using var parser = OpenCsvParser(claimCsvPath);
 
 		if (parser.EndOfData)
 			return lookup;
@@ -1432,15 +1455,26 @@ public static class StandardCsvExporter
 
 		return "";
 	}
+	// ClaimLevel UID: ClaimID(VisitNumber) + AccessionNo + DOS(MMDDYYYY).
+	// Plain concatenation with no delimiters.
 	private static string BuildClaimUID(Dictionary<string, string> extracted, DateTime? dos)
 	{
-		var claimId    = extracted.TryGetValue("ClaimID",         out var c)   ? c.Trim()   : "";
-		var accession  = extracted.TryGetValue("AccessionNumber", out var a)   ? a.Trim()   : "";
-		var cptCode    = extracted.TryGetValue("CPTCode",         out var cpt) ? cpt.Trim() : "";
-		var units      = extracted.TryGetValue("Units",           out var u)   ? u.Trim()   : "";
-		var icdCode    = extracted.TryGetValue("ICDCode",         out var icd) ? icd.Trim() : "";
-		var dosStr     = dos.HasValue ? dos.Value.ToString("MMddyyyy", CultureInfo.InvariantCulture) : "";
-		return $"{claimId}_{accession}_{cptCode}_{units}_{icdCode}_{dosStr}";
+		var claimId   = extracted.TryGetValue("ClaimID",         out var c) ? c.Trim() : "";
+		var accession = extracted.TryGetValue("AccessionNumber", out var a) ? a.Trim() : "";
+		var dosStr    = dos.HasValue ? dos.Value.ToString("MMddyyyy", CultureInfo.InvariantCulture) : "";
+		return $"{claimId}{accession}{dosStr}";
+	}
+
+	// LineLevel UID: ClaimID(VisitNumber) + AccessionNo + DOS(MMDDYYYY) + CPTCode + Units.
+	// Plain concatenation with no delimiters.
+	private static string BuildLineLevelUID(Dictionary<string, string> extracted, DateTime? dos)
+	{
+		var claimId   = extracted.TryGetValue("ClaimID",         out var c)   ? c.Trim()   : "";
+		var accession = extracted.TryGetValue("AccessionNumber", out var a)   ? a.Trim()   : "";
+		var dosStr    = dos.HasValue ? dos.Value.ToString("MMddyyyy", CultureInfo.InvariantCulture) : "";
+		var cptCode   = extracted.TryGetValue("CPTCode",         out var cpt) ? cpt.Trim() : "";
+		var units     = extracted.TryGetValue("Units",           out var u)   ? u.Trim()   : "";
+		return $"{claimId}{accession}{dosStr}{cptCode}{units}";
 	}
 
 	private static DateTime? ParseDateMaybe(string raw)
@@ -1615,14 +1649,9 @@ public static class StandardCsvExporter
 		if (File.Exists(tempPath))
 			File.Delete(tempPath);
 
-		using (var parser = new TextFieldParser(claimCsvPath))
+		using (var parser = OpenCsvParser(claimCsvPath))
 		using (var sw = new StreamWriter(tempPath, false, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true)))
 		{
-			parser.TextFieldType = FieldType.Delimited;
-			parser.HasFieldsEnclosedInQuotes = true;
-			parser.TrimWhiteSpace = false;
-			parser.SetDelimiters(",");
-
 			if (parser.EndOfData)
 				throw new InvalidOperationException($"Claim CSV is empty: {claimCsvPath}");
 
@@ -1684,13 +1713,7 @@ public static class StandardCsvExporter
 		var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		var grouped = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
 
-		using var parser = new TextFieldParser(lineCsvPath)
-		{
-			TextFieldType = FieldType.Delimited,
-			HasFieldsEnclosedInQuotes = true,
-			TrimWhiteSpace = false
-		};
-		parser.SetDelimiters(",");
+		using var parser = OpenCsvParser(lineCsvPath);
 
 		if (parser.EndOfData)
 			return result;

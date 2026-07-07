@@ -438,6 +438,21 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				var lineOutPath = Path.Combine(processedOutFolder, lineOutFileName);
 				var modeMedianOutPath = Path.Combine(processedOutFolder, modeMedianOutFileName);
 
+				// Build all standardized outputs inside a temporary staging subfolder first.
+				// A downstream watcher scans processedOutFolder and can grab a CSV the instant it
+				// appears, locking it while we are still enriching/reading it back. To avoid that,
+				// we generate + enrich + cross-copy entirely in staging and only move the finished
+				// files into processedOutFolder (an atomic rename on the same volume), then delete
+				// the staging folder.
+				var stagingFolder = Path.Combine(processedOutFolder, $"~staging_{runCtx.RunId}");
+				// Remove any leftover staging folders (e.g. from a prior run that was skipped due to a lock).
+				CleanupStaleStagingFolders(processedOutFolder);
+				Directory.CreateDirectory(stagingFolder);
+
+				var claimStagePath = Path.Combine(stagingFolder, claimOutFileName);
+				var lineStagePath = Path.Combine(stagingFolder, lineOutFileName);
+				var modeMedianStagePath = Path.Combine(stagingFolder, modeMedianOutFileName);
+
 				// RAW ROOT (no lab folder):
 				// D:\LRN\Automation\LRN-RAWFILE\02.February\02.06.2026 - 02.12.2026\
 				var rawRoot = Path.Combine(_opt.ReportOutputsRoot, "LRN-RAWFILE", monthFolder, weekFolder);
@@ -683,7 +698,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				StandardCsvExporter.Generate(
 					sourceCsvPath: lineRawPath,
 					headerRow: _commonLineSchema!.HeaderRow,
-					outputCsvPath: lineOutPath,
+					outputCsvPath: lineStagePath,
 					commonSchema: _commonLineSchema!,
 					labId: lab.LabId,
 					labName: lab.LabName,
@@ -709,7 +724,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						runCtx.RunId,
 						lab.LabName,
 						sourceDateLabel,
-						lineOutPath,
+						lineStagePath,
 						ct);
 
 					_logger.LogInformation(
@@ -783,7 +798,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				StandardCsvExporter.Generate(
 							sourceCsvPath: claimRawPath,
 							headerRow: _commonClaimSchema!.HeaderRow,
-							outputCsvPath: claimOutPath,
+							outputCsvPath: claimStagePath,
 							commonSchema: _commonClaimSchema!,
 							labId: lab.LabId,
 							labName: lab.LabName,
@@ -794,15 +809,15 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 							augmentation: claimAugmentation);
 
 				StandardCsvExporter.EnrichClaimLevelWithLineLevelCptSummary(
-					claimCsvPath: claimOutPath,
-					lineCsvPath: lineOutPath,
+					claimCsvPath: claimStagePath,
+					lineCsvPath: lineStagePath,
 					targetColumnName: ResolveClaimLevelCptSummaryColumnName(claimSchemaPath));
 
 				if (ShouldCopyClaimStatusToLineLevel(lab))
 				{
 					StandardCsvExporter.CopyClaimStatusFromClaimLevelToLineLevel(
-						claimCsvPath: claimOutPath,
-						lineCsvPath: lineOutPath);
+						claimCsvPath: claimStagePath,
+						lineCsvPath: lineStagePath);
 				}
 
 				step80.EndTimeIST = _processLog.NowIST();
@@ -811,8 +826,16 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				activeStep = null;
 				runRow.SplitOutputWrittenToSharePoint = "YES";
 
-				_logger.LogInformation("Lab {LabId}: ClaimLevel STANDARD CSV generated -> {Path}", lab.LabId, claimOutPath);
-				_fileLog.Info($"Lab {lab.LabId}: ClaimLevel STANDARD CSV -> {claimOutPath}");
+				_logger.LogInformation("Lab {LabId}: ClaimLevel STANDARD CSV generated -> {Path}", lab.LabId, claimStagePath);
+				_fileLog.Info($"Lab {lab.LabId}: ClaimLevel STANDARD CSV -> {claimStagePath}");
+
+				// All standardized outputs are complete in staging. Publish them into the watched
+				// output folder via atomic moves so the downstream watcher only ever sees finished
+				// files, then remove the staging folder entirely.
+				await MoveStagedOutputToFinalAsync(lineStagePath, lineOutPath, lab.LabId, ct);
+				await MoveStagedOutputToFinalAsync(claimStagePath, claimOutPath, lab.LabId, ct);
+				await MoveStagedOutputToFinalAsync(modeMedianStagePath, modeMedianOutPath, lab.LabId, ct);
+				TryDeleteDirectory(stagingFolder);
 
 				sw.Stop();
 
@@ -1054,6 +1077,62 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 			catch (OperationCanceledException) when (ct.IsCancellationRequested)
 			{
 				throw;
+			}
+			catch (Exception ex) when (IsFileLockException(ex))
+			{
+				// A required file is temporarily locked by another process (e.g. the downstream
+				// watcher holding a previous output file). Treat this as transient: skip the file
+				// for THIS run and let the next poll retry it. Do not mark ERROR, do not raise an
+				// Error_Log row, and do not send a failure notification.
+				var skipMsg = $"File locked by another process; skipping this run and retrying on the next run. {ex.Message}";
+
+				try
+				{
+					if (activeStep != null && string.Equals(activeStep.Status, "IN_PROGRESS", StringComparison.OrdinalIgnoreCase))
+					{
+						activeStep.EndTimeIST = _processLog.NowIST();
+						activeStep.Status = "SKIPPED";
+						activeStep.ErrorCode ??= "FILE_LOCKED_RETRY";
+						activeStep.ErrorMessage ??= ex.Message;
+						await _processLog.StepEndAsync(runCtx, activeStep, ct);
+					}
+				}
+				catch { }
+
+				_logger.LogWarning(ex, "Lab {LabId}: file locked by another process; skipping this run (will retry next run).", lab.LabId);
+				_fileLog.Warn($"Lab {lab.LabId}: {skipMsg}");
+
+				// IMPORTANT: leave the SharePoint file status unprocessed (no PROCESSED/ERROR upsert)
+				// so IsProcessedAsync stays false and the file is picked up again next run.
+				try
+				{
+					runRow.OverallStatus = "SKIPPED";
+					runRow.Notes = skipMsg;
+					await _processLog.CompleteRunAsync(runCtx, runRow, ct);
+				}
+				catch { }
+
+				try
+				{
+					MasterProcessorLogCsv.Append(
+						folder: masterLogFolder,
+						localNow: runLocalNow,
+						labId: lab.LabId,
+						labName: lab.LabName,
+						sourceFileName: selected?.Name ?? "",
+						sourceFileLocation: selected?.SharePointPath ?? "",
+						status: "Skipped",
+						message: skipMsg,
+						claimOutput: "",
+						lineOutput: "");
+				}
+				catch { }
+
+				try
+				{
+					await TryWriteAndUploadFileStatusLogAsync(lab, selected, siteDriveId, status: "Skipped", outputLocation: "", logMessage: skipMsg, ct: ct);
+				}
+				catch { }
 			}
 			catch (Exception ex)
 			{
@@ -1687,20 +1766,46 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		return Regex.IsMatch(value, @"\d{1,2}\.\d{1,2}\.\d{4}\s*-\s*\d{1,2}\.\d{1,2}(\.\d{4})?", RegexOptions.IgnoreCase);
 	}
 
+	// NorthWest (LabId 20) keeps line-level data in two sheets ("Webpm LineLevel" and
+	// "Daq Line Level"). Both must be combined into a single line-level CSV. Spacing varies
+	// between "LineLevel" and "Line Level", so all variants are listed as candidates; the
+	// exporter/validator match only the sheets that actually exist.
+	private const string NorthWestLineSheetCandidates =
+		"Webpm LineLevel,Webpm Line Level,Daq LineLevel,Daq Line Level";
+
 	private string GetEffectiveLineSheetCandidates(LabFileMap lab)
 	{
-		return !string.IsNullOrWhiteSpace(lab.LineLevelSheetNames)
-			? lab.LineLevelSheetNames
-			: _opt.SheetName;
+		if (!string.IsNullOrWhiteSpace(lab.LineLevelSheetNames))
+			return lab.LineLevelSheetNames;
+
+		// Fall back to the known multi-sheet layout for NorthWest even when the lab config
+		// does not set LineLevelSheetNames, so both sheets are still picked up.
+		if (IsNorthWestLab(lab))
+			return NorthWestLineSheetCandidates;
+
+		return _opt.SheetName;
+	}
+
+	private static bool IsNorthWestLab(LabFileMap lab)
+	{
+		if (lab == null) return false;
+
+		var labName = lab.LabName ?? string.Empty;
+
+		return lab.LabId == 20
+			|| labName.Contains("NorthWest", StringComparison.OrdinalIgnoreCase)
+			|| labName.Contains("North West", StringComparison.OrdinalIgnoreCase);
 	}
 
 	private static string ExtractSourceLabel(string sheetName)
 	{
-		// "Webpm Line Level" -> "Webpm", "Daq Line Level" -> "Daq"
-		const string suffix = " Line Level";
+		// "Webpm Line Level"/"Webpm LineLevel" -> "Webpm", "Daq Line Level" -> "Daq"
 		var trimmed = sheetName.Trim();
-		if (trimmed.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-			return trimmed.Substring(0, trimmed.Length - suffix.Length).Trim();
+		foreach (var suffix in new[] { " Line Level", " LineLevel" })
+		{
+			if (trimmed.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+				return trimmed.Substring(0, trimmed.Length - suffix.Length).Trim();
+		}
 		return trimmed;
 	}
 
@@ -1711,11 +1816,9 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		var labName = lab.LabName ?? string.Empty;
 
 		return lab.LabId == 19
-			|| lab.LabId == 20
+			|| IsNorthWestLab(lab)
 			|| labName.Contains("Augustus", StringComparison.OrdinalIgnoreCase)
-			|| labName.Contains("Certus", StringComparison.OrdinalIgnoreCase)
-			|| labName.Contains("NorthWest", StringComparison.OrdinalIgnoreCase)
-			|| labName.Contains("Northwest", StringComparison.OrdinalIgnoreCase);
+			|| labName.Contains("Certus", StringComparison.OrdinalIgnoreCase);
 	}
 
 	private static string ResolveClaimLevelCptSummaryColumnName(string? claimSchemaPath)
@@ -2406,7 +2509,27 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 					$"{Path.GetFileNameWithoutExtension(fileName)}_Obsolete_{DateTime.Now:yyyyMMddHHmmssfff}{Path.GetExtension(fileName)}");
 			}
 
-			File.Move(filePath, destPath);
+			// Retry briefly to ride out a transient lock; if the file is still held (e.g. the
+			// downstream watcher has it open), the lock exception propagates and the caller skips
+			// this file for the current run and retries it on the next run.
+			MoveFileWithLockRetry(filePath, destPath);
+		}
+	}
+
+	private static void MoveFileWithLockRetry(string sourcePath, string destPath)
+	{
+		const int maxAttempts = 5;
+		for (int attempt = 1; ; attempt++)
+		{
+			try
+			{
+				File.Move(sourcePath, destPath);
+				return;
+			}
+			catch (Exception ex) when (attempt < maxAttempts && IsFileLockException(ex))
+			{
+				Thread.Sleep(Math.Min(3000, attempt * attempt * 250));
+			}
 		}
 	}
 
@@ -2448,6 +2571,99 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 				File.Delete(path);
 		}
 		catch { }
+	}
+
+	// True when an exception indicates a file is temporarily locked / in use by another process
+	// (Windows sharing violation 32 / lock violation 33). These are transient: we skip the file
+	// for the current run and let the next poll retry it, instead of marking a hard error.
+	private static bool IsFileLockException(Exception ex)
+	{
+		for (var e = ex; e != null; e = e.InnerException)
+		{
+			var code = e.HResult & 0xFFFF;
+			if (code == 32 || code == 33) // ERROR_SHARING_VIOLATION / ERROR_LOCK_VIOLATION
+				return true;
+
+			if (e is IOException)
+			{
+				var msg = e.Message ?? string.Empty;
+				if (msg.Contains("being used by another process", StringComparison.OrdinalIgnoreCase)
+					|| msg.Contains("locked a portion of the file", StringComparison.OrdinalIgnoreCase))
+					return true;
+			}
+		}
+
+		return false;
+	}
+
+	// Moves a completed output file from the staging folder into its final (watched) location.
+	// The move is a rename on the same volume, so the watcher only ever sees a fully-written file.
+	// Retries a few times to ride out transient locks (antivirus/indexer/late handle release),
+	// which is why a plain write into the watched folder sometimes failed even with no obvious reader.
+	private async Task MoveStagedOutputToFinalAsync(string stagePath, string finalPath, int labId, CancellationToken ct)
+	{
+		if (!File.Exists(stagePath))
+			return;
+
+		const int maxAttempts = 6;
+		for (int attempt = 1; ; attempt++)
+		{
+			try
+			{
+				Directory.CreateDirectory(Path.GetDirectoryName(finalPath)!);
+				if (File.Exists(finalPath))
+					File.Delete(finalPath);
+
+				File.Move(stagePath, finalPath);
+				_fileLog.Info($"Lab {labId}: published output to watched folder -> {finalPath}");
+				return;
+			}
+			catch (IOException ex) when (attempt < maxAttempts)
+			{
+				var delay = TimeSpan.FromMilliseconds(Math.Min(5000, attempt * attempt * 250));
+				_logger.LogWarning(ex, "Lab {LabId}: move to output folder failed (attempt {Attempt}/{MaxAttempts}) for {Path}. Retrying in {DelayMs}ms.", labId, attempt, maxAttempts, finalPath, delay.TotalMilliseconds);
+				_fileLog.Warn($"Lab {labId}: move to output folder failed (attempt {attempt}/{maxAttempts}) for {finalPath}: {ex.Message}. Retrying in {delay.TotalMilliseconds:n0}ms.");
+				await Task.Delay(delay, ct);
+			}
+			catch (UnauthorizedAccessException ex) when (attempt < maxAttempts)
+			{
+				var delay = TimeSpan.FromMilliseconds(Math.Min(5000, attempt * attempt * 250));
+				_fileLog.Warn($"Lab {labId}: move to output folder blocked (attempt {attempt}/{maxAttempts}) for {finalPath}: {ex.Message}. Retrying in {delay.TotalMilliseconds:n0}ms.");
+				await Task.Delay(delay, ct);
+			}
+		}
+	}
+
+	private void TryDeleteDirectory(string folder)
+	{
+		try
+		{
+			if (Directory.Exists(folder))
+				Directory.Delete(folder, recursive: true);
+		}
+		catch (Exception ex)
+		{
+			_fileLog.Warn($"Failed to delete staging folder '{folder}': {ex.Message}");
+		}
+	}
+
+	// Removes any leftover "~staging_*" temp folders in the output folder. These can remain if a
+	// prior run was skipped mid-flight because a file was locked; sweeping them keeps the output
+	// folder clean and avoids stale partial files lingering on disk.
+	private void CleanupStaleStagingFolders(string processedOutFolder)
+	{
+		try
+		{
+			if (!Directory.Exists(processedOutFolder))
+				return;
+
+			foreach (var dir in Directory.EnumerateDirectories(processedOutFolder, "~staging_*", SearchOption.TopDirectoryOnly))
+				TryDeleteDirectory(dir);
+		}
+		catch (Exception ex)
+		{
+			_fileLog.Warn($"Failed to sweep stale staging folders under '{processedOutFolder}': {ex.Message}");
+		}
 	}
 
 	private static string ResolvePath(string path)

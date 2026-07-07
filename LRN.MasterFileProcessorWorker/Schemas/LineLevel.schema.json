@@ -433,7 +433,7 @@
 			]
 		},
 		{
-			"Name": "ClaimUID",
+			"Name": "LineLevelUID",
 			"DataType": "string"
 		},
 		{

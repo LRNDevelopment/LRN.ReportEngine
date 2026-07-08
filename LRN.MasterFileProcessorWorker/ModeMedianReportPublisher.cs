@@ -13,22 +13,26 @@ public sealed class ModeMedianReportPublisher
 	private readonly IHttpClientFactory _httpClientFactory;
 	private readonly ILogger<ModeMedianReportPublisher> _logger;
 	private readonly ILoggerService _fileLog;
+	private readonly LabModeMedianRepository _labModeMedianRepository;
 
 	public ModeMedianReportPublisher(
 		IConfiguration configuration,
 		IHttpClientFactory httpClientFactory,
 		ILogger<ModeMedianReportPublisher> logger,
-		ILoggerService fileLog)
+		ILoggerService fileLog,
+		LabModeMedianRepository labModeMedianRepository)
 	{
 		_configuration = configuration;
 		_httpClientFactory = httpClientFactory;
 		_logger = logger;
 		_fileLog = fileLog;
+		_labModeMedianRepository = labModeMedianRepository;
 	}
 
 	public async Task<ModeMedianPublishResult> PublishAsync(
 		string runId,
 		string labName,
+		int labId,
 		string weekDate,
 		string lineLevelStandardCsvPath,
 		CancellationToken ct)
@@ -64,10 +68,14 @@ public sealed class ModeMedianReportPublisher
 
 		try
 		{
-			ModeMedianPaymentReportWriter.GenerateSeparateFiles(
-				lineLevelStandardCsvPath,
+			var reportRows = ModeMedianPaymentReportWriter.BuildReport(lineLevelStandardCsvPath);
+
+			ModeMedianPaymentReportWriter.WriteSeparateFiles(
+				reportRows,
 				tempMedianPath,
 				tempModePath);
+
+			result.DatabaseStatus = await SaveToDatabaseAsync(runId, labName, labId, reportRows, ct);
 
 			ArchiveMatchingLocalFiles(medianServerFolderPath, safeLabName, "Median");
 			ArchiveMatchingLocalFiles(modeServerFolderPath, safeLabName, "Mode");
@@ -125,6 +133,34 @@ public sealed class ModeMedianReportPublisher
 		{
 			TryDelete(tempMedianPath);
 			TryDelete(tempModePath);
+		}
+	}
+
+	private async Task<string> SaveToDatabaseAsync(
+		string runId,
+		string labName,
+		int labId,
+		IReadOnlyList<ModeMedianPaymentReportWriter.PaymentReportRow> reportRows,
+		CancellationToken ct)
+	{
+		var saveToDatabase = _configuration.GetValue<bool?>("MasterFileProcessor:SaveModeMedianToDatabase") ?? true;
+		if (!saveToDatabase)
+			return "SKIPPED (SaveModeMedianToDatabase disabled)";
+
+		try
+		{
+			var rowCount = await _labModeMedianRepository.SaveAsync(runId, labName, labId, reportRows, ct);
+
+			_fileLog.Info(
+				$"Median/Mode saved to LabMedians/LabModes for lab {labId} ({labName}): {rowCount} rows each, RunID {runId}");
+
+			return $"SAVED ({rowCount} rows per table)";
+		}
+		catch (Exception ex)
+		{
+			_logger.LogWarning(ex, "Failed to save Median/Mode rows to database for lab {LabId}", labId);
+			_fileLog.Error($"Failed to save Median/Mode rows to database for lab {labId}", ex);
+			return "SAVE_FAILED";
 		}
 	}
 
@@ -649,6 +685,7 @@ public sealed class ModeMedianReportPublisher
 		public string ModeLocalStatus { get; set; } = string.Empty;
 		public string MedianSharePointStatus { get; set; } = string.Empty;
 		public string ModeSharePointStatus { get; set; } = string.Empty;
+		public string DatabaseStatus { get; set; } = string.Empty;
 
 		public string Summary
 		{
@@ -657,7 +694,8 @@ public sealed class ModeMedianReportPublisher
 				return "MedianLocal=" + MedianLocalStatus
 					 + "; ModeLocal=" + ModeLocalStatus
 					 + "; MedianSP=" + MedianSharePointStatus
-					 + "; ModeSP=" + ModeSharePointStatus;
+					 + "; ModeSP=" + ModeSharePointStatus
+					 + "; Database=" + DatabaseStatus;
 			}
 		}
 	}

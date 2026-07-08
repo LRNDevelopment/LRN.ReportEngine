@@ -723,6 +723,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					modeMedianPublishResult = await _modeMedianPublisher.PublishAsync(
 						runCtx.RunId,
 						lab.LabName,
+						lab.LabId,
 						sourceDateLabel,
 						lineStagePath,
 						ct);

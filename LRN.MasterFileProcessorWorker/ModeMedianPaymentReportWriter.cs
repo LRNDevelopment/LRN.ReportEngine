@@ -14,6 +14,12 @@ public static class ModeMedianPaymentReportWriter
 		string medianOutputWorkbookPath,
 		string modeOutputWorkbookPath)
 	{
+		var reportRows = BuildReport(lineLevelStandardCsvPath);
+		WriteSeparateFiles(reportRows, medianOutputWorkbookPath, modeOutputWorkbookPath);
+	}
+
+	public static IReadOnlyList<PaymentReportRow> BuildReport(string lineLevelStandardCsvPath)
+	{
 		if (string.IsNullOrWhiteSpace(lineLevelStandardCsvPath))
 			throw new ArgumentException("LineLevel standard CSV path is required.", nameof(lineLevelStandardCsvPath));
 
@@ -22,14 +28,20 @@ public static class ModeMedianPaymentReportWriter
 
 		var allRows = ReadRows(lineLevelStandardCsvPath);
 
-		var reportRows = BuildReportRows(allRows)
+		return BuildReportRows(allRows)
 			.OrderBy(x => x.PayerName, StringComparer.OrdinalIgnoreCase)
 			.ThenBy(x => x.Panel, StringComparer.OrdinalIgnoreCase)
 			.ThenBy(x => x.CPTCode, StringComparer.OrdinalIgnoreCase)
 			.ThenBy(x => x.AllowedAmount ?? decimal.MinValue)
 			.ThenBy(x => x.InsurancePaymentAmount ?? decimal.MinValue)
 			.ToList();
+	}
 
+	public static void WriteSeparateFiles(
+		IReadOnlyList<PaymentReportRow> reportRows,
+		string medianOutputWorkbookPath,
+		string modeOutputWorkbookPath)
+	{
 		if (!string.IsNullOrWhiteSpace(medianOutputWorkbookPath))
 		{
 			EnsureDirectory(medianOutputWorkbookPath);
@@ -605,7 +617,7 @@ public static class ModeMedianPaymentReportWriter
 	decimal? AllowedAmountPerUnit,
 	decimal? InsurancePaymentPerUnit);
 
-	private sealed record PaymentReportRow(
+	public sealed record PaymentReportRow(
 		string PayerName,
 		string Panel,
 		string CPTCode,

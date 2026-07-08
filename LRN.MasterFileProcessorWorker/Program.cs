@@ -31,6 +31,7 @@ var host = Host.CreateDefaultBuilder(args)
 		services.AddSingleton<IProcessLogCsvWriter, ProcessLogCsvWriter>();
 		services.AddSingleton<IProcessLogWorkbookWriter, ProcessLogWorkbookWriter>();
 		services.AddSingleton<IProcessLogService, ProcessLogService>();
+		services.AddSingleton<LabModeMedianRepository>();
 		services.AddSingleton<ModeMedianReportPublisher>();
 
 		services.AddHostedService<MasterFileProcessorWorker>();

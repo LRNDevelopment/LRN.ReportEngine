@@ -325,8 +325,8 @@ public static class StandardCsvExporter
 				else if (daysToDos.Value >= 181) rolling = "YTD";
 			}
 
-			extracted["ClaimUID"] = BuildClaimUID(extracted, dos);
-			extracted["LineLevelUID"] = BuildLineLevelUID(extracted, dos);
+			extracted["ClaimUID"] = BuildClaimUID(extracted, dos, labName);
+			extracted["LineLevelUID"] = BuildLineLevelUID(extracted, dos, labName);
 
 			var outFields = new List<string>(commonSchema.Columns.Count + extraSourceColumnIndexes.Count);
 
@@ -1455,26 +1455,56 @@ public static class StandardCsvExporter
 
 		return "";
 	}
-	// ClaimLevel UID: ClaimID(VisitNumber) + AccessionNo + DOS(MMDDYYYY).
+	// ClaimLevel UID: LabShortCode + ClaimID(VisitNumber) + AccessionNo + DOS(MMDDYYYY).
 	// Plain concatenation with no delimiters.
-	private static string BuildClaimUID(Dictionary<string, string> extracted, DateTime? dos)
+	private static string BuildClaimUID(Dictionary<string, string> extracted, DateTime? dos, string? labName)
 	{
-		var claimId   = extracted.TryGetValue("ClaimID",         out var c) ? c.Trim() : "";
+		var prefix = ResolveLabShortCode(labName);
+		var claimId = extracted.TryGetValue("ClaimID", out var c) ? c.Trim() : "";
 		var accession = extracted.TryGetValue("AccessionNumber", out var a) ? a.Trim() : "";
-		var dosStr    = dos.HasValue ? dos.Value.ToString("MMddyyyy", CultureInfo.InvariantCulture) : "";
-		return $"{claimId}{accession}{dosStr}";
+		var dosStr = dos.HasValue ? dos.Value.ToString("MMddyyyy", CultureInfo.InvariantCulture) : "";
+		return $"{prefix}{claimId}{accession}{dosStr}";
 	}
 
-	// LineLevel UID: ClaimID(VisitNumber) + AccessionNo + DOS(MMDDYYYY) + CPTCode + Units.
+	// LineLevel UID: LabShortCode + ClaimID(VisitNumber) + AccessionNo + DOS(MMDDYYYY) + CPTCode + Units.
 	// Plain concatenation with no delimiters.
-	private static string BuildLineLevelUID(Dictionary<string, string> extracted, DateTime? dos)
+	private static string BuildLineLevelUID(Dictionary<string, string> extracted, DateTime? dos, string? labName)
 	{
-		var claimId   = extracted.TryGetValue("ClaimID",         out var c)   ? c.Trim()   : "";
-		var accession = extracted.TryGetValue("AccessionNumber", out var a)   ? a.Trim()   : "";
-		var dosStr    = dos.HasValue ? dos.Value.ToString("MMddyyyy", CultureInfo.InvariantCulture) : "";
-		var cptCode   = extracted.TryGetValue("CPTCode",         out var cpt) ? cpt.Trim() : "";
-		var units     = extracted.TryGetValue("Units",           out var u)   ? u.Trim()   : "";
-		return $"{claimId}{accession}{dosStr}{cptCode}{units}";
+		var prefix = ResolveLabShortCode(labName);
+		var claimId = extracted.TryGetValue("ClaimID", out var c) ? c.Trim() : "";
+		var accession = extracted.TryGetValue("AccessionNumber", out var a) ? a.Trim() : "";
+		var dosStr = dos.HasValue ? dos.Value.ToString("MMddyyyy", CultureInfo.InvariantCulture) : "";
+		var cptCode = extracted.TryGetValue("CPTCode", out var cpt) ? cpt.Trim() : "";
+		var units = extracted.TryGetValue("Units", out var u) ? u.Trim() : "";
+		return $"{prefix}{claimId}{accession}{dosStr}{cptCode}{units}";
+	}
+
+	// Maps a lab name to its short code used as a prefix on ClaimUID / LineLevelUID.
+	// Matching is done on the normalized name (lowercased, non-alphanumeric stripped) so
+	// variants like "Beech_Tree" / "Beech Tree" or "NorthWest" / "North West" all resolve.
+	private static readonly Dictionary<string, string> LabShortCodesByNormName = new(StringComparer.OrdinalIgnoreCase)
+	{
+		[NormKey("Beech_Tree")] = "BCT",
+		[NormKey("Inhealth_DTR")] = "IHR",
+		[NormKey("Cove")] = "COV",
+		[NormKey("PCR_Dx_AL")] = "PAL",
+		[NormKey("PCR_Dx_CO")] = "PCO",
+		[NormKey("Certus")] = "CTS",
+		[NormKey("Elixir")] = "EXR",
+		[NormKey("Phi Life")] = "PLF",
+		[NormKey("Rising Tides")] = "RTS",
+		[NormKey("Augustus Labs")] = "AUG",
+		[NormKey("PCR Labs of America")] = "PLA",
+		[NormKey("NorthWest")] = "NWL",
+	};
+
+	private static string ResolveLabShortCode(string? labName)
+	{
+		var key = NormKey(labName ?? "");
+		if (string.IsNullOrWhiteSpace(key))
+			return "";
+
+		return LabShortCodesByNormName.TryGetValue(key, out var code) ? code : "";
 	}
 
 	private static DateTime? ParseDateMaybe(string raw)

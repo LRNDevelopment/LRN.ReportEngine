@@ -35,6 +35,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 	private readonly IProcessLogService _processLog;
 	private readonly ITeamsNotifier _teamsNotifier;
 	private readonly ModeMedianReportPublisher _modeMedianPublisher;
+	private readonly LabInsuranceMasterRepository _labInsuranceMaster;
 	private readonly IConfiguration _configuration;
 
 	private ColumnSchema? _commonLineSchema;
@@ -53,6 +54,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		IProcessLogService processLog,
 		ITeamsNotifier teamsNotifier,
 		ModeMedianReportPublisher modeMedianPublisher,
+		LabInsuranceMasterRepository labInsuranceMaster,
 		IConfiguration configuration)
 	{
 		_logger = logger;
@@ -65,6 +67,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		_processLog = processLog;
 		_teamsNotifier = teamsNotifier;
 		_modeMedianPublisher = modeMedianPublisher;
+		_labInsuranceMaster = labInsuranceMaster;
 		_configuration = configuration;
 
 	}
@@ -717,6 +720,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				_logger.LogInformation("Lab {LabId}: LineLevel STANDARD CSV generated -> {Path}", lab.LabId, lineOutPath);
 				_fileLog.Info($"Lab {lab.LabId}: LineLevel STANDARD CSV -> {lineOutPath}");
+
+				await TrySyncLabInsuranceMasterPayersAsync(lab, lineStagePath, ct);
 
 				try
 				{
@@ -1820,6 +1825,49 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 			|| IsNorthWestLab(lab)
 			|| labName.Contains("Augustus", StringComparison.OrdinalIgnoreCase)
 			|| labName.Contains("Certus", StringComparison.OrdinalIgnoreCase);
+	}
+
+	/// <summary>
+	/// Seeds dbo.LabInsuranceMaster with any PayerName_Raw from this lab's LineLevel CSV that is not
+	/// already registered against the lab's LabInsuranceMaster LabName + LabId. Never fails the run:
+	/// the master file outputs are already written by this point, so a DB problem is logged and skipped.
+	/// </summary>
+	private async Task TrySyncLabInsuranceMasterPayersAsync(LabFileMap lab, string lineLevelCsvPath, CancellationToken ct)
+	{
+		var insuranceMasterLabName = LabInsuranceMasterRepository.ResolveInsuranceMasterLabName(lab.LabName);
+
+		if (string.IsNullOrWhiteSpace(insuranceMasterLabName))
+		{
+			_logger.LogWarning(
+				"Lab {LabId}: no LabInsuranceMaster LabName mapped for '{LabName}'. Skipping payer sync.",
+				lab.LabId,
+				lab.LabName);
+
+			_fileLog.Info($"Lab {lab.LabId}: no LabInsuranceMaster LabName for '{lab.LabName}'. Payer sync skipped.");
+			return;
+		}
+
+		try
+		{
+			var result = await _labInsuranceMaster.SyncPayersFromLineLevelCsvAsync(
+				lineLevelCsvPath,
+				insuranceMasterLabName,
+				lab.LabId,
+				ct);
+
+			_logger.LogInformation(
+				"Lab {LabId} ({InsuranceMasterLabName}): LabInsuranceMaster payer sync -> {Summary}",
+				lab.LabId,
+				insuranceMasterLabName,
+				result.Summary);
+
+			_fileLog.Info($"Lab {lab.LabId} ({insuranceMasterLabName}): LabInsuranceMaster payer sync -> {result.Summary}");
+		}
+		catch (Exception ex)
+		{
+			_logger.LogWarning(ex, "LabInsuranceMaster payer sync failed for lab {LabId}", lab.LabId);
+			_fileLog.Error($"LabInsuranceMaster payer sync failed for lab {lab.LabId}", ex);
+		}
 	}
 
 	private static string ResolveClaimLevelCptSummaryColumnName(string? claimSchemaPath)

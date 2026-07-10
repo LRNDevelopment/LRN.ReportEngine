@@ -919,6 +919,13 @@ public static class StandardCsvExporter
 		Dictionary<string, int> headerNorm,
 		LabOverrides labOv)
 	{
+		// When the LAB schema declares a source for this column (e.g. Cove maps CPTCode from
+		// "Procedure"), that mapping must win even if the input file also contains a literal
+		// CPT/CPTCode column. ReadByAliases orders lab-declared headers first, so it resolves
+		// to the mapped column and ignores the other alias matches.
+		if (LabProvidesTargetColumn(col, labOv))
+			return ReadByAliases(col, row, headerExact, headerNorm, labOv);
+
 		var preferredHeaders = new[]
 		{
 			"CPT",
@@ -1498,7 +1505,11 @@ public static class StandardCsvExporter
 		[NormKey("NorthWest")] = "NWL",
 	};
 
-	private static string ResolveLabShortCode(string? labName)
+	/// <summary>
+	/// Resolves a lab's short code (e.g. "NorthWest" -> "NWL"). Returns "" when the lab is unknown.
+	/// Used both as the ClaimUID/LineLevelUID prefix and as the LabName value in LabInsuranceMaster.
+	/// </summary>
+	public static string ResolveLabShortCode(string? labName)
 	{
 		var key = NormKey(labName ?? "");
 		if (string.IsNullOrWhiteSpace(key))

@@ -274,7 +274,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						logMessage: lookup.Message ?? "no eligible SharePoint file found",
 						ct: ct);
 
-					if (lookup.Status == SharePointDownloader.LatestFileLookupStatus.NoFileInCurrentWeekFolder)
+					if (lookup.Status == SharePointDownloader.LatestFileLookupStatus.NoFileInCurrentWeekFolder
+						|| lookup.Status == SharePointDownloader.LatestFileLookupStatus.NoCurrentWeekFolder)
 					{
 						await NotifyNoRecentFileFoundInLatestWeekFolderAsync(
 							lab,

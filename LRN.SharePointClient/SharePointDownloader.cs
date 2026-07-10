@@ -47,13 +47,15 @@ public sealed class SharePointDownloader
 	}
 
 	/// <summary>
-	/// Finds the latest matching file for a lab by navigating:
-	/// LabRoot -> Year -> Month(s) -> DateFolder(s) -> Latest File (matching pattern)
+	/// Finds the matching file for a lab by navigating:
+	/// LabRoot -> Year -> Month -> CurrentWeekFolder -> File (matching pattern)
 	///
-	/// IMPORTANT change (Feb 2026 requirement):
-	/// - Always check the most recent date folder first.
-	/// - If the file is not found there, continue checking previous date folders
-	///   (and previous months) until a match is found.
+	/// IMPORTANT (Jul 2026 requirement):
+	/// - Only the week folder covering TODAY is considered by default.
+	/// - If there is no current week folder, or it has no matching file, the run is skipped.
+	///   Previous week folders are not used, even if their files changed since the last run,
+	///   unless MasterFileProcessor:ProcessPreviousWeekFile is set to true, which restores the
+	///   fallback to the latest available week folder.
 	/// </summary>
 	public async Task<LatestFileLookupResult> TryGetLatestFileForLabAsync(
 		LabFileMap lab,
@@ -146,154 +148,139 @@ public sealed class SharePointDownloader
 
 		var today = DateTime.Today;
 
-		// Current/recent week folder = folder that contains today
+		// Current week folder = folder whose date range contains today. Folders named with a
+		// single date (no range) are treated as covering [date, date + 6 days].
 		var currentWeekFolder = weekFolders
 			.FirstOrDefault(x =>
-				x.Range.HasValue &&
-				x.Range.Value.StartDate.Date <= today &&
-				today <= x.Range.Value.EndDate.Date);
+				(x.Range.HasValue &&
+				 x.Range.Value.StartDate.Date <= today &&
+				 today <= x.Range.Value.EndDate.Date)
+				||
+				(!x.Range.HasValue &&
+				 x.FirstDate.HasValue &&
+				 x.FirstDate.Value.Date <= today &&
+				 today <= x.FirstDate.Value.Date.AddDays(6)));
 
-		// If current week folder exists, only check that folder.
 		if (currentWeekFolder != null)
 		{
-			var fileChildren = await ListChildrenPagedAsync(driveId, currentWeekFolder.Item.Id, ct);
-
-			var matchingFiles = fileChildren
-				.Where(x => !x.IsFolder && WildcardMatch(x.Name, lab.SharePointFilePattern))
-				.OrderByDescending(x => x.LastModifiedUtc ?? DateTimeOffset.MinValue)
-				.ThenByDescending(x => x.Name)
-				.ToList();
-
-			_logger.LogInformation(
-				"Lab {LabId}: Current week folder '{WeekFolder}' found. MatchingFiles={Count}, Pattern='{Pattern}', LimsPattern='{LimsPattern}'.",
-				lab.LabId,
-				currentWeekFolder.Item.Name,
-				matchingFiles.Count,
-				lab.SharePointFilePattern,
-				lab.LimsMasterFilePattern);
-
-			if (matchingFiles.Count == 0)
-			{
-				return new LatestFileLookupResult(
-					File: null,
-					Status: LatestFileLookupStatus.NoFileInCurrentWeekFolder,
-					YearFolderName: yearFolder.Name,
-					MonthFolderName: monthFolder.Name,
-					WeekFolderName: currentWeekFolder.Item.Name,
-					Message: $"No recent file found in latest week folder '{currentWeekFolder.Item.Name}'.");
-			}
-
-			var file = matchingFiles.First();
-			var limsFile = FindRequiredLimsFile(fileChildren, file, lab.LimsMasterFilePattern);
-			if (limsFile == null)
-			{
-				return new LatestFileLookupResult(
-					File: null,
-					Status: string.IsNullOrWhiteSpace(lab.LimsMasterFilePattern)
-						? LatestFileLookupStatus.LimsMasterFilePatternMissing
-						: LatestFileLookupStatus.NoLimsMasterFileInCurrentWeekFolder,
-					YearFolderName: yearFolder.Name,
-					MonthFolderName: monthFolder.Name,
-					WeekFolderName: currentWeekFolder.Item.Name,
-					Message: string.IsNullOrWhiteSpace(lab.LimsMasterFilePattern)
-						? $"LIMS master file pattern is not configured for lab '{lab.LabName}'."
-						: $"Production master file '{file.Name}' was found, but no LIMS master file matched pattern '{lab.LimsMasterFilePattern}' in week folder '{currentWeekFolder.Item.Name}'.");
-			}
-
-			var eTagKey = file.ETag ?? string.Empty;
-
-			var spPath = BuildSpPath(
-				lab.SharePointRootPath,
-				yearFolder.Name,
-				monthFolder.Name,
-				currentWeekFolder.Item.Name,
-				file.Name);
-
-			return new LatestFileLookupResult(
-				File: new SelectedFile(
-					lab.LabId,
-					driveId,
-					file.Id,
-					file.Name,
-					eTagKey,
-					file.LastModifiedUtc,
-					spPath),
-				Status: LatestFileLookupStatus.FileFound,
-				YearFolderName: yearFolder.Name,
-				MonthFolderName: monthFolder.Name,
-				WeekFolderName: currentWeekFolder.Item.Name,
-				Message: null);
+			return await SelectFileFromWeekFolderAsync(
+				lab, driveId, yearFolder.Name, monthFolder.Name, currentWeekFolder.Item, isCurrentWeek: true, ct);
 		}
 
-		// No current week folder -> take latest available week folder only
+		// No week folder covers today. By default the run is skipped -- previous week folders
+		// are not used, even if their files were modified since the last run. Setting
+		// MasterFileProcessor:ProcessPreviousWeekFile = true restores the old fallback to the
+		// latest available week folder.
 		var latestAvailableWeekFolder = weekFolders.First();
 
-		var latestWeekFiles = await ListChildrenPagedAsync(driveId, latestAvailableWeekFolder.Item.Id, ct);
+		if (!_opt.ProcessPreviousWeekFile)
+		{
+			_logger.LogInformation(
+				"Lab {LabId}: No week folder covering today ({Today}) under month folder '{MonthFolder}'. Latest available week folder '{WeekFolder}' is NOT used (ProcessPreviousWeekFile=false). Skipping.",
+				lab.LabId,
+				today,
+				monthFolder.Name,
+				latestAvailableWeekFolder.Item.Name);
 
-		var latestWeekMatchingFiles = latestWeekFiles
+			return new LatestFileLookupResult(
+				File: null,
+				Status: LatestFileLookupStatus.NoCurrentWeekFolder,
+				YearFolderName: yearFolder.Name,
+				MonthFolderName: monthFolder.Name,
+				WeekFolderName: latestAvailableWeekFolder.Item.Name,
+				Message: $"No week folder covering today was found under month folder '{monthFolder.Name}'. Previous week folders are not processed (latest available: '{latestAvailableWeekFolder.Item.Name}'). Set MasterFileProcessor:ProcessPreviousWeekFile=true to allow the fallback.");
+		}
+
+		_logger.LogInformation(
+			"Lab {LabId}: No week folder covering today ({Today}). ProcessPreviousWeekFile=true -> using latest available week folder '{WeekFolder}'.",
+			lab.LabId,
+			today,
+			latestAvailableWeekFolder.Item.Name);
+
+		return await SelectFileFromWeekFolderAsync(
+			lab, driveId, yearFolder.Name, monthFolder.Name, latestAvailableWeekFolder.Item, isCurrentWeek: false, ct);
+	}
+
+	private async Task<LatestFileLookupResult> SelectFileFromWeekFolderAsync(
+		LabFileMap lab,
+		string driveId,
+		string yearFolderName,
+		string monthFolderName,
+		DriveChild weekFolder,
+		bool isCurrentWeek,
+		CancellationToken ct)
+	{
+		var fileChildren = await ListChildrenPagedAsync(driveId, weekFolder.Id, ct);
+
+		var matchingFiles = fileChildren
 			.Where(x => !x.IsFolder && WildcardMatch(x.Name, lab.SharePointFilePattern))
 			.OrderByDescending(x => x.LastModifiedUtc ?? DateTimeOffset.MinValue)
 			.ThenByDescending(x => x.Name)
 			.ToList();
 
 		_logger.LogInformation(
-			"Lab {LabId}: No current week folder found. Using latest available week folder '{WeekFolder}'. MatchingFiles={Count}, Pattern='{Pattern}', LimsPattern='{LimsPattern}'.",
+			"Lab {LabId}: {FolderKind} week folder '{WeekFolder}'. MatchingFiles={Count}, Pattern='{Pattern}', LimsPattern='{LimsPattern}'.",
 			lab.LabId,
-			latestAvailableWeekFolder.Item.Name,
-			latestWeekMatchingFiles.Count,
+			isCurrentWeek ? "Current" : "Latest available",
+			weekFolder.Name,
+			matchingFiles.Count,
 			lab.SharePointFilePattern,
 			lab.LimsMasterFilePattern);
 
-		if (latestWeekMatchingFiles.Count == 0)
+		if (matchingFiles.Count == 0)
 		{
 			return new LatestFileLookupResult(
 				File: null,
-				Status: LatestFileLookupStatus.NoFileInLatestAvailableWeekFolder,
-				YearFolderName: yearFolder.Name,
-				MonthFolderName: monthFolder.Name,
-				WeekFolderName: latestAvailableWeekFolder.Item.Name,
-				Message: $"No matching file found in latest available week folder '{latestAvailableWeekFolder.Item.Name}'.");
+				Status: isCurrentWeek
+					? LatestFileLookupStatus.NoFileInCurrentWeekFolder
+					: LatestFileLookupStatus.NoFileInLatestAvailableWeekFolder,
+				YearFolderName: yearFolderName,
+				MonthFolderName: monthFolderName,
+				WeekFolderName: weekFolder.Name,
+				Message: $"No matching file found in week folder '{weekFolder.Name}'.");
 		}
 
-		var latestFile = latestWeekMatchingFiles.First();
-		var latestLimsFile = FindRequiredLimsFile(latestWeekFiles, latestFile, lab.LimsMasterFilePattern);
-		if (latestLimsFile == null)
+		var file = matchingFiles.First();
+		var limsFile = FindRequiredLimsFile(fileChildren, file, lab.LimsMasterFilePattern);
+		if (limsFile == null)
 		{
 			return new LatestFileLookupResult(
 				File: null,
 				Status: string.IsNullOrWhiteSpace(lab.LimsMasterFilePattern)
 					? LatestFileLookupStatus.LimsMasterFilePatternMissing
-					: LatestFileLookupStatus.NoLimsMasterFileInLatestAvailableWeekFolder,
-				YearFolderName: yearFolder.Name,
-				MonthFolderName: monthFolder.Name,
-				WeekFolderName: latestAvailableWeekFolder.Item.Name,
+					: (isCurrentWeek
+						? LatestFileLookupStatus.NoLimsMasterFileInCurrentWeekFolder
+						: LatestFileLookupStatus.NoLimsMasterFileInLatestAvailableWeekFolder),
+				YearFolderName: yearFolderName,
+				MonthFolderName: monthFolderName,
+				WeekFolderName: weekFolder.Name,
 				Message: string.IsNullOrWhiteSpace(lab.LimsMasterFilePattern)
 					? $"LIMS master file pattern is not configured for lab '{lab.LabName}'."
-					: $"Production master file '{latestFile.Name}' was found, but no LIMS master file matched pattern '{lab.LimsMasterFilePattern}' in week folder '{latestAvailableWeekFolder.Item.Name}'.");
+					: $"Production master file '{file.Name}' was found, but no LIMS master file matched pattern '{lab.LimsMasterFilePattern}' in week folder '{weekFolder.Name}'.");
 		}
 
-		var latestETagKey = latestFile.ETag ?? string.Empty;
+		var eTagKey = BuildChangeKey(file);
 
-		var latestSpPath = BuildSpPath(
+		var spPath = BuildSpPath(
 			lab.SharePointRootPath,
-			yearFolder.Name,
-			monthFolder.Name,
-			latestAvailableWeekFolder.Item.Name,
-			latestFile.Name);
+			yearFolderName,
+			monthFolderName,
+			weekFolder.Name,
+			file.Name);
 
 		return new LatestFileLookupResult(
 			File: new SelectedFile(
 				lab.LabId,
 				driveId,
-				latestFile.Id,
-				latestFile.Name,
-				latestETagKey,
-				latestFile.LastModifiedUtc,
-				latestSpPath),
+				file.Id,
+				file.Name,
+				eTagKey,
+				file.LastModifiedUtc,
+				spPath),
 			Status: LatestFileLookupStatus.FileFound,
-			YearFolderName: yearFolder.Name,
-			MonthFolderName: monthFolder.Name,
-			WeekFolderName: latestAvailableWeekFolder.Item.Name,
+			YearFolderName: yearFolderName,
+			MonthFolderName: monthFolderName,
+			WeekFolderName: weekFolder.Name,
 			Message: null);
 	}
 
@@ -695,7 +682,17 @@ public sealed class SharePointDownloader
 
 	// ---------------- Children listing (paged) ----------------
 
-	private sealed record DriveChild(string Id, string Name, bool IsFolder, DateTimeOffset? LastModifiedUtc, string? ETag);
+	private sealed record DriveChild(string Id, string Name, bool IsFolder, DateTimeOffset? LastModifiedUtc, string? ETag, string? QuickXorHash);
+
+	// Change-detection key for a file. Prefers the Graph content hash (quickXorHash), which only
+	// changes when the file BYTES change, over the eTag, which SharePoint also bumps for
+	// metadata-only updates (e.g. a user opening and closing the workbook without saving edits).
+	// The "QXH:" prefix keeps hash keys distinguishable from legacy eTag keys already stored in
+	// the file-status table.
+	private static string BuildChangeKey(DriveChild file)
+		=> !string.IsNullOrWhiteSpace(file.QuickXorHash)
+			? "QXH:" + file.QuickXorHash
+			: file.ETag ?? string.Empty;
 
 	private async Task<List<DriveChild>> ListChildrenPagedAsync(
 	string driveId,
@@ -730,7 +727,15 @@ public sealed class SharePointDownloader
 					? etEl.GetString()
 					: null;
 
-				results.Add(new DriveChild(id, name, isFolder, lm, eTag));
+				string? quickXorHash = null;
+				if (item.TryGetProperty("file", out var fileEl) &&
+					fileEl.TryGetProperty("hashes", out var hashesEl) &&
+					hashesEl.TryGetProperty("quickXorHash", out var qxhEl))
+				{
+					quickXorHash = qxhEl.GetString();
+				}
+
+				results.Add(new DriveChild(id, name, isFolder, lm, eTag, quickXorHash));
 			}
 
 			url = doc.RootElement.TryGetProperty("@odata.nextLink", out var next)
@@ -982,7 +987,7 @@ public sealed class SharePointDownloader
 		if (match == null)
 			return null;
 
-		return new SelectedFile(currentFile.LabId, currentFile.DriveId, match.Id, match.Name, match.ETag ?? string.Empty, match.LastModifiedUtc, BuildSpPath(folderPath, match.Name));
+		return new SelectedFile(currentFile.LabId, currentFile.DriveId, match.Id, match.Name, BuildChangeKey(match), match.LastModifiedUtc, BuildSpPath(folderPath, match.Name));
 	}
 
 	private static string GetFolderPath(string sharePointPath)
@@ -1027,6 +1032,7 @@ public sealed class SharePointDownloader
 		NoYearFolder,
 		NoMonthFolder,
 		NoWeekFolder,
+		NoCurrentWeekFolder,
 		NoFileInCurrentWeekFolder,
 		NoFileInLatestAvailableWeekFolder,
 		LimsMasterFilePatternMissing,

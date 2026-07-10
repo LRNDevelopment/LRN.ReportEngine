@@ -51,6 +51,12 @@ public sealed class ImportOptions
     // Keep RAW exports
     public bool KeepRawCsvExports { get; set; } = false;
 
+    // When no SharePoint week folder covers today:
+    //   false (default) -> skip the run; previous week folders are never processed.
+    //   true            -> fall back to the latest available week folder and process its file
+    //                      (pre-Jul-2026 behavior).
+    public bool ProcessPreviousWeekFile { get; set; } = false;
+
     public SharePointOptions SharePoint { get; set; } = new();
 
     public List<LabFileMap> Labs { get; set; } = new();

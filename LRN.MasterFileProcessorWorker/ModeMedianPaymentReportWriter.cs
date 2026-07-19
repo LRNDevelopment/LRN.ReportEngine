@@ -32,6 +32,7 @@ public static class ModeMedianPaymentReportWriter
 			.OrderBy(x => x.PayerName, StringComparer.OrdinalIgnoreCase)
 			.ThenBy(x => x.Panel, StringComparer.OrdinalIgnoreCase)
 			.ThenBy(x => x.CPTCode, StringComparer.OrdinalIgnoreCase)
+			.ThenBy(x => x.RollingDays, StringComparer.OrdinalIgnoreCase)
 			.ThenBy(x => x.AllowedAmount ?? decimal.MinValue)
 			.ThenBy(x => x.InsurancePaymentAmount ?? decimal.MinValue)
 			.ToList();
@@ -138,6 +139,9 @@ public static class ModeMedianPaymentReportWriter
 			"Paid Amount Per Unit",
 			"Insurance Paid Per Unit");
 
+		int rollingDaysIdx = FindHeaderIndexOptional(header, "RollingDays", "Rolling Days");
+		int dateOfServiceIdx = FindHeaderIndexOptional(header, "DateofService", "Date of Service", "DateOfService", "DOS");
+
 		if (payerIdx < 0 || panelIdx < 0 || cptIdx < 0 || allowedIdx < 0 || insuranceIdx < 0)
 		{
 			throw new InvalidOperationException(
@@ -160,6 +164,8 @@ public static class ModeMedianPaymentReportWriter
 			var insurancePaymentAmount = ParseNullableDecimal(ReadField(fields, insuranceIdx));
 			var allowedAmountPerUnit = ParseNullableDecimal(ReadField(fields, allowedPerUnitIdx));
 			var insurancePaymentPerUnit = ParseNullableDecimal(ReadField(fields, insurancePerUnitIdx));
+			var rollingDays = ReadField(fields, rollingDaysIdx).Trim();
+			var dateOfService = ParseNullableDate(ReadField(fields, dateOfServiceIdx));
 
 			rows.Add(new PaymentRow(
 				payerName,
@@ -168,7 +174,9 @@ public static class ModeMedianPaymentReportWriter
 				allowedAmount,
 				insurancePaymentAmount,
 				allowedAmountPerUnit,
-				insurancePaymentPerUnit));
+				insurancePaymentPerUnit,
+				rollingDays,
+				dateOfService));
 		}
 
 		return rows;
@@ -288,6 +296,16 @@ public static class ModeMedianPaymentReportWriter
 				// Same rule for per-unit columns
 				var perUnitMode = SelectWinningPerUnitMode(rawGroupRows);
 
+				// Group-level date range from the line-level DateofService values
+				var serviceDates = rawGroupRows
+					.Where(x => x.DateOfService.HasValue)
+					.Select(x => x.DateOfService!.Value)
+					.ToList();
+
+				var minDateOfService = serviceDates.Count > 0 ? serviceDates.Min() : (DateTime?)null;
+				var maxDateOfService = serviceDates.Count > 0 ? serviceDates.Max() : (DateTime?)null;
+				var rollingDays = rawGroupRows[0].RollingDays;
+
 				return distinctOutputRows.Select(r =>
 				{
 					var rowKey = BuildDistinctRowKey(r);
@@ -309,7 +327,10 @@ public static class ModeMedianPaymentReportWriter
 						MedianAllowedAmountPerUnit: medianAllowedAmountPerUnit,
 						MedianInsurancePaymentPerUnit: medianInsurancePaymentPerUnit,
 						ModeAllowedAmountPerUnit: perUnitMode.AllowedAmountPerUnit,
-						ModeInsurancePaymentPerUnit: perUnitMode.InsurancePaymentPerUnit);
+						ModeInsurancePaymentPerUnit: perUnitMode.InsurancePaymentPerUnit,
+						RollingDays: rollingDays,
+						MinDateOfService: minDateOfService,
+						MaxDateOfService: maxDateOfService);
 				});
 			});
 	}
@@ -394,6 +415,7 @@ public static class ModeMedianPaymentReportWriter
 			"AllowedAmountPerUnit Median",
 			"InsurancePaymentPerUnit Median");
 
+		var asOfDate = DateTime.Today;
 		var rowNo = 2;
 		foreach (var row in rows)
 		{
@@ -403,6 +425,8 @@ public static class ModeMedianPaymentReportWriter
 			WriteDecimal(ws, rowNo, 8, row.MedianInsurancePaymentAmount);
 			WriteDecimal(ws, rowNo, 9, row.MedianAllowedAmountPerUnit);
 			WriteDecimal(ws, rowNo, 10, row.MedianInsurancePaymentPerUnit);
+
+			WriteGroupDateColumns(ws, rowNo, row, asOfDate);
 
 			rowNo++;
 		}
@@ -420,6 +444,7 @@ public static class ModeMedianPaymentReportWriter
 			"AllowedAmountPerUnit Mode",
 			"InsurancePaymentPerUnit Mode");
 
+		var asOfDate = DateTime.Today;
 		var rowNo = 2;
 		foreach (var row in rows)
 		{
@@ -430,10 +455,29 @@ public static class ModeMedianPaymentReportWriter
 			WriteDecimal(ws, rowNo, 9, row.ModeAllowedAmountPerUnit);
 			WriteDecimal(ws, rowNo, 10, row.ModeInsurancePaymentPerUnit);
 
+			WriteGroupDateColumns(ws, rowNo, row, asOfDate);
+
 			rowNo++;
 		}
 
 		FormatWorksheet(ws, rowNo - 1);
+	}
+
+	private static void WriteGroupDateColumns(IXLWorksheet ws, int rowNo, PaymentReportRow row, DateTime asOfDate)
+	{
+		ws.Cell(rowNo, 11).Value = row.RollingDays ?? string.Empty;
+		WriteDate(ws, rowNo, 12, row.MinDateOfService);
+		WriteDate(ws, rowNo, 13, row.MaxDateOfService);
+		WriteDate(ws, rowNo, 14, asOfDate);
+	}
+
+	private static void WriteDate(IXLWorksheet ws, int rowNo, int colNo, DateTime? value)
+	{
+		if (!value.HasValue)
+			return;
+
+		ws.Cell(rowNo, colNo).Value = value.Value;
+		ws.Cell(rowNo, colNo).Style.NumberFormat.Format = "MM/dd/yyyy";
 	}
 
 	private static void WriteDecimal(IXLWorksheet ws, int rowNo, int colNo, decimal? value)
@@ -498,6 +542,10 @@ public static class ModeMedianPaymentReportWriter
 		ws.Cell(1, 8).Value = metricHeader2;
 		ws.Cell(1, 9).Value = metricHeader3;
 		ws.Cell(1, 10).Value = metricHeader4;
+		ws.Cell(1, 11).Value = "RollingDays";
+		ws.Cell(1, 12).Value = "MinDateofService";
+		ws.Cell(1, 13).Value = "MaxDateofService";
+		ws.Cell(1, 14).Value = "AsOfDate";
 		ws.Row(1).Style.Font.Bold = true;
 	}
 
@@ -505,7 +553,7 @@ public static class ModeMedianPaymentReportWriter
 	{
 		if (lastRow >= 1)
 		{
-			var range = ws.Range(1, 1, Math.Max(lastRow, 1), 10);
+			var range = ws.Range(1, 1, Math.Max(lastRow, 1), 14);
 			range.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 			range.Style.Alignment.WrapText = false;
 			range.SetAutoFilter();
@@ -519,7 +567,8 @@ public static class ModeMedianPaymentReportWriter
 		=> string.Join("|",
 			NormalizeKey(row.PayerName),
 			NormalizeKey(row.Panel),
-			NormalizeKey(row.CPTCode));
+			NormalizeKey(row.CPTCode),
+			NormalizeKey(row.RollingDays));
 
 	private static string BuildDistinctRowKey(PaymentRow row)
 		=> string.Join("|",
@@ -580,6 +629,30 @@ public static class ModeMedianPaymentReportWriter
 		return null;
 	}
 
+	private static DateTime? ParseNullableDate(string? value)
+	{
+		if (string.IsNullOrWhiteSpace(value))
+			return null;
+
+		var cleaned = value.Trim();
+
+		// Standard CSV dates are normalized to MM/dd/yyyy, but accept common variants.
+		string[] formats =
+		{
+			"MM/dd/yyyy", "M/d/yyyy",
+			"yyyy-MM-dd", "yyyy/MM/dd",
+			"MM/dd/yyyy HH:mm:ss", "M/d/yyyy H:mm:ss"
+		};
+
+		if (DateTime.TryParseExact(cleaned, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var exact))
+			return exact.Date;
+
+		if (DateTime.TryParse(cleaned, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+			return parsed.Date;
+
+		return null;
+	}
+
 	private static decimal? CalculateMedian(IReadOnlyList<decimal> values)
 	{
 		if (values.Count == 0)
@@ -615,7 +688,9 @@ public static class ModeMedianPaymentReportWriter
 	decimal? AllowedAmount,
 	decimal? InsurancePaymentAmount,
 	decimal? AllowedAmountPerUnit,
-	decimal? InsurancePaymentPerUnit);
+	decimal? InsurancePaymentPerUnit,
+	string RollingDays,
+	DateTime? DateOfService);
 
 	public sealed record PaymentReportRow(
 		string PayerName,
@@ -631,5 +706,8 @@ public static class ModeMedianPaymentReportWriter
 		decimal? MedianAllowedAmountPerUnit,
 		decimal? MedianInsurancePaymentPerUnit,
 		decimal? ModeAllowedAmountPerUnit,
-		decimal? ModeInsurancePaymentPerUnit);
+		decimal? ModeInsurancePaymentPerUnit,
+		string RollingDays,
+		DateTime? MinDateOfService,
+		DateTime? MaxDateOfService);
 }

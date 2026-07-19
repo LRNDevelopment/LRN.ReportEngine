@@ -15,7 +15,11 @@ BEGIN
 		LabName NVARCHAR(50) NOT NULL,
 		LabId INT NOT NULL,
 		RunID NVARCHAR(50),
-		CreatedOn DATETIME DEFAULT(GETDATE())
+		CreatedOn DATETIME DEFAULT(GETDATE()),
+		RollingDays NVARCHAR(20) NULL,
+		MinDateofService DATE NULL,
+		MaxDateofService DATE NULL,
+		AsOfDate DATE NULL
 	);
 END
 GO
@@ -37,7 +41,11 @@ BEGIN
 		LabName NVARCHAR(50) NOT NULL,
 		LabId INT NOT NULL,
 		RunID NVARCHAR(50),
-		CreatedOn DATETIME DEFAULT(GETDATE())
+		CreatedOn DATETIME DEFAULT(GETDATE()),
+		RollingDays NVARCHAR(20) NULL,
+		MinDateofService DATE NULL,
+		MaxDateofService DATE NULL,
+		AsOfDate DATE NULL
 	);
 END
 GO

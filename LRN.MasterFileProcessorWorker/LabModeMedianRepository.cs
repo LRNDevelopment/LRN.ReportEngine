@@ -153,6 +153,10 @@ public sealed class LabModeMedianRepository
 		table.Columns.Add("LabName", typeof(string));
 		table.Columns.Add("LabId", typeof(int));
 		table.Columns.Add("RunID", typeof(string));
+		table.Columns.Add("RollingDays", typeof(string));
+		table.Columns.Add("MinDateofService", typeof(DateTime));
+		table.Columns.Add("MaxDateofService", typeof(DateTime));
+		table.Columns.Add("AsOfDate", typeof(DateTime));
 		return table;
 	}
 
@@ -180,10 +184,17 @@ public sealed class LabModeMedianRepository
 			ToDb(metric4),
 			TruncateRequired(labName, 50),
 			labId,
-			Truncate(runId, 50));
+			Truncate(runId, 50),
+			Truncate(row.RollingDays, 20),
+			ToDb(row.MinDateOfService),
+			ToDb(row.MaxDateOfService),
+			DateTime.Today);
 	}
 
 	private static object ToDb(decimal? value)
+		=> value.HasValue ? value.Value : DBNull.Value;
+
+	private static object ToDb(DateTime? value)
 		=> value.HasValue ? value.Value : DBNull.Value;
 
 	private static object Truncate(string? value, int maxLength)

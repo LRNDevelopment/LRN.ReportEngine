@@ -547,7 +547,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				activeStep = step40;
 				await _processLog.StepStartAsync(runCtx, step40, ct);
 
-				var effectiveLineCandidates = GetEffectiveLineSheetCandidates(lab);
+				var effectiveLineCandidates = GetEffectiveLineSheetCandidates(lab, stagingPath);
 				var lineValidation = _schemaValidator.Validate(stagingPath, effectiveLineCandidates, lineSchemaPath);
 				var claimValidation = _schemaValidator.Validate(stagingPath, _opt.ClaimSheetName, claimSchemaPath);
 
@@ -659,9 +659,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				if (lineSheetNames.Length > 1)
 				{
-					var sheetSourcePairs = lineSheetNames
-						.Select(s => (SheetName: s, SourceValue: ExtractSourceLabel(s)))
-						.ToArray();
+					var sheetSourcePairs = BuildLineSheetSourcePairs(lab, lineSheetNames);
 					await ExcelCsvExporter.ExportMultiSheetCombinedToCsvAsync(stagingPath, sheetSourcePairs, "Source", lineRawPath, ct);
 				}
 				else
@@ -1778,7 +1776,7 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 	// between "LineLevel" and "Line Level", so all variants are listed as candidates; the
 	// exporter/validator match only the sheets that actually exist.
 	private const string NorthWestLineSheetCandidates =
-		"Webpm LineLevel,Webpm Line Level,Daq LineLevel,Daq Line Level";
+		"Webpm LineLevel,Webpm Line Level,Daq LineLevel,Daq Line Level,Line Level,LineLevel";
 
 	private string GetEffectiveLineSheetCandidates(LabFileMap lab)
 	{
@@ -1793,6 +1791,81 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		return _opt.SheetName;
 	}
 
+	/// <summary>
+	/// Line-level sheet candidates resolved against the sheets the workbook ACTUALLY contains.
+	/// <para>
+	/// NorthWest deliveries are inconsistent: usually "Webpm Line Level" + "Daq Line Level", but
+	/// sometimes one system's prefix is dropped and the sheet arrives as plain "Line Level" (or
+	/// "LineLevel"). Matching a fixed candidate list silently skipped that unprefixed sheet, so
+	/// half the data was lost. Every sheet whose name ends with Line Level / LineLevel -- with or
+	/// without a system prefix -- is therefore taken from the workbook itself.
+	/// </para>
+	/// Falls back to the static candidate list when nothing matches, so behavior is unchanged for
+	/// labs and files that do not use this naming.
+	/// </summary>
+	private string GetEffectiveLineSheetCandidates(LabFileMap lab, string workbookPath)
+	{
+		var configured = GetEffectiveLineSheetCandidates(lab);
+
+		// Only the multi-sheet labs need discovery; single-sheet labs keep the configured list.
+		if (!IsNorthWestLab(lab) && string.IsNullOrWhiteSpace(lab.LineLevelSheetNames))
+			return configured;
+
+		List<string> workbookSheets;
+		try
+		{
+			workbookSheets = ExcelCsvExporter.ListSheetNamesInOrder(workbookPath);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogWarning(ex, "Lab {LabId}: could not list workbook sheets; using configured line-level candidates.", lab.LabId);
+			return configured;
+		}
+
+		var lineSheets = workbookSheets
+			.Where(IsLineLevelSheetName)
+			.ToList();
+
+		if (lineSheets.Count == 0)
+			return configured;
+
+		// When prefixed sheets identify both source systems, a bare "Line Level" sheet alongside
+		// them is ambiguous (likely a rollup) and is excluded rather than double-counted.
+		var prefixed = lineSheets.Where(s => !string.IsNullOrWhiteSpace(ExtractSourceLabel(s))).ToList();
+		var selected = prefixed.Count >= 2 ? prefixed : lineSheets;
+
+		if (selected.Count != lineSheets.Count)
+		{
+			_logger.LogInformation(
+				"Lab {LabId}: ignoring unprefixed line-level sheet(s) [{Ignored}] because prefixed sheets [{Prefixed}] are present.",
+				lab.LabId,
+				string.Join(", ", lineSheets.Except(selected)),
+				string.Join(", ", prefixed));
+		}
+
+		_logger.LogInformation(
+			"Lab {LabId}: line-level sheets resolved from workbook -> [{Sheets}].",
+			lab.LabId,
+			string.Join(", ", selected));
+
+		_fileLog.Info($"Lab {lab.LabId}: line-level sheets resolved from workbook -> [{string.Join(", ", selected)}]");
+
+		return string.Join(",", selected);
+	}
+
+	/// <summary>
+	/// True for sheet names that denote line-level data, with or without a system prefix:
+	/// "Line Level", "LineLevel", "Daq Line Level", "Webpm LineLevel", "Master Line Level", ...
+	/// </summary>
+	private static bool IsLineLevelSheetName(string? sheetName)
+	{
+		if (string.IsNullOrWhiteSpace(sheetName))
+			return false;
+
+		var normalized = new string(sheetName.Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
+		return normalized.EndsWith("LINELEVEL", StringComparison.Ordinal);
+	}
+
 	private static bool IsNorthWestLab(LabFileMap lab)
 	{
 		if (lab == null) return false;
@@ -1804,15 +1877,86 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 			|| labName.Contains("North West", StringComparison.OrdinalIgnoreCase);
 	}
 
+	/// <summary>
+	/// Pairs each line-level sheet with the Source value its rows get.
+	/// <para>
+	/// A sheet that arrives without its system prefix (plain "Line Level") is labelled with the
+	/// configured system that is NOT otherwise present in the workbook: with "Daq Line Level" +
+	/// "Line Level", the unprefixed sheet is the Webpm delivery, so its rows are tagged "Webpm"
+	/// rather than left blank. When no sheet carries a prefix there is nothing to infer from, so
+	/// the Source stays blank.
+	/// </para>
+	/// </summary>
+	private (string SheetName, string SourceValue)[] BuildLineSheetSourcePairs(LabFileMap lab, IReadOnlyList<string> sheetNames)
+	{
+		var pairs = sheetNames
+			.Select(s => (SheetName: s, SourceValue: ExtractSourceLabel(s)))
+			.ToArray();
+
+		// Nothing missing, or nothing to infer from (every sheet unprefixed) -> leave as-is.
+		if (pairs.All(p => !string.IsNullOrWhiteSpace(p.SourceValue)) ||
+			pairs.All(p => string.IsNullOrWhiteSpace(p.SourceValue)))
+			return pairs;
+
+		// Only labs with a known multi-system layout have systems to infer.
+		if (!IsNorthWestLab(lab) && string.IsNullOrWhiteSpace(lab.LineLevelSheetNames))
+			return pairs;
+
+		var knownSources = GetEffectiveLineSheetCandidates(lab)
+			.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+			.Select(ExtractSourceLabel)
+			.Where(x => !string.IsNullOrWhiteSpace(x))
+			.Distinct(StringComparer.OrdinalIgnoreCase)
+			.ToList();
+
+		var present = new HashSet<string>(
+			pairs.Where(p => !string.IsNullOrWhiteSpace(p.SourceValue)).Select(p => p.SourceValue),
+			StringComparer.OrdinalIgnoreCase);
+
+		var missingSources = new Queue<string>(knownSources.Where(k => !present.Contains(k)));
+
+		for (int i = 0; i < pairs.Length; i++)
+		{
+			if (!string.IsNullOrWhiteSpace(pairs[i].SourceValue))
+				continue;
+
+			if (missingSources.Count == 0)
+				break;
+
+			var inferred = missingSources.Dequeue();
+
+			_logger.LogInformation(
+				"Lab {LabId}: sheet '{Sheet}' has no system prefix; tagging its rows Source='{Source}' (the configured system missing from this workbook).",
+				lab.LabId,
+				pairs[i].SheetName,
+				inferred);
+
+			_fileLog.Info($"Lab {lab.LabId}: sheet '{pairs[i].SheetName}' has no system prefix; Source set to '{inferred}'");
+
+			pairs[i] = (pairs[i].SheetName, inferred);
+		}
+
+		return pairs;
+	}
+
 	private static string ExtractSourceLabel(string sheetName)
 	{
-		// "Webpm Line Level"/"Webpm LineLevel" -> "Webpm", "Daq Line Level" -> "Daq"
-		var trimmed = sheetName.Trim();
-		foreach (var suffix in new[] { " Line Level", " LineLevel" })
+		// "Webpm Line Level"/"Webpm LineLevel" -> "Webpm", "Daq Line Level" -> "Daq".
+		// An unprefixed sheet ("Line Level"/"LineLevel") carries no system name, so it yields
+		// "" and its rows get a blank Source rather than the literal sheet name.
+		var trimmed = (sheetName ?? string.Empty).Trim();
+
+		foreach (var suffix in new[] { "Line Level", "LineLevel" })
 		{
-			if (trimmed.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-				return trimmed.Substring(0, trimmed.Length - suffix.Length).Trim();
+			if (!trimmed.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+				continue;
+
+			return trimmed.Substring(0, trimmed.Length - suffix.Length)
+				.Trim()
+				.Trim('-', '_')
+				.Trim();
 		}
+
 		return trimmed;
 	}
 

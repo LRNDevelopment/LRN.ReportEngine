@@ -208,6 +208,27 @@ public static class ExcelCsvExporter
         return (claimSheet, lineSheet);
     }
 
+    /// <summary>
+    /// Sheet names in workbook order. Use when the caller needs to decide which sheets to read
+    /// based on what the file actually contains (e.g. labs whose sheet naming varies per delivery).
+    /// </summary>
+    public static List<string> ListSheetNamesInOrder(string xlsxPath)
+    {
+        using var stream = File.Open(xlsxPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var reader = ExcelReaderFactory.CreateReader(stream);
+
+        var names = new List<string>();
+
+        do
+        {
+            if (!string.IsNullOrWhiteSpace(reader.Name))
+                names.Add(reader.Name);
+        }
+        while (reader.NextResult());
+
+        return names;
+    }
+
     private static HashSet<string> ListSheetNames(string xlsxPath)
     {
         using var stream = File.Open(xlsxPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);

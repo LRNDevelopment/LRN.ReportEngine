@@ -18,85 +18,85 @@ BEGIN
         [RowHash] CHAR(64) NOT NULL,
         [LabID] INT NOT NULL,
         [LabName] NVARCHAR(200) NOT NULL,
-        [ClaimID] NVARCHAR(255) NULL,
-        [AccessionNumber] NVARCHAR(255) NULL,
-        [SourceFileID] NVARCHAR(255) NULL,
-        [IngestedOn] NVARCHAR(255) NULL,
-        [CsvRowHash] NVARCHAR(255) NULL,
-        [PayerName_Raw] NVARCHAR(500) NULL,
-        [PayerName] NVARCHAR(500) NULL,
-        [Payer_Code] NVARCHAR(500) NULL,
-        [Payer_Common_Code] NVARCHAR(500) NULL,
-        [Payer_Group_Code] NVARCHAR(500) NULL,
-        [Global_Payer_ID] NVARCHAR(500) NULL,
-        [PayerType] NVARCHAR(500) NULL,
-        [BillingProvider] NVARCHAR(500) NULL,
-        [ReferringProvider] NVARCHAR(500) NULL,
-        [ClinicName] NVARCHAR(500) NULL,
-        [SalesRepname] NVARCHAR(500) NULL,
-        [PatientID] NVARCHAR(255) NULL,
-        [PatientDOB] NVARCHAR(255) NULL,
-        [DateofService] NVARCHAR(255) NULL,
-        [ChargeEnteredDate] NVARCHAR(255) NULL,
-        [FirstBilledDate] NVARCHAR(255) NULL,
-        [Panelname] NVARCHAR(500) NULL,
-        [CPTCodeXUnitsXModifierOrginal] NVARCHAR(255) NULL,
-        [CPTCodeXUnitsXModifier] NVARCHAR(255) NULL,
-        [POS] NVARCHAR(255) NULL,
-        [TOS] NVARCHAR(255) NULL,
-        [ChargeAmount] NVARCHAR(255) NULL,
-        [AllowedAmount] NVARCHAR(255) NULL,
-        [InsurancePayment] NVARCHAR(255) NULL,
-        [PatientPayment] NVARCHAR(255) NULL,
-        [TotalPayments] NVARCHAR(255) NULL,
-        [InsuranceAdjustments] NVARCHAR(255) NULL,
-        [PatientAdjustments] NVARCHAR(255) NULL,
-        [TotalAdjustments] NVARCHAR(255) NULL,
-        [InsuranceBalance] NVARCHAR(255) NULL,
-        [PatientBalance] NVARCHAR(255) NULL,
-        [TotalBalance] NVARCHAR(255) NULL,
-        [CheckDate] NVARCHAR(255) NULL,
-        [ClaimStatus] NVARCHAR(500) NULL,
-        [DenialCode] NVARCHAR(255) NULL,
-        [ICDCode] NVARCHAR(1000) NULL,
-        [DaystoDOS] NVARCHAR(255) NULL,
-        [RollingDays] NVARCHAR(255) NULL,
-        [DaystoBill] NVARCHAR(255) NULL,
-        [DaystoPost] NVARCHAR(255) NULL,
-        [ICDPointer] NVARCHAR(1000) NULL,
-        [T_F] NVARCHAR(255) NULL,
-        [PatientFirstName] NVARCHAR(500) NULL,
-        [PatientLastName] NVARCHAR(500) NULL,
-        [PatientAddress] NVARCHAR(1000) NULL,
-        [Coverage] NVARCHAR(255) NULL,
-        [AgingDOS] NVARCHAR(255) NULL,
-        [ServiceToDate] NVARCHAR(255) NULL,
-        [AgingDOE] NVARCHAR(255) NULL,
-        [Facility] NVARCHAR(255) NULL,
-        [ServiceLocationCode] NVARCHAR(255) NULL,
-        [ServiceLocationName] NVARCHAR(500) NULL,
-        [PrimarySubId] NVARCHAR(255) NULL,
-        [BilledWeek] NVARCHAR(255) NULL,
-        [ICDField] NVARCHAR(1000) NULL,
-        [DODWeek] NVARCHAR(255) NULL,
-        [DenialReason] NVARCHAR(1000) NULL,
-        [BillingOption] NVARCHAR(255) NULL,
-        [CurrentStatus] NVARCHAR(500) NULL,
-        [BatchNo] NVARCHAR(255) NULL,
-        [CreatedOn] NVARCHAR(255) NULL,
-        [CreatedBy] NVARCHAR(255) NULL,
-        [UpdatedOn] NVARCHAR(255) NULL,
-        [UpdatedBy] NVARCHAR(255) NULL,
-        [BillStatus] NVARCHAR(500) NULL,
-        [PaymentPercent] NVARCHAR(255) NULL,
-        [FullyPaidCount] NVARCHAR(255) NULL,
-        [FullyPaidAmount] NVARCHAR(255) NULL,
-        [AdjucticatedCount] NVARCHAR(255) NULL,
-        [AdjucticatedAmount] NVARCHAR(255) NULL,
-        [Bucket30Count] NVARCHAR(255) NULL,
-        [Bucket30Amount] NVARCHAR(255) NULL,
-        [Bucket60Count] NVARCHAR(255) NULL,
-        [Bucket60Amount] NVARCHAR(255) NULL,
+        [ClaimID] NVARCHAR(500) NULL,
+        [AccessionNumber] NVARCHAR(500) NULL,
+        [SourceFileID] NVARCHAR(500) NULL,
+        [IngestedOn] NVARCHAR(500) NULL,
+        [CsvRowHash] NVARCHAR(500) NULL,
+        [PayerName_Raw] NVARCHAR(1000) NULL,
+        [PayerName] NVARCHAR(1000) NULL,
+        [Payer_Code] NVARCHAR(1000) NULL,
+        [Payer_Common_Code] NVARCHAR(1000) NULL,
+        [Payer_Group_Code] NVARCHAR(1000) NULL,
+        [Global_Payer_ID] NVARCHAR(1000) NULL,
+        [PayerType] NVARCHAR(1000) NULL,
+        [BillingProvider] NVARCHAR(1000) NULL,
+        [ReferringProvider] NVARCHAR(1000) NULL,
+        [ClinicName] NVARCHAR(1000) NULL,
+        [SalesRepname] NVARCHAR(1000) NULL,
+        [PatientID] NVARCHAR(500) NULL,
+        [PatientDOB] NVARCHAR(500) NULL,
+        [DateofService] NVARCHAR(500) NULL,
+        [ChargeEnteredDate] NVARCHAR(500) NULL,
+        [FirstBilledDate] NVARCHAR(500) NULL,
+        [Panelname] NVARCHAR(1000) NULL,
+        [CPTCodeXUnitsXModifierOrginal] NVARCHAR(MAX) NULL,
+        [CPTCodeXUnitsXModifier] NVARCHAR(MAX) NULL,
+        [POS] NVARCHAR(500) NULL,
+        [TOS] NVARCHAR(500) NULL,
+        [ChargeAmount] NVARCHAR(500) NULL,
+        [AllowedAmount] NVARCHAR(500) NULL,
+        [InsurancePayment] NVARCHAR(500) NULL,
+        [PatientPayment] NVARCHAR(500) NULL,
+        [TotalPayments] NVARCHAR(500) NULL,
+        [InsuranceAdjustments] NVARCHAR(500) NULL,
+        [PatientAdjustments] NVARCHAR(500) NULL,
+        [TotalAdjustments] NVARCHAR(500) NULL,
+        [InsuranceBalance] NVARCHAR(500) NULL,
+        [PatientBalance] NVARCHAR(500) NULL,
+        [TotalBalance] NVARCHAR(500) NULL,
+        [CheckDate] NVARCHAR(500) NULL,
+        [ClaimStatus] NVARCHAR(1000) NULL,
+        [DenialCode] NVARCHAR(500) NULL,
+        [ICDCode] NVARCHAR(MAX) NULL,
+        [DaystoDOS] NVARCHAR(500) NULL,
+        [RollingDays] NVARCHAR(500) NULL,
+        [DaystoBill] NVARCHAR(500) NULL,
+        [DaystoPost] NVARCHAR(500) NULL,
+        [ICDPointer] NVARCHAR(MAX) NULL,
+        [T_F] NVARCHAR(500) NULL,
+        [PatientFirstName] NVARCHAR(1000) NULL,
+        [PatientLastName] NVARCHAR(1000) NULL,
+        [PatientAddress] NVARCHAR(2000) NULL,
+        [Coverage] NVARCHAR(500) NULL,
+        [AgingDOS] NVARCHAR(500) NULL,
+        [ServiceToDate] NVARCHAR(500) NULL,
+        [AgingDOE] NVARCHAR(500) NULL,
+        [Facility] NVARCHAR(500) NULL,
+        [ServiceLocationCode] NVARCHAR(500) NULL,
+        [ServiceLocationName] NVARCHAR(1000) NULL,
+        [PrimarySubId] NVARCHAR(500) NULL,
+        [BilledWeek] NVARCHAR(500) NULL,
+        [ICDField] NVARCHAR(MAX) NULL,
+        [DODWeek] NVARCHAR(500) NULL,
+        [DenialReason] NVARCHAR(MAX) NULL,
+        [BillingOption] NVARCHAR(500) NULL,
+        [CurrentStatus] NVARCHAR(1000) NULL,
+        [BatchNo] NVARCHAR(500) NULL,
+        [CreatedOn] NVARCHAR(500) NULL,
+        [CreatedBy] NVARCHAR(500) NULL,
+        [UpdatedOn] NVARCHAR(500) NULL,
+        [UpdatedBy] NVARCHAR(500) NULL,
+        [BillStatus] NVARCHAR(1000) NULL,
+        [PaymentPercent] NVARCHAR(500) NULL,
+        [FullyPaidCount] NVARCHAR(500) NULL,
+        [FullyPaidAmount] NVARCHAR(500) NULL,
+        [AdjucticatedCount] NVARCHAR(500) NULL,
+        [AdjucticatedAmount] NVARCHAR(500) NULL,
+        [Bucket30Count] NVARCHAR(500) NULL,
+        [Bucket30Amount] NVARCHAR(500) NULL,
+        [Bucket60Count] NVARCHAR(500) NULL,
+        [Bucket60Amount] NVARCHAR(500) NULL,
         [InsertedDateTime] DATETIME2(3) NOT NULL
             CONSTRAINT [DF_ClaimLevelData_InsertedDateTime] DEFAULT (SYSDATETIME())
     );
@@ -131,86 +131,1038 @@ BEGIN
         [RowHash] CHAR(64) NOT NULL,
         [LabID] INT NOT NULL,
         [LabName] NVARCHAR(200) NOT NULL,
-        [ClaimID] NVARCHAR(255) NULL,
-        [AccessionNumber] NVARCHAR(255) NULL,
-        [SourceFileID] NVARCHAR(255) NULL,
-        [IngestedOn] NVARCHAR(255) NULL,
-        [CsvRowHash] NVARCHAR(255) NULL,
-        [PayerName_Raw] NVARCHAR(500) NULL,
-        [PayerName] NVARCHAR(500) NULL,
-        [Payer_Code] NVARCHAR(500) NULL,
-        [Payer_Common_Code] NVARCHAR(500) NULL,
-        [Payer_Group_Code] NVARCHAR(500) NULL,
-        [Global_Payer_ID] NVARCHAR(500) NULL,
-        [PayerType] NVARCHAR(500) NULL,
-        [BillingProvider] NVARCHAR(500) NULL,
-        [ReferringProvider] NVARCHAR(500) NULL,
-        [ClinicName] NVARCHAR(500) NULL,
-        [SalesRepname] NVARCHAR(500) NULL,
-        [PatientID] NVARCHAR(255) NULL,
-        [PatientDOB] NVARCHAR(255) NULL,
-        [DateofService] NVARCHAR(255) NULL,
-        [ChargeEnteredDate] NVARCHAR(255) NULL,
-        [FirstBilledDate] NVARCHAR(255) NULL,
-        [Panelname] NVARCHAR(500) NULL,
-        [CPTCodeXUnitsXModifierOrginal] NVARCHAR(255) NULL,
-        [CPTCodeXUnitsXModifier] NVARCHAR(255) NULL,
-        [POS] NVARCHAR(255) NULL,
-        [TOS] NVARCHAR(255) NULL,
-        [ChargeAmount] NVARCHAR(255) NULL,
-        [AllowedAmount] NVARCHAR(255) NULL,
-        [InsurancePayment] NVARCHAR(255) NULL,
-        [PatientPayment] NVARCHAR(255) NULL,
-        [TotalPayments] NVARCHAR(255) NULL,
-        [InsuranceAdjustments] NVARCHAR(255) NULL,
-        [PatientAdjustments] NVARCHAR(255) NULL,
-        [TotalAdjustments] NVARCHAR(255) NULL,
-        [InsuranceBalance] NVARCHAR(255) NULL,
-        [PatientBalance] NVARCHAR(255) NULL,
-        [TotalBalance] NVARCHAR(255) NULL,
-        [CheckDate] NVARCHAR(255) NULL,
-        [ClaimStatus] NVARCHAR(500) NULL,
-        [DenialCode] NVARCHAR(255) NULL,
-        [ICDCode] NVARCHAR(1000) NULL,
-        [DaystoDOS] NVARCHAR(255) NULL,
-        [RollingDays] NVARCHAR(255) NULL,
-        [DaystoBill] NVARCHAR(255) NULL,
-        [DaystoPost] NVARCHAR(255) NULL,
-        [ICDPointer] NVARCHAR(1000) NULL,
-        [T_F] NVARCHAR(255) NULL,
-        [PatientFirstName] NVARCHAR(500) NULL,
-        [PatientLastName] NVARCHAR(500) NULL,
-        [PatientAddress] NVARCHAR(1000) NULL,
-        [Coverage] NVARCHAR(255) NULL,
-        [AgingDOS] NVARCHAR(255) NULL,
-        [ServiceToDate] NVARCHAR(255) NULL,
-        [AgingDOE] NVARCHAR(255) NULL,
-        [Facility] NVARCHAR(255) NULL,
-        [ServiceLocationCode] NVARCHAR(255) NULL,
-        [ServiceLocationName] NVARCHAR(500) NULL,
-        [PrimarySubId] NVARCHAR(255) NULL,
-        [BilledWeek] NVARCHAR(255) NULL,
-        [ICDField] NVARCHAR(1000) NULL,
-        [DODWeek] NVARCHAR(255) NULL,
-        [DenialReason] NVARCHAR(1000) NULL,
-        [BillingOption] NVARCHAR(255) NULL,
-        [CurrentStatus] NVARCHAR(500) NULL,
-        [BatchNo] NVARCHAR(255) NULL,
-        [CreatedOn] NVARCHAR(255) NULL,
-        [CreatedBy] NVARCHAR(255) NULL,
-        [UpdatedOn] NVARCHAR(255) NULL,
-        [UpdatedBy] NVARCHAR(255) NULL,
-        [BillStatus] NVARCHAR(500) NULL,
-        [PaymentPercent] NVARCHAR(255) NULL,
-        [FullyPaidCount] NVARCHAR(255) NULL,
-        [FullyPaidAmount] NVARCHAR(255) NULL,
-        [AdjucticatedCount] NVARCHAR(255) NULL,
-        [AdjucticatedAmount] NVARCHAR(255) NULL,
-        [Bucket30Count] NVARCHAR(255) NULL,
-        [Bucket30Amount] NVARCHAR(255) NULL,
-        [Bucket60Count] NVARCHAR(255) NULL,
-        [Bucket60Amount] NVARCHAR(255) NULL,
+        [ClaimID] NVARCHAR(500) NULL,
+        [AccessionNumber] NVARCHAR(500) NULL,
+        [SourceFileID] NVARCHAR(500) NULL,
+        [IngestedOn] NVARCHAR(500) NULL,
+        [CsvRowHash] NVARCHAR(500) NULL,
+        [PayerName_Raw] NVARCHAR(1000) NULL,
+        [PayerName] NVARCHAR(1000) NULL,
+        [Payer_Code] NVARCHAR(1000) NULL,
+        [Payer_Common_Code] NVARCHAR(1000) NULL,
+        [Payer_Group_Code] NVARCHAR(1000) NULL,
+        [Global_Payer_ID] NVARCHAR(1000) NULL,
+        [PayerType] NVARCHAR(1000) NULL,
+        [BillingProvider] NVARCHAR(1000) NULL,
+        [ReferringProvider] NVARCHAR(1000) NULL,
+        [ClinicName] NVARCHAR(1000) NULL,
+        [SalesRepname] NVARCHAR(1000) NULL,
+        [PatientID] NVARCHAR(500) NULL,
+        [PatientDOB] NVARCHAR(500) NULL,
+        [DateofService] NVARCHAR(500) NULL,
+        [ChargeEnteredDate] NVARCHAR(500) NULL,
+        [FirstBilledDate] NVARCHAR(500) NULL,
+        [Panelname] NVARCHAR(1000) NULL,
+        [CPTCodeXUnitsXModifierOrginal] NVARCHAR(MAX) NULL,
+        [CPTCodeXUnitsXModifier] NVARCHAR(MAX) NULL,
+        [POS] NVARCHAR(500) NULL,
+        [TOS] NVARCHAR(500) NULL,
+        [ChargeAmount] NVARCHAR(500) NULL,
+        [AllowedAmount] NVARCHAR(500) NULL,
+        [InsurancePayment] NVARCHAR(500) NULL,
+        [PatientPayment] NVARCHAR(500) NULL,
+        [TotalPayments] NVARCHAR(500) NULL,
+        [InsuranceAdjustments] NVARCHAR(500) NULL,
+        [PatientAdjustments] NVARCHAR(500) NULL,
+        [TotalAdjustments] NVARCHAR(500) NULL,
+        [InsuranceBalance] NVARCHAR(500) NULL,
+        [PatientBalance] NVARCHAR(500) NULL,
+        [TotalBalance] NVARCHAR(500) NULL,
+        [CheckDate] NVARCHAR(500) NULL,
+        [ClaimStatus] NVARCHAR(1000) NULL,
+        [DenialCode] NVARCHAR(500) NULL,
+        [ICDCode] NVARCHAR(MAX) NULL,
+        [DaystoDOS] NVARCHAR(500) NULL,
+        [RollingDays] NVARCHAR(500) NULL,
+        [DaystoBill] NVARCHAR(500) NULL,
+        [DaystoPost] NVARCHAR(500) NULL,
+        [ICDPointer] NVARCHAR(MAX) NULL,
+        [T_F] NVARCHAR(500) NULL,
+        [PatientFirstName] NVARCHAR(1000) NULL,
+        [PatientLastName] NVARCHAR(1000) NULL,
+        [PatientAddress] NVARCHAR(2000) NULL,
+        [Coverage] NVARCHAR(500) NULL,
+        [AgingDOS] NVARCHAR(500) NULL,
+        [ServiceToDate] NVARCHAR(500) NULL,
+        [AgingDOE] NVARCHAR(500) NULL,
+        [Facility] NVARCHAR(500) NULL,
+        [ServiceLocationCode] NVARCHAR(500) NULL,
+        [ServiceLocationName] NVARCHAR(1000) NULL,
+        [PrimarySubId] NVARCHAR(500) NULL,
+        [BilledWeek] NVARCHAR(500) NULL,
+        [ICDField] NVARCHAR(MAX) NULL,
+        [DODWeek] NVARCHAR(500) NULL,
+        [DenialReason] NVARCHAR(MAX) NULL,
+        [BillingOption] NVARCHAR(500) NULL,
+        [CurrentStatus] NVARCHAR(1000) NULL,
+        [BatchNo] NVARCHAR(500) NULL,
+        [CreatedOn] NVARCHAR(500) NULL,
+        [CreatedBy] NVARCHAR(500) NULL,
+        [UpdatedOn] NVARCHAR(500) NULL,
+        [UpdatedBy] NVARCHAR(500) NULL,
+        [BillStatus] NVARCHAR(1000) NULL,
+        [PaymentPercent] NVARCHAR(500) NULL,
+        [FullyPaidCount] NVARCHAR(500) NULL,
+        [FullyPaidAmount] NVARCHAR(500) NULL,
+        [AdjucticatedCount] NVARCHAR(500) NULL,
+        [AdjucticatedAmount] NVARCHAR(500) NULL,
+        [Bucket30Count] NVARCHAR(500) NULL,
+        [Bucket30Amount] NVARCHAR(500) NULL,
+        [Bucket60Count] NVARCHAR(500) NULL,
+        [Bucket60Amount] NVARCHAR(500) NULL,
         [InsertedDateTime] DATETIME2(3) NOT NULL CONSTRAINT [DF_ClaimLevelData_Staging_InsertedDateTime] DEFAULT (SYSDATETIME())
     );
 END
+GO
+
+/* Reconcile [ClaimLevelData] with the current mapping - additive only. */
+IF COL_LENGTH('dbo.ClaimLevelData', 'ClaimID') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ClaimID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'ClaimID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [ClaimID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'AccessionNumber') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [AccessionNumber] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'AccessionNumber' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [AccessionNumber] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'SourceFileID') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [SourceFileID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'SourceFileID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [SourceFileID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'IngestedOn') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [IngestedOn] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'IngestedOn' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [IngestedOn] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'CsvRowHash') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [CsvRowHash] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'CsvRowHash' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [CsvRowHash] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PayerName_Raw') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PayerName_Raw] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PayerName_Raw' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PayerName_Raw] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PayerName') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PayerName] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PayerName' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PayerName] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Payer_Code') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Payer_Code] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'Payer_Code' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [Payer_Code] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Payer_Common_Code') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Payer_Common_Code] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'Payer_Common_Code' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [Payer_Common_Code] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Payer_Group_Code') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Payer_Group_Code] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'Payer_Group_Code' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [Payer_Group_Code] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Global_Payer_ID') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Global_Payer_ID] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'Global_Payer_ID' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [Global_Payer_ID] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PayerType') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PayerType] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PayerType' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PayerType] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'BillingProvider') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [BillingProvider] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'BillingProvider' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [BillingProvider] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ReferringProvider') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ReferringProvider] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'ReferringProvider' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [ReferringProvider] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ClinicName') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ClinicName] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'ClinicName' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [ClinicName] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'SalesRepname') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [SalesRepname] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'SalesRepname' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [SalesRepname] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PatientID') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PatientID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PatientID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PatientID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PatientDOB') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PatientDOB] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PatientDOB' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PatientDOB] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'DateofService') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [DateofService] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'DateofService' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [DateofService] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ChargeEnteredDate') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ChargeEnteredDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'ChargeEnteredDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [ChargeEnteredDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'FirstBilledDate') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [FirstBilledDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'FirstBilledDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [FirstBilledDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Panelname') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Panelname] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'Panelname' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [Panelname] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'CPTCodeXUnitsXModifierOrginal') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [CPTCodeXUnitsXModifierOrginal] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'CPTCodeXUnitsXModifierOrginal' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [CPTCodeXUnitsXModifierOrginal] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'CPTCodeXUnitsXModifier') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [CPTCodeXUnitsXModifier] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'CPTCodeXUnitsXModifier' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [CPTCodeXUnitsXModifier] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'POS') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [POS] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'POS' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [POS] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'TOS') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [TOS] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'TOS' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [TOS] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ChargeAmount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ChargeAmount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'ChargeAmount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [ChargeAmount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'AllowedAmount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [AllowedAmount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'AllowedAmount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [AllowedAmount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'InsurancePayment') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [InsurancePayment] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'InsurancePayment' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [InsurancePayment] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PatientPayment') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PatientPayment] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PatientPayment' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PatientPayment] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'TotalPayments') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [TotalPayments] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'TotalPayments' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [TotalPayments] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'InsuranceAdjustments') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [InsuranceAdjustments] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'InsuranceAdjustments' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [InsuranceAdjustments] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PatientAdjustments') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PatientAdjustments] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PatientAdjustments' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PatientAdjustments] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'TotalAdjustments') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [TotalAdjustments] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'TotalAdjustments' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [TotalAdjustments] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'InsuranceBalance') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [InsuranceBalance] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'InsuranceBalance' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [InsuranceBalance] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PatientBalance') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PatientBalance] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PatientBalance' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PatientBalance] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'TotalBalance') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [TotalBalance] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'TotalBalance' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [TotalBalance] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'CheckDate') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [CheckDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'CheckDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [CheckDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ClaimStatus') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ClaimStatus] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'ClaimStatus' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [ClaimStatus] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'DenialCode') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [DenialCode] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'DenialCode' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [DenialCode] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ICDCode') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ICDCode] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'ICDCode' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [ICDCode] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'DaystoDOS') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [DaystoDOS] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'DaystoDOS' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [DaystoDOS] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'RollingDays') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [RollingDays] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'RollingDays' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [RollingDays] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'DaystoBill') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [DaystoBill] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'DaystoBill' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [DaystoBill] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'DaystoPost') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [DaystoPost] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'DaystoPost' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [DaystoPost] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ICDPointer') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ICDPointer] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'ICDPointer' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [ICDPointer] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'T_F') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [T_F] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'T_F' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [T_F] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PatientFirstName') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PatientFirstName] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PatientFirstName' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PatientFirstName] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PatientLastName') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PatientLastName] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PatientLastName' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PatientLastName] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PatientAddress') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PatientAddress] NVARCHAR(2000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PatientAddress' AND c.max_length <> -1 AND c.max_length < 4000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PatientAddress] NVARCHAR(2000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Coverage') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Coverage] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'Coverage' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [Coverage] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'AgingDOS') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [AgingDOS] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'AgingDOS' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [AgingDOS] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ServiceToDate') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ServiceToDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'ServiceToDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [ServiceToDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'AgingDOE') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [AgingDOE] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'AgingDOE' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [AgingDOE] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Facility') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Facility] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'Facility' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [Facility] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ServiceLocationCode') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ServiceLocationCode] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'ServiceLocationCode' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [ServiceLocationCode] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ServiceLocationName') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ServiceLocationName] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'ServiceLocationName' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [ServiceLocationName] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PrimarySubId') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PrimarySubId] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PrimarySubId' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PrimarySubId] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'BilledWeek') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [BilledWeek] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'BilledWeek' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [BilledWeek] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ICDField') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ICDField] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'ICDField' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [ICDField] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'DODWeek') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [DODWeek] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'DODWeek' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [DODWeek] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'DenialReason') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [DenialReason] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'DenialReason' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [DenialReason] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'BillingOption') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [BillingOption] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'BillingOption' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [BillingOption] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'CurrentStatus') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [CurrentStatus] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'CurrentStatus' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [CurrentStatus] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'BatchNo') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [BatchNo] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'BatchNo' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [BatchNo] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'CreatedOn') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [CreatedOn] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'CreatedOn' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [CreatedOn] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'CreatedBy') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [CreatedBy] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'CreatedBy' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [CreatedBy] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'UpdatedOn') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [UpdatedOn] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'UpdatedOn' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [UpdatedOn] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'UpdatedBy') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [UpdatedBy] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'UpdatedBy' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [UpdatedBy] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'BillStatus') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [BillStatus] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'BillStatus' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [BillStatus] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PaymentPercent') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PaymentPercent] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PaymentPercent' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PaymentPercent] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'FullyPaidCount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [FullyPaidCount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'FullyPaidCount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [FullyPaidCount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'FullyPaidAmount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [FullyPaidAmount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'FullyPaidAmount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [FullyPaidAmount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'AdjucticatedCount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [AdjucticatedCount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'AdjucticatedCount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [AdjucticatedCount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'AdjucticatedAmount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [AdjucticatedAmount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'AdjucticatedAmount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [AdjucticatedAmount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Bucket30Count') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Bucket30Count] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'Bucket30Count' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [Bucket30Count] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Bucket30Amount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Bucket30Amount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'Bucket30Amount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [Bucket30Amount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Bucket60Count') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Bucket60Count] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'Bucket60Count' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [Bucket60Count] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Bucket60Amount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Bucket60Amount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'Bucket60Amount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [Bucket60Amount] NVARCHAR(500) NULL;
+GO
+
+/* Reconcile [ClaimLevelData_Staging] with the current mapping - additive only. */
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ClaimID') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [ClaimID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'ClaimID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [ClaimID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'AccessionNumber') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [AccessionNumber] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'AccessionNumber' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [AccessionNumber] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'SourceFileID') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [SourceFileID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'SourceFileID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [SourceFileID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'IngestedOn') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [IngestedOn] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'IngestedOn' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [IngestedOn] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'CsvRowHash') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [CsvRowHash] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'CsvRowHash' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [CsvRowHash] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PayerName_Raw') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PayerName_Raw] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PayerName_Raw' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PayerName_Raw] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PayerName') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PayerName] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PayerName' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PayerName] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'Payer_Code') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [Payer_Code] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'Payer_Code' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [Payer_Code] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'Payer_Common_Code') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [Payer_Common_Code] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'Payer_Common_Code' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [Payer_Common_Code] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'Payer_Group_Code') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [Payer_Group_Code] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'Payer_Group_Code' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [Payer_Group_Code] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'Global_Payer_ID') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [Global_Payer_ID] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'Global_Payer_ID' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [Global_Payer_ID] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PayerType') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PayerType] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PayerType' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PayerType] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'BillingProvider') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [BillingProvider] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'BillingProvider' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [BillingProvider] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ReferringProvider') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [ReferringProvider] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'ReferringProvider' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [ReferringProvider] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ClinicName') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [ClinicName] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'ClinicName' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [ClinicName] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'SalesRepname') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [SalesRepname] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'SalesRepname' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [SalesRepname] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PatientID') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PatientID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PatientID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PatientID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PatientDOB') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PatientDOB] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PatientDOB' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PatientDOB] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'DateofService') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [DateofService] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'DateofService' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [DateofService] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ChargeEnteredDate') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [ChargeEnteredDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'ChargeEnteredDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [ChargeEnteredDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'FirstBilledDate') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [FirstBilledDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'FirstBilledDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [FirstBilledDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'Panelname') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [Panelname] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'Panelname' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [Panelname] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'CPTCodeXUnitsXModifierOrginal') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [CPTCodeXUnitsXModifierOrginal] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'CPTCodeXUnitsXModifierOrginal' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [CPTCodeXUnitsXModifierOrginal] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'CPTCodeXUnitsXModifier') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [CPTCodeXUnitsXModifier] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'CPTCodeXUnitsXModifier' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [CPTCodeXUnitsXModifier] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'POS') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [POS] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'POS' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [POS] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'TOS') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [TOS] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'TOS' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [TOS] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ChargeAmount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [ChargeAmount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'ChargeAmount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [ChargeAmount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'AllowedAmount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [AllowedAmount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'AllowedAmount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [AllowedAmount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'InsurancePayment') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [InsurancePayment] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'InsurancePayment' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [InsurancePayment] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PatientPayment') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PatientPayment] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PatientPayment' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PatientPayment] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'TotalPayments') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [TotalPayments] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'TotalPayments' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [TotalPayments] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'InsuranceAdjustments') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [InsuranceAdjustments] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'InsuranceAdjustments' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [InsuranceAdjustments] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PatientAdjustments') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PatientAdjustments] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PatientAdjustments' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PatientAdjustments] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'TotalAdjustments') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [TotalAdjustments] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'TotalAdjustments' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [TotalAdjustments] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'InsuranceBalance') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [InsuranceBalance] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'InsuranceBalance' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [InsuranceBalance] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PatientBalance') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PatientBalance] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PatientBalance' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PatientBalance] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'TotalBalance') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [TotalBalance] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'TotalBalance' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [TotalBalance] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'CheckDate') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [CheckDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'CheckDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [CheckDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ClaimStatus') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [ClaimStatus] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'ClaimStatus' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [ClaimStatus] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'DenialCode') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [DenialCode] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'DenialCode' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [DenialCode] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ICDCode') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [ICDCode] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'ICDCode' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [ICDCode] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'DaystoDOS') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [DaystoDOS] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'DaystoDOS' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [DaystoDOS] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'RollingDays') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [RollingDays] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'RollingDays' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [RollingDays] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'DaystoBill') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [DaystoBill] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'DaystoBill' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [DaystoBill] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'DaystoPost') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [DaystoPost] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'DaystoPost' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [DaystoPost] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ICDPointer') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [ICDPointer] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'ICDPointer' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [ICDPointer] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'T_F') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [T_F] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'T_F' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [T_F] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PatientFirstName') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PatientFirstName] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PatientFirstName' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PatientFirstName] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PatientLastName') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PatientLastName] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PatientLastName' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PatientLastName] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PatientAddress') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PatientAddress] NVARCHAR(2000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PatientAddress' AND c.max_length <> -1 AND c.max_length < 4000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PatientAddress] NVARCHAR(2000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'Coverage') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [Coverage] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'Coverage' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [Coverage] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'AgingDOS') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [AgingDOS] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'AgingDOS' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [AgingDOS] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ServiceToDate') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [ServiceToDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'ServiceToDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [ServiceToDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'AgingDOE') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [AgingDOE] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'AgingDOE' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [AgingDOE] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'Facility') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [Facility] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'Facility' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [Facility] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ServiceLocationCode') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [ServiceLocationCode] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'ServiceLocationCode' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [ServiceLocationCode] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ServiceLocationName') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [ServiceLocationName] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'ServiceLocationName' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [ServiceLocationName] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PrimarySubId') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PrimarySubId] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PrimarySubId' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PrimarySubId] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'BilledWeek') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [BilledWeek] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'BilledWeek' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [BilledWeek] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ICDField') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [ICDField] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'ICDField' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [ICDField] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'DODWeek') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [DODWeek] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'DODWeek' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [DODWeek] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'DenialReason') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [DenialReason] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'DenialReason' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [DenialReason] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'BillingOption') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [BillingOption] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'BillingOption' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [BillingOption] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'CurrentStatus') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [CurrentStatus] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'CurrentStatus' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [CurrentStatus] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'BatchNo') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [BatchNo] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'BatchNo' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [BatchNo] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'CreatedOn') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [CreatedOn] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'CreatedOn' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [CreatedOn] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'CreatedBy') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [CreatedBy] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'CreatedBy' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [CreatedBy] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'UpdatedOn') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [UpdatedOn] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'UpdatedOn' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [UpdatedOn] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'UpdatedBy') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [UpdatedBy] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'UpdatedBy' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [UpdatedBy] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'BillStatus') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [BillStatus] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'BillStatus' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [BillStatus] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PaymentPercent') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PaymentPercent] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PaymentPercent' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PaymentPercent] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'FullyPaidCount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [FullyPaidCount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'FullyPaidCount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [FullyPaidCount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'FullyPaidAmount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [FullyPaidAmount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'FullyPaidAmount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [FullyPaidAmount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'AdjucticatedCount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [AdjucticatedCount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'AdjucticatedCount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [AdjucticatedCount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'AdjucticatedAmount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [AdjucticatedAmount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'AdjucticatedAmount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [AdjucticatedAmount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'Bucket30Count') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [Bucket30Count] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'Bucket30Count' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [Bucket30Count] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'Bucket30Amount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [Bucket30Amount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'Bucket30Amount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [Bucket30Amount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'Bucket60Count') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [Bucket60Count] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'Bucket60Count' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [Bucket60Count] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'Bucket60Amount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [Bucket60Amount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'Bucket60Amount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [Bucket60Amount] NVARCHAR(500) NULL;
 GO

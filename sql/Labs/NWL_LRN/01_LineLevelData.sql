@@ -18,79 +18,79 @@ BEGIN
         [RowHash] CHAR(64) NOT NULL,
         [LabID] INT NOT NULL,
         [LabName] NVARCHAR(200) NOT NULL,
-        [ClaimID] NVARCHAR(255) NULL,
-        [AccessionNumber] NVARCHAR(255) NULL,
-        [SourceFileID] NVARCHAR(255) NULL,
-        [IngestedOn] NVARCHAR(255) NULL,
-        [CsvRowHash] NVARCHAR(255) NULL,
-        [PayerName_Raw] NVARCHAR(500) NULL,
-        [PayerName] NVARCHAR(500) NULL,
-        [Payer_Code] NVARCHAR(500) NULL,
-        [Payer_Common_Code] NVARCHAR(500) NULL,
-        [Payer_Group_Code] NVARCHAR(500) NULL,
-        [Global_Payer_ID] NVARCHAR(500) NULL,
-        [PayerType] NVARCHAR(500) NULL,
-        [BillingProvider] NVARCHAR(500) NULL,
-        [ReferringProvider] NVARCHAR(500) NULL,
-        [ClinicName] NVARCHAR(500) NULL,
-        [SalesRepname] NVARCHAR(500) NULL,
-        [PatientID] NVARCHAR(255) NULL,
-        [PatientDOB] NVARCHAR(255) NULL,
-        [DateofService] NVARCHAR(255) NULL,
-        [ChargeEnteredDate] NVARCHAR(255) NULL,
-        [FirstBilledDate] NVARCHAR(255) NULL,
-        [Panelname] NVARCHAR(500) NULL,
-        [CPTCode] NVARCHAR(255) NULL,
-        [Units] NVARCHAR(255) NULL,
-        [Modifier] NVARCHAR(255) NULL,
-        [POS] NVARCHAR(255) NULL,
-        [TOS] NVARCHAR(255) NULL,
-        [ChargeAmount] NVARCHAR(255) NULL,
-        [ChargeAmountPerUnit] NVARCHAR(255) NULL,
-        [AllowedAmount] NVARCHAR(255) NULL,
-        [AllowedAmountPerUnit] NVARCHAR(255) NULL,
-        [InsurancePayment] NVARCHAR(255) NULL,
-        [InsurancePaymentPerUnit] NVARCHAR(255) NULL,
-        [PatientPayment] NVARCHAR(255) NULL,
-        [PatientPaymentPerUnit] NVARCHAR(255) NULL,
-        [TotalPayments] NVARCHAR(255) NULL,
-        [InsuranceAdjustments] NVARCHAR(255) NULL,
-        [PatientAdjustments] NVARCHAR(255) NULL,
-        [TotalAdjustments] NVARCHAR(255) NULL,
-        [InsuranceBalance] NVARCHAR(255) NULL,
-        [PatientBalance] NVARCHAR(255) NULL,
-        [PatientBalancePerUnit] NVARCHAR(255) NULL,
-        [TotalBalance] NVARCHAR(255) NULL,
-        [CheckDate] NVARCHAR(255) NULL,
-        [PostingDate] NVARCHAR(255) NULL,
-        [ClaimStatus] NVARCHAR(500) NULL,
-        [PayStatus] NVARCHAR(500) NULL,
-        [DenialCode] NVARCHAR(255) NULL,
-        [DenialDate] NVARCHAR(255) NULL,
-        [ICDCode] NVARCHAR(1000) NULL,
-        [DaystoDOS] NVARCHAR(255) NULL,
-        [RollingDays] NVARCHAR(255) NULL,
-        [DaystoBill] NVARCHAR(255) NULL,
-        [DaystoPost] NVARCHAR(255) NULL,
-        [ICDPointer] NVARCHAR(1000) NULL,
-        [UID] NVARCHAR(255) NULL,
-        [T_F] NVARCHAR(255) NULL,
-        [PatientName] NVARCHAR(500) NULL,
-        [CombinedLineLevelICD] NVARCHAR(1000) NULL,
-        [SubscriberId] NVARCHAR(255) NULL,
-        [ClaimAmount] NVARCHAR(255) NULL,
-        [CptWithUnits] NVARCHAR(255) NULL,
-        [Proc] NVARCHAR(255) NULL,
-        [EnteredStatus] NVARCHAR(500) NULL,
-        [BilledStatus] NVARCHAR(500) NULL,
-        [ProcTotalBal] NVARCHAR(255) NULL,
-        [UpdatedDenialCode] NVARCHAR(255) NULL,
-        [CombinedLineLevelDenialCode] NVARCHAR(255) NULL,
-        [Loc] NVARCHAR(255) NULL,
-        [ProcInsLastRefiledDeniedReason] NVARCHAR(1000) NULL,
-        [ProcInsResponsibleCarrierOriginalFilingDate] NVARCHAR(255) NULL,
-        [ProcInsStatus] NVARCHAR(500) NULL,
-        [ProcInsLastRefiledDeniedDate] NVARCHAR(255) NULL,
+        [ClaimID] NVARCHAR(500) NULL,
+        [AccessionNumber] NVARCHAR(500) NULL,
+        [SourceFileID] NVARCHAR(500) NULL,
+        [IngestedOn] NVARCHAR(500) NULL,
+        [CsvRowHash] NVARCHAR(500) NULL,
+        [PayerName_Raw] NVARCHAR(1000) NULL,
+        [PayerName] NVARCHAR(1000) NULL,
+        [Payer_Code] NVARCHAR(1000) NULL,
+        [Payer_Common_Code] NVARCHAR(1000) NULL,
+        [Payer_Group_Code] NVARCHAR(1000) NULL,
+        [Global_Payer_ID] NVARCHAR(1000) NULL,
+        [PayerType] NVARCHAR(1000) NULL,
+        [BillingProvider] NVARCHAR(1000) NULL,
+        [ReferringProvider] NVARCHAR(1000) NULL,
+        [ClinicName] NVARCHAR(1000) NULL,
+        [SalesRepname] NVARCHAR(1000) NULL,
+        [PatientID] NVARCHAR(500) NULL,
+        [PatientDOB] NVARCHAR(500) NULL,
+        [DateofService] NVARCHAR(500) NULL,
+        [ChargeEnteredDate] NVARCHAR(500) NULL,
+        [FirstBilledDate] NVARCHAR(500) NULL,
+        [Panelname] NVARCHAR(1000) NULL,
+        [CPTCode] NVARCHAR(500) NULL,
+        [Units] NVARCHAR(500) NULL,
+        [Modifier] NVARCHAR(500) NULL,
+        [POS] NVARCHAR(500) NULL,
+        [TOS] NVARCHAR(500) NULL,
+        [ChargeAmount] NVARCHAR(500) NULL,
+        [ChargeAmountPerUnit] NVARCHAR(500) NULL,
+        [AllowedAmount] NVARCHAR(500) NULL,
+        [AllowedAmountPerUnit] NVARCHAR(500) NULL,
+        [InsurancePayment] NVARCHAR(500) NULL,
+        [InsurancePaymentPerUnit] NVARCHAR(500) NULL,
+        [PatientPayment] NVARCHAR(500) NULL,
+        [PatientPaymentPerUnit] NVARCHAR(500) NULL,
+        [TotalPayments] NVARCHAR(500) NULL,
+        [InsuranceAdjustments] NVARCHAR(500) NULL,
+        [PatientAdjustments] NVARCHAR(500) NULL,
+        [TotalAdjustments] NVARCHAR(500) NULL,
+        [InsuranceBalance] NVARCHAR(500) NULL,
+        [PatientBalance] NVARCHAR(500) NULL,
+        [PatientBalancePerUnit] NVARCHAR(500) NULL,
+        [TotalBalance] NVARCHAR(500) NULL,
+        [CheckDate] NVARCHAR(500) NULL,
+        [PostingDate] NVARCHAR(500) NULL,
+        [ClaimStatus] NVARCHAR(1000) NULL,
+        [PayStatus] NVARCHAR(1000) NULL,
+        [DenialCode] NVARCHAR(500) NULL,
+        [DenialDate] NVARCHAR(500) NULL,
+        [ICDCode] NVARCHAR(MAX) NULL,
+        [DaystoDOS] NVARCHAR(500) NULL,
+        [RollingDays] NVARCHAR(500) NULL,
+        [DaystoBill] NVARCHAR(500) NULL,
+        [DaystoPost] NVARCHAR(500) NULL,
+        [ICDPointer] NVARCHAR(MAX) NULL,
+        [UID] NVARCHAR(500) NULL,
+        [T_F] NVARCHAR(500) NULL,
+        [PatientName] NVARCHAR(1000) NULL,
+        [CombinedLineLevelICD] NVARCHAR(MAX) NULL,
+        [SubscriberId] NVARCHAR(500) NULL,
+        [ClaimAmount] NVARCHAR(500) NULL,
+        [CptWithUnits] NVARCHAR(500) NULL,
+        [Proc] NVARCHAR(500) NULL,
+        [EnteredStatus] NVARCHAR(1000) NULL,
+        [BilledStatus] NVARCHAR(1000) NULL,
+        [ProcTotalBal] NVARCHAR(500) NULL,
+        [UpdatedDenialCode] NVARCHAR(500) NULL,
+        [CombinedLineLevelDenialCode] NVARCHAR(MAX) NULL,
+        [Loc] NVARCHAR(500) NULL,
+        [ProcInsLastRefiledDeniedReason] NVARCHAR(MAX) NULL,
+        [ProcInsResponsibleCarrierOriginalFilingDate] NVARCHAR(500) NULL,
+        [ProcInsStatus] NVARCHAR(1000) NULL,
+        [ProcInsLastRefiledDeniedDate] NVARCHAR(500) NULL,
         [InsertedDateTime] DATETIME2(3) NOT NULL
             CONSTRAINT [DF_LineLevelData_InsertedDateTime] DEFAULT (SYSDATETIME())
     );
@@ -125,80 +125,960 @@ BEGIN
         [RowHash] CHAR(64) NOT NULL,
         [LabID] INT NOT NULL,
         [LabName] NVARCHAR(200) NOT NULL,
-        [ClaimID] NVARCHAR(255) NULL,
-        [AccessionNumber] NVARCHAR(255) NULL,
-        [SourceFileID] NVARCHAR(255) NULL,
-        [IngestedOn] NVARCHAR(255) NULL,
-        [CsvRowHash] NVARCHAR(255) NULL,
-        [PayerName_Raw] NVARCHAR(500) NULL,
-        [PayerName] NVARCHAR(500) NULL,
-        [Payer_Code] NVARCHAR(500) NULL,
-        [Payer_Common_Code] NVARCHAR(500) NULL,
-        [Payer_Group_Code] NVARCHAR(500) NULL,
-        [Global_Payer_ID] NVARCHAR(500) NULL,
-        [PayerType] NVARCHAR(500) NULL,
-        [BillingProvider] NVARCHAR(500) NULL,
-        [ReferringProvider] NVARCHAR(500) NULL,
-        [ClinicName] NVARCHAR(500) NULL,
-        [SalesRepname] NVARCHAR(500) NULL,
-        [PatientID] NVARCHAR(255) NULL,
-        [PatientDOB] NVARCHAR(255) NULL,
-        [DateofService] NVARCHAR(255) NULL,
-        [ChargeEnteredDate] NVARCHAR(255) NULL,
-        [FirstBilledDate] NVARCHAR(255) NULL,
-        [Panelname] NVARCHAR(500) NULL,
-        [CPTCode] NVARCHAR(255) NULL,
-        [Units] NVARCHAR(255) NULL,
-        [Modifier] NVARCHAR(255) NULL,
-        [POS] NVARCHAR(255) NULL,
-        [TOS] NVARCHAR(255) NULL,
-        [ChargeAmount] NVARCHAR(255) NULL,
-        [ChargeAmountPerUnit] NVARCHAR(255) NULL,
-        [AllowedAmount] NVARCHAR(255) NULL,
-        [AllowedAmountPerUnit] NVARCHAR(255) NULL,
-        [InsurancePayment] NVARCHAR(255) NULL,
-        [InsurancePaymentPerUnit] NVARCHAR(255) NULL,
-        [PatientPayment] NVARCHAR(255) NULL,
-        [PatientPaymentPerUnit] NVARCHAR(255) NULL,
-        [TotalPayments] NVARCHAR(255) NULL,
-        [InsuranceAdjustments] NVARCHAR(255) NULL,
-        [PatientAdjustments] NVARCHAR(255) NULL,
-        [TotalAdjustments] NVARCHAR(255) NULL,
-        [InsuranceBalance] NVARCHAR(255) NULL,
-        [PatientBalance] NVARCHAR(255) NULL,
-        [PatientBalancePerUnit] NVARCHAR(255) NULL,
-        [TotalBalance] NVARCHAR(255) NULL,
-        [CheckDate] NVARCHAR(255) NULL,
-        [PostingDate] NVARCHAR(255) NULL,
-        [ClaimStatus] NVARCHAR(500) NULL,
-        [PayStatus] NVARCHAR(500) NULL,
-        [DenialCode] NVARCHAR(255) NULL,
-        [DenialDate] NVARCHAR(255) NULL,
-        [ICDCode] NVARCHAR(1000) NULL,
-        [DaystoDOS] NVARCHAR(255) NULL,
-        [RollingDays] NVARCHAR(255) NULL,
-        [DaystoBill] NVARCHAR(255) NULL,
-        [DaystoPost] NVARCHAR(255) NULL,
-        [ICDPointer] NVARCHAR(1000) NULL,
-        [UID] NVARCHAR(255) NULL,
-        [T_F] NVARCHAR(255) NULL,
-        [PatientName] NVARCHAR(500) NULL,
-        [CombinedLineLevelICD] NVARCHAR(1000) NULL,
-        [SubscriberId] NVARCHAR(255) NULL,
-        [ClaimAmount] NVARCHAR(255) NULL,
-        [CptWithUnits] NVARCHAR(255) NULL,
-        [Proc] NVARCHAR(255) NULL,
-        [EnteredStatus] NVARCHAR(500) NULL,
-        [BilledStatus] NVARCHAR(500) NULL,
-        [ProcTotalBal] NVARCHAR(255) NULL,
-        [UpdatedDenialCode] NVARCHAR(255) NULL,
-        [CombinedLineLevelDenialCode] NVARCHAR(255) NULL,
-        [Loc] NVARCHAR(255) NULL,
-        [ProcInsLastRefiledDeniedReason] NVARCHAR(1000) NULL,
-        [ProcInsResponsibleCarrierOriginalFilingDate] NVARCHAR(255) NULL,
-        [ProcInsStatus] NVARCHAR(500) NULL,
-        [ProcInsLastRefiledDeniedDate] NVARCHAR(255) NULL,
+        [ClaimID] NVARCHAR(500) NULL,
+        [AccessionNumber] NVARCHAR(500) NULL,
+        [SourceFileID] NVARCHAR(500) NULL,
+        [IngestedOn] NVARCHAR(500) NULL,
+        [CsvRowHash] NVARCHAR(500) NULL,
+        [PayerName_Raw] NVARCHAR(1000) NULL,
+        [PayerName] NVARCHAR(1000) NULL,
+        [Payer_Code] NVARCHAR(1000) NULL,
+        [Payer_Common_Code] NVARCHAR(1000) NULL,
+        [Payer_Group_Code] NVARCHAR(1000) NULL,
+        [Global_Payer_ID] NVARCHAR(1000) NULL,
+        [PayerType] NVARCHAR(1000) NULL,
+        [BillingProvider] NVARCHAR(1000) NULL,
+        [ReferringProvider] NVARCHAR(1000) NULL,
+        [ClinicName] NVARCHAR(1000) NULL,
+        [SalesRepname] NVARCHAR(1000) NULL,
+        [PatientID] NVARCHAR(500) NULL,
+        [PatientDOB] NVARCHAR(500) NULL,
+        [DateofService] NVARCHAR(500) NULL,
+        [ChargeEnteredDate] NVARCHAR(500) NULL,
+        [FirstBilledDate] NVARCHAR(500) NULL,
+        [Panelname] NVARCHAR(1000) NULL,
+        [CPTCode] NVARCHAR(500) NULL,
+        [Units] NVARCHAR(500) NULL,
+        [Modifier] NVARCHAR(500) NULL,
+        [POS] NVARCHAR(500) NULL,
+        [TOS] NVARCHAR(500) NULL,
+        [ChargeAmount] NVARCHAR(500) NULL,
+        [ChargeAmountPerUnit] NVARCHAR(500) NULL,
+        [AllowedAmount] NVARCHAR(500) NULL,
+        [AllowedAmountPerUnit] NVARCHAR(500) NULL,
+        [InsurancePayment] NVARCHAR(500) NULL,
+        [InsurancePaymentPerUnit] NVARCHAR(500) NULL,
+        [PatientPayment] NVARCHAR(500) NULL,
+        [PatientPaymentPerUnit] NVARCHAR(500) NULL,
+        [TotalPayments] NVARCHAR(500) NULL,
+        [InsuranceAdjustments] NVARCHAR(500) NULL,
+        [PatientAdjustments] NVARCHAR(500) NULL,
+        [TotalAdjustments] NVARCHAR(500) NULL,
+        [InsuranceBalance] NVARCHAR(500) NULL,
+        [PatientBalance] NVARCHAR(500) NULL,
+        [PatientBalancePerUnit] NVARCHAR(500) NULL,
+        [TotalBalance] NVARCHAR(500) NULL,
+        [CheckDate] NVARCHAR(500) NULL,
+        [PostingDate] NVARCHAR(500) NULL,
+        [ClaimStatus] NVARCHAR(1000) NULL,
+        [PayStatus] NVARCHAR(1000) NULL,
+        [DenialCode] NVARCHAR(500) NULL,
+        [DenialDate] NVARCHAR(500) NULL,
+        [ICDCode] NVARCHAR(MAX) NULL,
+        [DaystoDOS] NVARCHAR(500) NULL,
+        [RollingDays] NVARCHAR(500) NULL,
+        [DaystoBill] NVARCHAR(500) NULL,
+        [DaystoPost] NVARCHAR(500) NULL,
+        [ICDPointer] NVARCHAR(MAX) NULL,
+        [UID] NVARCHAR(500) NULL,
+        [T_F] NVARCHAR(500) NULL,
+        [PatientName] NVARCHAR(1000) NULL,
+        [CombinedLineLevelICD] NVARCHAR(MAX) NULL,
+        [SubscriberId] NVARCHAR(500) NULL,
+        [ClaimAmount] NVARCHAR(500) NULL,
+        [CptWithUnits] NVARCHAR(500) NULL,
+        [Proc] NVARCHAR(500) NULL,
+        [EnteredStatus] NVARCHAR(1000) NULL,
+        [BilledStatus] NVARCHAR(1000) NULL,
+        [ProcTotalBal] NVARCHAR(500) NULL,
+        [UpdatedDenialCode] NVARCHAR(500) NULL,
+        [CombinedLineLevelDenialCode] NVARCHAR(MAX) NULL,
+        [Loc] NVARCHAR(500) NULL,
+        [ProcInsLastRefiledDeniedReason] NVARCHAR(MAX) NULL,
+        [ProcInsResponsibleCarrierOriginalFilingDate] NVARCHAR(500) NULL,
+        [ProcInsStatus] NVARCHAR(1000) NULL,
+        [ProcInsLastRefiledDeniedDate] NVARCHAR(500) NULL,
         [InsertedDateTime] DATETIME2(3) NOT NULL CONSTRAINT [DF_LineLevelData_Staging_InsertedDateTime] DEFAULT (SYSDATETIME())
     );
 END
+GO
+
+/* Reconcile [LineLevelData] with the current mapping - additive only. */
+IF COL_LENGTH('dbo.LineLevelData', 'ClaimID') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ClaimID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'ClaimID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [ClaimID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'AccessionNumber') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [AccessionNumber] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'AccessionNumber' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [AccessionNumber] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'SourceFileID') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [SourceFileID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'SourceFileID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [SourceFileID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'IngestedOn') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [IngestedOn] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'IngestedOn' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [IngestedOn] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'CsvRowHash') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [CsvRowHash] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'CsvRowHash' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [CsvRowHash] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'PayerName_Raw') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [PayerName_Raw] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'PayerName_Raw' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [PayerName_Raw] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'PayerName') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [PayerName] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'PayerName' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [PayerName] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'Payer_Code') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [Payer_Code] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'Payer_Code' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [Payer_Code] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'Payer_Common_Code') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [Payer_Common_Code] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'Payer_Common_Code' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [Payer_Common_Code] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'Payer_Group_Code') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [Payer_Group_Code] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'Payer_Group_Code' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [Payer_Group_Code] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'Global_Payer_ID') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [Global_Payer_ID] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'Global_Payer_ID' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [Global_Payer_ID] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'PayerType') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [PayerType] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'PayerType' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [PayerType] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'BillingProvider') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [BillingProvider] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'BillingProvider' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [BillingProvider] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ReferringProvider') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ReferringProvider] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'ReferringProvider' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [ReferringProvider] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ClinicName') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ClinicName] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'ClinicName' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [ClinicName] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'SalesRepname') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [SalesRepname] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'SalesRepname' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [SalesRepname] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'PatientID') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [PatientID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'PatientID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [PatientID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'PatientDOB') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [PatientDOB] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'PatientDOB' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [PatientDOB] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'DateofService') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [DateofService] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'DateofService' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [DateofService] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ChargeEnteredDate') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ChargeEnteredDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'ChargeEnteredDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [ChargeEnteredDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'FirstBilledDate') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [FirstBilledDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'FirstBilledDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [FirstBilledDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'Panelname') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [Panelname] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'Panelname' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [Panelname] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'CPTCode') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [CPTCode] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'CPTCode' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [CPTCode] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'Units') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [Units] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'Units' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [Units] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'Modifier') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [Modifier] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'Modifier' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [Modifier] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'POS') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [POS] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'POS' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [POS] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'TOS') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [TOS] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'TOS' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [TOS] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ChargeAmount') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ChargeAmount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'ChargeAmount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [ChargeAmount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ChargeAmountPerUnit') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ChargeAmountPerUnit] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'ChargeAmountPerUnit' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [ChargeAmountPerUnit] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'AllowedAmount') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [AllowedAmount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'AllowedAmount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [AllowedAmount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'AllowedAmountPerUnit') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [AllowedAmountPerUnit] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'AllowedAmountPerUnit' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [AllowedAmountPerUnit] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'InsurancePayment') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [InsurancePayment] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'InsurancePayment' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [InsurancePayment] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'InsurancePaymentPerUnit') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [InsurancePaymentPerUnit] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'InsurancePaymentPerUnit' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [InsurancePaymentPerUnit] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'PatientPayment') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [PatientPayment] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'PatientPayment' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [PatientPayment] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'PatientPaymentPerUnit') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [PatientPaymentPerUnit] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'PatientPaymentPerUnit' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [PatientPaymentPerUnit] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'TotalPayments') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [TotalPayments] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'TotalPayments' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [TotalPayments] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'InsuranceAdjustments') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [InsuranceAdjustments] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'InsuranceAdjustments' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [InsuranceAdjustments] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'PatientAdjustments') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [PatientAdjustments] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'PatientAdjustments' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [PatientAdjustments] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'TotalAdjustments') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [TotalAdjustments] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'TotalAdjustments' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [TotalAdjustments] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'InsuranceBalance') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [InsuranceBalance] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'InsuranceBalance' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [InsuranceBalance] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'PatientBalance') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [PatientBalance] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'PatientBalance' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [PatientBalance] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'PatientBalancePerUnit') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [PatientBalancePerUnit] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'PatientBalancePerUnit' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [PatientBalancePerUnit] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'TotalBalance') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [TotalBalance] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'TotalBalance' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [TotalBalance] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'CheckDate') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [CheckDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'CheckDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [CheckDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'PostingDate') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [PostingDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'PostingDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [PostingDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ClaimStatus') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ClaimStatus] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'ClaimStatus' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [ClaimStatus] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'PayStatus') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [PayStatus] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'PayStatus' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [PayStatus] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'DenialCode') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [DenialCode] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'DenialCode' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [DenialCode] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'DenialDate') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [DenialDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'DenialDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [DenialDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ICDCode') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ICDCode] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'ICDCode' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [ICDCode] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'DaystoDOS') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [DaystoDOS] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'DaystoDOS' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [DaystoDOS] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'RollingDays') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [RollingDays] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'RollingDays' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [RollingDays] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'DaystoBill') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [DaystoBill] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'DaystoBill' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [DaystoBill] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'DaystoPost') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [DaystoPost] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'DaystoPost' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [DaystoPost] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ICDPointer') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ICDPointer] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'ICDPointer' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [ICDPointer] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'UID') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [UID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'UID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [UID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'T_F') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [T_F] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'T_F' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [T_F] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'PatientName') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [PatientName] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'PatientName' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [PatientName] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'CombinedLineLevelICD') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [CombinedLineLevelICD] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'CombinedLineLevelICD' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [CombinedLineLevelICD] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'SubscriberId') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [SubscriberId] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'SubscriberId' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [SubscriberId] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ClaimAmount') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ClaimAmount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'ClaimAmount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [ClaimAmount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'CptWithUnits') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [CptWithUnits] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'CptWithUnits' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [CptWithUnits] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'Proc') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [Proc] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'Proc' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [Proc] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'EnteredStatus') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [EnteredStatus] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'EnteredStatus' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [EnteredStatus] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'BilledStatus') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [BilledStatus] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'BilledStatus' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [BilledStatus] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ProcTotalBal') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ProcTotalBal] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'ProcTotalBal' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [ProcTotalBal] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'UpdatedDenialCode') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [UpdatedDenialCode] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'UpdatedDenialCode' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [UpdatedDenialCode] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'CombinedLineLevelDenialCode') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [CombinedLineLevelDenialCode] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'CombinedLineLevelDenialCode' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [CombinedLineLevelDenialCode] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'Loc') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [Loc] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'Loc' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [Loc] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ProcInsLastRefiledDeniedReason') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ProcInsLastRefiledDeniedReason] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'ProcInsLastRefiledDeniedReason' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [ProcInsLastRefiledDeniedReason] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ProcInsResponsibleCarrierOriginalFilingDate') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ProcInsResponsibleCarrierOriginalFilingDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'ProcInsResponsibleCarrierOriginalFilingDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [ProcInsResponsibleCarrierOriginalFilingDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ProcInsStatus') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ProcInsStatus] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'ProcInsStatus' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [ProcInsStatus] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ProcInsLastRefiledDeniedDate') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ProcInsLastRefiledDeniedDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'ProcInsLastRefiledDeniedDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [ProcInsLastRefiledDeniedDate] NVARCHAR(500) NULL;
+GO
+
+/* Reconcile [LineLevelData_Staging] with the current mapping - additive only. */
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'ClaimID') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [ClaimID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'ClaimID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [ClaimID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'AccessionNumber') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [AccessionNumber] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'AccessionNumber' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [AccessionNumber] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'SourceFileID') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [SourceFileID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'SourceFileID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [SourceFileID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'IngestedOn') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [IngestedOn] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'IngestedOn' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [IngestedOn] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'CsvRowHash') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [CsvRowHash] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'CsvRowHash' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [CsvRowHash] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'PayerName_Raw') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [PayerName_Raw] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'PayerName_Raw' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [PayerName_Raw] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'PayerName') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [PayerName] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'PayerName' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [PayerName] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'Payer_Code') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [Payer_Code] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'Payer_Code' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [Payer_Code] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'Payer_Common_Code') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [Payer_Common_Code] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'Payer_Common_Code' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [Payer_Common_Code] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'Payer_Group_Code') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [Payer_Group_Code] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'Payer_Group_Code' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [Payer_Group_Code] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'Global_Payer_ID') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [Global_Payer_ID] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'Global_Payer_ID' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [Global_Payer_ID] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'PayerType') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [PayerType] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'PayerType' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [PayerType] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'BillingProvider') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [BillingProvider] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'BillingProvider' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [BillingProvider] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'ReferringProvider') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [ReferringProvider] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'ReferringProvider' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [ReferringProvider] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'ClinicName') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [ClinicName] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'ClinicName' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [ClinicName] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'SalesRepname') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [SalesRepname] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'SalesRepname' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [SalesRepname] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'PatientID') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [PatientID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'PatientID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [PatientID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'PatientDOB') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [PatientDOB] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'PatientDOB' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [PatientDOB] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'DateofService') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [DateofService] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'DateofService' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [DateofService] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'ChargeEnteredDate') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [ChargeEnteredDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'ChargeEnteredDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [ChargeEnteredDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'FirstBilledDate') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [FirstBilledDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'FirstBilledDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [FirstBilledDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'Panelname') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [Panelname] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'Panelname' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [Panelname] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'CPTCode') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [CPTCode] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'CPTCode' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [CPTCode] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'Units') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [Units] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'Units' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [Units] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'Modifier') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [Modifier] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'Modifier' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [Modifier] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'POS') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [POS] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'POS' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [POS] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'TOS') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [TOS] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'TOS' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [TOS] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'ChargeAmount') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [ChargeAmount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'ChargeAmount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [ChargeAmount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'ChargeAmountPerUnit') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [ChargeAmountPerUnit] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'ChargeAmountPerUnit' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [ChargeAmountPerUnit] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'AllowedAmount') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [AllowedAmount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'AllowedAmount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [AllowedAmount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'AllowedAmountPerUnit') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [AllowedAmountPerUnit] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'AllowedAmountPerUnit' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [AllowedAmountPerUnit] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'InsurancePayment') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [InsurancePayment] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'InsurancePayment' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [InsurancePayment] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'InsurancePaymentPerUnit') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [InsurancePaymentPerUnit] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'InsurancePaymentPerUnit' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [InsurancePaymentPerUnit] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'PatientPayment') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [PatientPayment] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'PatientPayment' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [PatientPayment] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'PatientPaymentPerUnit') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [PatientPaymentPerUnit] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'PatientPaymentPerUnit' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [PatientPaymentPerUnit] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'TotalPayments') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [TotalPayments] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'TotalPayments' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [TotalPayments] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'InsuranceAdjustments') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [InsuranceAdjustments] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'InsuranceAdjustments' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [InsuranceAdjustments] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'PatientAdjustments') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [PatientAdjustments] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'PatientAdjustments' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [PatientAdjustments] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'TotalAdjustments') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [TotalAdjustments] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'TotalAdjustments' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [TotalAdjustments] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'InsuranceBalance') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [InsuranceBalance] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'InsuranceBalance' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [InsuranceBalance] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'PatientBalance') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [PatientBalance] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'PatientBalance' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [PatientBalance] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'PatientBalancePerUnit') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [PatientBalancePerUnit] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'PatientBalancePerUnit' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [PatientBalancePerUnit] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'TotalBalance') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [TotalBalance] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'TotalBalance' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [TotalBalance] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'CheckDate') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [CheckDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'CheckDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [CheckDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'PostingDate') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [PostingDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'PostingDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [PostingDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'ClaimStatus') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [ClaimStatus] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'ClaimStatus' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [ClaimStatus] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'PayStatus') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [PayStatus] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'PayStatus' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [PayStatus] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'DenialCode') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [DenialCode] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'DenialCode' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [DenialCode] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'DenialDate') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [DenialDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'DenialDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [DenialDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'ICDCode') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [ICDCode] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'ICDCode' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [ICDCode] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'DaystoDOS') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [DaystoDOS] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'DaystoDOS' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [DaystoDOS] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'RollingDays') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [RollingDays] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'RollingDays' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [RollingDays] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'DaystoBill') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [DaystoBill] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'DaystoBill' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [DaystoBill] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'DaystoPost') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [DaystoPost] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'DaystoPost' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [DaystoPost] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'ICDPointer') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [ICDPointer] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'ICDPointer' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [ICDPointer] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'UID') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [UID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'UID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [UID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'T_F') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [T_F] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'T_F' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [T_F] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'PatientName') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [PatientName] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'PatientName' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [PatientName] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'CombinedLineLevelICD') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [CombinedLineLevelICD] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'CombinedLineLevelICD' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [CombinedLineLevelICD] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'SubscriberId') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [SubscriberId] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'SubscriberId' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [SubscriberId] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'ClaimAmount') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [ClaimAmount] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'ClaimAmount' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [ClaimAmount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'CptWithUnits') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [CptWithUnits] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'CptWithUnits' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [CptWithUnits] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'Proc') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [Proc] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'Proc' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [Proc] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'EnteredStatus') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [EnteredStatus] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'EnteredStatus' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [EnteredStatus] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'BilledStatus') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [BilledStatus] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'BilledStatus' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [BilledStatus] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'ProcTotalBal') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [ProcTotalBal] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'ProcTotalBal' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [ProcTotalBal] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'UpdatedDenialCode') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [UpdatedDenialCode] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'UpdatedDenialCode' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [UpdatedDenialCode] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'CombinedLineLevelDenialCode') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [CombinedLineLevelDenialCode] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'CombinedLineLevelDenialCode' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [CombinedLineLevelDenialCode] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'Loc') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [Loc] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'Loc' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [Loc] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'ProcInsLastRefiledDeniedReason') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [ProcInsLastRefiledDeniedReason] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'ProcInsLastRefiledDeniedReason' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [ProcInsLastRefiledDeniedReason] NVARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'ProcInsResponsibleCarrierOriginalFilingDate') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [ProcInsResponsibleCarrierOriginalFilingDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'ProcInsResponsibleCarrierOriginalFilingDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [ProcInsResponsibleCarrierOriginalFilingDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'ProcInsStatus') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [ProcInsStatus] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'ProcInsStatus' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [ProcInsStatus] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'ProcInsLastRefiledDeniedDate') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [ProcInsLastRefiledDeniedDate] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'ProcInsLastRefiledDeniedDate' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [ProcInsLastRefiledDeniedDate] NVARCHAR(500) NULL;
 GO

@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using Microsoft.VisualBasic.FileIO;
 
 namespace LRN.MasterFileProcessorWorker.BulkLoad;
@@ -45,9 +45,15 @@ public sealed class CsvBulkDataReader : IDataReader
         AuditColumns.AuditValues audit,
         int headerRow = 1)
     {
-        _fields = fields ?? throw new ArgumentNullException(nameof(fields));
+        ArgumentNullException.ThrowIfNull(fields);
+
+        // LabID and LabName are legitimately mapped from the CSV AND are part of the audit block.
+        // Keeping both would emit the column twice, which SqlBulkCopy tolerates but the
+        // INSERT...SELECT swap rejects with "column ... specified more than once". The stamped
+        // audit value wins - it comes from the lab configuration rather than the file.
+        _fields = fields.Where(f => !AuditColumns.IsPipelineOwned(f.SqlColumn)).ToList();
         _audit = audit;
-        _hasher = new RowHasher(fields);
+        _hasher = new RowHasher(_fields);
 
         _parser = new TextFieldParser(csvPath)
         {
@@ -80,13 +86,13 @@ public sealed class CsvBulkDataReader : IDataReader
             headerNorm.TryAdd(Norm(name), i);
         }
 
-        _csvIndexByField = new int[fields.Count];
+        _csvIndexByField = new int[_fields.Count];
         var missing = new List<string>();
         var claimed = new HashSet<int>();
 
-        for (int f = 0; f < fields.Count; f++)
+        for (int f = 0; f < _fields.Count; f++)
         {
-            var csvHeader = (fields[f].CsvHeader ?? "").Trim();
+            var csvHeader = (_fields[f].CsvHeader ?? "").Trim();
 
             if (headerIndex.TryGetValue(csvHeader, out var idx) ||
                 headerNorm.TryGetValue(Norm(csvHeader), out idx))
@@ -97,22 +103,26 @@ public sealed class CsvBulkDataReader : IDataReader
             else
             {
                 _csvIndexByField[f] = -1;
-                missing.Add($"{fields[f].CsvHeader} -> {fields[f].SqlColumn}");
+                missing.Add($"{_fields[f].CsvHeader} -> {_fields[f].SqlColumn}");
             }
         }
 
         MissingCsvHeaders = missing;
+
+        // A CSV column that matches an audit column (LabID, LabName, RunId, ...) is not unmapped -
+        // it is supplied by the stamped audit block instead of read from the file. Reporting it as
+        // dropped would send someone hunting for a mapping bug that does not exist.
         UnmappedCsvHeaders = headerIndex
-            .Where(kv => !claimed.Contains(kv.Value))
+            .Where(kv => !claimed.Contains(kv.Value) && !AuditColumns.IsPipelineOwned(kv.Key))
             .Select(kv => kv.Key)
             .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        _columnNames = fields.Select(f => f.SqlColumn)
+        _columnNames = _fields.Select(f => f.SqlColumn)
             .Concat(AuditColumns.Names)
             .ToArray();
 
-        _current = new string?[fields.Count];
+        _current = new string?[_fields.Count];
     }
 
     private static string Norm(string s) =>

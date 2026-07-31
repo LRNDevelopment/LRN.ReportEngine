@@ -166,6 +166,41 @@ public static class ImportDiagnostics
             var hasStatus = await ColumnExistsAsync(labConn!, "dbo.LineClaimFileLogs", "Status", ct);
             Report("  LineClaimFileLogs.Status column", hasStatus,
                 hasStatus ? "" : "optional - run sql/Labs/_Common/02_LineClaimFileLogs.sql to record load outcomes");
+
+            // Column drift. Table existence is not enough: a table left over from an earlier
+            // iteration is skipped by CREATE TABLE IF NOT EXISTS, and the load then fails mid-swap
+            // with 'Invalid column name'. Compare what the mapping needs against what is there.
+            foreach (var (levelName, level) in new[]
+                     {
+                         (FileTypes.LineLevel, mapping.LineLevel),
+                         (FileTypes.ClaimLevel, mapping.ClaimLevel)
+                     })
+            {
+                if (level is not { Enabled: true, BulkCopyToTable: true }) continue;
+
+                var expected = level.Fields.Select(f => f.SqlColumn)
+                    .Concat(AuditColumns.Names)
+                    .Where(c => !string.IsNullOrWhiteSpace(c))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                foreach (var table in new[] { level.SqlTableName, level.ResolveStagingTableName() })
+                {
+                    var actual = await ColumnNamesAsync(labConn!, table, ct);
+                    if (actual.Count == 0) continue;   // table missing - already reported above
+
+                    var missing = expected
+                        .Where(c => !actual.Contains(c))
+                        .OrderBy(c => c, StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+
+                    Report($"  [{levelName}] {table} columns", missing.Count == 0,
+                        missing.Count == 0
+                            ? $"{expected.Count} mapped columns present"
+                            : $"{missing.Count} missing ({string.Join(", ", missing.Take(6))}{(missing.Count > 6 ? ", ..." : "")}) " +
+                              $"- re-run sql/Labs/{catalog}/*.sql, which adds missing columns to existing tables");
+                }
+            }
         }
 
         return Finish();
@@ -278,6 +313,40 @@ WHERE s.name = @Schema AND t.name = @Table;";
         {
             return false;
         }
+    }
+
+    /// <summary>Column names of a table, or empty when the table does not exist.</summary>
+    private static async Task<HashSet<string>> ColumnNamesAsync(string connectionString, string tableName, CancellationToken ct)
+    {
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var parts = tableName.Replace("[", "").Replace("]", "").Split('.', 2);
+        var schema = parts.Length == 2 ? parts[0] : "dbo";
+        var table = parts.Length == 2 ? parts[1] : parts[0];
+
+        const string sql = @"
+SELECT c.name FROM sys.columns c
+JOIN sys.tables t  ON t.object_id = c.object_id
+JOIN sys.schemas s ON s.schema_id = t.schema_id
+WHERE s.name = @Schema AND t.name = @Table;";
+
+        try
+        {
+            await using var conn = new SqlConnection(connectionString);
+            await using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.Add("@Schema", SqlDbType.NVarChar, 128).Value = schema;
+            cmd.Parameters.Add("@Table", SqlDbType.NVarChar, 128).Value = table;
+            await conn.OpenAsync(ct);
+            await using var reader = await cmd.ExecuteReaderAsync(ct);
+
+            while (await reader.ReadAsync(ct))
+                names.Add(reader.GetString(0));
+        }
+        catch
+        {
+            // Treated as "unknown"; table existence is reported separately.
+        }
+
+        return names;
     }
 
     private static async Task<bool> ColumnExistsAsync(string connectionString, string table, string column, CancellationToken ct)

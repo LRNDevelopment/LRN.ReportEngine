@@ -883,8 +883,15 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				step85.Status = bulkOutcomes.All(o => o.Succeeded)
 					? (bulkOutcomes.All(o => o.Skipped) ? "SKIPPED" : "SUCCESS")
 					: "FAILED";
-				step85.ErrorMessage = string.Join(" | ",
+				var bulkErrors = string.Join(" | ",
 					bulkOutcomes.Where(o => !o.Succeeded).Select(o => $"{o.FileType}: {o.Message}"));
+
+				// LRN_Step_Log.ErrorMessage is nvarchar(800). A SqlException listing 19 invalid
+				// columns is far longer, and an over-long value aborts the whole step-log write,
+				// which previously took the entire lab run down with it. Summary goes in
+				// ErrorMessage, the untruncated text in ErrorDetail (nvarchar(max)).
+				step85.ErrorMessage = Truncate(bulkErrors, 780);
+				step85.ErrorDetail = string.IsNullOrEmpty(bulkErrors) ? null : bulkErrors;
 				await _processLog.StepEndAsync(runCtx, step85, ct);
 				activeStep = null;
 
@@ -1906,6 +1913,18 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 
 		var normalized = new string(sheetName.Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
 		return normalized.EndsWith("LINELEVEL", StringComparison.Ordinal);
+	}
+
+	/// <summary>
+	/// Caps a value to fit a fixed-width log column, marking it so a reader knows it was cut.
+	/// </summary>
+	private static string? Truncate(string? value, int maxLength)
+	{
+		if (string.IsNullOrEmpty(value) || value.Length <= maxLength)
+			return value;
+
+		const string suffix = "... [truncated]";
+		return value[..(maxLength - suffix.Length)] + suffix;
 	}
 
 	/// <summary>

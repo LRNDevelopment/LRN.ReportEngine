@@ -69,11 +69,13 @@ public sealed class LineClaimBulkLoader
         long rowsRead;
         IReadOnlyList<string> missing;
         IReadOnlyList<string> unmapped;
+        IReadOnlyList<string> columnNames;
 
         using (var reader = new CsvBulkDataReader(csvPath, level.Fields, audit))
         {
             missing = reader.MissingCsvHeaders;
             unmapped = reader.UnmappedCsvHeaders;
+            columnNames = reader.ColumnNames;   // effective, de-duplicated - reused for the swap
 
             if (missing.Count > 0)
             {
@@ -126,9 +128,9 @@ public sealed class LineClaimBulkLoader
         }
 
         // ---- 3. swap, in one short transaction ----
-        var columnList = string.Join(", ",
-            level.Fields.Select(f => "[" + f.SqlColumn + "]")
-                 .Concat(AuditColumns.Names.Select(n => "[" + n + "]")));
+        // Exactly the columns the reader wrote to staging, in the same order. Deriving this list a
+        // second time from level.Fields is how LabID/LabName ended up duplicated in the INSERT.
+        var columnList = string.Join(", ", columnNames.Select(n => "[" + n + "]"));
 
         await using (var tx = (SqlTransaction)await conn.BeginTransactionAsync(ct).ConfigureAwait(false))
         {

@@ -58,9 +58,16 @@ AUDIT = [
 AUDIT_NAMES = {a[0].lower() for a in AUDIT}
 
 # Length heuristic. The spreadsheet declares a type but never a length, so sizes come from the
-# column's role. Anything unmatched gets 255, which covers every value seen in the sample exports.
-LONG_1000 = re.compile(r"(path|remark|comment|reason|description|codes|icd|address|notes)", re.I)
-LONG_500 = re.compile(r"(name|provider|clinic|panel|payer|status|category|action)", re.I)
+# column's role.
+#
+# These sizes were raised after a real load failed: ClaimLevelData.CPTCombined held
+# "81175*1 (90),81185*1 (90),81189*1 (90),..." and overflowed NVARCHAR(255). Any column that
+# aggregates a list of codes is effectively unbounded, so those get NVARCHAR(MAX) rather than a
+# guess that will overflow again on a bigger claim.
+UNBOUNDED = re.compile(
+    r"(combined|xunits|codes|denials|denialcombination|description|remark|comment|reason|icd)", re.I)
+LONG_2000 = re.compile(r"(path|address|notes)", re.I)
+LONG_1000 = re.compile(r"(name|provider|clinic|panel|payer|status|category|action)", re.I)
 
 
 def excel_sheets(path):
@@ -123,11 +130,44 @@ def sql_type(column, declared):
         return "DECIMAL(19,4)"
     if declared in ("datetime", "date"):
         return "DATETIME2(3)"
+    if UNBOUNDED.search(column):
+        return "NVARCHAR(MAX)"
+    if LONG_2000.search(column):
+        return "NVARCHAR(2000)"
     if LONG_1000.search(column):
         return "NVARCHAR(1000)"
-    if LONG_500.search(column):
-        return "NVARCHAR(500)"
-    return "NVARCHAR(255)"
+    return "NVARCHAR(500)"
+
+
+def reconcile_block(table, columns):
+    """
+    Additive reconciliation for a table that already exists in a lab database with an older shape.
+
+    CREATE TABLE alone is not enough: several lab databases already had LineLevelData /
+    ClaimLevelData from a previous iteration, so IF NOT EXISTS skipped them and the load then failed
+    with 'Invalid column name' against 19 columns that only existed in the freshly-created staging
+    table.
+
+    Only ever ADDs a missing column or WIDENS one that is too small. Never drops, renames, retypes
+    or narrows, so it is safe to re-run against any vintage of the table.
+    """
+    lines = []
+    a = lines.append
+    a(f"/* Reconcile [{table}] with the current mapping - additive only. */")
+    for name, sqltype in columns:
+        target_len = -1 if "(MAX)" in sqltype.upper() else 0
+        a(f"IF COL_LENGTH('dbo.{table}', '{name}') IS NULL")
+        a(f"    ALTER TABLE [dbo].[{table}] ADD [{name}] {sqltype} NULL;")
+        if sqltype.upper().startswith("NVARCHAR"):
+            # max_length is in BYTES for nvarchar; -1 means MAX. Widen only.
+            want = "-1" if target_len == -1 else str(2 * int(re.search(r"\((\d+)\)", sqltype).group(1)))
+            cond = (f"c.max_length <> -1" if want == "-1"
+                    else f"c.max_length <> -1 AND c.max_length < {want}")
+            a(f"IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.{table}')")
+            a(f"           AND c.name = '{name}' AND {cond})")
+            a(f"    ALTER TABLE [dbo].[{table}] ALTER COLUMN [{name}] {sqltype} NULL;")
+        a("GO")
+    return "\n".join(lines)
 
 
 def build_table_script(db, table, staging, columns, index_prefix):
@@ -184,6 +224,12 @@ def build_table_script(db, table, staging, columns, index_prefix):
     a("    );")
     a("END")
     a("GO")
+    a("")
+    # Both tables must be reconciled: the live one may pre-date this mapping, and the staging one
+    # must stay column-for-column identical to it or the INSERT...SELECT swap fails.
+    a(reconcile_block(table, columns))
+    a("")
+    a(reconcile_block(staging, columns))
     a("")
     return "\n".join(lines)
 

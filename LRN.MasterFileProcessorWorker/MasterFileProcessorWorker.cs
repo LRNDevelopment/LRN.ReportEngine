@@ -15,6 +15,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using static SharePointDownloader;
 using LRN.SharePointClient.Models;
+using LRN.MasterFileProcessorWorker.BulkLoad;
 
 public sealed class MasterFileProcessorWorker : BackgroundService
 {
@@ -37,6 +38,9 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 	private readonly ModeMedianReportPublisher _modeMedianPublisher;
 	private readonly LabInsuranceMasterRepository _labInsuranceMaster;
 	private readonly IConfiguration _configuration;
+	private readonly LineClaimImportOptions _lineClaimOptions;
+	private readonly LabRegistry _labRegistry;
+	private readonly LineClaimImportService _lineClaimImport;
 
 	private ColumnSchema? _commonLineSchema;
 	private ColumnSchema? _commonClaimSchema;
@@ -55,7 +59,10 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		ITeamsNotifier teamsNotifier,
 		ModeMedianReportPublisher modeMedianPublisher,
 		LabInsuranceMasterRepository labInsuranceMaster,
-		IConfiguration configuration)
+		IConfiguration configuration,
+		IOptions<LineClaimImportOptions> lineClaimOptions,
+		LabRegistry labRegistry,
+		LineClaimImportService lineClaimImport)
 	{
 		_logger = logger;
 		_fileLog = fileLog;
@@ -69,6 +76,9 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		_modeMedianPublisher = modeMedianPublisher;
 		_labInsuranceMaster = labInsuranceMaster;
 		_configuration = configuration;
+		_lineClaimOptions = lineClaimOptions.Value;
+		_labRegistry = labRegistry;
+		_lineClaimImport = lineClaimImport;
 
 	}
 
@@ -708,7 +718,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 					ingestedOnLocal: DateTime.Now,
 					labSchema: labLineSchema,
 					insuranceMaster: _insuranceMaster,
-					augmentation: lineAugmentation);
+					augmentation: lineAugmentation,
+					log: m => { _logger.LogInformation("Lab {LabId}: {Message}", lab.LabId, m); _fileLog.Info($"Lab {lab.LabId}: {m}"); });
 
 
 
@@ -811,7 +822,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 							ingestedOnLocal: DateTime.Now,
 							labSchema: labClaimSchema,
 							insuranceMaster: _insuranceMaster,
-							augmentation: claimAugmentation);
+							augmentation: claimAugmentation,
+							log: m => { _logger.LogInformation("Lab {LabId}: {Message}", lab.LabId, m); _fileLog.Info($"Lab {lab.LabId}: {m}"); });
 
 				StandardCsvExporter.EnrichClaimLevelWithLineLevelCptSummary(
 					claimCsvPath: claimStagePath,
@@ -844,7 +856,37 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				sw.Stop();
 
+				// STEP 85: Bulk copy the standardized CSVs into the lab's line/claim level tables.
+				// Runs against the FINAL paths, after the atomic move, so the loader can never read a
+				// half-written file. Additive: the LRN_Step_Log / LRN_Run_Log / LRN_Error_Log writes
+				// around it are unchanged, and a bulk-copy failure is contained to this step so the
+				// rest of the lab's run (SharePoint upload, status log) still completes.
+				stepSeq = 85;
+				var step85 = new StepLogRow
+				{
+					StepSeq = stepSeq,
+					StepName = "Bulk Copy Line/Claim Level to SQL",
+					StepCategory = "Load",
+					SourceSystem = "Local",
+					StartTimeIST = _processLog.NowIST(),
+					Status = "IN_PROGRESS",
+					PathIn = processedOutFolder
+				};
+				activeStep = step85;
+				await _processLog.StepStartAsync(runCtx, step85, ct);
 
+				var bulkOutcomes = await TryImportLineClaimLevelAsync(
+					lab, runCtx.RunId, selected, weekFolder, lineOutPath, claimOutPath, ct);
+
+				step85.EndTimeIST = _processLog.NowIST();
+				step85.RecordsOut = (int)Math.Min(int.MaxValue, bulkOutcomes.Sum(o => o.RowsCopied));
+				step85.Status = bulkOutcomes.All(o => o.Succeeded)
+					? (bulkOutcomes.All(o => o.Skipped) ? "SKIPPED" : "SUCCESS")
+					: "FAILED";
+				step85.ErrorMessage = string.Join(" | ",
+					bulkOutcomes.Where(o => !o.Succeeded).Select(o => $"{o.FileType}: {o.Message}"));
+				await _processLog.StepEndAsync(runCtx, step85, ct);
+				activeStep = null;
 
 				// Cleanup RAW CSVs unless configured to keep
 				if (!_opt.KeepRawCsvExports)
@@ -1864,6 +1906,68 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 
 		var normalized = new string(sheetName.Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
 		return normalized.EndsWith("LINELEVEL", StringComparison.Ordinal);
+	}
+
+	/// <summary>
+	/// Bulk copies this lab's standardized line-level and claim-level CSVs into its database.
+	/// <para>
+	/// Never throws. The import is an addition to an established pipeline: if it fails, the lab's
+	/// files are already published and the rest of the run must still finish. Every failure is
+	/// recorded in ReportRunIdInfoLog, ReportsWorkflowTracker and LineClaimFileLogs by the service
+	/// itself, and surfaced to LRN_Step_Log by the caller.
+	/// </para>
+	/// </summary>
+	private async Task<IReadOnlyList<LineClaimImportOutcome>> TryImportLineClaimLevelAsync(
+		LabFileMap lab,
+		string runId,
+		SharePointDownloader.SelectedFile? selected,
+		string? weekFolder,
+		string lineCsvPath,
+		string claimCsvPath,
+		CancellationToken ct)
+	{
+		var empty = Array.Empty<LineClaimImportOutcome>();
+
+		if (!_lineClaimOptions.Enabled)
+			return empty;
+
+		try
+		{
+			var mappingFolder = ResolvePath(_lineClaimOptions.LabMappingsFolder);
+			var labs = await _labRegistry.GetActiveLabsAsync(mappingFolder, ct);
+
+			var resolved = labs.FirstOrDefault(l => l.LabId == lab.LabId);
+
+			if (resolved is null)
+			{
+				_logger.LogInformation(
+					"Lab {LabId}: not returned by LabMaster as active with a mapping; line/claim bulk copy skipped.",
+					lab.LabId);
+				return empty;
+			}
+
+			var request = new LineClaimImportRequest(
+				RunId: runId,
+				WeekFolder: weekFolder,
+				SourceFullPath: selected?.SharePointPath,
+				SourceFileName: selected?.Name,
+				FileCreatedDateTime: selected?.LastModifiedUtc?.LocalDateTime,
+				LineLevelCsvPath: lineCsvPath,
+				ClaimLevelCsvPath: claimCsvPath);
+
+			return await _lineClaimImport.ImportLabAsync(resolved, request, ct);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Lab {LabId}: line/claim level bulk copy failed.", lab.LabId);
+			_fileLog.Error($"Lab {lab.LabId}: line/claim level bulk copy failed. {ex.Message}");
+
+			return new[]
+			{
+				new LineClaimImportOutcome(FileTypes.LineLevel, false, false, 0, ex.Message),
+				new LineClaimImportOutcome(FileTypes.ClaimLevel, false, false, 0, ex.Message)
+			};
+		}
 	}
 
 	private static bool IsNorthWestLab(LabFileMap lab)

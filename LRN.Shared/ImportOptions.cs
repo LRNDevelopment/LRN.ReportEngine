@@ -1,4 +1,4 @@
-public sealed class ImportOptions
+﻿public sealed class ImportOptions
 {
     // Local staging download folder
     public string WatchFolder { get; set; } = "";
@@ -15,6 +15,20 @@ public sealed class ImportOptions
 
     // Poll interval
     public int PollSeconds { get; set; } = 60;
+
+    // ---- CSV output switches (MasterFileProcessor section) -------------------------------
+    // Turn the line-level and claim-level CSV output on/off, independently. Applies to every lab
+    // unless that lab overrides it in its own Labs[] entry below.
+    //
+    //   "MasterFileProcessor": {
+    //     "CreateLineLevelCsv": true,
+    //     "CreateClaimLevelCsv": false,
+    //     ...
+    //
+    // When a level is off, its RAW export, its standardized CSV, its publish to the output folder
+    // and its SQL bulk copy are all skipped, and the skip is logged.
+    public bool CreateLineLevelCsv { get; set; } = true;
+    public bool CreateClaimLevelCsv { get; set; } = true;
 
     // Sheet candidates (comma separated). Worker picks first one that exists.
     // Example: "Master Line Level,Line Level,LineLevel,Master_Line_Level"
@@ -139,4 +153,14 @@ public sealed class LabFileMap
 	// When set, overrides the global SheetName for this lab. Multiple entries trigger a combined export
 	// with an added "Source" column; the value per row is the sheet name with " Line Level" suffix stripped.
 	public string? LineLevelSheetNames { get; set; }
+
+	// ---- Per-lab CSV output switches ------------------------------------------------------
+	// Override MasterFileProcessor:CreateLineLevelCsv / CreateClaimLevelCsv for THIS lab only:
+	//
+	//   { "LabId": 18, "LabName": "Certus",
+	//     "CreateLineLevelCsv": true, "CreateClaimLevelCsv": false, ... }
+	//
+	// Leave unset (null) to inherit the section-level default.
+	public bool? CreateLineLevelCsv { get; set; }
+	public bool? CreateClaimLevelCsv { get; set; }
 }

@@ -1956,28 +1956,44 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 	/// </summary>
 	private (bool Line, bool Claim) ResolveCsvOutputToggles(LabFileMap lab)
 	{
-		if (!_lineClaimOptions.Enabled)
-			return (true, true);
+		// Precedence, most specific first:
+		//   1. MasterFileProcessor:Labs[] -> CreateLineLevelCsv / CreateClaimLevelCsv   (this lab)
+		//   2. MasterFileProcessor       -> CreateLineLevelCsv / CreateClaimLevelCsv   (all labs)
+		//   3. Schemas/LabMappings/<Lab>FieldMappings.json -> <Level>.CreateCsv
+		//   4. true
+		// appsettings wins so the switch lives where the rest of this worker is configured.
+		bool line = lab.CreateLineLevelCsv ?? _opt.CreateLineLevelCsv;
+		bool claim = lab.CreateClaimLevelCsv ?? _opt.CreateClaimLevelCsv;
+
+		var lineFromAppSettings = lab.CreateLineLevelCsv.HasValue || !_opt.CreateLineLevelCsv;
+		var claimFromAppSettings = lab.CreateClaimLevelCsv.HasValue || !_opt.CreateClaimLevelCsv;
 
 		try
 		{
 			var mappingFolder = ResolvePath(_lineClaimOptions.LabMappingsFolder);
 			var mapping = _labRegistry.TryGetMapping(lab.LabId, mappingFolder);
 
-			if (mapping is null)
-				return (true, true);
+			if (mapping is not null)
+			{
+				static bool Produces(LevelMapping? level) => level is null || (level.Enabled && level.CreateCsv);
 
-			static bool Produces(LevelMapping? level) => level is null || (level.Enabled && level.CreateCsv);
-
-			return (Produces(mapping.LineLevel), Produces(mapping.ClaimLevel));
+				// Only consult the mapping where appsettings has not already made the call.
+				if (!lineFromAppSettings) line = Produces(mapping.LineLevel);
+				if (!claimFromAppSettings) claim = Produces(mapping.ClaimLevel);
+			}
 		}
 		catch (Exception ex)
 		{
-			// Never let a config problem stop the file being processed - the mapping loader logs
-			// the detail, and defaulting to "produce both" preserves the previous behaviour.
-			_logger.LogWarning(ex, "Lab {LabId}: could not resolve CSV output toggles; producing both levels.", lab.LabId);
-			return (true, true);
+			// A mapping problem must not stop the file being processed; appsettings still applies.
+			_logger.LogWarning(ex, "Lab {LabId}: could not read the lab mapping for CSV toggles; using appsettings values.", lab.LabId);
 		}
+
+		_logger.LogInformation(
+			"Lab {LabId}: CSV output -> LineLevel={Line}, ClaimLevel={Claim} " +
+			"(set MasterFileProcessor:CreateLineLevelCsv / CreateClaimLevelCsv, or the same keys inside this lab's Labs[] entry).",
+			lab.LabId, line, claim);
+
+		return (line, claim);
 	}
 
 	/// <summary>

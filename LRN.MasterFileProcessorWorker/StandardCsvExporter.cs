@@ -106,7 +106,9 @@ public static class StandardCsvExporter
 		ColumnSchema? labSchema = null,
 		Dictionary<string, InsuranceMasterEntry>? insuranceMaster = null,
 		bool appendUnmappedSourceColumns = true,
-		ExportAugmentationContext? augmentation = null)
+		ExportAugmentationContext? augmentation = null,
+		bool enableDynamicColumnMatching = true,
+		Action<string>? log = null)
 	{
 		if (!File.Exists(sourceCsvPath))
 			throw new FileNotFoundException("Source CSV not found", sourceCsvPath);
@@ -152,6 +154,11 @@ public static class StandardCsvExporter
 		// and support composite expressions like "[Last], [First] {Referral Name}".
 		var labOv = BuildLabOverrides(labSchema);
 
+		// Last-resort binding for headers the lab renamed since the schema was written.
+		// Must run before the extra-column scan so a bound header is not ALSO appended as unmapped.
+		if (enableDynamicColumnMatching)
+			ResolveDynamicColumnBindings(header, commonSchema, headerExact, headerNorm, labOv, log);
+
 		// For calculations: resolve by COMMON column name
 		var schemaByName = commonSchema.Columns
 			.Where(c => !string.IsNullOrWhiteSpace(c.Name))
@@ -159,7 +166,7 @@ public static class StandardCsvExporter
 
 		var extraSourceColumnIndexes = appendUnmappedSourceColumns
 			? FindExtraSourceColumnIndexes(header, commonSchema, headerExact, headerNorm, labOv)
-			: new List<int>();
+			: new List<ExtraSourceColumn>();
 
 		var finalOutputHeaders = commonSchema.Columns.Select(c => c.Name).ToList();
 
@@ -176,7 +183,7 @@ public static class StandardCsvExporter
 			finalOutputHeaders.Add("LRN Panel Type");
 		}
 
-		finalOutputHeaders.AddRange(extraSourceColumnIndexes.Select(i => header[i] ?? string.Empty));
+		finalOutputHeaders.AddRange(extraSourceColumnIndexes.Select(e => e.OutputName));
 
 		using var sw = new StreamWriter(outputCsvPath, false, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
 		sw.WriteLine(string.Join(",", finalOutputHeaders.Select(Escape)));
@@ -401,9 +408,18 @@ public static class StandardCsvExporter
 				outFields.Add(Escape(ResolvePanelType(row, headerExact, headerNorm, augmentation)));
 			}
 
-			foreach (var extraIndex in extraSourceColumnIndexes)
+			foreach (var extra in extraSourceColumnIndexes)
 			{
-				outFields.Add(Escape(Get(row, extraIndex)));
+				var extraValue = "";
+
+				foreach (var extraIndex in extra.SourceIndexes)
+				{
+					extraValue = Get(row, extraIndex);
+					if (!string.IsNullOrWhiteSpace(extraValue))
+						break;
+				}
+
+				outFields.Add(Escape(extraValue));
 			}
 
 			sw.WriteLine(string.Join(",", outFields));
@@ -640,6 +656,27 @@ public static class StandardCsvExporter
 		public HashSet<string> PreferredNorm { get; } = new(StringComparer.OrdinalIgnoreCase);
 		public Dictionary<string, CompositeTemplate> CompositeByName { get; } = new(StringComparer.OrdinalIgnoreCase);
 		public Dictionary<string, CompositeTemplate> CompositeByNorm { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+		/// <summary>
+		/// Interchangeable source spellings declared by one LAB schema column, reachable from any
+		/// member. { "Name": "Enc", "Aliases": [ "Proc-Encounter #" ] } registers the group
+		/// [Enc, Proc-Encounter #] under both keys.
+		/// <para>
+		/// This exists because a lab can ship the SAME logical column under different headers in
+		/// one file. NorthWest sends line level twice - a Webpm sheet ("Enc", "Acc", "DOS") and a
+		/// Daq sheet ("Proc-Encounter #", "Proc-Superbill", "Proc-Date of Service") - and the two
+		/// sheets are combined into one CSV whose header is the UNION of both. Every group column
+		/// therefore exists in the file, but each row only fills the one from its own sheet.
+		/// </para>
+		/// </summary>
+		public Dictionary<string, List<string>> AliasGroupByNorm { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+		/// <summary>
+		/// COMMON column (normalized) -&gt; source header bound at runtime by the near-miss matcher.
+		/// Only populated for columns that nothing declared could resolve, so a renamed header keeps
+		/// flowing without a schema edit. See <see cref="ResolveDynamicColumnBindings"/>.
+		/// </summary>
+		public Dictionary<string, string> DynamicSourceByCommonNorm { get; } = new(StringComparer.OrdinalIgnoreCase);
 	}
 
 	private readonly record struct CompositeSegment(bool IsColumn, string Text);
@@ -698,6 +735,9 @@ public static class StandardCsvExporter
 			if (!string.IsNullOrWhiteSpace(norm))
 				ov.PreferredNorm.Add(norm);
 
+			// Every spelling this lab column declares is one interchangeable group.
+			var group = new List<string> { rawName };
+
 			// Some lab schemas may also include Aliases on their column specs
 			if (c.Aliases != null)
 			{
@@ -711,11 +751,45 @@ public static class StandardCsvExporter
 					var an = NormKey(aa);
 					if (!string.IsNullOrWhiteSpace(an))
 						ov.PreferredNorm.Add(an);
+
+					if (!group.Contains(aa, StringComparer.OrdinalIgnoreCase))
+						group.Add(aa);
 				}
 			}
+
+			RegisterAliasGroup(ov, group);
 		}
 
 		return ov;
+	}
+
+	/// <summary>
+	/// Makes every member of <paramref name="group"/> resolve to the whole group. Groups that share
+	/// a member are merged so a spelling declared twice does not split into rival groups.
+	/// </summary>
+	private static void RegisterAliasGroup(LabOverrides ov, List<string> group)
+	{
+		var members = group
+			.Select(g => (g ?? "").Trim())
+			.Where(g => !string.IsNullOrWhiteSpace(g))
+			.ToList();
+
+		if (members.Count == 0)
+			return;
+
+		// Merge with anything already registered under any of these keys.
+		foreach (var key in members.Select(NormKey).Where(k => !string.IsNullOrWhiteSpace(k)).Distinct())
+		{
+			if (!ov.AliasGroupByNorm.TryGetValue(key, out var existing))
+				continue;
+
+			foreach (var e in existing)
+				if (!members.Contains(e, StringComparer.OrdinalIgnoreCase))
+					members.Add(e);
+		}
+
+		foreach (var key in members.Select(NormKey).Where(k => !string.IsNullOrWhiteSpace(k)).Distinct())
+			ov.AliasGroupByNorm[key] = members;
 	}
 
 	private static bool TryParseComposite(string raw, out CompositeTemplate template)
@@ -945,8 +1019,12 @@ public static class StandardCsvExporter
 		return ReadByAliases(col, row, headerExact, headerNorm, labOv);
 	}
 
-	private static string ReadByAliases(ColumnSpec col, string[] row, Dictionary<string, int> headerExact, Dictionary<string, int> headerNorm,
-			LabOverrides labOv)
+	/// <summary>
+	/// Every source header the COMMON schema knows for this column: declared aliases, built-ins and
+	/// the column name itself. Order is preserved; lab-declared spellings are hoisted to the front
+	/// so they win when the file happens to contain several of them.
+	/// </summary>
+	private static List<string> BuildCommonCandidates(ColumnSpec col, LabOverrides labOv)
 	{
 		var candidates = (col.Aliases ?? new List<string>())
 			.Where(a => !string.IsNullOrWhiteSpace(a))
@@ -956,42 +1034,101 @@ public static class StandardCsvExporter
 			.Where(a => !string.IsNullOrWhiteSpace(a))
 			.ToList();
 
-		// Prefer headers explicitly present in the LAB schema when multiple COMMON aliases exist.
 		var ordered = new List<string>(candidates.Count);
 		var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-		// Preferred first (stable order)
+		// Preferred first (stable order), then the rest.
 		foreach (var c in candidates)
-		{
-			var cn = NormKey(c);
-			var isPref = labOv.PreferredExact.Contains(c) || (!string.IsNullOrWhiteSpace(cn) && labOv.PreferredNorm.Contains(cn));
-			if (!isPref) continue;
-
-			if (seen.Add(c))
+			if (IsLabPreferred(c, labOv) && seen.Add(c))
 				ordered.Add(c);
+
+		foreach (var c in candidates)
+			if (!IsLabPreferred(c, labOv) && seen.Add(c))
+				ordered.Add(c);
+
+		return ordered;
+	}
+
+	private static bool IsLabPreferred(string header, LabOverrides labOv)
+	{
+		var h = (header ?? "").Trim();
+		if (string.IsNullOrWhiteSpace(h))
+			return false;
+
+		if (labOv.PreferredExact.Contains(h))
+			return true;
+
+		var hn = NormKey(h);
+		return !string.IsNullOrWhiteSpace(hn) && labOv.PreferredNorm.Contains(hn);
+	}
+
+	/// <summary>
+	/// The interchangeable spellings this LAB declares for a COMMON column, plus any header the
+	/// near-miss matcher bound at runtime. Empty when the lab schema says nothing about the column.
+	/// </summary>
+	private static List<string> BuildLabDeclaredGroup(ColumnSpec col, IReadOnlyList<string> commonCandidates, LabOverrides labOv)
+	{
+		var group = new List<string>();
+		var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+		foreach (var cand in commonCandidates)
+		{
+			var cn = NormKey(cand);
+			if (string.IsNullOrWhiteSpace(cn) || !labOv.AliasGroupByNorm.TryGetValue(cn, out var members))
+				continue;
+
+			foreach (var m in members)
+				if (!string.IsNullOrWhiteSpace(m) && seen.Add(m.Trim()))
+					group.Add(m.Trim());
 		}
 
-		// Then the remaining candidates
-		foreach (var c in candidates)
+		var target = NormKey(col.Name);
+		if (!string.IsNullOrWhiteSpace(target) &&
+			labOv.DynamicSourceByCommonNorm.TryGetValue(target, out var dynamicHeader) &&
+			!string.IsNullOrWhiteSpace(dynamicHeader) &&
+			seen.Add(dynamicHeader))
 		{
-			var cn = NormKey(c);
-			var isPref = labOv.PreferredExact.Contains(c) || (!string.IsNullOrWhiteSpace(cn) && labOv.PreferredNorm.Contains(cn));
-			if (isPref) continue;
-
-			if (seen.Add(c))
-				ordered.Add(c);
+			group.Add(dynamicHeader);
 		}
 
-		foreach (var cand in ordered)
+		return group;
+	}
+
+	private static string ReadByAliases(ColumnSpec col, string[] row, Dictionary<string, int> headerExact, Dictionary<string, int> headerNorm,
+			LabOverrides labOv)
+	{
+		var candidates = BuildCommonCandidates(col, labOv);
+		var labGroup = BuildLabDeclaredGroup(col, candidates, labOv);
+
+		// TIER 1 - the lab's own interchangeable spellings.
+		// Scan for the first NON-EMPTY value instead of the first column that merely exists.
+		// When two source systems are merged into one CSV the union header carries both spellings
+		// on every row, and the row's own system fills exactly one of them; stopping at the first
+		// existing column would return the other system's blank cell for every row.
+		bool anyLabColumnPresent = false;
+
+		foreach (var cand in labGroup)
 		{
-			var c = (cand ?? "").Trim();
-			if (string.IsNullOrWhiteSpace(c)) continue;
+			if (!TryResolveHeaderIndex(cand, headerExact, headerNorm, out var labIdx))
+				continue;
 
-			if (headerExact.TryGetValue(c, out int idx))
-				return Get(row, idx);
+			anyLabColumnPresent = true;
 
-			var cn = NormKey(c);
-			if (!string.IsNullOrWhiteSpace(cn) && headerNorm.TryGetValue(cn, out idx))
+			var value = Get(row, labIdx);
+			if (!string.IsNullOrWhiteSpace(value))
+				return value;
+		}
+
+		// The lab declared this column and it is genuinely blank on this row. Do NOT fall through to
+		// unrelated COMMON aliases - that is how a blank line-level CPT used to pick up the
+		// claim-level roll-up instead of staying empty.
+		if (anyLabColumnPresent)
+			return "";
+
+		// TIER 2 - nothing the lab declared exists in the file: first matching COMMON alias wins.
+		foreach (var cand in candidates)
+		{
+			if (TryResolveHeaderIndex(cand, headerExact, headerNorm, out var idx))
 				return Get(row, idx);
 		}
 
@@ -999,7 +1136,15 @@ public static class StandardCsvExporter
 	}
 
 
-	private static List<int> FindExtraSourceColumnIndexes(
+	/// <summary>
+	/// One appended output column. <see cref="SourceIndexes"/> holds more than one index when the lab
+	/// schema declares several interchangeable spellings for a column that has no COMMON target
+	/// (e.g. Webpm "Subscriber Id" and Daq "Primary Carrier Policy Number"); the row takes the first
+	/// non-empty of them so the merged file gets one populated column instead of two half-empty ones.
+	/// </summary>
+	private sealed record ExtraSourceColumn(string OutputName, List<int> SourceIndexes);
+
+	private static List<ExtraSourceColumn> FindExtraSourceColumnIndexes(
 		string[] header,
 		ColumnSchema commonSchema,
 		Dictionary<string, int> headerExact,
@@ -1027,32 +1172,51 @@ public static class StandardCsvExporter
 				.Where(x => !string.IsNullOrWhiteSpace(x)),
 			StringComparer.OrdinalIgnoreCase);
 
-		var extras = new List<int>();
+		var extras = new List<ExtraSourceColumn>();
+		var emittedGroups = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
 		for (int i = 0; i < header.Length; i++)
 		{
 			var sourceHeader = (header[i] ?? string.Empty).Trim();
 			if (string.IsNullOrWhiteSpace(sourceHeader))
 				continue;
 
+			// Consumed by a COMMON column already (directly, via alias, or via a composite).
 			if (usedIndexes.Contains(i))
 				continue;
 
 			var normalizedSourceHeader = NormKey(sourceHeader);
 
-			// Do not append columns already declared in the LAB schema.
-			// The extra-column rule should only append truly unknown Excel columns:
-			// not mapped by COMMON schema and not declared in lab-specific schema.
-			// Example: Certus source column "Billed Amounts" is declared in Certus_LineLevel.schema.json
-			// and maps to ChargeAmount, so it must not be added again as an extra output column.
-			if (labOv.PreferredExact.Contains(sourceHeader) ||
-				(!string.IsNullOrWhiteSpace(normalizedSourceHeader) && labOv.PreferredNorm.Contains(normalizedSourceHeader)))
-				continue;
-
 			// If source header itself is already a standard/common output column, do not append it again.
 			if (!string.IsNullOrWhiteSpace(normalizedSourceHeader) && commonTargetNorms.Contains(normalizedSourceHeader))
 				continue;
 
-			extras.Add(i);
+			// A header the LAB schema declares but no COMMON column consumed: it has no standard
+			// target, so it still has to be appended or the data is lost. Emit the whole alias group
+			// once, under its primary spelling, merging the sheet-specific variants into one column.
+			// (Certus "Billed Amounts" does not reach here - it maps to ChargeAmount and is already
+			// in usedIndexes, so it is still not duplicated.)
+			if (!string.IsNullOrWhiteSpace(normalizedSourceHeader) &&
+				labOv.AliasGroupByNorm.TryGetValue(normalizedSourceHeader, out var group) &&
+				group.Count > 0)
+			{
+				if (!emittedGroups.Add(NormKey(group[0])))
+					continue;
+
+				var groupIndexes = group
+					.Select(g => TryResolveHeaderIndex(g, headerExact, headerNorm, out var gi) ? gi : -1)
+					.Where(gi => gi >= 0 && !usedIndexes.Contains(gi))
+					.Distinct()
+					.ToList();
+
+				if (groupIndexes.Count > 0)
+					extras.Add(new ExtraSourceColumn(group[0], groupIndexes));
+
+				continue;
+			}
+
+			// Lab-declared single spelling with no group and no common target: keep it as-is.
+			extras.Add(new ExtraSourceColumn(sourceHeader, new List<int> { i }));
 		}
 
 		return extras;
@@ -1075,19 +1239,199 @@ public static class StandardCsvExporter
 			return;
 		}
 
-		var candidates = (col.Aliases ?? new List<string>())
-			.Where(a => !string.IsNullOrWhiteSpace(a))
-			.Concat(GetBuiltInSourceAliases(col.Name))
-			.Concat(new[] { col.Name })
-			.Select(a => (a ?? string.Empty).Trim())
-			.Where(a => !string.IsNullOrWhiteSpace(a))
-			.ToList();
+		var candidates = BuildCommonCandidates(col, labOv);
 
-		foreach (var cand in candidates)
+		// Alias-group members and runtime bindings are real sources for this column too, so they
+		// must not be appended a second time as "unmapped extra" output columns.
+		foreach (var cand in candidates.Concat(BuildLabDeclaredGroup(col, candidates, labOv)))
 		{
 			if (TryResolveHeaderIndex(cand, headerExact, headerNorm, out var idx))
 				usedIndexes.Add(idx);
 		}
+	}
+
+	// ---------------- Dynamic (near-miss) column binding ----------------
+	// NormKey already absorbs the common kinds of header drift for free, because it strips case,
+	// spaces and punctuation: "Proc-Charge Amount $" / "Proc Charge Amount" / "proc_charge_amount"
+	// all resolve to the same key. What it cannot absorb is a header that gained, lost or misspelt a
+	// WORD ("Proc-Modifier 1" -> "Proc-Modifier", "Pat Payments" -> "Pat Paymentss").
+	//
+	// This pass runs once per file, AFTER everything declared has been resolved, and only for
+	// COMMON columns that found no source at all. It considers only source headers that no other
+	// column claimed, and it binds one only when the best score clears MinScore AND beats the
+	// runner-up by MinMargin - an ambiguous header is left unbound rather than guessed. Every
+	// decision (bound and rejected) is logged so a real rename can be promoted into the lab schema.
+
+	// Deliberately strict. A wrong binding writes plausible-looking numbers into the wrong column,
+	// which is far worse than a blank, so only a near-identical header is taken automatically.
+	// Anything merely similar is logged instead, to be promoted into the lab schema by hand.
+	private const double DynamicMinScore = 0.90;
+	private const double DynamicMinMargin = 0.08;
+	private const double DynamicReportScore = 0.75;
+
+	private static void ResolveDynamicColumnBindings(
+		string[] header,
+		ColumnSchema commonSchema,
+		Dictionary<string, int> headerExact,
+		Dictionary<string, int> headerNorm,
+		LabOverrides labOv,
+		Action<string>? log)
+	{
+		// 1. Which source headers are already spoken for.
+		// Note every source-backed column stays in the running, not just the ones that resolved to
+		// nothing: in a merged two-system file a column is "resolved" as soon as ONE system's
+		// spelling is present, while the other system's renamed spelling is still orphaned and
+		// would leave that system's rows blank.
+		var claimed = new HashSet<int>();
+		var targets = new List<ColumnSpec>();
+
+		foreach (var col in commonSchema.Columns)
+		{
+			if (col == null || IsMetadata(col.Name) || IsDays(col.Name) || !string.IsNullOrWhiteSpace(col.Calculation))
+				continue;
+
+			MarkReferencedSourceIndexes(col, headerExact, headerNorm, labOv, claimed);
+
+			if (!TryGetCompositeTemplate(col, labOv, out _))
+				targets.Add(col);
+		}
+
+		if (targets.Count == 0)
+			return;
+
+		var freeHeaders = new List<(int Index, string Name)>();
+		for (int i = 0; i < header.Length; i++)
+		{
+			var name = (header[i] ?? "").Trim();
+			if (!string.IsNullOrWhiteSpace(name) && !claimed.Contains(i))
+				freeHeaders.Add((i, name));
+		}
+
+		if (freeHeaders.Count == 0)
+			return;
+
+		// 2. Score every (unresolved column, free header) pair, then take them greedily by score so
+		//    one header cannot be handed to two columns.
+		var scored = new List<(ColumnSpec Col, string Header, double Score, double Runner)>();
+
+		foreach (var col in targets)
+		{
+			var candidates = BuildCommonCandidates(col, labOv)
+				.Concat(BuildLabDeclaredGroup(col, BuildCommonCandidates(col, labOv), labOv))
+				.Distinct(StringComparer.OrdinalIgnoreCase)
+				.ToList();
+
+			var ranked = freeHeaders
+				.Select(h => (h.Name, Score: candidates.Max(c => HeaderSimilarity(c, h.Name))))
+				.OrderByDescending(x => x.Score)
+				.ToList();
+
+			if (ranked.Count == 0)
+				continue;
+
+			var best = ranked[0];
+			var runner = ranked.Count > 1 ? ranked[1].Score : 0d;
+
+			if (best.Score < DynamicMinScore)
+			{
+				if (best.Score >= DynamicReportScore)
+					log?.Invoke($"Possible renamed column: source header '{best.Name}' resembles '{col.Name}' (score {best.Score:0.00}) but is below the auto-bind threshold {DynamicMinScore:0.00}. It was NOT used - add it to the lab schema Aliases if it is the same column.");
+
+				continue;
+			}
+
+			if (best.Score - runner < DynamicMinMargin)
+			{
+				log?.Invoke($"Dynamic column match skipped for '{col.Name}': '{best.Name}' ({best.Score:0.00}) is too close to the next candidate ({runner:0.00}).");
+				continue;
+			}
+
+			scored.Add((col, best.Name, best.Score, runner));
+		}
+
+		var takenHeaders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+		foreach (var match in scored.OrderByDescending(s => s.Score))
+		{
+			if (!takenHeaders.Add(match.Header))
+			{
+				log?.Invoke($"Dynamic column match skipped for '{match.Col.Name}': source header '{match.Header}' was already bound to a closer column.");
+				continue;
+			}
+
+			var key = NormKey(match.Col.Name);
+			if (string.IsNullOrWhiteSpace(key))
+				continue;
+
+			labOv.DynamicSourceByCommonNorm[key] = match.Header;
+			log?.Invoke($"Dynamic column match: '{match.Header}' -> '{match.Col.Name}' (score {match.Score:0.00}). Add it to the lab schema Aliases to make this permanent.");
+		}
+	}
+
+	/// <summary>
+	/// 0..1 similarity between two header names: the better of a whole-string edit-distance ratio
+	/// and a word-overlap (Jaccard) ratio, both computed on normalized text.
+	/// </summary>
+	private static double HeaderSimilarity(string a, string b)
+	{
+		var na = NormKey(a);
+		var nb = NormKey(b);
+
+		if (string.IsNullOrWhiteSpace(na) || string.IsNullOrWhiteSpace(nb))
+			return 0d;
+
+		if (na.Equals(nb, StringComparison.Ordinal))
+			return 1d;
+
+		double edit = 1d - ((double)LevenshteinDistance(na, nb) / Math.Max(na.Length, nb.Length));
+
+		var ta = TokenizeHeader(a);
+		var tb = TokenizeHeader(b);
+
+		double jaccard = 0d;
+		if (ta.Count > 0 && tb.Count > 0)
+		{
+			double intersect = ta.Count(t => tb.Contains(t));
+			double union = ta.Union(tb, StringComparer.OrdinalIgnoreCase).Count();
+			if (union > 0) jaccard = intersect / union;
+		}
+
+		return Math.Max(edit, jaccard);
+	}
+
+	private static HashSet<string> TokenizeHeader(string s)
+	{
+		var parts = Regex.Split(s ?? "", @"(?<=[a-z0-9])(?=[A-Z])|[^A-Za-z0-9]+")
+			.Select(p => p.Trim().ToLowerInvariant())
+			.Where(p => p.Length > 0);
+
+		return new HashSet<string>(parts, StringComparer.OrdinalIgnoreCase);
+	}
+
+	private static int LevenshteinDistance(string a, string b)
+	{
+		if (a.Length == 0) return b.Length;
+		if (b.Length == 0) return a.Length;
+
+		var prev = new int[b.Length + 1];
+		var curr = new int[b.Length + 1];
+
+		for (int j = 0; j <= b.Length; j++) prev[j] = j;
+
+		for (int i = 1; i <= a.Length; i++)
+		{
+			curr[0] = i;
+
+			for (int j = 1; j <= b.Length; j++)
+			{
+				int cost = a[i - 1] == b[j - 1] ? 0 : 1;
+				curr[j] = Math.Min(Math.Min(curr[j - 1] + 1, prev[j] + 1), prev[j - 1] + cost);
+			}
+
+			(prev, curr) = (curr, prev);
+		}
+
+		return prev[b.Length];
 	}
 
 	private static bool TryResolveHeaderIndex(

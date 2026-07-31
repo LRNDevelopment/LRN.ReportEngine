@@ -338,7 +338,7 @@
         "IncludeInHash": false
       },
       {
-        "CsvHeader": "Claim Amount",
+        "CsvHeader": "ChargeAmount",
         "SqlColumn": "ClaimAmount",
         "IncludeInHash": false
       },
@@ -416,6 +416,31 @@
         "CsvHeader": "Claim Type",
         "SqlColumn": "ClaimType",
         "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "ClaimUID",
+        "SqlColumn": "ClaimUID",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Aging DOE",
+        "SqlColumn": "AgingDOE",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Aging DOS",
+        "SqlColumn": "AgingDOS",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Panel Name LIS",
+        "SqlColumn": "PanelNameLIS",
+        "IncludeInHash": true
+      },
+      {
+        "CsvHeader": "Panel Name Based on CPT",
+        "SqlColumn": "PanelNameBasedOnCPT",
+        "IncludeInHash": true
       }
     ],
     "StagingTableName": "dbo.ClaimLevelData_Staging"
@@ -799,7 +824,7 @@
         "IncludeInHash": false
       },
       {
-        "CsvHeader": "Billed Amounts",
+        "CsvHeader": "ChargeAmount",
         "SqlColumn": "BilledAmounts",
         "IncludeInHash": false
       },
@@ -817,6 +842,16 @@
         "CsvHeader": "Payment %",
         "SqlColumn": "PaymentPercent",
         "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "LineLevelUID",
+        "SqlColumn": "LineLevelUID",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Source",
+        "SqlColumn": "Source",
+        "IncludeInHash": true
       }
     ],
     "StagingTableName": "dbo.LineLevelData_Staging"

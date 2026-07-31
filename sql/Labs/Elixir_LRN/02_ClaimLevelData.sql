@@ -97,6 +97,9 @@ BEGIN
         [Bucket30Amount] NVARCHAR(500) NULL,
         [Bucket60Count] NVARCHAR(500) NULL,
         [Bucket60Amount] NVARCHAR(500) NULL,
+        [ClaimUID] NVARCHAR(500) NULL,
+        [PanelNameLIS] NVARCHAR(1000) NULL,
+        [PanelNameBasedOnCPT] NVARCHAR(1000) NULL,
         [InsertedDateTime] DATETIME2(3) NOT NULL
             CONSTRAINT [DF_ClaimLevelData_InsertedDateTime] DEFAULT (SYSDATETIME())
     );
@@ -210,6 +213,9 @@ BEGIN
         [Bucket30Amount] NVARCHAR(500) NULL,
         [Bucket60Count] NVARCHAR(500) NULL,
         [Bucket60Amount] NVARCHAR(500) NULL,
+        [ClaimUID] NVARCHAR(500) NULL,
+        [PanelNameLIS] NVARCHAR(1000) NULL,
+        [PanelNameBasedOnCPT] NVARCHAR(1000) NULL,
         [InsertedDateTime] DATETIME2(3) NOT NULL CONSTRAINT [DF_ClaimLevelData_Staging_InsertedDateTime] DEFAULT (SYSDATETIME())
     );
 END
@@ -690,6 +696,24 @@ IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimL
            AND c.name = 'Bucket60Amount' AND c.max_length <> -1 AND c.max_length < 1000)
     ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [Bucket60Amount] NVARCHAR(500) NULL;
 GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ClaimUID') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ClaimUID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'ClaimUID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [ClaimUID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PanelNameLIS') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PanelNameLIS] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PanelNameLIS' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PanelNameLIS] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PanelNameBasedOnCPT') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PanelNameBasedOnCPT] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PanelNameBasedOnCPT' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PanelNameBasedOnCPT] NVARCHAR(1000) NULL;
+GO
 
 /* Reconcile [ClaimLevelData_Staging] with the current mapping - additive only. */
 IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ClaimID') IS NULL
@@ -1165,4 +1189,22 @@ IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'Bucket60Amount') IS NULL
 IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
            AND c.name = 'Bucket60Amount' AND c.max_length <> -1 AND c.max_length < 1000)
     ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [Bucket60Amount] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ClaimUID') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [ClaimUID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'ClaimUID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [ClaimUID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PanelNameLIS') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PanelNameLIS] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PanelNameLIS' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PanelNameLIS] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PanelNameBasedOnCPT') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PanelNameBasedOnCPT] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PanelNameBasedOnCPT' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PanelNameBasedOnCPT] NVARCHAR(1000) NULL;
 GO

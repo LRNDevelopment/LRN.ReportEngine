@@ -421,6 +421,31 @@
         "CsvHeader": "60 Bucket $",
         "SqlColumn": "Bucket60Amount",
         "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "ClaimUID",
+        "SqlColumn": "ClaimUID",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Aging DOE",
+        "SqlColumn": "AgingDOE",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Aging DOS",
+        "SqlColumn": "AgingDOS",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Panel Name LIS",
+        "SqlColumn": "PanelNameLIS",
+        "IncludeInHash": true
+      },
+      {
+        "CsvHeader": "Panel Name Based on CPT",
+        "SqlColumn": "PanelNameBasedOnCPT",
+        "IncludeInHash": true
       }
     ],
     "StagingTableName": "dbo.ClaimLevelData_Staging"
@@ -754,7 +779,7 @@
         "IncludeInHash": false
       },
       {
-        "CsvHeader": "Claim amount",
+        "CsvHeader": "ChargeAmount",
         "SqlColumn": "ClaimAmount",
         "IncludeInHash": false
       },
@@ -817,6 +842,16 @@
         "CsvHeader": "Proc-Ins Last Refiled/Denied Date",
         "SqlColumn": "ProcInsLastRefiledDeniedDate",
         "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "LineLevelUID",
+        "SqlColumn": "LineLevelUID",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Source",
+        "SqlColumn": "Source",
+        "IncludeInHash": true
       }
     ],
     "StagingTableName": "dbo.LineLevelData_Staging"

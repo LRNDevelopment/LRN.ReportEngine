@@ -351,6 +351,31 @@
         "CsvHeader": "DOE_Month",
         "SqlColumn": "DOE_Month",
         "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "ClaimUID",
+        "SqlColumn": "ClaimUID",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Aging DOE",
+        "SqlColumn": "AgingDOE",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Aging DOS",
+        "SqlColumn": "AgingDOS",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Panel Name LIS",
+        "SqlColumn": "PanelNameLIS",
+        "IncludeInHash": true
+      },
+      {
+        "CsvHeader": "Panel Name Based on CPT",
+        "SqlColumn": "PanelNameBasedOnCPT",
+        "IncludeInHash": true
       }
     ],
     "StagingTableName": "dbo.ClaimLevelData_Staging"
@@ -723,6 +748,16 @@
         "CsvHeader": "Posted Week",
         "SqlColumn": "PostedWeek",
         "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "LineLevelUID",
+        "SqlColumn": "LineLevelUID",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Source",
+        "SqlColumn": "Source",
+        "IncludeInHash": true
       }
     ],
     "StagingTableName": "dbo.LineLevelData_Staging"

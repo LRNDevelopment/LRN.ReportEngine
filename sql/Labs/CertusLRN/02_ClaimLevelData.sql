@@ -96,6 +96,11 @@ BEGIN
         [Bucket60] NVARCHAR(500) NULL,
         [Bucket60Amount] NVARCHAR(500) NULL,
         [ClaimType] NVARCHAR(500) NULL,
+        [ClaimUID] NVARCHAR(500) NULL,
+        [AgingDOE] NVARCHAR(500) NULL,
+        [AgingDOS] NVARCHAR(500) NULL,
+        [PanelNameLIS] NVARCHAR(1000) NULL,
+        [PanelNameBasedOnCPT] NVARCHAR(1000) NULL,
         [InsertedDateTime] DATETIME2(3) NOT NULL
             CONSTRAINT [DF_ClaimLevelData_InsertedDateTime] DEFAULT (SYSDATETIME())
     );
@@ -208,6 +213,11 @@ BEGIN
         [Bucket60] NVARCHAR(500) NULL,
         [Bucket60Amount] NVARCHAR(500) NULL,
         [ClaimType] NVARCHAR(500) NULL,
+        [ClaimUID] NVARCHAR(500) NULL,
+        [AgingDOE] NVARCHAR(500) NULL,
+        [AgingDOS] NVARCHAR(500) NULL,
+        [PanelNameLIS] NVARCHAR(1000) NULL,
+        [PanelNameBasedOnCPT] NVARCHAR(1000) NULL,
         [InsertedDateTime] DATETIME2(3) NOT NULL CONSTRAINT [DF_ClaimLevelData_Staging_InsertedDateTime] DEFAULT (SYSDATETIME())
     );
 END
@@ -682,6 +692,36 @@ IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimL
            AND c.name = 'ClaimType' AND c.max_length <> -1 AND c.max_length < 1000)
     ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [ClaimType] NVARCHAR(500) NULL;
 GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ClaimUID') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ClaimUID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'ClaimUID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [ClaimUID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'AgingDOE') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [AgingDOE] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'AgingDOE' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [AgingDOE] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'AgingDOS') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [AgingDOS] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'AgingDOS' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [AgingDOS] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PanelNameLIS') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PanelNameLIS] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PanelNameLIS' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PanelNameLIS] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PanelNameBasedOnCPT') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PanelNameBasedOnCPT] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'PanelNameBasedOnCPT' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PanelNameBasedOnCPT] NVARCHAR(1000) NULL;
+GO
 
 /* Reconcile [ClaimLevelData_Staging] with the current mapping - additive only. */
 IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ClaimID') IS NULL
@@ -1151,4 +1191,34 @@ IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ClaimType') IS NULL
 IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
            AND c.name = 'ClaimType' AND c.max_length <> -1 AND c.max_length < 1000)
     ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [ClaimType] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ClaimUID') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [ClaimUID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'ClaimUID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [ClaimUID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'AgingDOE') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [AgingDOE] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'AgingDOE' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [AgingDOE] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'AgingDOS') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [AgingDOS] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'AgingDOS' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [AgingDOS] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PanelNameLIS') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PanelNameLIS] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PanelNameLIS' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PanelNameLIS] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PanelNameBasedOnCPT') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PanelNameBasedOnCPT] NVARCHAR(1000) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'PanelNameBasedOnCPT' AND c.max_length <> -1 AND c.max_length < 2000)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PanelNameBasedOnCPT] NVARCHAR(1000) NULL;
 GO

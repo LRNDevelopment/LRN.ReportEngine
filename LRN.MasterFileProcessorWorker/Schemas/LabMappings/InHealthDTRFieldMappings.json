@@ -392,6 +392,11 @@
         "CsvHeader": "Facility",
         "SqlColumn": "Facility",
         "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "ClaimUID",
+        "SqlColumn": "ClaimUID",
+        "IncludeInHash": false
       }
     ],
     "StagingTableName": "dbo.ClaimLevelData_Staging"
@@ -758,6 +763,16 @@
         "CsvHeader": "ClientAccNum",
         "SqlColumn": "ClientAccNum",
         "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "LineLevelUID",
+        "SqlColumn": "LineLevelUID",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Source",
+        "SqlColumn": "Source",
+        "IncludeInHash": true
       }
     ],
     "StagingTableName": "dbo.LineLevelData_Staging"

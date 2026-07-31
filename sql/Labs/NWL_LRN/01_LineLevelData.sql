@@ -91,6 +91,8 @@ BEGIN
         [ProcInsResponsibleCarrierOriginalFilingDate] NVARCHAR(500) NULL,
         [ProcInsStatus] NVARCHAR(1000) NULL,
         [ProcInsLastRefiledDeniedDate] NVARCHAR(500) NULL,
+        [LineLevelUID] NVARCHAR(500) NULL,
+        [Source] NVARCHAR(500) NULL,
         [InsertedDateTime] DATETIME2(3) NOT NULL
             CONSTRAINT [DF_LineLevelData_InsertedDateTime] DEFAULT (SYSDATETIME())
     );
@@ -198,6 +200,8 @@ BEGIN
         [ProcInsResponsibleCarrierOriginalFilingDate] NVARCHAR(500) NULL,
         [ProcInsStatus] NVARCHAR(1000) NULL,
         [ProcInsLastRefiledDeniedDate] NVARCHAR(500) NULL,
+        [LineLevelUID] NVARCHAR(500) NULL,
+        [Source] NVARCHAR(500) NULL,
         [InsertedDateTime] DATETIME2(3) NOT NULL CONSTRAINT [DF_LineLevelData_Staging_InsertedDateTime] DEFAULT (SYSDATETIME())
     );
 END
@@ -642,6 +646,18 @@ IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLe
            AND c.name = 'ProcInsLastRefiledDeniedDate' AND c.max_length <> -1 AND c.max_length < 1000)
     ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [ProcInsLastRefiledDeniedDate] NVARCHAR(500) NULL;
 GO
+IF COL_LENGTH('dbo.LineLevelData', 'LineLevelUID') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [LineLevelUID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'LineLevelUID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [LineLevelUID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'Source') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [Source] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData')
+           AND c.name = 'Source' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData] ALTER COLUMN [Source] NVARCHAR(500) NULL;
+GO
 
 /* Reconcile [LineLevelData_Staging] with the current mapping - additive only. */
 IF COL_LENGTH('dbo.LineLevelData_Staging', 'ClaimID') IS NULL
@@ -1081,4 +1097,16 @@ IF COL_LENGTH('dbo.LineLevelData_Staging', 'ProcInsLastRefiledDeniedDate') IS NU
 IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
            AND c.name = 'ProcInsLastRefiledDeniedDate' AND c.max_length <> -1 AND c.max_length < 1000)
     ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [ProcInsLastRefiledDeniedDate] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'LineLevelUID') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [LineLevelUID] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'LineLevelUID' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [LineLevelUID] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'Source') IS NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [Source] NVARCHAR(500) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.LineLevelData_Staging')
+           AND c.name = 'Source' AND c.max_length <> -1 AND c.max_length < 1000)
+    ALTER TABLE [dbo].[LineLevelData_Staging] ALTER COLUMN [Source] NVARCHAR(500) NULL;
 GO

@@ -362,3 +362,6 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /LRN.ExcelValidator/Services/ExcelDataReaderHeaderReader.cs
+
+# Local credential overrides - never commit
+appsettings.Secrets.json

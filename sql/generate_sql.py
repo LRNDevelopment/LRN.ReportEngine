@@ -38,7 +38,7 @@ LABS = [
     (10, "Beech_Tree",          "BeechTree_LRN", "BeechTreeFieldMappings.json"),
     (9,  "Rising Tides",        "RisingTides",  "RisingTidesFieldMappings.Json"),
     (13, "PCR Labs of America", "LRN_PCRLOA",   "PCRLabsofAmericaFieldMappings.Json"),
-    (18, "Certus",              "Certus_LRN",   "CertusFieldMappings.Json"),
+    (18, "Certus",              "CertusLRN",    "CertusFieldMappings.Json"),
     (19, "Augustus",            "Augustus_LRN", "AugustusFieldMappings.Json"),
     (21, "Elixir",              "Elixir_LRN",   "ElixirFieldMappings.Json"),
 ]
@@ -252,14 +252,14 @@ def main():
         ":r $(Path)\\LRNMaster\\01_ReportRunIdInfoLog.sql",
         ":r $(Path)\\LRNMaster\\02_ReportsWorkflowTracker.sql",
         "",
-        "PRINT '== Per-lab: LineClaimFileLogs additive migration ==';",
+        "PRINT '== Per-lab: LineClaimFileLogs (create or migrate) ==';",
     ]
     # The migration script has no USE of its own (it is normally run with sqlcmd -d <LabDb>),
     # so switch database before each include.
     for _, _, db, _ in LABS:
         deploy.append(f"USE [{db}];")
         deploy.append("GO")
-        deploy.append(":r $(Path)\\Labs\\_Common\\03_LineClaimFileLogs_AddStatusColumns.sql")
+        deploy.append(":r $(Path)\\Labs\\_Common\\02_LineClaimFileLogs.sql")
     deploy += ["", "PRINT '== Per-lab data tables ==';"]
     for rel in written:
         deploy.append(":r $(Path)\\" + rel[len("sql/"):].replace("/", "\\"))

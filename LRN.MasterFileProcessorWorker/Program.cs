@@ -5,6 +5,8 @@ using LRN.Notifications;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 // Self-tests for the line/claim bulk-copy pipeline. Runs without a database or a test framework.
 if (args.Contains("--selftest", StringComparer.OrdinalIgnoreCase))
@@ -13,6 +15,14 @@ if (args.Contains("--selftest", StringComparer.OrdinalIgnoreCase))
 var host = Host.CreateDefaultBuilder(args)
 	.UseContentRoot(AppContext.BaseDirectory)
 	.UseWindowsService(o => o.ServiceName = "LRN - Master File Processor")
+	.ConfigureAppConfiguration((context, config) =>
+	{
+		// Real credentials live here, never in the tracked appsettings.json. This file is
+		// gitignored, is loaded LAST so it overrides anything above it, and is loaded in every
+		// environment - unlike user-secrets, which only load under Development.
+		// See sql/README.md, "Supplying secrets".
+		config.AddJsonFile("appsettings.Secrets.json", optional: true, reloadOnChange: true);
+	})
 	.ConfigureLogging((context, logging) =>
 	{
 		logging.ClearProviders();
@@ -54,6 +64,22 @@ var host = Host.CreateDefaultBuilder(args)
 		services.AddHostedService<MasterFileProcessorWorker>();
 	})
 	.Build();
+
+// Preflight check: verifies config, mappings, LabMaster and the target tables without
+// processing a file. Answers "is the bulk copy set up correctly" directly.
+if (args.Contains("--diagnose", StringComparer.OrdinalIgnoreCase))
+{
+	using var scope = host.Services.CreateScope();
+	var sp = scope.ServiceProvider;
+
+	return await ImportDiagnostics.RunAsync(
+		sp.GetRequiredService<IOptions<LineClaimImportOptions>>().Value,
+		sp.GetRequiredService<IOptions<ImportOptions>>().Value,
+		sp.GetRequiredService<IConfiguration>(),
+		sp.GetRequiredService<LabMappingLoader>(),
+		AppContext.BaseDirectory,
+		CancellationToken.None);
+}
 
 await host.RunAsync();
 return 0;

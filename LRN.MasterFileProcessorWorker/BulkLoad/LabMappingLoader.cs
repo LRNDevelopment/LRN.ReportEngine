@@ -179,8 +179,11 @@ public sealed class LabMappingLoader
                 errors.Add($"{file} [{levelName}]: SqlColumn '{sqlColumn}' is stamped by the pipeline and must not be mapped from the CSV.");
             }
 
-            if (!string.IsNullOrWhiteSpace(field.CsvHeader) && !seenCsv.Add(field.CsvHeader.Trim()))
-                errors.Add($"{file} [{levelName}]: duplicate CsvHeader '{field.CsvHeader}'.");
+            // A repeated CsvHeader is legitimate fan-out: one source column can feed several target
+            // columns (e.g. "Payment Posted Date" -> PostingDate AND PaymentPostedDate). Only a
+            // repeated SqlColumn is an error, because two fields would fight over one destination.
+            if (!string.IsNullOrWhiteSpace(field.CsvHeader))
+                seenCsv.Add(field.CsvHeader.Trim());
 
             if (!seenSql.Add(sqlColumn))
                 errors.Add($"{file} [{levelName}]: duplicate SqlColumn '{sqlColumn}'.");

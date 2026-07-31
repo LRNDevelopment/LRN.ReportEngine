@@ -20,7 +20,7 @@ sqlcmd -S <server> -d LRNMaster -i sql/LRNMaster/01_ReportRunIdInfoLog.sql
 sqlcmd -S <server> -d LRNMaster -i sql/LRNMaster/02_ReportsWorkflowTracker.sql
 
 # each lab database
-sqlcmd -S <server> -d NWL_LRN -i sql/Labs/_Common/03_LineClaimFileLogs_AddStatusColumns.sql
+sqlcmd -S <server> -d NWL_LRN -i sql/Labs/_Common/02_LineClaimFileLogs.sql
 sqlcmd -S <server> -d NWL_LRN -i sql/Labs/NWL_LRN/01_LineLevelData.sql
 sqlcmd -S <server> -d NWL_LRN -i sql/Labs/NWL_LRN/02_ClaimLevelData.sql
 ```

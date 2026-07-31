@@ -674,7 +674,7 @@
         "IncludeInHash": true
       },
       {
-        "CsvHeader": "Posting Date",
+        "CsvHeader": "Payment Posted Date",
         "SqlColumn": "PostingDate",
         "IncludeInHash": true
       },

@@ -49,12 +49,129 @@ ORDER BY LabId;";
     }
 
     /// <summary>
+    /// Resolves ONE lab for the bulk copy. Returns null (with a reason logged) when the lab cannot be
+    /// resolved, so a lab that is not set up never stops the rest of the run.
+    /// </summary>
+    /// <param name="labConnectionStringOverride">
+    /// The lab's connection string as the worker already resolves it from
+    /// <c>MasterFileProcessor:Labs[].LabDbConnectionString</c>. This takes precedence over
+    /// LabMaster.ConnectionKey, because that is where per-lab connection strings actually live in
+    /// this repo - LabMaster is authoritative for WHICH labs are active, not for how to reach them.
+    /// </param>
+    public async Task<ResolvedLab?> TryResolveLabAsync(
+        int labId,
+        string? labConnectionStringOverride,
+        string mappingFolderPath,
+        CancellationToken ct)
+    {
+        var mappings = LoadMappingsCached(mappingFolderPath);
+        var mapping = mappings.FirstOrDefault(m => m.LabId == labId);
+
+        if (mapping is null)
+        {
+            _logger.LogWarning(
+                "Lab {LabId}: no mapping file in {Folder} declares \"LabId\": {LabId}. Bulk copy skipped. " +
+                "Add the LabId to that lab's *FieldMappings.json.",
+                labId, mappingFolderPath, labId);
+            return null;
+        }
+
+        // LabMaster gates which labs are active WHEN IT EXISTS. It is not present on every
+        // deployment, so its absence must not disable the whole feature - fall back to the lab list
+        // in MasterFileProcessor:Labs, which is what the rest of this worker already iterates.
+        var active = await TryReadLabMasterAsync(labId, ct).ConfigureAwait(false);
+
+        if (active is { IsActive: false })
+        {
+            _logger.LogInformation(
+                "Lab {LabId}: LabMaster row has IsActive = 0. Bulk copy skipped.", labId);
+            return null;
+        }
+
+        var connectionString = FirstNonBlank(
+            labConnectionStringOverride,
+            ResolveConnectionString(active?.ConnectionKey ?? ""));
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            _logger.LogWarning(
+                "Lab {LabId} '{LabName}': no connection string. Set MasterFileProcessor:Labs[].LabDbConnectionString " +
+                "for this lab, or add a ConnectionStrings entry matching LabMaster.ConnectionKey. Bulk copy skipped.",
+                labId, mapping.LabName ?? active?.LabName ?? "");
+            return null;
+        }
+
+        var labName = FirstNonBlank(active?.LabName, mapping.LabName) ?? $"Lab{labId}";
+
+        return new ResolvedLab(labId, labName, active?.ConnectionKey ?? "", connectionString!, mapping);
+    }
+
+    private static string? FirstNonBlank(params string?[] values) =>
+        values.FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+
+    private IReadOnlyList<LabMappingConfig>? _cachedMappings;
+    private string? _cachedMappingFolder;
+
+    /// <summary>Mapping files change only on deploy; loading them per lab per run is wasted work.</summary>
+    private IReadOnlyList<LabMappingConfig> LoadMappingsCached(string mappingFolderPath)
+    {
+        if (_cachedMappings is not null &&
+            string.Equals(_cachedMappingFolder, mappingFolderPath, StringComparison.OrdinalIgnoreCase))
+        {
+            return _cachedMappings;
+        }
+
+        _cachedMappings = _loader.LoadAll(mappingFolderPath);
+        _cachedMappingFolder = mappingFolderPath;
+        return _cachedMappings;
+    }
+
+    private sealed record LabMasterRow(string LabName, string ConnectionKey, bool IsActive);
+
+    /// <summary>
+    /// Reads the LabMaster row, or null when the table does not exist, the row is absent, or the
+    /// read fails. Null means "LabMaster has nothing to say about this lab", not "skip the lab".
+    /// </summary>
+    private async Task<LabMasterRow?> TryReadLabMasterAsync(int labId, CancellationToken ct)
+    {
+        const string sql = @"
+IF OBJECT_ID('dbo.LabMaster', 'U') IS NOT NULL
+    SELECT TOP (1) LabName, ISNULL(ConnectionKey, ''), IsActive
+    FROM   dbo.LabMaster
+    WHERE  LabId = @LabId;";
+
+        try
+        {
+            await using var conn = new SqlConnection(_masterConnectionString);
+            await using var cmd = new SqlCommand(sql, conn) { CommandTimeout = 60 };
+            cmd.Parameters.Add("@LabId", System.Data.SqlDbType.Int).Value = labId;
+
+            await conn.OpenAsync(ct).ConfigureAwait(false);
+            await using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
+
+            if (!await reader.ReadAsync(ct).ConfigureAwait(false))
+                return null;
+
+            return new LabMasterRow(
+                reader.IsDBNull(0) ? "" : reader.GetString(0).Trim(),
+                reader.IsDBNull(1) ? "" : reader.GetString(1).Trim(),
+                !reader.IsDBNull(2) && reader.GetBoolean(2));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "Lab {LabId}: could not read LRNMaster.dbo.LabMaster; continuing with the configured lab settings.", labId);
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Returns every active lab that has a usable mapping. A lab that cannot be resolved is logged
     /// and skipped rather than throwing, so one bad row never stops the other labs loading.
     /// </summary>
     public async Task<IReadOnlyList<ResolvedLab>> GetActiveLabsAsync(string mappingFolderPath, CancellationToken ct)
     {
-        var mappings = _loader.LoadAll(mappingFolderPath);
+        var mappings = LoadMappingsCached(mappingFolderPath);
         var rows = await ReadLabMasterAsync(ct).ConfigureAwait(false);
 
         var resolved = new List<ResolvedLab>();

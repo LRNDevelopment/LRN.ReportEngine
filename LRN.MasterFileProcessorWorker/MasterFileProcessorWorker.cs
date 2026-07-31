@@ -1929,22 +1929,30 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		var empty = Array.Empty<LineClaimImportOutcome>();
 
 		if (!_lineClaimOptions.Enabled)
+		{
+			// Logged every run, and deliberately not Debug: silence here is what makes a
+			// "nothing happened and nothing was logged" run impossible to diagnose.
+			_logger.LogWarning(
+				"Lab {LabId}: LineClaimImport:Enabled is false, so no line/claim rows are being copied to SQL. " +
+				"Set LineClaimImport:Enabled to true in appsettings.json to turn the bulk copy on.",
+				lab.LabId);
+			_fileLog.Info($"Lab {lab.LabId}: LineClaimImport:Enabled=false, bulk copy skipped.");
 			return empty;
+		}
 
 		try
 		{
 			var mappingFolder = ResolvePath(_lineClaimOptions.LabMappingsFolder);
-			var labs = await _labRegistry.GetActiveLabsAsync(mappingFolder, ct);
 
-			var resolved = labs.FirstOrDefault(l => l.LabId == lab.LabId);
+			// The lab's own connection string wins - it is where this repo keeps them. LabMaster is
+			// consulted for whether the lab is active, and as the fallback source of the connection.
+			var labConnectionString = GetLabConfigValue(lab, "LabDbConnectionString")
+				?? _configuration.GetConnectionString(GetLabConfigValue(lab, "LabDbConnectionKey") ?? string.Empty);
+
+			var resolved = await _labRegistry.TryResolveLabAsync(lab.LabId, labConnectionString, mappingFolder, ct);
 
 			if (resolved is null)
-			{
-				_logger.LogInformation(
-					"Lab {LabId}: not returned by LabMaster as active with a mapping; line/claim bulk copy skipped.",
-					lab.LabId);
-				return empty;
-			}
+				return empty;   // TryResolveLabAsync has already logged the specific reason
 
 			var request = new LineClaimImportRequest(
 				RunId: runId,

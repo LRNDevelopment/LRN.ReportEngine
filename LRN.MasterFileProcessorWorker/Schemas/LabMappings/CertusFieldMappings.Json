@@ -1,7 +1,7 @@
 {
   "LabId": 18,
   "LabName": "Certus",
-  "DatabaseName": "Certus_LRN",
+  "DatabaseName": "CertusLRN",
   "ClaimLevel": {
     "Enabled": true,
     "CreateCsv": true,

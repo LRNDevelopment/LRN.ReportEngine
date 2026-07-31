@@ -109,6 +109,13 @@ ORDER BY LabId;";
     private static string? FirstNonBlank(params string?[] values) =>
         values.FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
 
+    /// <summary>
+    /// The mapping for one lab, without touching the database. Used by the worker to decide which
+    /// CSVs to produce, which must not depend on LRNMaster being reachable.
+    /// </summary>
+    public LabMappingConfig? TryGetMapping(int labId, string mappingFolderPath) =>
+        LoadMappingsCached(mappingFolderPath).FirstOrDefault(m => m.LabId == labId);
+
     private IReadOnlyList<LabMappingConfig>? _cachedMappings;
     private string? _cachedMappingFolder;
 

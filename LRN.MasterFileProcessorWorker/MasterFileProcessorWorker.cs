@@ -647,7 +647,28 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				var sw = Stopwatch.StartNew();
 
+				// Per-level output switches, resolved from this lab's *FieldMappings.json.
+				// Line level and claim level are independent: either can be turned off on its own,
+				// and turning one off skips its RAW export, its standardized CSV, its publish to the
+				// output folder and its bulk copy. Defaults are true, so a lab whose mapping says
+				// nothing behaves exactly as before.
+				var (createLineCsv, createClaimCsv) = ResolveCsvOutputToggles(lab);
+
+				if (!createLineCsv)
+				{
+					_logger.LogInformation("Lab {LabId}: LineLevel.CreateCsv=false - skipping line-level CSV output.", lab.LabId);
+					_fileLog.Info($"Lab {lab.LabId}: LineLevel.CreateCsv=false, line-level CSV skipped.");
+				}
+
+				if (!createClaimCsv)
+				{
+					_logger.LogInformation("Lab {LabId}: ClaimLevel.CreateCsv=false - skipping claim-level CSV output.", lab.LabId);
+					_fileLog.Info($"Lab {lab.LabId}: ClaimLevel.CreateCsv=false, claim-level CSV skipped.");
+				}
+
 				// STEP 50: LineLevel RAW export
+				if (createLineCsv)
+				{
 				stepSeq = 50;
 				var step50 = new StepLogRow
 				{
@@ -763,7 +784,11 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						ex);
 				}
 
+				} // end if (createLineCsv)
+
 				// STEP 70: ClaimLevel RAW export
+				if (createClaimCsv)
+				{
 				stepSeq = 70;
 				var step70 = new StepLogRow
 				{
@@ -846,11 +871,16 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				_logger.LogInformation("Lab {LabId}: ClaimLevel STANDARD CSV generated -> {Path}", lab.LabId, claimStagePath);
 				_fileLog.Info($"Lab {lab.LabId}: ClaimLevel STANDARD CSV -> {claimStagePath}");
 
+				} // end if (createClaimCsv)
+
 				// All standardized outputs are complete in staging. Publish them into the watched
 				// output folder via atomic moves so the downstream watcher only ever sees finished
 				// files, then remove the staging folder entirely.
-				await MoveStagedOutputToFinalAsync(lineStagePath, lineOutPath, lab.LabId, ct);
-				await MoveStagedOutputToFinalAsync(claimStagePath, claimOutPath, lab.LabId, ct);
+				if (createLineCsv)
+					await MoveStagedOutputToFinalAsync(lineStagePath, lineOutPath, lab.LabId, ct);
+
+				if (createClaimCsv)
+					await MoveStagedOutputToFinalAsync(claimStagePath, claimOutPath, lab.LabId, ct);
 				await MoveStagedOutputToFinalAsync(modeMedianStagePath, modeMedianOutPath, lab.LabId, ct);
 				TryDeleteDirectory(stagingFolder);
 
@@ -898,8 +928,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				// Cleanup RAW CSVs unless configured to keep
 				if (!_opt.KeepRawCsvExports)
 				{
-					TryDelete(lineRawPath);
-					TryDelete(claimRawPath);
+					if (createLineCsv) TryDelete(lineRawPath);
+					if (createClaimCsv) TryDelete(claimRawPath);
 				}
 
 				// STEP 90: FileStatus CSV log (local + optional upload)
@@ -1913,6 +1943,41 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 
 		var normalized = new string(sheetName.Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
 		return normalized.EndsWith("LINELEVEL", StringComparison.Ordinal);
+	}
+
+	/// <summary>
+	/// Per-level CSV output switches for a lab, read from its <c>*FieldMappings.json</c>.
+	/// <para>
+	/// A level produces its CSV when the mapping says <c>Enabled</c> AND <c>CreateCsv</c>. The two
+	/// levels are fully independent - line level on with claim level off is supported, and vice
+	/// versa. When the mapping cannot be read at all, both default to true so behaviour is
+	/// unchanged for any lab that has not opted in.
+	/// </para>
+	/// </summary>
+	private (bool Line, bool Claim) ResolveCsvOutputToggles(LabFileMap lab)
+	{
+		if (!_lineClaimOptions.Enabled)
+			return (true, true);
+
+		try
+		{
+			var mappingFolder = ResolvePath(_lineClaimOptions.LabMappingsFolder);
+			var mapping = _labRegistry.TryGetMapping(lab.LabId, mappingFolder);
+
+			if (mapping is null)
+				return (true, true);
+
+			static bool Produces(LevelMapping? level) => level is null || (level.Enabled && level.CreateCsv);
+
+			return (Produces(mapping.LineLevel), Produces(mapping.ClaimLevel));
+		}
+		catch (Exception ex)
+		{
+			// Never let a config problem stop the file being processed - the mapping loader logs
+			// the detail, and defaulting to "produce both" preserves the previous behaviour.
+			_logger.LogWarning(ex, "Lab {LabId}: could not resolve CSV output toggles; producing both levels.", lab.LabId);
+			return (true, true);
+		}
 	}
 
 	/// <summary>

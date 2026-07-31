@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 
 namespace LRN.MasterFileProcessorWorker.BulkLoad;
 
@@ -33,6 +33,7 @@ public static class SelfTests
         DisabledLevelIsNotValidated();
         AuditStampingAndCsvBinding();
         ToggleSkipReasons();
+        PerLevelCsvToggles();
 
         Console.WriteLine(new string('-', 70));
 
@@ -318,6 +319,27 @@ public static class SelfTests
         Check("Enabled level is loadable", enabled is { Enabled: true, CreateCsv: true, BulkCopyToTable: true });
         Check("CreateCsv=false implies no bulk copy", !csvOff.BulkCopyToTable);
         Check("Level toggles are independent", levelOff.Enabled == false && enabled.Enabled);
+    }
+
+    /// <summary>
+    /// The two levels must be switchable independently: line on / claim off and the reverse are
+    /// both valid, and each combination must resolve to the right (produceLine, produceClaim) pair.
+    /// Mirrors the worker's ResolveCsvOutputToggles.
+    /// </summary>
+    private static void PerLevelCsvToggles()
+    {
+        static bool Produces(LevelMapping? level) => level is null || (level.Enabled && level.CreateCsv);
+
+        var on   = new LevelMapping { Enabled = true,  CreateCsv = true };
+        var off  = new LevelMapping { Enabled = true,  CreateCsv = false };
+        var dead = new LevelMapping { Enabled = false, CreateCsv = true };
+
+        Check("both levels on -> both CSVs", Produces(on) && Produces(on));
+        Check("line on, claim off -> only line CSV", Produces(on) && !Produces(off));
+        Check("line off, claim on -> only claim CSV", !Produces(off) && Produces(on));
+        Check("both off -> no CSV", !Produces(off) && !Produces(off));
+        Check("Enabled=false suppresses the CSV too", !Produces(dead));
+        Check("absent level section defaults to producing", Produces(null));
     }
 
     // ---------------- helpers ----------------

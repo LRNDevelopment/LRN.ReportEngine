@@ -446,6 +446,11 @@
         "CsvHeader": "Panel Name Based on CPT",
         "SqlColumn": "PanelNameBasedOnCPT",
         "IncludeInHash": true
+      },
+      {
+        "CsvHeader": "CPT Code X Units X Modifier Orginal",
+        "SqlColumn": "CPTCodeXUnitsXModifierOrginal",
+        "IncludeInHash": true
       }
     ],
     "StagingTableName": "dbo.ClaimLevelData_Staging"

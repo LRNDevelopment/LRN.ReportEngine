@@ -102,6 +102,7 @@ BEGIN
         [AgingDOS] NVARCHAR(500) NULL,
         [PanelNameLIS] NVARCHAR(1000) NULL,
         [PanelNameBasedOnCPT] NVARCHAR(1000) NULL,
+        [CPTCodeXUnitsXModifierOrginal] NVARCHAR(MAX) NULL,
         [InsertedDateTime] DATETIME2(3) NOT NULL
             CONSTRAINT [DF_ClaimLevelData_InsertedDateTime] DEFAULT (SYSDATETIME())
     );
@@ -220,6 +221,7 @@ BEGIN
         [AgingDOS] NVARCHAR(500) NULL,
         [PanelNameLIS] NVARCHAR(1000) NULL,
         [PanelNameBasedOnCPT] NVARCHAR(1000) NULL,
+        [CPTCodeXUnitsXModifierOrginal] NVARCHAR(MAX) NULL,
         [InsertedDateTime] DATETIME2(3) NOT NULL CONSTRAINT [DF_ClaimLevelData_Staging_InsertedDateTime] DEFAULT (SYSDATETIME())
     );
 END
@@ -730,6 +732,12 @@ IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimL
            AND c.name = 'PanelNameBasedOnCPT' AND c.max_length <> -1 AND c.max_length < 2000)
     ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [PanelNameBasedOnCPT] NVARCHAR(1000) NULL;
 GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'CPTCodeXUnitsXModifierOrginal') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [CPTCodeXUnitsXModifierOrginal] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData')
+           AND c.name = 'CPTCodeXUnitsXModifierOrginal' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[ClaimLevelData] ALTER COLUMN [CPTCodeXUnitsXModifierOrginal] NVARCHAR(MAX) NULL;
+GO
 
 /* Reconcile [ClaimLevelData_Staging] with the current mapping - additive only. */
 IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ClaimID') IS NULL
@@ -1235,4 +1243,10 @@ IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PanelNameBasedOnCPT') IS NULL
 IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
            AND c.name = 'PanelNameBasedOnCPT' AND c.max_length <> -1 AND c.max_length < 2000)
     ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [PanelNameBasedOnCPT] NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'CPTCodeXUnitsXModifierOrginal') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [CPTCodeXUnitsXModifierOrginal] NVARCHAR(MAX) NULL;
+IF EXISTS (SELECT 1 FROM sys.columns c WHERE c.object_id = OBJECT_ID('dbo.ClaimLevelData_Staging')
+           AND c.name = 'CPTCodeXUnitsXModifierOrginal' AND c.max_length <> -1)
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ALTER COLUMN [CPTCodeXUnitsXModifierOrginal] NVARCHAR(MAX) NULL;
 GO

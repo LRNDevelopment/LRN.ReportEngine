@@ -322,24 +322,34 @@ public static class SelfTests
     }
 
     /// <summary>
-    /// The two levels must be switchable independently: line on / claim off and the reverse are
-    /// both valid, and each combination must resolve to the right (produceLine, produceClaim) pair.
-    /// Mirrors the worker's ResolveCsvOutputToggles.
+    /// The CSV toggles publish a FILE; they must never decide whether rows reach SQL.
+    /// The file is always produced in staging and the loader reads it from there, so
+    /// CreateCsv=false means "no file on disk", never "no data in the table".
     /// </summary>
     private static void PerLevelCsvToggles()
     {
-        static bool Produces(LevelMapping? level) => level is null || (level.Enabled && level.CreateCsv);
+        // What the worker uses to decide whether to PUBLISH the csv.
+        static bool Publishes(LevelMapping? level) => level is null || (level.Enabled && level.CreateCsv);
 
-        var on   = new LevelMapping { Enabled = true,  CreateCsv = true };
-        var off  = new LevelMapping { Enabled = true,  CreateCsv = false };
-        var dead = new LevelMapping { Enabled = false, CreateCsv = true };
+        var on   = new LevelMapping { Enabled = true,  CreateCsv = true,  BulkCopyToTable = true, SqlTableName = "dbo.X" };
+        var off  = new LevelMapping { Enabled = true,  CreateCsv = false, BulkCopyToTable = true, SqlTableName = "dbo.X" };
+        var dead = new LevelMapping { Enabled = false, CreateCsv = true,  BulkCopyToTable = true, SqlTableName = "dbo.X" };
+        var noLoad = new LevelMapping { Enabled = true, CreateCsv = true, BulkCopyToTable = false };
 
-        Check("both levels on -> both CSVs", Produces(on) && Produces(on));
-        Check("line on, claim off -> only line CSV", Produces(on) && !Produces(off));
-        Check("line off, claim on -> only claim CSV", !Produces(off) && Produces(on));
-        Check("both off -> no CSV", !Produces(off) && !Produces(off));
-        Check("Enabled=false suppresses the CSV too", !Produces(dead));
-        Check("absent level section defaults to producing", Produces(null));
+        Check("both levels on -> both CSVs published", Publishes(on) && Publishes(on));
+        Check("line on, claim off -> only line CSV published", Publishes(on) && !Publishes(off));
+        Check("line off, claim on -> only claim CSV published", !Publishes(off) && Publishes(on));
+        Check("both off -> no CSV published", !Publishes(off) && !Publishes(off));
+        Check("absent level section defaults to publishing", Publishes(null));
+
+        // The load decision, mirroring LineClaimImportService.ResolveSkipReason.
+        static bool Loads(LevelMapping? level) => level is not null && level.Enabled && level.BulkCopyToTable;
+
+        Check("CreateCsv=false STILL loads to SQL", Loads(off));
+        Check("CreateCsv=true loads to SQL", Loads(on));
+        Check("Enabled=false stops the load", !Loads(dead));
+        Check("BulkCopyToTable=false stops the load", !Loads(noLoad));
+        Check("publishing and loading are independent", Publishes(on) && Loads(off) && !Publishes(off));
     }
 
     // ---------------- helpers ----------------

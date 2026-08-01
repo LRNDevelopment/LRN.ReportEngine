@@ -1,4 +1,4 @@
-namespace LRN.MasterFileProcessorWorker.BulkLoad;
+﻿namespace LRN.MasterFileProcessorWorker.BulkLoad;
 
 /// <summary>
 /// One file in <c>Schemas/LabMappings/</c>.
@@ -52,7 +52,15 @@ public sealed class LevelMapping
     /// <summary>Master switch. False skips the level end to end (logged, never silent).</summary>
     public bool Enabled { get; set; } = true;
 
-    /// <summary>Write the standardized CSV for this level. False also skips the bulk copy.</summary>
+    /// <summary>
+    /// Publish the standardized CSV for this level to the output folder.
+    /// <para>
+    /// This does NOT affect the SQL load. The file is always produced in the staging folder and the
+    /// loader reads it from there, so turning this off means "no file on disk", never "no data".
+    /// Prefer the appsettings keys MasterFileProcessor:CreateLineLevelCsv / CreateClaimLevelCsv,
+    /// which take precedence over this.
+    /// </para>
+    /// </summary>
     public bool CreateCsv { get; set; } = true;
 
     /// <summary>

@@ -16,17 +16,19 @@
     // Poll interval
     public int PollSeconds { get; set; } = 60;
 
-    // ---- CSV output switches (MasterFileProcessor section) -------------------------------
-    // Turn the line-level and claim-level CSV output on/off, independently. Applies to every lab
-    // unless that lab overrides it in its own Labs[] entry below.
+    // ---- CSV FILE output switches (MasterFileProcessor section) ---------------------------
+    // Whether the standardized line-level / claim-level CSV is written to the output folder.
+    // Independent per level, and overridable per lab in its Labs[] entry below.
     //
     //   "MasterFileProcessor": {
     //     "CreateLineLevelCsv": true,
     //     "CreateClaimLevelCsv": false,
     //     ...
     //
-    // When a level is off, its RAW export, its standardized CSV, its publish to the output folder
-    // and its SQL bulk copy are all skipped, and the skip is logged.
+    // THESE CONTROL THE FILE ONLY. The SQL bulk copy into LineLevelData / ClaimLevelData always
+    // runs regardless: the file is always produced in the staging folder and the loader reads it
+    // from there, so false means "no file on disk", never "no data in the table".
+    // To stop a level loading to SQL, set BulkCopyToTable=false in that lab's *FieldMappings.json.
     public bool CreateLineLevelCsv { get; set; } = true;
     public bool CreateClaimLevelCsv { get; set; } = true;
 
@@ -154,8 +156,9 @@ public sealed class LabFileMap
 	// with an added "Source" column; the value per row is the sheet name with " Line Level" suffix stripped.
 	public string? LineLevelSheetNames { get; set; }
 
-	// ---- Per-lab CSV output switches ------------------------------------------------------
-	// Override MasterFileProcessor:CreateLineLevelCsv / CreateClaimLevelCsv for THIS lab only:
+	// ---- Per-lab CSV FILE output switches -------------------------------------------------
+	// Override MasterFileProcessor:CreateLineLevelCsv / CreateClaimLevelCsv for THIS lab only.
+	// File output only - the SQL load is unaffected. See the section-level comment above.
 	//
 	//   { "LabId": 18, "LabName": "Certus",
 	//     "CreateLineLevelCsv": true, "CreateClaimLevelCsv": false, ... }

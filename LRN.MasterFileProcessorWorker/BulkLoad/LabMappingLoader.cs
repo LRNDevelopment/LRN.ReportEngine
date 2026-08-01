@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace LRN.MasterFileProcessorWorker.BulkLoad;
@@ -136,9 +136,6 @@ public sealed class LabMappingLoader
             var staging = level.ResolveStagingTableName();
             if (!string.IsNullOrWhiteSpace(staging) && !TableNamePattern.IsMatch(staging.Trim()))
                 errors.Add($"{file} [{levelName}]: StagingTableName '{staging}' is not a valid 'schema.table' identifier.");
-
-            if (!level.CreateCsv)
-                errors.Add($"{file} [{levelName}]: BulkCopyToTable is true but CreateCsv is false - there would be no file to load.");
 
             if (level.Fields.Count == 0)
                 errors.Add($"{file} [{levelName}]: BulkCopyToTable is true but Fields is empty.");

@@ -224,11 +224,19 @@ public sealed class LineClaimImportService
         }
     }
 
+    /// <summary>
+    /// Why this level would not be loaded, or null to load it.
+    /// <para>
+    /// Deliberately does NOT consider CreateCsv. Whether the standardized CSV is published to the
+    /// output folder is a separate concern from whether the rows reach SQL: the file is always
+    /// produced in the staging folder, and the loader reads it from there when publishing is off.
+    /// Only Enabled and BulkCopyToTable decide whether a load happens.
+    /// </para>
+    /// </summary>
     private static string? ResolveSkipReason(LevelMapping? level)
     {
         if (level is null) return "no mapping section for this level in the lab JSON";
         if (!level.Enabled) return "Enabled=false";
-        if (!level.CreateCsv) return "CreateCsv=false";
         if (!level.BulkCopyToTable) return "BulkCopyToTable=false";
         return null;
     }

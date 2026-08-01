@@ -667,8 +667,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				}
 
 				// STEP 50: LineLevel RAW export
-				if (createLineCsv)
-				{
+				// Always runs. CreateLineLevelCsv controls only whether the finished file is
+				// PUBLISHED to the output folder - the SQL load reads from staging either way.
 				stepSeq = 50;
 				var step50 = new StepLogRow
 				{
@@ -784,11 +784,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						ex);
 				}
 
-				} // end if (createLineCsv)
-
 				// STEP 70: ClaimLevel RAW export
-				if (createClaimCsv)
-				{
 				stepSeq = 70;
 				var step70 = new StepLogRow
 				{
@@ -871,8 +867,6 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				_logger.LogInformation("Lab {LabId}: ClaimLevel STANDARD CSV generated -> {Path}", lab.LabId, claimStagePath);
 				_fileLog.Info($"Lab {lab.LabId}: ClaimLevel STANDARD CSV -> {claimStagePath}");
 
-				} // end if (createClaimCsv)
-
 				// All standardized outputs are complete in staging. Publish them into the watched
 				// output folder via atomic moves so the downstream watcher only ever sees finished
 				// files, then remove the staging folder entirely.
@@ -881,8 +875,14 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				if (createClaimCsv)
 					await MoveStagedOutputToFinalAsync(claimStagePath, claimOutPath, lab.LabId, ct);
+
 				await MoveStagedOutputToFinalAsync(modeMedianStagePath, modeMedianOutPath, lab.LabId, ct);
-				TryDeleteDirectory(stagingFolder);
+
+				// The bulk copy loads from wherever the file actually is: the published path when it
+				// was requested, otherwise the staging copy. Staging is deleted AFTER the load, not
+				// before, so switching the CSV off never removes the loader's input.
+				var lineLoadPath = createLineCsv ? lineOutPath : lineStagePath;
+				var claimLoadPath = createClaimCsv ? claimOutPath : claimStagePath;
 
 				sw.Stop();
 
@@ -906,7 +906,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				await _processLog.StepStartAsync(runCtx, step85, ct);
 
 				var bulkOutcomes = await TryImportLineClaimLevelAsync(
-					lab, runCtx.RunId, selected, weekFolder, lineOutPath, claimOutPath, ct);
+					lab, runCtx.RunId, selected, weekFolder, lineLoadPath, claimLoadPath, ct);
 
 				step85.EndTimeIST = _processLog.NowIST();
 				step85.RecordsOut = (int)Math.Min(int.MaxValue, bulkOutcomes.Sum(o => o.RowsCopied));
@@ -925,11 +925,14 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				await _processLog.StepEndAsync(runCtx, step85, ct);
 				activeStep = null;
 
+				// Safe now: the load has finished with the staged files.
+				TryDeleteDirectory(stagingFolder);
+
 				// Cleanup RAW CSVs unless configured to keep
 				if (!_opt.KeepRawCsvExports)
 				{
-					if (createLineCsv) TryDelete(lineRawPath);
-					if (createClaimCsv) TryDelete(claimRawPath);
+					TryDelete(lineRawPath);
+					TryDelete(claimRawPath);
 				}
 
 				// STEP 90: FileStatus CSV log (local + optional upload)

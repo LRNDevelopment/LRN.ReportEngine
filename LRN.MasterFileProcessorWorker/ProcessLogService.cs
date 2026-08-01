@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using System;
 using System.Reflection;
 using System.Threading;
@@ -97,6 +97,7 @@ public sealed class ProcessLogService : IProcessLogService
         if (!_opt.Enabled || string.IsNullOrWhiteSpace(ctx.RunId)) return;
 
         step.RunID = ctx.RunId;
+        step.LabId ??= ctx.LabId;
         step.LabName ??= ctx.LabName;
         step.StartTimeIST ??= NowIST();
         step.Status ??= "IN_PROGRESS";
@@ -120,6 +121,7 @@ public sealed class ProcessLogService : IProcessLogService
         if (!_opt.Enabled || string.IsNullOrWhiteSpace(ctx.RunId)) return;
 
         step.RunID = ctx.RunId;
+        step.LabId ??= ctx.LabId;
         step.LabName ??= ctx.LabName;
         step.EndTimeIST ??= NowIST();
 

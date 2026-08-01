@@ -297,6 +297,10 @@ def main():
         "PRINT '== LRNMaster ==';",
         ":r $(Path)\\LRNMaster\\01_ReportRunIdInfoLog.sql",
         ":r $(Path)\\LRNMaster\\02_ReportsWorkflowTracker.sql",
+        ":r $(Path)\\LRNMaster\\03_ReportTypeMaster.sql",
+        ":r $(Path)\\LRNMaster\\04_AddColumns_RunLog_StepLog_InfoLog.sql",
+        ":r $(Path)\\LRNMaster\\05_usp_ReportRunIdInfoLog_Insert.sql",
+        ":r $(Path)\\LRNMaster\\06_usp_ReportsWorkflowTracker_Upsert.sql",
         "",
         "PRINT '== Per-lab: LineClaimFileLogs (create or migrate) ==';",
     ]

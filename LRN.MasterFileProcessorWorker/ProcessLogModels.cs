@@ -1,9 +1,13 @@
-using System;
+﻿using System;
 
 public sealed class RunLogRow
 {
     public string RunID { get; set; } = "";
     public string LabName { get; set; } = "";
+
+    /// <summary>Lab identity and week, so downstream procedures can resolve a run from RunId alone.</summary>
+    public int? LabId { get; set; }
+    public string? WeekFolder { get; set; }
     public string? PipelineName { get; set; }
     public string? TriggerType { get; set; }
     public string? TriggeredBy { get; set; }
@@ -40,6 +44,7 @@ public sealed class StepLogRow
 {
     public string RunID { get; set; } = "";
     public string? LabName { get; set; }
+    public int? LabId { get; set; }
     public int StepSeq { get; set; }
     public string StepName { get; set; } = "";
     public string? StepCategory { get; set; }
@@ -87,5 +92,9 @@ public sealed class ProcessRunContext
 {
     public string RunId { get; init; } = "";
     public string LabName { get; init; } = "";
+
+    /// <summary>Carried so every step row is stamped with the lab without the caller repeating it.</summary>
+    public int? LabId { get; set; }
+
     public DateTime StartTimeIST { get; init; }
 }

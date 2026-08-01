@@ -1,4 +1,4 @@
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System;
@@ -30,6 +30,44 @@ public sealed class SqlProcessLogRepository : IProcessLogRepository
         _opt = opt.Value ?? new ProcessLogOptions();
     }
 
+    private static readonly Dictionary<string, bool> _columnCache = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Whether a column exists, cached for the process lifetime. Lets the log writers include newly
+    /// added columns without making the additive migration a hard deployment prerequisite.
+    /// </summary>
+    private async Task<bool> ColumnExistsAsync(string table, string column, CancellationToken ct)
+    {
+        var key = table + "." + column;
+
+        lock (_columnCache)
+        {
+            if (_columnCache.TryGetValue(key, out var cached))
+                return cached;
+        }
+
+        bool exists;
+        try
+        {
+            using var conn = new SqlConnection(_connStr);
+            using var cmd = new SqlCommand("SELECT COL_LENGTH(@Table, @Column);", conn);
+            cmd.Parameters.AddWithValue("@Table", table);
+            cmd.Parameters.AddWithValue("@Column", column);
+            await conn.OpenAsync(ct);
+            var result = await cmd.ExecuteScalarAsync(ct);
+            exists = result is not null && result is not DBNull;
+        }
+        catch
+        {
+            exists = false;
+        }
+
+        lock (_columnCache)
+            _columnCache[key] = exists;
+
+        return exists;
+    }
+
     public async Task<string> NextRunIdAsync(CancellationToken ct)
     {
         using var conn = new SqlConnection(_connStr);
@@ -54,10 +92,14 @@ public sealed class SqlProcessLogRepository : IProcessLogRepository
     {
         if (!_opt.Enabled) return;
 
+        // Written only when the additive migration (sql/LRNMaster/04_*.sql) has been applied, so the
+        // worker runs correctly against a database where it has not.
+        var runLogHasLab = await ColumnExistsAsync(_opt.RunLogTable, "LabId", ct);
+
         string sql = $@"
 INSERT INTO {_opt.RunLogTable}
 (
-  RunID, LabName, PipelineName, TriggerType, TriggeredBy,
+  RunID, LabName, {(runLogHasLab ? "LabId, WeekFolder," : "")} PipelineName, TriggerType, TriggeredBy,
   StartTimeIST, EndTimeIST, DurationSeconds, OverallStatus, LatestMasterFileFound,
   InputMasterSharePointPath, InputMasterFileName, InputMasterFileModifiedTime, InputMasterFileSizeMB,
   MandatoryColumnCheck, SplitOutputWrittenToSharePoint,
@@ -66,7 +108,7 @@ INSERT INTO {_opt.RunLogTable}
 )
 VALUES
 (
-  @RunID, @LabName, @PipelineName, @TriggerType, @TriggeredBy,
+  @RunID, @LabName, {(runLogHasLab ? "@LabId, @WeekFolder," : "")} @PipelineName, @TriggerType, @TriggeredBy,
   @StartTimeIST, @EndTimeIST, @DurationSeconds, @OverallStatus, @LatestMasterFileFound,
   @InputMasterSharePointPath, @InputMasterFileName, @InputMasterFileModifiedTime, @InputMasterFileSizeMB,
   @MandatoryColumnCheck, @SplitOutputWrittenToSharePoint,
@@ -124,6 +166,8 @@ UPDATE {_opt.RunLogTable}
     {
         if (!_opt.Enabled) return;
 
+        var stepLogHasLab = await ColumnExistsAsync(_opt.StepLogTable, "LabId", ct);
+
         string sql = $@"
 IF EXISTS (SELECT 1 FROM {_opt.StepLogTable} WHERE RunID=@RunID AND StepSeq=@StepSeq)
 BEGIN
@@ -155,7 +199,7 @@ ELSE
 BEGIN
     INSERT INTO {_opt.StepLogTable}
     (
-      RunID, [LabName], StepSeq, StepName, StepCategory, SourceSystem,
+      RunID, [LabName], {(stepLogHasLab ? "LabId," : "")} StepSeq, StepName, StepCategory, SourceSystem,
       StartTimeIST, EndTimeIST, DurationSeconds, Status,
       RecordsIn, RecordsOut,
       FileNameIn, FileNameOut, PathIn, PathOut,
@@ -164,7 +208,7 @@ BEGIN
     )
     VALUES
     (
-      @RunID, @LabName, @StepSeq, @StepName, @StepCategory, @SourceSystem,
+      @RunID, @LabName, {(stepLogHasLab ? "@LabId," : "")} @StepSeq, @StepName, @StepCategory, @SourceSystem,
       @StartTimeIST, @EndTimeIST, @DurationSeconds, @Status,
       @RecordsIn, @RecordsOut,
       @FileNameIn, @FileNameOut, @PathIn, @PathOut,
@@ -258,6 +302,7 @@ VALUES
     {
         cmd.Parameters.AddWithValue("@RunID", s.RunID);
         cmd.Parameters.AddWithValue("@LabName", (object?)s.LabName ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@LabId", (object?)s.LabId ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@StepSeq", s.StepSeq);
         cmd.Parameters.AddWithValue("@StepName", s.StepName);
         cmd.Parameters.AddWithValue("@StepCategory", (object?)s.StepCategory ?? DBNull.Value);

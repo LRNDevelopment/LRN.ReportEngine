@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using Microsoft.Data.SqlClient;
 
 namespace LRN.MasterFileProcessorWorker.BulkLoad;
@@ -28,27 +28,10 @@ public static class WorkflowStatus
 /// </summary>
 public sealed class ReportsWorkflowTrackerRepository
 {
-    // MERGE on the natural key so a re-run updates in place instead of duplicating.
-    private const string UpsertSql = @"
-MERGE dbo.ReportsWorkflowTracker WITH (HOLDLOCK) AS target
-USING (SELECT @RunId AS RunId, @LabID AS LabID, @ReportName AS ReportName) AS source
-    ON  target.RunId      = source.RunId
-    AND target.LabID      = source.LabID
-    AND target.ReportName = source.ReportName
-WHEN MATCHED THEN
-    UPDATE SET LabName     = @LabName,
-               WeekFolder  = @WeekFolder,
-               ReportType  = @ReportType,
-               Status      = @Status,
-               [RowCount]  = @RowCountValue,
-               StartedOn   = ISNULL(target.StartedOn, @StartedOn),
-               CompletedOn = @CompletedOn,
-               Remarks     = @Remarks
-WHEN NOT MATCHED THEN
-    INSERT (RunId, LabID, LabName, WeekFolder, ReportName, ReportType, Status, [RowCount],
-            StartedOn, CompletedOn, Remarks, CreatedOn, CreatedBy)
-    VALUES (@RunId, @LabID, @LabName, @WeekFolder, @ReportName, @ReportType, @Status, @RowCountValue,
-            @StartedOn, @CompletedOn, @Remarks, @CreatedOn, @CreatedBy);";
+    // Goes through the shared procedure so this worker uses the same contract as every other team.
+    // The procedure resolves LabId / LabName / WeekFolder from dbo.LRN_Run_Log by RunId, and
+    // ReportTypeId from dbo.ReportTypeMaster by ReportName.
+    private const string UpsertProc = "dbo.usp_ReportsWorkflowTracker_Upsert";
 
     private readonly string _masterConnectionString;
     private readonly ILogger<ReportsWorkflowTrackerRepository> _logger;
@@ -83,21 +66,25 @@ WHEN NOT MATCHED THEN
         try
         {
             await using var conn = new SqlConnection(_masterConnectionString);
-            await using var cmd = new SqlCommand(UpsertSql, conn) { CommandTimeout = 60 };
+            await using var cmd = new SqlCommand(UpsertProc, conn)
+            {
+                CommandType = CommandType.StoredProcedure,
+                CommandTimeout = 60
+            };
 
-            cmd.Parameters.Add("@RunId", SqlDbType.VarChar, 50).Value = runId;
-            cmd.Parameters.Add("@LabID", SqlDbType.Int).Value = labId;
-            cmd.Parameters.Add("@LabName", SqlDbType.VarChar, 200).Value = (object?)labName ?? DBNull.Value;
-            cmd.Parameters.Add("@WeekFolder", SqlDbType.VarChar, 200).Value = (object?)weekFolder ?? DBNull.Value;
+            cmd.Parameters.Add("@RunId", SqlDbType.VarChar, 30).Value = runId;
             cmd.Parameters.Add("@ReportName", SqlDbType.VarChar, 200).Value = reportName;
-            cmd.Parameters.Add("@ReportType", SqlDbType.VarChar, 100).Value = (object?)reportType ?? DBNull.Value;
             cmd.Parameters.Add("@Status", SqlDbType.VarChar, 50).Value = status;
-            cmd.Parameters.Add("@RowCountValue", SqlDbType.BigInt).Value = (object?)rowCount ?? DBNull.Value;
+            cmd.Parameters.Add("@RowCount", SqlDbType.BigInt).Value = (object?)rowCount ?? DBNull.Value;
             cmd.Parameters.Add("@StartedOn", SqlDbType.DateTime2).Value = (object?)startedOn ?? DBNull.Value;
             cmd.Parameters.Add("@CompletedOn", SqlDbType.DateTime2).Value = (object?)completedOn ?? DBNull.Value;
             cmd.Parameters.Add("@Remarks", SqlDbType.NVarChar, -1).Value = (object?)remarks ?? DBNull.Value;
-            cmd.Parameters.Add("@CreatedOn", SqlDbType.DateTime2).Value = ReportRunIdInfoLogger.IstNow();
             cmd.Parameters.Add("@CreatedBy", SqlDbType.VarChar, 100).Value = _createdBy;
+
+            // Passed as a fallback: the procedure prefers dbo.LRN_Run_Log, and uses these only when
+            // the run log has no lab context yet.
+            cmd.Parameters.Add("@LabId", SqlDbType.Int).Value = labId;
+            cmd.Parameters.Add("@WeekFolder", SqlDbType.VarChar, 200).Value = (object?)weekFolder ?? DBNull.Value;
 
             await conn.OpenAsync(ct).ConfigureAwait(false);
             await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);

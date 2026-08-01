@@ -267,6 +267,12 @@ VALUES
     {
         cmd.Parameters.AddWithValue("@RunID", r.RunID);
         cmd.Parameters.AddWithValue("@LabName", r.LabName);
+
+        // Always bound, even when the INSERT omits the columns because the additive migration has
+        // not run: an unreferenced parameter is harmless, a referenced-but-unbound one is fatal.
+        cmd.Parameters.AddWithValue("@LabId", (object?)r.LabId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@WeekFolder", (object?)r.WeekFolder ?? DBNull.Value);
+
         cmd.Parameters.AddWithValue("@PipelineName", (object?)r.PipelineName ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@TriggerType", (object?)r.TriggerType ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@TriggeredBy", (object?)r.TriggeredBy ?? DBNull.Value);

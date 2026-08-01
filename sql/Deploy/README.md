@@ -62,7 +62,31 @@ mode needed, there are no `:r` includes.
 | `LineClaimFileLogs` | created, or `+ Status, RowsCopied, ErrorMessage, CompletedDateTime` |
 | `LineLevelData` | production schema verbatim, plus the columns listed in the alignment report |
 | `ClaimLevelData` | production schema verbatim, plus the columns listed in the alignment report |
-| `LineLevelData_Staging`, `ClaimLevelData_Staging` | same shape, minus identity and computed columns |
+| `LineLevelData_Staging`, `ClaimLevelData_Staging` | same shape, minus the identity column |
+| `InsuranceBalance_Decimal` | added to **all four tables in every lab** — see below |
+
+### `InsuranceBalance_Decimal`
+
+`InsuranceBalance` is stored as `nvarchar` everywhere, so aggregating it needs a cast in every
+query. All four tables now carry:
+
+```sql
+[InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED
+```
+
+Production already had this on three `ClaimLevelData` tables (Augustus, Certus, NWL); it is now on
+line level and claim level for all 12 labs, including the staging tables so a staged load reads the
+same as the live one.
+
+`TRY_CAST` yields `NULL` for non-numeric text rather than failing the row. `PERSISTED` stores the
+result, so it can be indexed and costs nothing to read. Nothing writes to it — it is absent from
+every lab mapping, so it appears in neither the `SqlBulkCopy` column list nor the swap's
+`INSERT ... SELECT`.
+
+> ⚠ **A `PERSISTED` computed column requires `QUOTED_IDENTIFIER ON` for any INSERT or UPDATE on the
+> table.** The .NET client sets this by default, so the worker is unaffected. `sqlcmd` does **not** —
+> pass `-I` when writing to these tables by hand, or the insert fails with error 1934. Reads are
+> unaffected.
 
 Staging tables are this worker's own — production does not have them. The load writes to staging,
 verifies the row count, then truncates and swaps into the live table inside one short transaction,

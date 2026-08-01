@@ -200,9 +200,16 @@ BEGIN
         [PaymentPercent] NVARCHAR(100) NULL,
         [LineLevelUID] NVARCHAR(500) NULL,
         [Source] NVARCHAR(500) NULL,
+        [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED,
         PRIMARY KEY CLUSTERED ([RecordId] ASC)
     );
 END
+GO
+
+/* InsuranceBalance_Decimal - numeric view of InsuranceBalance, added on every table */
+IF COL_LENGTH('dbo.LineLevelData', 'InsuranceBalance_Decimal') IS NULL
+   AND COL_LENGTH('dbo.LineLevelData', 'InsuranceBalance') IS NOT NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED;
 GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.default_constraints d
@@ -315,7 +322,8 @@ BEGIN
         [UpdatedBy] NVARCHAR(500) NULL,
         [PaymentPercent] NVARCHAR(100) NULL,
         [LineLevelUID] NVARCHAR(500) NULL,
-        [Source] NVARCHAR(500) NULL
+        [Source] NVARCHAR(500) NULL,
+        [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED
     );
 END
 GO
@@ -325,6 +333,10 @@ IF COL_LENGTH('dbo.LineLevelData_Staging', 'LineLevelUID') IS NULL
 GO
 IF COL_LENGTH('dbo.LineLevelData_Staging', 'Source') IS NULL
     ALTER TABLE [dbo].[LineLevelData_Staging] ADD [Source] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.LineLevelData_Staging', 'InsuranceBalance_Decimal') IS NULL
+   AND COL_LENGTH('dbo.LineLevelData_Staging', 'InsuranceBalance') IS NOT NULL
+    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED;
 GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_LineLevelData_RunId' AND object_id = OBJECT_ID('dbo.LineLevelData'))
@@ -439,9 +451,16 @@ BEGIN
         [ClaimUID] NVARCHAR(500) NULL,
         [PanelNameLIS] NVARCHAR(500) NULL,
         [PanelNameBasedOnCPT] NVARCHAR(500) NULL,
+        [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED,
         PRIMARY KEY CLUSTERED ([RecordId] ASC)
     );
 END
+GO
+
+/* InsuranceBalance_Decimal - numeric view of InsuranceBalance, added on every table */
+IF COL_LENGTH('dbo.ClaimLevelData', 'InsuranceBalance_Decimal') IS NULL
+   AND COL_LENGTH('dbo.ClaimLevelData', 'InsuranceBalance') IS NOT NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED;
 GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.default_constraints d
@@ -558,7 +577,8 @@ BEGIN
         [Bucket60Amount] NVARCHAR(500) NULL,
         [ClaimUID] NVARCHAR(500) NULL,
         [PanelNameLIS] NVARCHAR(500) NULL,
-        [PanelNameBasedOnCPT] NVARCHAR(500) NULL
+        [PanelNameBasedOnCPT] NVARCHAR(500) NULL,
+        [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED
     );
 END
 GO
@@ -571,6 +591,10 @@ IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PanelNameLIS') IS NULL
 GO
 IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PanelNameBasedOnCPT') IS NULL
     ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PanelNameBasedOnCPT] NVARCHAR(500) NULL;
+GO
+IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'InsuranceBalance_Decimal') IS NULL
+   AND COL_LENGTH('dbo.ClaimLevelData_Staging', 'InsuranceBalance') IS NOT NULL
+    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED;
 GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_ClaimLevelData_RunId' AND object_id = OBJECT_ID('dbo.ClaimLevelData'))

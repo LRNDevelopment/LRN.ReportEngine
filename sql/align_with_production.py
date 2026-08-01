@@ -50,6 +50,34 @@ DB_TO_MAPPING = collections.OrderedDict([
     ("RisingTides",    "RisingTidesFieldMappings.Json"),
 ])
 
+# Numeric view of InsuranceBalance, which every table stores as nvarchar.
+#
+# Production already carries this on three ClaimLevelData tables (Augustus, Certus, NWL); it is now
+# created on ALL 24 tables - both levels, every lab - so reporting can aggregate the balance without
+# casting in every query. TRY_CAST yields NULL rather than failing on non-numeric text, and PERSISTED
+# stores the result so it can be indexed and costs nothing to read.
+#
+# Nothing ever writes to it: it is absent from every lab mapping, so it appears in neither the
+# SqlBulkCopy column list nor the INSERT...SELECT of the swap. Verified before this was added.
+COMPUTED_COL = "InsuranceBalance_Decimal"
+COMPUTED_SRC = "InsuranceBalance"
+COMPUTED_EXPR = "(TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED"
+
+
+def computed_clause():
+    return f"        [{COMPUTED_COL}] AS {COMPUTED_EXPR}"
+
+
+def computed_alter(table):
+    """Idempotent add for a table that already exists without the column."""
+    return [
+        f"IF COL_LENGTH('dbo.{table}', '{COMPUTED_COL}') IS NULL",
+        f"   AND COL_LENGTH('dbo.{table}', '{COMPUTED_SRC}') IS NOT NULL",
+        f"    ALTER TABLE [dbo].[{table}] ADD [{COMPUTED_COL}] AS {COMPUTED_EXPR};",
+        "GO",
+    ]
+
+
 # Columns the pipeline owns. Present in production already; never mapped from the CSV.
 PIPELINE_OWNED = {norm(c) for c in
                   ["RecordId", "FileLogId", "RunId", "WeekFolder", "SourceFullPath", "FileName",
@@ -266,6 +294,9 @@ def write_db_bundle(deploy_dir, db, prod_tables, db_report):
         for name, sqltype, _ in added:
             body.append(f"        [{name}] {sqltype} NULL")
 
+        if not any(norm(c[0]) == norm(COMPUTED_COL) for c in prod_cols)            and any(norm(c[0]) == norm(COMPUTED_SRC) for c in prod_cols):
+            body.append(computed_clause())
+
         pk = next((c[0] for c in prod_cols if c[3]), None)
         if pk:
             body.append(f"        PRIMARY KEY CLUSTERED ([{pk}] ASC)")
@@ -274,6 +305,11 @@ def write_db_bundle(deploy_dir, db, prod_tables, db_report):
         a("    );")
         a("END")
         a("GO")
+        a("")
+
+        a(f"/* {COMPUTED_COL} - numeric view of {COMPUTED_SRC}, added on every table */")
+        for line in computed_alter(table):
+            a(line)
         a("")
 
         # Production defaults InsertedDateTime via a separate ALTER; reproduce it.
@@ -293,7 +329,8 @@ def write_db_bundle(deploy_dir, db, prod_tables, db_report):
                 a("GO")
             a("")
 
-        # staging mirror - identical shape minus the identity column
+        # staging mirror - identical shape minus the identity column, but WITH the computed
+        # column so a staged load can be inspected exactly like the live table
         staging = table + "_Staging"
         a(f"/* ---------- {staging} (load target for the staging+swap strategy) ---------- */")
         a("GO")
@@ -303,11 +340,22 @@ def write_db_bundle(deploy_dir, db, prod_tables, db_report):
         a(f"    CREATE TABLE [dbo].[{staging}](")
         body = []
         for name, sqltype, nullable, identity, computed in prod_cols:
-            if identity or computed:
+            if identity:
+                continue
+            if computed:
+                body.append(f"        [{name}] AS {computed}")
                 continue
             body.append(f"        [{name}] {sqltype} NULL")
         for name, sqltype, _ in added:
             body.append(f"        [{name}] {sqltype} NULL")
+
+        # Staging carries the computed column too, so a staged load reads exactly like the live
+        # table. Only appended when production did not already declare it (the loop above copies it
+        # verbatim in that case).
+        if not any(norm(c[0]) == norm(COMPUTED_COL) for c in prod_cols) \
+           and any(norm(c[0]) == norm(COMPUTED_SRC) for c in prod_cols):
+            body.append(computed_clause())
+
         a(",\n".join(body))
         a("    );")
         a("END")
@@ -317,6 +365,8 @@ def write_db_bundle(deploy_dir, db, prod_tables, db_report):
             a(f"IF COL_LENGTH('dbo.{staging}', '{name}') IS NULL")
             a(f"    ALTER TABLE [dbo].[{staging}] ADD [{name}] {sqltype} NULL;")
             a("GO")
+        for line in computed_alter(staging):
+            a(line)
         a("")
 
         # Production types these as nvarchar(500), so a composite key on

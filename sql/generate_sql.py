@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
 """
+Generates the LRNMaster deployment bundle.
+
+NOTE: this no longer generates the per-lab LineLevelData / ClaimLevelData DDL.
+sql/align_with_production.py owns that, because those tables must match the schema already running
+in production (sql/Existing_LineLevel_ClaimLevel_DATA.sql) rather than being derived from the
+mappings. Run BOTH:
+
+    python sql/align_with_production.py     -> sql/Deploy/<LabDb>.sql + SchemaAlignmentReport.md
+    python sql/generate_sql.py              -> sql/Deploy/LRNMaster.sql
+
+Original description follows.
+
 Generates the idempotent deployment scripts under sql/ from the lab mapping JSONs.
 
     python sql/generate_sql.py
@@ -235,91 +247,8 @@ def build_table_script(db, table, staging, columns, index_prefix):
 
 
 def main():
-    if not os.path.exists(FIELDS_XLSX):
-        sys.exit(f"Missing {FIELDS_XLSX}")
-
-    sheets = excel_sheets(FIELDS_XLSX)
-    # Workbook sheet names do not match lab names exactly.
-    sheet_alias = {
-        "NorthWest": "Northwest", "Beech_Tree": "BeechTree", "Rising Tides": "RisingTides",
-        "PCR Labs of America": "PCRLOA", "Certus": "Certus", "Augustus": "Augustus",
-        "Elixir": "Elixir", "Cove": "Cove", "PhiLife": "PHILIFE", "InHealthDTR": "InHEalthDTR",
-    }
-
-    written = []
-    for lab_id, lab_name, db, mapping_file in LABS:
-        mapping_path = os.path.join(MAPPINGS, mapping_file)
-        if not os.path.exists(mapping_path):
-            print(f"  ! {lab_name}: mapping {mapping_file} not found, skipped")
-            continue
-
-        mapping = json.load(io.open(mapping_path, encoding="utf-8-sig"))
-        sheet_name = sheet_alias.get(lab_name)
-        rows = sheets.get(sheet_name)
-        if rows is None:
-            print(f"  ! {lab_name}: no workbook sheet '{sheet_name}', skipped")
-            continue
-
-        claim_types, line_types = declared_types(rows)
-        lab_dir = os.path.join(OUT, "Labs", db)
-        os.makedirs(lab_dir, exist_ok=True)
-
-        for seq, (level_key, types, table_default) in enumerate(
-                [("LineLevel", line_types, "LineLevelData"),
-                 ("ClaimLevel", claim_types, "ClaimLevelData")], start=1):
-
-            level = mapping.get(level_key) or {}
-            table = (level.get("SqlTableName") or f"dbo.{table_default}").split(".")[-1]
-            staging = table + "_Staging"
-
-            cols = []
-            for f in level.get("Fields", []):
-                name = (f.get("SqlColumn") or "").strip()
-                if not name or name.lower() in AUDIT_NAMES:
-                    continue  # LabID/LabName are stamped by the loader, declared in AUDIT above
-                cols.append((name, sql_type(name, types.get(name, "nvarchar"))))
-
-            script = build_table_script(db, table, staging, cols, f"{table}")
-            path = os.path.join(lab_dir, f"{seq:02d}_{table}.sql")
-            with io.open(path, "w", encoding="utf-8", newline="\r\n") as fh:
-                fh.write(script)
-            written.append(os.path.relpath(path, ROOT).replace("\\", "/"))
-            print(f"  + {os.path.relpath(path, ROOT)}  ({len(cols)} business columns)")
-
-    # 00_DeployAll.sql - :r includes, run with SQLCMD mode enabled.
-    deploy = [
-        "/* Master deployment script. Run in SSMS with SQLCMD Mode ON (Query > SQLCMD Mode),",
-        "   or via: sqlcmd -S <server> -i sql/00_DeployAll.sql",
-        "   Every referenced script is idempotent and safe to re-run. */",
-        "",
-        ":setvar Path \".\"",
-        "",
-        "PRINT '== LRNMaster ==';",
-        ":r $(Path)\\LRNMaster\\01_ReportRunIdInfoLog.sql",
-        ":r $(Path)\\LRNMaster\\02_ReportsWorkflowTracker.sql",
-        ":r $(Path)\\LRNMaster\\03_ReportTypeMaster.sql",
-        ":r $(Path)\\LRNMaster\\04_AddColumns_RunLog_StepLog_InfoLog.sql",
-        ":r $(Path)\\LRNMaster\\05_usp_ReportRunIdInfoLog_Insert.sql",
-        ":r $(Path)\\LRNMaster\\06_usp_ReportsWorkflowTracker_Upsert.sql",
-        "",
-        "PRINT '== Per-lab: LineClaimFileLogs (create or migrate) ==';",
-    ]
-    # The migration script has no USE of its own (it is normally run with sqlcmd -d <LabDb>),
-    # so switch database before each include.
-    for _, _, db, _ in LABS:
-        deploy.append(f"USE [{db}];")
-        deploy.append("GO")
-        deploy.append(":r $(Path)\\Labs\\_Common\\02_LineClaimFileLogs.sql")
-    deploy += ["", "PRINT '== Per-lab data tables ==';"]
-    for rel in written:
-        deploy.append(":r $(Path)\\" + rel[len("sql/"):].replace("/", "\\"))
-    deploy.append("")
-
-    with io.open(os.path.join(OUT, "00_DeployAll.sql"), "w", encoding="utf-8", newline="\r\n") as fh:
-        fh.write("\n".join(deploy))
-    print(f"  + sql/00_DeployAll.sql")
-
-    write_deploy_bundles(written)
+    """Emits only sql/Deploy/LRNMaster.sql. Lab DDL comes from align_with_production.py."""
+    write_deploy_bundles([])
 
 
 # ----------------------------------------------------------------------------------------------
@@ -413,37 +342,8 @@ def write_deploy_bundles(written_lab_scripts):
     io.open(out, "w", encoding="utf-8", newline="\r\n").write(text)
     print(f"  + sql/Deploy/LRNMaster.sql  ({len(contents)} parts)")
 
-    # ---- one bundle per lab database ----
-    common = os.path.join(OUT, "Labs", "_Common", "02_LineClaimFileLogs.sql")
-    common_body = strip_use_and_trailing_select(io.open(common, encoding="utf-8-sig").read()) \
-        if os.path.exists(common) else ""
-
-    by_db = {}
-    for rel in written_lab_scripts:
-        db = rel.split("/")[2]
-        by_db.setdefault(db, []).append(rel)
-
-    for db, rels in sorted(by_db.items()):
-        parts, contents = [], ["LineClaimFileLogs (create or add outcome columns)"]
-        parts.append(f"/* ---------- LineClaimFileLogs ---------- */\nGO\n{common_body}\nGO\n")
-
-        for rel in sorted(rels):
-            path = os.path.join(ROOT, rel.replace("/", os.sep))
-            label = os.path.splitext(os.path.basename(path))[0].split("_", 1)[-1]
-            contents.append(f"{label} + {label}_Staging (create, then reconcile columns)")
-            body = strip_use_and_trailing_select(io.open(path, encoding="utf-8-sig").read())
-            parts.append(f"/* ---------- {label} ---------- */\nGO\n{body}\nGO\n")
-
-        text = (banner(f"LRN Report Engine - {db} deployment", contents, db)
-                + f"USE [{db}];\nGO\nSET NOCOUNT ON;\nGO\n\n"
-                + "\n".join(parts)
-                + f"\nPRINT '{db} deployment complete.';\nGO\n")
-
-        out = os.path.join(deploy_dir, f"{db}.sql")
-        io.open(out, "w", encoding="utf-8", newline="\r\n").write(text)
-        print(f"  + sql/Deploy/{db}.sql  ({len(contents)} parts)")
-
-    write_deploy_readme(deploy_dir, sorted(by_db))
+    # Per-lab bundles are produced by align_with_production.py, from the production schema.
+    write_deploy_readme(deploy_dir, [])
 
 
 def write_deploy_readme(deploy_dir, dbs):

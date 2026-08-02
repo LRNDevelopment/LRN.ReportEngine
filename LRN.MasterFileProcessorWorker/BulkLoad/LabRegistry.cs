@@ -1,8 +1,8 @@
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 
 namespace LRN.MasterFileProcessorWorker.BulkLoad;
 
-/// <summary>One active lab, joined from LabMaster to its mapping JSON and its connection string.</summary>
+/// <summary>One active lab, joined from dbo.Labs to its mapping JSON and its connection string.</summary>
 public sealed record ResolvedLab(
     int LabId,
     string LabName,
@@ -11,15 +11,15 @@ public sealed record ResolvedLab(
     LabMappingConfig Mapping);
 
 /// <summary>
-/// Resolves the authoritative lab list from <c>LRNMaster.dbo.LabMaster</c> and joins each row to its
+/// Resolves the authoritative lab list from <c>LRNMaster.dbo.Labs</c> and joins each row to its
 /// mapping JSON.
 /// <para>
-/// LabMaster is the source of truth by decision: the four candidate lists in the repo
-/// (appsettings.Labs, Schemas/LabMappings/*.json, ClaimLevelLineLevel_Fields.xlsx and LabMaster)
-/// all disagreed, and only LabMaster is maintained outside the deployment artifact.
+/// dbo.Labs is the single global lab registry, shared by the Master File Processor, the
+/// Denial Processor, LRN Metrics and the LRN API. Every other candidate list in the repo
+/// disagreed with it, so nothing else is trusted for LabId.
 /// </para>
 /// <para>
-/// The connection string comes from configuration under <c>LabMaster.ConnectionKey</c>; it is never
+/// The connection string comes from configuration under <c>Labs.ConnectionKey</c>; it is never
 /// read from the mapping JSON and never hard-coded.
 /// </para>
 /// </summary>
@@ -29,7 +29,7 @@ public sealed class LabRegistry
 SELECT  LabId,
         LabName,
         ConnectionKey
-FROM    dbo.LabMaster
+FROM    dbo.Labs
 WHERE   IsActive = 1
 ORDER BY LabId;";
 
@@ -55,8 +55,8 @@ ORDER BY LabId;";
     /// <param name="labConnectionStringOverride">
     /// The lab's connection string as the worker already resolves it from
     /// <c>MasterFileProcessor:Labs[].LabDbConnectionString</c>. This takes precedence over
-    /// LabMaster.ConnectionKey, because that is where per-lab connection strings actually live in
-    /// this repo - LabMaster is authoritative for WHICH labs are active, not for how to reach them.
+    /// Labs.ConnectionKey, because that is where per-lab connection strings actually live in
+    /// this repo - dbo.Labs is authoritative for WHICH labs are active, not for how to reach them.
     /// </param>
     public async Task<ResolvedLab?> TryResolveLabAsync(
         int labId,
@@ -76,15 +76,15 @@ ORDER BY LabId;";
             return null;
         }
 
-        // LabMaster gates which labs are active WHEN IT EXISTS. It is not present on every
+        // dbo.Labs gates which labs are active WHEN IT EXISTS. It is not present on every
         // deployment, so its absence must not disable the whole feature - fall back to the lab list
         // in MasterFileProcessor:Labs, which is what the rest of this worker already iterates.
-        var active = await TryReadLabMasterAsync(labId, ct).ConfigureAwait(false);
+        var active = await TryReadLabsAsync(labId, ct).ConfigureAwait(false);
 
         if (active is { IsActive: false })
         {
             _logger.LogInformation(
-                "Lab {LabId}: LabMaster row has IsActive = 0. Bulk copy skipped.", labId);
+                "Lab {LabId}: dbo.Labs row has IsActive = 0. Bulk copy skipped.", labId);
             return null;
         }
 
@@ -96,7 +96,7 @@ ORDER BY LabId;";
         {
             _logger.LogWarning(
                 "Lab {LabId} '{LabName}': no connection string. Set MasterFileProcessor:Labs[].LabDbConnectionString " +
-                "for this lab, or add a ConnectionStrings entry matching LabMaster.ConnectionKey. Bulk copy skipped.",
+                "for this lab, or add a ConnectionStrings entry matching Labs.ConnectionKey. Bulk copy skipped.",
                 labId, mapping.LabName ?? active?.LabName ?? "");
             return null;
         }
@@ -133,18 +133,18 @@ ORDER BY LabId;";
         return _cachedMappings;
     }
 
-    private sealed record LabMasterRow(string LabName, string ConnectionKey, bool IsActive);
+    private sealed record LabsRow(string LabName, string ConnectionKey, bool IsActive);
 
     /// <summary>
-    /// Reads the LabMaster row, or null when the table does not exist, the row is absent, or the
-    /// read fails. Null means "LabMaster has nothing to say about this lab", not "skip the lab".
+    /// Reads the dbo.Labs row, or null when the table does not exist, the row is absent, or the
+    /// read fails. Null means "dbo.Labs has nothing to say about this lab", not "skip the lab".
     /// </summary>
-    private async Task<LabMasterRow?> TryReadLabMasterAsync(int labId, CancellationToken ct)
+    private async Task<LabsRow?> TryReadLabsAsync(int labId, CancellationToken ct)
     {
         const string sql = @"
-IF OBJECT_ID('dbo.LabMaster', 'U') IS NOT NULL
+IF OBJECT_ID('dbo.Labs', 'U') IS NOT NULL
     SELECT TOP (1) LabName, ISNULL(ConnectionKey, ''), IsActive
-    FROM   dbo.LabMaster
+    FROM   dbo.Labs
     WHERE  LabId = @LabId;";
 
         try
@@ -159,7 +159,7 @@ IF OBJECT_ID('dbo.LabMaster', 'U') IS NOT NULL
             if (!await reader.ReadAsync(ct).ConfigureAwait(false))
                 return null;
 
-            return new LabMasterRow(
+            return new LabsRow(
                 reader.IsDBNull(0) ? "" : reader.GetString(0).Trim(),
                 reader.IsDBNull(1) ? "" : reader.GetString(1).Trim(),
                 !reader.IsDBNull(2) && reader.GetBoolean(2));
@@ -167,7 +167,7 @@ IF OBJECT_ID('dbo.LabMaster', 'U') IS NOT NULL
         catch (Exception ex)
         {
             _logger.LogWarning(ex,
-                "Lab {LabId}: could not read LRNMaster.dbo.LabMaster; continuing with the configured lab settings.", labId);
+                "Lab {LabId}: could not read LRNMaster.dbo.Labs; continuing with the configured lab settings.", labId);
             return null;
         }
     }
@@ -179,7 +179,7 @@ IF OBJECT_ID('dbo.LabMaster', 'U') IS NOT NULL
     public async Task<IReadOnlyList<ResolvedLab>> GetActiveLabsAsync(string mappingFolderPath, CancellationToken ct)
     {
         var mappings = LoadMappingsCached(mappingFolderPath);
-        var rows = await ReadLabMasterAsync(ct).ConfigureAwait(false);
+        var rows = await ReadLabsAsync(ct).ConfigureAwait(false);
 
         var resolved = new List<ResolvedLab>();
 
@@ -223,7 +223,7 @@ IF OBJECT_ID('dbo.LabMaster', 'U') IS NOT NULL
         return resolved;
     }
 
-    private async Task<List<(int LabId, string LabName, string ConnectionKey)>> ReadLabMasterAsync(CancellationToken ct)
+    private async Task<List<(int LabId, string LabName, string ConnectionKey)>> ReadLabsAsync(CancellationToken ct)
     {
         var rows = new List<(int, string, string)>();
 

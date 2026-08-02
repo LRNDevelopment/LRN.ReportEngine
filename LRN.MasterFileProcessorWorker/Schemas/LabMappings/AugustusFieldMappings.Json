@@ -1,6 +1,6 @@
 {
-  "LabId": 19,
-  "LabName": "Augustus",
+  "LabId": 24,
+  "LabName": "Augustus_Labs",
   "DatabaseName": "Augustus_LRN",
   "ClaimLevel": {
     "Enabled": true,

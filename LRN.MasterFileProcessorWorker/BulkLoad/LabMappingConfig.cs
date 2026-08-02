@@ -14,16 +14,16 @@ public sealed class LabMappingConfig
     public string SourceFile { get; set; } = "";
 
     /// <summary>
-    /// Joins this mapping to <c>LRNMaster.dbo.LabMaster</c>, which is the authoritative lab list.
+    /// Joins this mapping to <c>LRNMaster.dbo.Labs</c>, which is the authoritative lab list.
     /// Optional in the JSON: when absent the loader falls back to matching <see cref="LabName"/>,
-    /// then the file name, against LabMaster.
+    /// then the file name, against dbo.Labs.
     /// </summary>
     public int? LabId { get; set; }
 
     public string? LabName { get; set; }
 
     /// <summary>
-    /// Informational - the real connection comes from LabMaster.ConnectionKey. Used only to make
+    /// Informational - the real connection comes from dbo.Labs.ConnectionKey. Used only to make
     /// the generated DDL folder name obvious and to sanity-check the resolved connection.
     /// </summary>
     public string? DatabaseName { get; set; }

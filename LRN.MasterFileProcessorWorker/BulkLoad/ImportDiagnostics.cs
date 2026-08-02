@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using Microsoft.Data.SqlClient;
 
 namespace LRN.MasterFileProcessorWorker.BulkLoad;
@@ -68,15 +68,15 @@ public static class ImportDiagnostics
         var masterOk = await CanConnectAsync(master!, ct);
         Report("LRNMaster reachable", masterOk.Ok, masterOk.Detail);
 
-        var hasLabMaster = false;
+        var hasLabsTable = false;
 
         if (masterOk.Ok)
         {
-            hasLabMaster = await TableExistsAsync(master!, "dbo.LabMaster", ct);
+            hasLabsTable = await TableExistsAsync(master!, "dbo.Labs", ct);
 
             // Optional: when it is absent the worker falls back to MasterFileProcessor:Labs.
-            Console.WriteLine($"  {(hasLabMaster ? "ok  " : "note")} {"dbo.LabMaster exists",-42} " +
-                              (hasLabMaster ? "" : "absent - falling back to MasterFileProcessor:Labs"));
+            Console.WriteLine($"  {(hasLabsTable ? "ok  " : "note")} {"dbo.Labs exists",-42} " +
+                              (hasLabsTable ? "" : "absent - falling back to MasterFileProcessor:Labs"));
 
             foreach (var table in new[] { "dbo.ReportRunIdInfoLog", "dbo.ReportsWorkflowTracker" })
             {
@@ -127,10 +127,10 @@ public static class ImportDiagnostics
                 GetLabValue(configuration, lab, "LabDbConnectionString"),
                 configuration.GetConnectionString(GetLabValue(configuration, lab, "LabDbConnectionKey") ?? ""));
 
-            if (hasLabMaster)
+            if (hasLabsTable)
             {
-                var labMasterKey = await LabMasterConnectionKeyAsync(master!, lab.LabId, ct);
-                Report("  active row in LabMaster", labMasterKey is not null,
+                var labMasterKey = await LabsConnectionKeyAsync(master!, lab.LabId, ct);
+                Report("  active row in dbo.Labs", labMasterKey is not null,
                     labMasterKey is null ? "no row with IsActive = 1 -> lab is skipped" : $"ConnectionKey='{labMasterKey}'");
 
                 if (string.IsNullOrWhiteSpace(labConn) && !string.IsNullOrWhiteSpace(labMasterKey))
@@ -369,9 +369,9 @@ WHERE s.name = @Schema AND t.name = @Table;";
         }
     }
 
-    private static async Task<string?> LabMasterConnectionKeyAsync(string masterConnectionString, int labId, CancellationToken ct)
+    private static async Task<string?> LabsConnectionKeyAsync(string masterConnectionString, int labId, CancellationToken ct)
     {
-        const string sql = "SELECT TOP (1) ISNULL(ConnectionKey,'') FROM dbo.LabMaster WHERE LabId = @LabId AND IsActive = 1;";
+        const string sql = "SELECT TOP (1) ISNULL(ConnectionKey,'') FROM dbo.Labs WHERE LabId = @LabId AND IsActive = 1;";
 
         try
         {

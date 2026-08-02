@@ -10,12 +10,12 @@ access — and anyone who has ever cloned or forked it — can read them.
 
 | # | Credential | Where | Introduced |
 |---|---|---|---|
-| S1 | Azure AD application secret `BOZ8Q~…` | `LRN.DenialDatabaseWorker/appsettings.json`, `LRN.MasterFileProcessorWorker/appsettings.json` | commit `6d8dd54` "code changes" |
-| S2 | Azure AD application secret `BOZ8Q~…` | **`.codex_build/DenialDatabaseWorker/appsettings.json`** | commit `461240f` "denial code changes" |
-| S3 | SQL password `Labrevnavigator@…` for `sqladmin` on `lrnanalytics-sqlmi.public.…database.windows.net` | both `appsettings.json` files and `.codex_build/**` | multiple commits |
-| S4 | Teams incoming webhook (`…webhook.office.com/webhookb2/…`) | both `appsettings.json` files and `.codex_build/**` | multiple commits |
+| S1 | Azure AD application secret `BOZ8…` (the older one) | `LRN.DenialDatabaseWorker/appsettings.json`, `LRN.MasterFileProcessorWorker/appsettings.json` | commit `6d8dd54` "code changes" |
+| S2 | Azure AD application secret `BOZ8…` (the older one) | **`.codex_build/DenialDatabaseWorker/appsettings.json`** | commit `461240f` "denial code changes" |
+| S3 | SQL password for `sqladmin` on `lrnanalytics-sqlmi.public.…database.windows.net` | both `appsettings.json` files and `.codex_build/**` | multiple commits |
+| S4 | Teams incoming webhook (the Teams incoming webhook URL) | both `appsettings.json` files and `.codex_build/**` | multiple commits |
 
-The newer Azure secret `9Dn8Q~…` was **never pushed** — GitHub's push protection blocked it, and it
+The newer Azure secret `9Dn8…` (the newer one) was **never pushed** — GitHub's push protection blocked it, and it
 has since been replaced with a placeholder in the two commits now on `DEV`.
 
 ### `.codex_build/` is the bigger problem
@@ -43,7 +43,7 @@ A rewrite does not un-leak anything. Anyone could already hold these. Rotate bef
 after.
 
 1. **Azure AD app** `0cde51ec-0b8f-429e-9cb6-10ba6944f72c` (tenant `b13b3679-…`) — delete the
-   `BOZ8Q~…` secret in Entra ID → App registrations → Certificates & secrets. Also delete `9Dn8Q~…`
+   `BOZ8…` (the older one) secret in Entra ID → App registrations → Certificates & secrets. Also delete `9Dn8…` (the newer one)
    if it was ever used anywhere, since it briefly existed in a local commit.
 2. **SQL login** `sqladmin` on `lrnanalytics-sqlmi` — change the password. Note this is an
    *admin* login reachable on a public endpoint (`…public.4e3a76f4ed99.database.windows.net,3342`);
@@ -98,10 +98,10 @@ cd rewrite.git
 **3. Write the replacement list** — `replacements.txt`, real values on the left:
 
 ```
-BOZ8Q~<rest-of-the-secret>==>PUT_IN_USER_SECRETS_OR_ENV
-9Dn8Q~<rest-of-the-secret>==>PUT_IN_USER_SECRETS_OR_ENV
-Labrevnavigator@<rest>==>PUT_IN_USER_SECRETS_OR_ENV
-regex:https://3eclaimsprocessingllc\.webhook\.office\.com/webhookb2/[^"]+==>PUT_IN_USER_SECRETS_OR_ENV
+<paste-the-old-azure-secret-here>==>PUT_IN_USER_SECRETS_OR_ENV
+<paste-the-new-azure-secret-here>==>PUT_IN_USER_SECRETS_OR_ENV
+<paste-the-sql-password-here>==>PUT_IN_USER_SECRETS_OR_ENV
+regex:https://<tenant>\.webhook\.office\.com/webhookb2/[^"]+==>PUT_IN_USER_SECRETS_OR_ENV
 ```
 
 **4. Purge the build directory and scrub the values.**
@@ -114,8 +114,8 @@ git filter-repo --replace-text replacements.txt
 **5. Verify nothing survives.**
 
 ```bash
-git log --all -S'BOZ8Q~' --oneline          # expect empty
-git log --all -S'Labrevnavigator' --oneline # expect empty
+git log --all -S'<old-azure-secret>' --oneline          # expect empty
+git log --all -S'<sql-password>' --oneline # expect empty
 git log --all --name-only | grep codex_build # expect empty
 ```
 

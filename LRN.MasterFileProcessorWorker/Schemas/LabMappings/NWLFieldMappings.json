@@ -1,6 +1,6 @@
 {
-  "LabId": 20,
-  "LabName": "NorthWest",
+  "LabId": 23,
+  "LabName": "Northwest",
   "DatabaseName": "NWL_LRN",
   "ClaimLevel": {
     "Enabled": true,

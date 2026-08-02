@@ -310,13 +310,13 @@ BEGIN
 END
 GO
 
-/* ---------- backfill LabId from LabMaster, where the name matches exactly one lab ---------- */
-IF OBJECT_ID('dbo.LabMaster', 'U') IS NOT NULL
+/* ---------- backfill LabId from dbo.Labs, where the name matches exactly one lab ---------- */
+IF OBJECT_ID('dbo.Labs', 'U') IS NOT NULL
 BEGIN
     UPDATE r
     SET    r.LabId = m.LabId
     FROM   dbo.LRN_Run_Log r
-    JOIN   dbo.LabMaster  m ON m.LabName = r.LabName
+    JOIN   dbo.Labs   m ON m.LabName = r.LabName
     WHERE  r.LabId IS NULL;
 
     PRINT CONCAT('LRN_Run_Log LabId backfilled: ', @@ROWCOUNT);
@@ -324,14 +324,14 @@ BEGIN
     UPDATE s
     SET    s.LabId = m.LabId
     FROM   dbo.LRN_Step_Log s
-    JOIN   dbo.LabMaster   m ON m.LabName = s.LabName
+    JOIN   dbo.Labs   m ON m.LabName = s.LabName
     WHERE  s.LabId IS NULL;
 
     PRINT CONCAT('LRN_Step_Log LabId backfilled: ', @@ROWCOUNT);
 END
 ELSE
 BEGIN
-    PRINT 'dbo.LabMaster not present - LabId left NULL on existing rows (new rows are stamped by the worker).';
+    PRINT 'dbo.Labs not present - LabId left NULL on existing rows (new rows are stamped by the worker).';
 END
 GO
 

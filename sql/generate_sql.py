@@ -264,6 +264,14 @@ LRNMASTER_PARTS = [
     ("LRNMaster/06_usp_ReportsWorkflowTracker_Upsert.sql", "usp_ReportsWorkflowTracker_Upsert"),
 ]
 
+# Kept OUT of LRNMaster.sql on purpose. 07 is a read-only report and 08 rewrites LabId on ~194,000
+# rows behind an explicit @Commit flag - neither belongs in a schema deployment that should be safe
+# to re-run unattended. They ship as their own bundle, run once, deliberately, after a backup.
+LRNMASTER_MIGRATION_PARTS = [
+    ("LRNMaster/07_LabId_Alignment_Report.sql", "LabId alignment report (read-only)"),
+    ("LRNMaster/08_LabId_Alignment.sql", "LabId alignment migration (DRY RUN until @Commit = 1)"),
+]
+
 USE_LINE = re.compile(r"^\s*USE\s*\[[^\]]+\]\s*;?\s*$", re.I)
 GO_LINE = re.compile(r"^\s*GO\s*$", re.I)
 FINAL_SELECT = re.compile(r"^\s*SELECT\s+ReportTypeId,\s*ReportTypeName", re.I)
@@ -342,94 +350,29 @@ def write_deploy_bundles(written_lab_scripts):
     io.open(out, "w", encoding="utf-8", newline="\r\n").write(text)
     print(f"  + sql/Deploy/LRNMaster.sql  ({len(contents)} parts)")
 
+    # ---- LRNMaster one-time data migration, shipped separately ----
+    parts, contents = [], []
+    for rel, desc in LRNMASTER_MIGRATION_PARTS:
+        path = os.path.join(OUT, rel.replace("/", os.sep))
+        if not os.path.exists(path):
+            continue
+        contents.append(desc)
+        body = strip_use_and_trailing_select(io.open(path, encoding="utf-8-sig").read())
+        parts.append(f"/* ---------- {desc} ---------- */\nGO\n{body}\nGO\n")
+
+    if parts:
+        text = (banner("LRN Report Engine - LRNMaster LabId alignment (ONE-TIME)", contents, "LRNMaster")
+                + "USE [LRNMaster];\nGO\nSET NOCOUNT ON;\nGO\n\n"
+                + "\n".join(parts)
+                + "\nPRINT 'LabId alignment finished. Set @Commit = 1 in section 2 to apply for real.';\nGO\n")
+
+        out = os.path.join(deploy_dir, "LRNMaster_LabIdAlignment.sql")
+        io.open(out, "w", encoding="utf-8", newline="\r\n").write(text)
+        print(f"  + sql/Deploy/LRNMaster_LabIdAlignment.sql  ({len(contents)} parts)")
+
     # Per-lab bundles are produced by align_with_production.py, from the production schema.
-    write_deploy_readme(deploy_dir, [])
+    # README.md in sql/Deploy is maintained by hand - it spans both generators.
 
-
-def write_deploy_readme(deploy_dir, dbs):
-    lines = [
-        "# Production deployment",
-        "",
-        "One self-contained script per database. Nothing else from `sql/` is needed - these bundles",
-        "already contain every table, column, index, view and stored procedure this change requires.",
-        "",
-        "Every script is **idempotent**: it creates what is missing, adds missing columns and widens",
-        "columns that are too small. It never drops, renames, narrows or retypes anything, and never",
-        "deletes data. Re-running is safe.",
-        "",
-        "## Run order",
-        "",
-        "**1. LRNMaster first** - the lab scripts do not depend on it, but the worker does.",
-        "",
-        "```",
-        "sqlcmd -S <server> -d LRNMaster -E -b -i LRNMaster.sql",
-        "```",
-        "",
-        "**2. Then each lab database** (independent of each other - run only the labs you are enabling):",
-        "",
-        "```",
-    ]
-    for db in dbs:
-        lines.append(f"sqlcmd -S <server> -d {db} -E -b -i {db}.sql")
-    lines += [
-        "```",
-        "",
-        "For SQL auth use `-U <user> -P <password>` instead of `-E`. In SSMS just open the file and",
-        "run it - no SQLCMD mode needed, the bundles have no `:r` includes.",
-        "",
-        "## What lands where",
-        "",
-        "### LRNMaster",
-        "",
-        "| Object | Change |",
-        "|---|---|",
-        "| `ReportRunIdInfoLog` | created; `+ SourceFileName` |",
-        "| `ReportsWorkflowTracker` | created; `+ ReportTypeId` (FK); `vw_ReportsWorkflowTracker_Wide` |",
-        "| `ReportTypeMaster` | created + seeded with the 13 report types, all active |",
-        "| `LRN_Run_Log` | `+ LabId`, `+ WeekFolder` (existing columns untouched) |",
-        "| `LRN_Step_Log` | `+ LabId` (existing columns untouched) |",
-        "| `usp_ReportRunIdInfoLog_Insert` | created / altered |",
-        "| `usp_ReportsWorkflowTracker_Upsert` | created / altered |",
-        "",
-        "### Each lab database",
-        "",
-        "| Object | Change |",
-        "|---|---|",
-        "| `LineClaimFileLogs` | created, or `+ Status, RowsCopied, ErrorMessage, CompletedDateTime` |",
-        "| `LineLevelData` + `LineLevelData_Staging` | created, then reconciled to the current mapping |",
-        "| `ClaimLevelData` + `ClaimLevelData_Staging` | created, then reconciled to the current mapping |",
-        "",
-        "\"Reconciled\" means an existing table from an earlier release gets its missing columns added",
-        "and its undersized columns widened, rather than being skipped by `CREATE TABLE IF NOT EXISTS`.",
-        "",
-        "## After deploying",
-        "",
-        "```",
-        "dotnet run --project LRN.MasterFileProcessorWorker -- --diagnose",
-        "```",
-        "",
-        "Checks config, mappings, connections and every target table's columns, and names anything",
-        "still wrong. Expect `All checks passed`.",
-        "",
-        "## Verifying by hand",
-        "",
-        "```sql",
-        "-- LRNMaster",
-        "SELECT * FROM dbo.ReportTypeMaster ORDER BY ReportTypeId;   -- 13 rows, IsActive = 1",
-        "SELECT name FROM sys.procedures WHERE name LIKE 'usp_Report%';",
-        "SELECT COL_LENGTH('dbo.LRN_Run_Log','LabId'), COL_LENGTH('dbo.LRN_Run_Log','WeekFolder');",
-        "SELECT COL_LENGTH('dbo.ReportRunIdInfoLog','SourceFileName');",
-        "",
-        "-- a lab database",
-        "SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID('dbo.LineLevelData');",
-        "SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID('dbo.ClaimLevelData');",
-        "```",
-        "",
-        "Generated by `sql/generate_sql.py`. Do not hand-edit the bundles - re-run the generator.",
-        "",
-    ]
-    io.open(os.path.join(deploy_dir, "README.md"), "w", encoding="utf-8", newline="\r\n").write("\n".join(lines))
-    print("  + sql/Deploy/README.md")
 
 
 if __name__ == "__main__":

@@ -226,29 +226,56 @@ All are raised at severity 16 and write nothing.
 
 ## 6. Checking your output
 
+Two read procedures. You do not need `SELECT` on the tables to use them.
+
+### `usp_ReportRunIdInfoLog_Get` — your log trail
+
+Send a RunId, get that run's whole trail oldest-first. Add `@LogType` to narrow it.
+
 ```sql
--- your progress trail for a run
-SELECT CreatedOn, LogType, ReportType, SourceSystem, SourceFileName, LogMessage
-FROM   LRNMaster.dbo.ReportRunIdInfoLog
-WHERE  RunId = '20260801R0003'
-ORDER BY ReportRunIdInfoLogId;
+EXEC LRNMaster.dbo.usp_ReportRunIdInfoLog_Get @RunId = '20260801R0003';                      -- all types
+EXEC LRNMaster.dbo.usp_ReportRunIdInfoLog_Get @RunId = '20260801R0003', @LogType = 'Error';  -- errors only
+EXEC LRNMaster.dbo.usp_ReportRunIdInfoLog_Get @RunId = '20260801R0003', @LogType = 'Error,Warning';
 
--- the dashboard row
-SELECT LabName, ReportName, Status, [RowCount], StartedOn, CompletedOn, Remarks
-FROM   LRNMaster.dbo.ReportsWorkflowTracker
-WHERE  RunId = '20260801R0003'
-ORDER BY ReportName;
+-- just your own report's entries
+EXEC LRNMaster.dbo.usp_ReportRunIdInfoLog_Get
+     @RunId = '20260801R0003', @ReportType = 'Denial Report';
 
--- everything for a run, laid out like the tracker spreadsheet
-SELECT * FROM LRNMaster.dbo.vw_ReportsWorkflowTracker_Wide
-WHERE  [RunID] = '20260801R0003';
+-- errors across every lab today, newest first
+EXEC LRNMaster.dbo.usp_ReportRunIdInfoLog_Get
+     @LogType = 'Error', @FromDate = '2026-08-01', @Newest = 1;
 
--- errors across all labs today
-SELECT RunId, ReportType, SourceSystem, LogMessage
-FROM   LRNMaster.dbo.ReportRunIdInfoLog
-WHERE  LogType = 'Error' AND CreatedOn >= CAST(GETDATE() AS date)
-ORDER BY CreatedOn DESC;
+-- counts per type as a second result set
+EXEC LRNMaster.dbo.usp_ReportRunIdInfoLog_Get @RunId = '20260801R0003', @IncludeSummary = 1;
 ```
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `@RunId` | `NULL` | one run; `NULL` = every run (pair with the dates) |
+| `@LogType` | `NULL` | **`NULL` = every type.** One name, or a comma-separated list |
+| `@ReportType` | `NULL` | e.g. `'Line Level'`, `'Denial Report'` |
+| `@SourceSystem` | `NULL` | lab name, or `'SharePoint'` |
+| `@FromDate` / `@ToDate` | `NULL` | on `CreatedOn`; `@ToDate` includes the whole day |
+| `@Newest` | `0` | `1` = newest first |
+| `@IncludeSummary` | `0` | `1` = second result set, count + first/last per type |
+
+A misspelt `@LogType` is **rejected with an error** listing the types actually present. It does not
+return an empty set — during triage, "no rows" and "no errors" must never look the same.
+
+### `usp_ReportsWorkflowTracker_Pivot` — the dashboard
+
+The tracker in the layout of `Reports_Workflow_Tracker_v1.0.xlsx`: one row per RunId + Lab, every
+report type its own column, status as the value.
+
+```sql
+EXEC LRNMaster.dbo.usp_ReportsWorkflowTracker_Pivot;                            -- everything
+EXEC LRNMaster.dbo.usp_ReportsWorkflowTracker_Pivot @RunId = '20260801R0003';
+EXEC LRNMaster.dbo.usp_ReportsWorkflowTracker_Pivot @LabId = 18;
+EXEC LRNMaster.dbo.usp_ReportsWorkflowTracker_Pivot @ShowBlankAs = 'Not Run';
+```
+
+A blank cell means that report never wrote a tracker row for the run — **not** the same as a
+failure. If your report's column is blank, it is not calling §2 yet.
 
 ---
 

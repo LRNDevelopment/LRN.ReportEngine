@@ -263,6 +263,7 @@ LRNMASTER_PARTS = [
     ("LRNMaster/05_usp_ReportRunIdInfoLog_Insert.sql", "usp_ReportRunIdInfoLog_Insert"),
     ("LRNMaster/06_usp_ReportsWorkflowTracker_Upsert.sql", "usp_ReportsWorkflowTracker_Upsert"),
     ("LRNMaster/09_usp_ReportsWorkflowTracker_Pivot.sql", "usp_ReportsWorkflowTracker_Pivot (workbook layout)"),
+    ("LRNMaster/10_usp_ReportRunIdInfoLog_Get.sql", "usp_ReportRunIdInfoLog_Get (read the run log back)"),
 ]
 
 # Kept OUT of LRNMaster.sql on purpose. 07 is a read-only report and 08 rewrites LabId on ~194,000

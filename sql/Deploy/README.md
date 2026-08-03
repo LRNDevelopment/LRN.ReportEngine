@@ -75,11 +75,12 @@ then set `@Commit = 1` in section 2 of the file and run it again to apply.
 |---|---|
 | `ReportRunIdInfoLog` | created; `+ SourceFileName` |
 | `ReportsWorkflowTracker` | created; `+ ReportTypeId` (FK); `vw_ReportsWorkflowTracker_Wide` |
-| `ReportTypeMaster` | created + seeded with the 13 report types, all active |
+| `ReportTypeMaster` | created + seeded with the 14 report types in workbook order (`+ DisplayOrder`) |
 | `LRN_Run_Log` | `+ LabId`, `+ WeekFolder`, backfilled from `dbo.Labs` by name |
 | `LRN_Step_Log` | `+ LabId`, backfilled from `dbo.Labs` by name |
 | `usp_ReportRunIdInfoLog_Insert` | created / altered — the entry point for other teams |
 | `usp_ReportsWorkflowTracker_Upsert` | created / altered — resolves lab context from RunId alone |
+| `usp_ReportsWorkflowTracker_Pivot` | created / altered — the workbook layout, one column per report |
 
 Existing columns on `LRN_Run_Log` and `LRN_Step_Log` are untouched.
 
@@ -131,7 +132,8 @@ By hand:
 
 ```sql
 -- LRNMaster
-SELECT * FROM dbo.ReportTypeMaster ORDER BY ReportTypeId;   -- 13 rows, IsActive = 1
+SELECT * FROM dbo.ReportTypeMaster ORDER BY DisplayOrder;   -- 14 rows, IsActive = 1
+EXEC dbo.usp_ReportsWorkflowTracker_Pivot;                   -- the dashboard, wide
 SELECT name FROM sys.procedures WHERE name LIKE 'usp_Report%';
 SELECT COL_LENGTH('dbo.LRN_Run_Log','LabId'), COL_LENGTH('dbo.ReportRunIdInfoLog','SourceFileName');
 

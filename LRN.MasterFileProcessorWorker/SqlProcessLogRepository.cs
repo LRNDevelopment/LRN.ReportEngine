@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 public interface IProcessLogRepository
 {
-    Task<string> NextRunIdAsync(CancellationToken ct);
+    Task<string> NextRunIdAsync(int? labId, string? labName, CancellationToken ct);
     Task InsertRunAsync(RunLogRow row, CancellationToken ct);
     Task UpdateRunAsync(RunLogRow row, CancellationToken ct);
 
@@ -68,7 +68,16 @@ public sealed class SqlProcessLogRepository : IProcessLogRepository
         return exists;
     }
 
-    public async Task<string> NextRunIdAsync(CancellationToken ct)
+    /// <summary>
+    /// Allocates the next RunId for a lab: R&lt;YYYYMMDD&gt;&lt;SHORT&gt;&lt;NNNN&gt;, e.g. R20260803CRT0001.
+    /// The counter is per lab and continuous.
+    /// </summary>
+    /// <remarks>
+    /// Both the id and the name go to the procedure. LabId resolves it unambiguously; the name is
+    /// the fallback for callers that only know it, and it shows up in the error when a lab has no
+    /// ShortName configured, which is the whole diagnosis.
+    /// </remarks>
+    public async Task<string> NextRunIdAsync(int? labId, string? labName, CancellationToken ct)
     {
         using var conn = new SqlConnection(_connStr);
         await conn.OpenAsync(ct);
@@ -83,6 +92,8 @@ public sealed class SqlProcessLogRepository : IProcessLogRepository
             Direction = ParameterDirection.Output
         };
         cmd.Parameters.Add(p);
+        cmd.Parameters.AddWithValue("@LabId", (object?)labId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@LabName", (object?)labName ?? DBNull.Value);
 
         await cmd.ExecuteNonQueryAsync(ct);
         return Convert.ToString(p.Value) ?? string.Empty;

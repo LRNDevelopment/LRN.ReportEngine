@@ -13,6 +13,23 @@ folder — the tracker resolves all of that from the `RunId`.
 
 `CreatedOn` defaults to `GETDATE()` on both. **Do not pass it.**
 
+### What a RunId looks like
+
+    R20260803CRT0001
+    │ │        │  └── the lab's run number, continuous — it never resets
+    │ │        └───── lab code, from dbo.Labs.ShortName
+    │ └────────────── date the run started, YYYYMMDD
+    └──────────────── literal 'R'
+
+| | | | | | |
+|---|---|---|---|---|---|
+| `AUG` Augustus | `BCT` BeechTree | `COV` Cove | `CRT` Certus | `ELX` Elixir | `INH` InHealth |
+| `NWL` Northwest | `PAL` PCRDx-AL | `PCO` PCRDx-CO | `PHY` Phi Life | `PLA` PCR Labs of America | `RST` Rising Tides |
+
+You never build one — take the RunId you were given. Ids in the older global format
+(`20260801R0007`) are still valid and still in the tables; the two shapes never collide, since the
+new one starts with `R` and the old one with a digit.
+
 ---
 
 ## 1. `usp_ReportRunIdInfoLog_Insert`
@@ -21,10 +38,10 @@ Your running commentary: started, row counts, warnings, failures, finished.
 
 ```sql
 EXEC dbo.usp_ReportRunIdInfoLog_Insert
-     @RunId          = '20260801R0003',
+     @RunId          = 'R20260803CRT0001',
      @ReportType     = 'Denial Report',
      @SourceSystem   = 'Certus',
-     @SourceFileName = '20260801R0003_Certus_Denial_07.20.2026.csv',
+     @SourceFileName = 'R20260803CRT0001_Certus_Denial_07.20.2026.csv',
      @LogType        = 'Info',
      @LogMessage     = 'Loaded 60,625 rows.',
      @CreatedBy      = 'LRN.DenialDatabaseWorker';
@@ -48,19 +65,19 @@ alongside so the log still joins to the master.
 ### A typical run
 
 ```sql
-DECLARE @RunId varchar(30) = '20260801R0003';
+DECLARE @RunId varchar(30) = 'R20260803CRT0001';
 
 EXEC dbo.usp_ReportRunIdInfoLog_Insert @RunId, 'Denial Report', 'Certus',
-     '20260801R0003_Certus_Denial.csv', 'Start', 'Denial Report started.', 'MyService';
+     'R20260803CRT0001_Certus_Denial.csv', 'Start', 'Denial Report started.', 'MyService';
 
 EXEC dbo.usp_ReportRunIdInfoLog_Insert @RunId, 'Denial Report', 'Certus',
-     '20260801R0003_Certus_Denial.csv', 'Info',  'Read 60,625 source rows.', 'MyService';
+     'R20260803CRT0001_Certus_Denial.csv', 'Info',  'Read 60,625 source rows.', 'MyService';
 
 EXEC dbo.usp_ReportRunIdInfoLog_Insert @RunId, 'Denial Report', 'Certus',
-     '20260801R0003_Certus_Denial.csv', 'Warning', '12 rows had no payer code.', 'MyService';
+     'R20260803CRT0001_Certus_Denial.csv', 'Warning', '12 rows had no payer code.', 'MyService';
 
 EXEC dbo.usp_ReportRunIdInfoLog_Insert @RunId, 'Denial Report', 'Certus',
-     '20260801R0003_Certus_Denial.csv', 'End',   'Denial Report finished in 41s.', 'MyService';
+     'R20260803CRT0001_Certus_Denial.csv', 'End',   'Denial Report finished in 41s.', 'MyService';
 ```
 
 On failure, log the exception and then close the run:
@@ -81,7 +98,7 @@ One row per report per run. This drives the workflow dashboard.
 
 ```sql
 EXEC dbo.usp_ReportsWorkflowTracker_Upsert
-     @RunId       = '20260801R0003',
+     @RunId       = 'R20260803CRT0001',
      @ReportName  = 'Denial Report',
      @Status      = 'Success',
      @RowCount    = 60625,
@@ -160,23 +177,24 @@ reason in `@Remarks`. Do not leave the row absent; a missing row is indistinguis
 
 ## 3. Report names
 
-Use these **exactly** in `@ReportName`. All 13 are active.
+Use these **exactly** in `@ReportName`. All 14 are active. The order below is the column order of
+the workflow dashboard, which is what `DisplayOrder` carries — `ReportTypeId` is only insert order.
 
-| Id | ReportTypeName | | Id | ReportTypeName |
+| # | ReportTypeName | | # | ReportTypeName |
 |---:|---|---|---:|---|
-| 1 | `Claim Level Master` | | 8 | `Line Level Master` |
-| 2 | `Clinic Summary` | | 9 | `LIS Summary` |
-| 3 | `Coding Validation` | | 10 | `Payer Policy Validation` |
-| 4 | `Collection Summary` | | 11 | `Prediction Analysis` |
-| 5 | `Denial Report` | | 12 | `Production Summary` |
-| 6 | `Executive Summary` | | 13 | `Sales Rep Summary` |
-| 7 | `Forecasting` | | | |
+| 1 | `Line Level Master` | | 8 | `Clinic Summary` |
+| 2 | `Claim Level Master` | | 9 | `Sales Rep Summary` |
+| 3 | `LIS Summary` | | 10 | `Coding Validation` |
+| 4 | `Production Summary` | | 11 | `Payer Policy Validation` |
+| 5 | `Collection Summary` | | 12 | `Forecasting` |
+| 6 | `Denial Report` | | 13 | `Prediction Analysis` |
+| 7 | `Executive Summary` | | 14 | `Error Log` |
 
 Always current:
 
 ```sql
 SELECT ReportTypeId, ReportTypeName FROM LRNMaster.dbo.ReportTypeMaster
-WHERE IsActive = 1 ORDER BY ReportTypeName;
+WHERE IsActive = 1 ORDER BY DisplayOrder;
 ```
 
 Need a name that is not listed? Ask for it to be added to `ReportTypeMaster` — do not invent one, the
@@ -185,19 +203,19 @@ tracker will reject it.
 ### One call per report
 
 ```sql
-EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='20260801R0003', @ReportName='Line Level Master',       @Status='Success', @RowCount=195161, @CreatedBy='MyService';
-EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='20260801R0003', @ReportName='Claim Level Master',      @Status='Success', @RowCount=60625,  @CreatedBy='MyService';
-EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='20260801R0003', @ReportName='LIS Summary',             @Status='Success', @CreatedBy='MyService';
-EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='20260801R0003', @ReportName='Production Summary',      @Status='Success', @CreatedBy='MyService';
-EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='20260801R0003', @ReportName='Collection Summary',      @Status='Success', @CreatedBy='MyService';
-EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='20260801R0003', @ReportName='Denial Report',           @Status='Success', @CreatedBy='MyService';
-EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='20260801R0003', @ReportName='Executive Summary',       @Status='Success', @CreatedBy='MyService';
-EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='20260801R0003', @ReportName='Clinic Summary',          @Status='Success', @CreatedBy='MyService';
-EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='20260801R0003', @ReportName='Sales Rep Summary',       @Status='Success', @CreatedBy='MyService';
-EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='20260801R0003', @ReportName='Coding Validation',       @Status='Success', @CreatedBy='MyService';
-EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='20260801R0003', @ReportName='Payer Policy Validation', @Status='Success', @CreatedBy='MyService';
-EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='20260801R0003', @ReportName='Forecasting',             @Status='Success', @CreatedBy='MyService';
-EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='20260801R0003', @ReportName='Prediction Analysis',     @Status='Success', @CreatedBy='MyService';
+EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='R20260803CRT0001', @ReportName='Line Level Master',       @Status='Success', @RowCount=195161, @CreatedBy='MyService';
+EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='R20260803CRT0001', @ReportName='Claim Level Master',      @Status='Success', @RowCount=60625,  @CreatedBy='MyService';
+EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='R20260803CRT0001', @ReportName='LIS Summary',             @Status='Success', @CreatedBy='MyService';
+EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='R20260803CRT0001', @ReportName='Production Summary',      @Status='Success', @CreatedBy='MyService';
+EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='R20260803CRT0001', @ReportName='Collection Summary',      @Status='Success', @CreatedBy='MyService';
+EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='R20260803CRT0001', @ReportName='Denial Report',           @Status='Success', @CreatedBy='MyService';
+EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='R20260803CRT0001', @ReportName='Executive Summary',       @Status='Success', @CreatedBy='MyService';
+EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='R20260803CRT0001', @ReportName='Clinic Summary',          @Status='Success', @CreatedBy='MyService';
+EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='R20260803CRT0001', @ReportName='Sales Rep Summary',       @Status='Success', @CreatedBy='MyService';
+EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='R20260803CRT0001', @ReportName='Coding Validation',       @Status='Success', @CreatedBy='MyService';
+EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='R20260803CRT0001', @ReportName='Payer Policy Validation', @Status='Success', @CreatedBy='MyService';
+EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='R20260803CRT0001', @ReportName='Forecasting',             @Status='Success', @CreatedBy='MyService';
+EXEC dbo.usp_ReportsWorkflowTracker_Upsert @RunId='R20260803CRT0001', @ReportName='Prediction Analysis',     @Status='Success', @CreatedBy='MyService';
 ```
 
 ---
@@ -251,20 +269,20 @@ Two read procedures. You do not need `SELECT` on the tables to use them.
 Send a RunId, get that run's whole trail oldest-first. Add `@LogType` to narrow it.
 
 ```sql
-EXEC LRNMaster.dbo.usp_ReportRunIdInfoLog_Get @RunId = '20260801R0003';                      -- all types
-EXEC LRNMaster.dbo.usp_ReportRunIdInfoLog_Get @RunId = '20260801R0003', @LogType = 'Error';  -- errors only
-EXEC LRNMaster.dbo.usp_ReportRunIdInfoLog_Get @RunId = '20260801R0003', @LogType = 'Error,Warning';
+EXEC LRNMaster.dbo.usp_ReportRunIdInfoLog_Get @RunId = 'R20260803CRT0001';                      -- all types
+EXEC LRNMaster.dbo.usp_ReportRunIdInfoLog_Get @RunId = 'R20260803CRT0001', @LogType = 'Error';  -- errors only
+EXEC LRNMaster.dbo.usp_ReportRunIdInfoLog_Get @RunId = 'R20260803CRT0001', @LogType = 'Error,Warning';
 
 -- just your own report's entries
 EXEC LRNMaster.dbo.usp_ReportRunIdInfoLog_Get
-     @RunId = '20260801R0003', @ReportType = 'Denial Report';
+     @RunId = 'R20260803CRT0001', @ReportType = 'Denial Report';
 
 -- errors across every lab today, newest first
 EXEC LRNMaster.dbo.usp_ReportRunIdInfoLog_Get
      @LogType = 'Error', @FromDate = '2026-08-01', @Newest = 1;
 
 -- counts per type as a second result set
-EXEC LRNMaster.dbo.usp_ReportRunIdInfoLog_Get @RunId = '20260801R0003', @IncludeSummary = 1;
+EXEC LRNMaster.dbo.usp_ReportRunIdInfoLog_Get @RunId = 'R20260803CRT0001', @IncludeSummary = 1;
 ```
 
 | Parameter | Default | Meaning |
@@ -287,7 +305,7 @@ report type its own column, status as the value.
 
 ```sql
 EXEC LRNMaster.dbo.usp_ReportsWorkflowTracker_Pivot;                            -- everything
-EXEC LRNMaster.dbo.usp_ReportsWorkflowTracker_Pivot @RunId = '20260801R0003';
+EXEC LRNMaster.dbo.usp_ReportsWorkflowTracker_Pivot @RunId = 'R20260803CRT0001';
 EXEC LRNMaster.dbo.usp_ReportsWorkflowTracker_Pivot @LabId = 18;
 EXEC LRNMaster.dbo.usp_ReportsWorkflowTracker_Pivot @ShowBlankAs = 'Not Run';
 

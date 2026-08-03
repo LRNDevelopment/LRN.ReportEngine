@@ -82,6 +82,9 @@ then set `@Commit = 1` in section 2 of the file and run it again to apply.
 | `usp_ReportsWorkflowTracker_Upsert` | created / altered — resolves lab context from RunId alone |
 | `usp_ReportsWorkflowTracker_Pivot` | created / altered — the workbook layout; `@Mode` for one row per lab |
 | `usp_ReportRunIdInfoLog_Get` | created / altered — reads a run's log back; `@LogType='Error'` for triage |
+| `Labs` | `+ ShortName`, seeded with the 12 lab codes (AUG, BCT, CRT, COV, ELX, INH, NWL, PLA, PAL, PCO, PHY, RST) |
+| `LRN_RunIdSequence` | rebuilt per-lab and continuous; the old daily global counter is kept as `LRN_RunIdSequence_Legacy` |
+| `sp_LRN_NextRunId` | created / altered — issues `R<YYYYMMDD><SHORT><NNNN>`, e.g. `R20260803CRT0001` |
 
 Existing columns on `LRN_Run_Log` and `LRN_Step_Log` are untouched.
 
@@ -133,6 +136,7 @@ By hand:
 
 ```sql
 -- LRNMaster
+SELECT LabId, LabName, ShortName FROM dbo.Labs WHERE ShortName IS NOT NULL;  -- 12 rows
 SELECT * FROM dbo.ReportTypeMaster ORDER BY DisplayOrder;   -- 14 rows, IsActive = 1
 EXEC dbo.usp_ReportsWorkflowTracker_Pivot;                   -- the dashboard, wide
 SELECT name FROM sys.procedures WHERE name LIKE 'usp_Report%';

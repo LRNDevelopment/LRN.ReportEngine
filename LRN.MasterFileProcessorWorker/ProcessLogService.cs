@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 public interface IProcessLogService
 {
-    Task<ProcessRunContext> StartRunAsync(string labName, string? pipelineName, string? triggerType, string? triggeredBy, CancellationToken ct);
+    Task<ProcessRunContext> StartRunAsync(int? labId, string labName, string? pipelineName, string? triggerType, string? triggeredBy, CancellationToken ct);
     Task StepStartAsync(ProcessRunContext ctx, StepLogRow step, CancellationToken ct);
     Task StepEndAsync(ProcessRunContext ctx, StepLogRow step, CancellationToken ct);
     Task LogErrorAsync(ProcessRunContext ctx, ErrorLogRow err, CancellationToken ct);
@@ -50,18 +50,20 @@ public sealed class ProcessLogService : IProcessLogService
         catch { return TimeZoneInfo.FindSystemTimeZoneById("Asia/Kolkata"); }
     }
 
-    public async Task<ProcessRunContext> StartRunAsync(string labName, string? pipelineName, string? triggerType, string? triggeredBy, CancellationToken ct)
+    public async Task<ProcessRunContext> StartRunAsync(int? labId, string labName, string? pipelineName, string? triggerType, string? triggeredBy, CancellationToken ct)
     {
         if (!_opt.Enabled)
             return new ProcessRunContext { RunId = "", LabName = labName ?? "", StartTimeIST = NowIST() };
 
-        var runId = await _repo.NextRunIdAsync(ct);
+        // The RunId now carries the lab's code, so the lab has to be known before one can be issued.
+        var runId = await _repo.NextRunIdAsync(labId, labName, ct);
         var start = NowIST();
 
         var row = new RunLogRow
         {
             RunID = runId,
             LabName = labName,
+            LabId = labId,
             PipelineName = string.IsNullOrWhiteSpace(pipelineName) ? _opt.DefaultPipelineName : pipelineName,
             TriggerType = string.IsNullOrWhiteSpace(triggerType) ? _opt.DefaultTriggerType : triggerType,
             TriggeredBy = string.IsNullOrWhiteSpace(triggeredBy) ? _opt.DefaultTriggeredBy : triggeredBy,

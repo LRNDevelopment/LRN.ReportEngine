@@ -192,8 +192,9 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		{
 			ct.ThrowIfCancellationRequested();
 
-			// One unique RunID per lab-run
+			// One unique RunID per lab-run: R<YYYYMMDD><SHORT><NNNN>, e.g. R20260803CRT0001
 			var runCtx = await _processLog.StartRunAsync(
+				labId: lab.LabId,
 				labName: lab.LabName,
 				pipelineName: "LRN.MasterFileProcessor",
 				triggerType: "Schedule",

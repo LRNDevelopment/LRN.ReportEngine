@@ -102,10 +102,28 @@ EXEC dbo.usp_ReportsWorkflowTracker_Upsert
 | `@Remarks` | `nvarchar(MAX)` | | Put the failure reason here on `Failed`. |
 | `@CreatedBy` | `varchar(100)` | ✔ | Your service or job name. |
 | `@LabId` | `int` | | Only if `LRN_Run_Log` has no lab for this run yet. |
-| `@WeekFolder` | `varchar(200)` | | Same. |
+| `@WeekFolder` | `varchar(200)` | | Resolved for you — see below. Pass it only to override. |
 
 **You do not pass LabId, LabName or WeekFolder.** They are read from `dbo.LRN_Run_Log` by `RunId`,
 and `ReportTypeId` from `dbo.ReportTypeMaster` by `@ReportName`.
+
+### Where WeekFolder comes from
+
+If you do not send `@WeekFolder` it is resolved in this order, first non-NULL winning:
+
+1. `dbo.LRN_Run_Log` for the RunId
+2. the RunId's existing tracker rows — preferring the same lab, then `Line Level Master` /
+   `Claim Level Master`, then the most recently touched
+
+The run log frequently holds NULL, so in practice step 2 is what fills it: the master file processor
+stamps the week folder on its own two rows and every other report of that run inherits it. An empty
+string counts as not supplied.
+
+Once resolved it also backfills any row of that run still holding NULL, so reports that logged before
+the week folder was known get corrected. Only NULLs are touched — a value you passed is never
+overwritten.
+
+Nothing fails if the week folder cannot be found anywhere; the column simply stays NULL.
 
 ### Upsert behaviour
 

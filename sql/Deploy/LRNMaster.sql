@@ -459,9 +459,22 @@ GO
     The caller sends a RunId and a ReportName. Everything else about the lab is looked up here:
 
         LabId, LabName, WeekFolder   <-  dbo.LRN_Run_Log  (by RunId)
+        WeekFolder (fallback)        <-  dbo.ReportsWorkflowTracker (by RunId)
         ReportTypeId, ReportType     <-  dbo.ReportTypeMaster (by ReportName)
 
     so no two teams have to agree on how to spell a lab or a report.
+
+    WEEKFOLDER FALLBACK. A caller that does not send @WeekFolder gets it resolved, in order:
+
+        1. dbo.LRN_Run_Log for the RunId
+        2. the RunId's existing tracker rows - preferring the same lab, then 'Line Level Master' /
+           'Claim Level Master', then the most recent - taking the first non-NULL
+
+    The master file processor stamps WeekFolder on its own two rows, and today the run log often
+    holds NULL, so step 2 is what actually fills it in. WeekFolder is a property of the run, not of
+    the report, so every report of a run belongs to the same week. Once resolved it also backfills
+    any row of that run still holding NULL - and only those, so a value a caller sent is never
+    overwritten.
 
     CALL:
         EXEC dbo.usp_ReportsWorkflowTracker_Upsert
@@ -501,6 +514,10 @@ CREATE OR ALTER PROCEDURE [dbo].[usp_ReportsWorkflowTracker_Upsert]
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    -- An empty string is 'not supplied', not a week folder. Without this the fallback below is
+    -- skipped and the row stores '' - which reads as data and is harder to spot than NULL.
+    SET @WeekFolder = NULLIF(LTRIM(RTRIM(@WeekFolder)), '');
 
     IF NULLIF(LTRIM(RTRIM(@RunId)), '') IS NULL
     BEGIN
@@ -544,6 +561,32 @@ BEGIN
         RETURN;
     END
 
+    /*
+        ---- WeekFolder fallback: borrow it from the run's own tracker rows ----
+
+        Preference order, first non-NULL wins:
+          1. the same lab - a different lab's week folder would be the wrong value, not just a
+             stale one
+          2. the two master reports, which are the rows the file processor stamps directly
+          3. most recently touched
+
+        The lab is a PREFERENCE rather than a filter on purpose. LabID is not reliably identical
+        across a run's rows yet - the run log resolves NorthWest to 23 via dbo.Labs while the
+        worker still writes 20 from its mapping JSON - and a hard filter would silently return
+        nothing in exactly that case.
+    */
+    IF @WeekFolder IS NULL
+    BEGIN
+        SELECT TOP (1) @WeekFolder = t.WeekFolder
+        FROM   dbo.ReportsWorkflowTracker t
+        WHERE  t.RunId = @RunId
+          AND  t.WeekFolder IS NOT NULL
+        ORDER BY CASE WHEN @LabId IS NOT NULL AND t.LabID = @LabId THEN 0 ELSE 1 END,
+                 CASE WHEN t.ReportName IN ('Line Level Master', 'Claim Level Master') THEN 0 ELSE 1 END,
+                 COALESCE(t.CompletedOn, t.CreatedOn) DESC,
+                 t.WorkflowTrackerId DESC;
+    END
+
     -- LabID is part of the natural key, so it cannot be NULL. -1 marks "run log had no lab id yet"
     -- and is still upsertable; it gets corrected on the next call once the run log is stamped.
     SET @LabId = ISNULL(@LabId, -1);
@@ -569,6 +612,20 @@ BEGIN
                 Status, [RowCount], StartedOn, CompletedOn, Remarks, CreatedOn, CreatedBy)
         VALUES (@RunId, @LabId, @LabName, @WeekFolder, @ReportName, @ReportTypeId, @ReportTypeName,
                 @Status, @RowCount, @StartedOn, @CompletedOn, @Remarks, GETDATE(), @CreatedBy);
+
+    /*
+        Backfill the rest of the run. Reports that logged before the week folder was known are
+        sitting on NULL; the value is a property of the run, so it belongs on all of them.
+
+        Strictly WHERE WeekFolder IS NULL - this never overwrites a value someone supplied.
+    */
+    IF @WeekFolder IS NOT NULL
+    BEGIN
+        UPDATE dbo.ReportsWorkflowTracker
+        SET    WeekFolder = @WeekFolder
+        WHERE  RunId      = @RunId
+          AND  WeekFolder IS NULL;
+    END
 END
 GO
 

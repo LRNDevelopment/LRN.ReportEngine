@@ -110,8 +110,8 @@ Per lab, per level, independent — line level on with claim level off is suppor
 | Key | Default | Effect |
 |---|---|---|
 | `Enabled` | `true` | `false` skips the level end to end |
-| `CreateCsv` | `true` | `false` skips the CSV **and** the bulk copy |
-| `BulkCopyToTable` | `false` | must be `true` to write to SQL |
+| `CreateCsv` | `true` | `false` skips **publishing the CSV file only**. The load still runs |
+| `BulkCopyToTable` | `false` | must be `true` to write to SQL. The only toggle that controls the load |
 | `TruncateBeforeLoad` | `true` | truncate-and-reload |
 | `BatchSize` | `10000` | `SqlBulkCopy` batch |
 | `BulkCopyTimeoutSeconds` | `900` | never `0` — a hung load must fail, not block the run |

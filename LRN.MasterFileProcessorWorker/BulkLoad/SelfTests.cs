@@ -310,14 +310,15 @@ public static class SelfTests
     {
         // Mirrors LineClaimImportService.ResolveSkipReason via observable behaviour of the toggles.
         var enabled = new LevelMapping { Enabled = true, CreateCsv = true, BulkCopyToTable = true, SqlTableName = "dbo.X" };
-        var csvOff = new LevelMapping { Enabled = true, CreateCsv = false, BulkCopyToTable = false };
+        // CreateCsv off, load on - the combination that must work. It used to be unreachable.
+        var csvOff = new LevelMapping { Enabled = true, CreateCsv = false, BulkCopyToTable = true, SqlTableName = "dbo.X" };
         var levelOff = new LevelMapping { Enabled = false };
 
         Check("Defaults preserve current behaviour (BulkCopyToTable off)", new LevelMapping().BulkCopyToTable == false);
         Check("Defaults preserve current behaviour (CreateCsv on)", new LevelMapping().CreateCsv);
         Check("Defaults preserve current behaviour (Enabled on)", new LevelMapping().Enabled);
         Check("Enabled level is loadable", enabled is { Enabled: true, CreateCsv: true, BulkCopyToTable: true });
-        Check("CreateCsv=false implies no bulk copy", !csvOff.BulkCopyToTable);
+        Check("CreateCsv=false does NOT disable the bulk copy", csvOff.BulkCopyToTable);
         Check("Level toggles are independent", levelOff.Enabled == false && enabled.Enabled);
     }
 

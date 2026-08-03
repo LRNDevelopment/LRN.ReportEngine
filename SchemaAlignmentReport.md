@@ -36,10 +36,10 @@ ones to check: each is a column production expects that we are not currently pop
 | InHealthDTRLRN | ClaimLevelData | 90 | 0 | 1 | **6** |
 | NWL_LRN | LineLevelData | 84 | 0 | 2 | 0 |
 | NWL_LRN | ClaimLevelData | 91 | 0 | 6 | **1** |
-| PCRAL_LRN | LineLevelData | 66 | 0 | 0 | **57** |
-| PCRAL_LRN | ClaimLevelData | 56 | 0 | 0 | **47** |
-| PCRCO_LRN | LineLevelData | 66 | 0 | 0 | **57** |
-| PCRCO_LRN | ClaimLevelData | 56 | 0 | 0 | **47** |
+| PCRAL_LRN | LineLevelData | 66 | 0 | 0 | 0 |
+| PCRAL_LRN | ClaimLevelData | 56 | 0 | 0 | 0 |
+| PCRCO_LRN | LineLevelData | 66 | 0 | 0 | 0 |
+| PCRCO_LRN | ClaimLevelData | 56 | 0 | 0 | 0 |
 | PCRLOA_LRN | LineLevelData | 78 | 0 | 2 | 0 |
 | PCRLOA_LRN | ClaimLevelData | 75 | 0 | 5 | 0 |
 | PhiLife_LRN | LineLevelData | 78 | 0 | 2 | **2** |
@@ -315,65 +315,41 @@ To populate any of these, add a `{ "CsvHeader": "...", "SqlColumn": "<name>", "I
 
 ## PCRAL_LRN
 
-Mapping file: `(none — this worker has no mapping for this lab yet)`
+Mapping file: `PCRDxALFieldMappings.json`
 
 ### LineLevelData
 
 - production columns: **66**
-- columns this worker maps: **0**
+- columns this worker maps: **57**
 
-**⚠ 57 production column(s) we do NOT map — these load NULL:**
-
-```
-LabID, LabName, ClaimID, AccessionNumber, SourceFileID, IngestedOn, CsvRowHash, PayerName_Raw, PayerName, Payer_Code, Payer_Common_Code, Payer_Group_Code, Global_Payer_ID, PayerType, BillingProvider, ReferringProvider, ClinicName, SalesRepname, PatientID, PatientDOB, DateofService, ChargeEnteredDate, FirstBilledDate, Panelname, CPTCode, Units, Modifier, POS, TOS, ChargeAmount, ChargeAmountPerUnit, AllowedAmount, AllowedAmountPerUnit, InsurancePayment, InsurancePaymentPerUnit, PatientPayment, PatientPaymentPerUnit, TotalPayments, InsuranceAdjustments, PatientAdjustments, TotalAdjustments, InsuranceBalance, PatientBalance, PatientBalancePerUnit, TotalBalance, CheckDate, PostingDate, ClaimStatus, PayStatus, DenialCode, DenialDate, ICDCode, DaystoDOS, RollingDays, DaystoBill, DaystoPost, ICDPointer
-```
-
-To populate any of these, add a `{ "CsvHeader": "...", "SqlColumn": "<name>", "IncludeInHash": true|false }` entry to the lab's mapping JSON.
+✅ Every production column is mapped.
 
 ### ClaimLevelData
 
 - production columns: **56**
-- columns this worker maps: **0**
+- columns this worker maps: **47**
 
-**⚠ 47 production column(s) we do NOT map — these load NULL:**
-
-```
-LabID, LabName, ClaimID, AccessionNumber, SourceFileID, IngestedOn, CsvRowHash, PayerName_Raw, PayerName, Payer_Code, Payer_Common_Code, Payer_Group_Code, Global_Payer_ID, PayerType, BillingProvider, ReferringProvider, ClinicName, SalesRepname, PatientID, PatientDOB, DateofService, ChargeEnteredDate, FirstBilledDate, Panelname, CPTCodeXUnitsXModifier, POS, TOS, ChargeAmount, AllowedAmount, InsurancePayment, PatientPayment, TotalPayments, InsuranceAdjustments, PatientAdjustments, TotalAdjustments, InsuranceBalance, PatientBalance, TotalBalance, CheckDate, ClaimStatus, DenialCode, ICDCode, DaystoDOS, RollingDays, DaystoBill, DaystoPost, ICDPointer
-```
-
-To populate any of these, add a `{ "CsvHeader": "...", "SqlColumn": "<name>", "IncludeInHash": true|false }` entry to the lab's mapping JSON.
+✅ Every production column is mapped.
 
 ---
 
 ## PCRCO_LRN
 
-Mapping file: `(none — this worker has no mapping for this lab yet)`
+Mapping file: `PCRDxCOFieldMappings.json`
 
 ### LineLevelData
 
 - production columns: **66**
-- columns this worker maps: **0**
+- columns this worker maps: **57**
 
-**⚠ 57 production column(s) we do NOT map — these load NULL:**
-
-```
-LabID, LabName, ClaimID, AccessionNumber, SourceFileID, IngestedOn, CsvRowHash, PayerName_Raw, PayerName, Payer_Code, Payer_Common_Code, Payer_Group_Code, Global_Payer_ID, PayerType, BillingProvider, ReferringProvider, ClinicName, SalesRepname, PatientID, PatientDOB, DateofService, ChargeEnteredDate, FirstBilledDate, Panelname, CPTCode, Units, Modifier, POS, TOS, ChargeAmount, ChargeAmountPerUnit, AllowedAmount, AllowedAmountPerUnit, InsurancePayment, InsurancePaymentPerUnit, PatientPayment, PatientPaymentPerUnit, TotalPayments, InsuranceAdjustments, PatientAdjustments, TotalAdjustments, InsuranceBalance, PatientBalance, PatientBalancePerUnit, TotalBalance, CheckDate, PostingDate, ClaimStatus, PayStatus, DenialCode, DenialDate, ICDCode, DaystoDOS, RollingDays, DaystoBill, DaystoPost, ICDPointer
-```
-
-To populate any of these, add a `{ "CsvHeader": "...", "SqlColumn": "<name>", "IncludeInHash": true|false }` entry to the lab's mapping JSON.
+✅ Every production column is mapped.
 
 ### ClaimLevelData
 
 - production columns: **56**
-- columns this worker maps: **0**
+- columns this worker maps: **47**
 
-**⚠ 47 production column(s) we do NOT map — these load NULL:**
-
-```
-LabID, LabName, ClaimID, AccessionNumber, SourceFileID, IngestedOn, CsvRowHash, PayerName_Raw, PayerName, Payer_Code, Payer_Common_Code, Payer_Group_Code, Global_Payer_ID, PayerType, BillingProvider, ReferringProvider, ClinicName, SalesRepname, PatientID, PatientDOB, DateofService, ChargeEnteredDate, FirstBilledDate, Panelname, CPTCodeXUnitsXModifier, POS, TOS, ChargeAmount, AllowedAmount, InsurancePayment, PatientPayment, TotalPayments, InsuranceAdjustments, PatientAdjustments, TotalAdjustments, InsuranceBalance, PatientBalance, TotalBalance, CheckDate, ClaimStatus, DenialCode, ICDCode, DaystoDOS, RollingDays, DaystoBill, DaystoPost, ICDPointer
-```
-
-To populate any of these, add a `{ "CsvHeader": "...", "SqlColumn": "<name>", "IncludeInHash": true|false }` entry to the lab's mapping JSON.
+✅ Every production column is mapped.
 
 ---
 

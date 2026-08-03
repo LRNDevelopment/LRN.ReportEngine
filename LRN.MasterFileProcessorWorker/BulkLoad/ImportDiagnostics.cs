@@ -115,11 +115,20 @@ public static class ImportDiagnostics
                     continue;
                 }
 
-                var willLoad = level.Enabled && level.CreateCsv && level.BulkCopyToTable;
-                Report($"  [{levelName}] will bulk copy", willLoad,
-                    willLoad
-                        ? $"-> {level.SqlTableName}"
-                        : $"Enabled={level.Enabled} CreateCsv={level.CreateCsv} BulkCopyToTable={level.BulkCopyToTable}");
+                // CreateCsv is NOT part of this: it controls the file only, never the load.
+                var willLoad = level.Enabled && level.BulkCopyToTable;
+
+                if (willLoad)
+                {
+                    Report($"  [{levelName}] will bulk copy", true, $"-> {level.SqlTableName}");
+                }
+                else
+                {
+                    // A level switched off on purpose is not a failure - say so without counting it.
+                    var why = !level.Enabled ? "Enabled=false" : "BulkCopyToTable=false";
+                    Console.WriteLine($"  note   {$"  [{levelName}] will bulk copy",-42} " +
+                                      $"skipped by config ({why}) - set it true in the lab's *FieldMappings.json to load");
+                }
             }
 
             // connection: same precedence the worker uses

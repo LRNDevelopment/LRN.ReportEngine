@@ -199,7 +199,7 @@ public static class SelfTests
 
             Check("Valid mapping loads", configs.Count == 1);
             Check("LabId is read", configs[0].LabId == 20);
-            Check("Staging table name defaults", configs[0].LineLevel!.ResolveStagingTableName() == "dbo.LineLevelData_Staging");
+            Check("SqlTableName is read", configs[0].LineLevel!.SqlTableName == "dbo.LineLevelData");
             Check("BulkCopyToTable defaults to false when absent", configs[0].ClaimLevel is null);
         }
         finally

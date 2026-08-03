@@ -133,10 +133,6 @@ public sealed class LabMappingLoader
                 errors.Add($"{file} [{levelName}]: SqlTableName '{level.SqlTableName}' is not a valid 'schema.table' identifier.");
             }
 
-            var staging = level.ResolveStagingTableName();
-            if (!string.IsNullOrWhiteSpace(staging) && !TableNamePattern.IsMatch(staging.Trim()))
-                errors.Add($"{file} [{levelName}]: StagingTableName '{staging}' is not a valid 'schema.table' identifier.");
-
             if (level.Fields.Count == 0)
                 errors.Add($"{file} [{levelName}]: BulkCopyToTable is true but Fields is empty.");
         }

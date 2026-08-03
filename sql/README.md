@@ -126,24 +126,25 @@ after deploy — and does not start writing to SQL until someone opts it in.
 
 ## How a load runs
 
-Staging-then-swap, so a failed load can never leave a lab with an empty table:
+`TRUNCATE`, bulk copy and verify, all in one transaction:
 
-1. Insert the `LineClaimFileLogs` row → `FileLogId`.
-2. `TRUNCATE` the **staging** table; stream the CSV into it with `SqlBulkCopy`
-   (`EnableStreaming`, explicit column mappings by name, never ordinal). The live table is untouched
-   and still readable throughout.
-3. Verify staged rows == CSV rows. **A mismatch aborts here, before the live table is touched.**
-4. `TRUNCATE` live + `INSERT ... SELECT` from staging, in one short transaction.
-5. Verify live rows == CSV rows.
+1. Insert the `LineClaimFileLogs` row -> `FileLogId`.
+2. `BEGIN TRAN`, then `TRUNCATE` the destination.
+3. Stream the CSV straight into it with `SqlBulkCopy` (`EnableStreaming`, explicit column mappings
+   by name, never ordinal), enlisted in the same transaction.
+4. Count the destination and compare with the CSV row count - still inside the transaction.
+5. Commit on a match; otherwise roll back, leaving the table exactly as it was.
 6. Update the file log, `ReportRunIdInfoLog` and `ReportsWorkflowTracker`.
 
-Staging is deliberately left populated after a load — it is the cheapest forensic copy of what was
-last loaded.
+The trade is a `TABLOCK` on the destination for the duration of the load - about 18s for a 195k row
+lab - during which readers block unless the database has read-committed snapshot on. The load runs
+once per lab per run, so that window is acceptable.
 
 **Truncate scope is per run per level.** The pipeline produces exactly one line-level and one
-claim-level CSV per lab per run, so per-file and per-run truncation are equivalent. ⚠ If a run ever
+claim-level CSV per lab per run, so per-file and per-run truncation are equivalent. If a run ever
 starts producing two files of the same level for one lab, this must move to truncate-once-per-run or
 the second file will discard the first one's rows.
+
 
 ---
 

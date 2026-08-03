@@ -217,108 +217,13 @@ IF COL_LENGTH('dbo.LineLevelData', 'Source') IS NULL
     ALTER TABLE [dbo].[LineLevelData] ADD [Source] NVARCHAR(500) NULL;   -- from lab mapping
 GO
 
-/* ---------- LineLevelData_Staging (load target for the staging+swap strategy) ---------- */
+/* ---------- LineLevelData_Staging - no longer used, dropped to reclaim space ---------- */
 GO
-IF NOT EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON s.schema_id = t.schema_id
-               WHERE s.name = 'dbo' AND t.name = 'LineLevelData_Staging')
+IF OBJECT_ID('dbo.LineLevelData_Staging', 'U') IS NOT NULL
 BEGIN
-    CREATE TABLE [dbo].[LineLevelData_Staging](
-        [FileLogId] NVARCHAR(500) NULL,
-        [RunId] NVARCHAR(500) NULL,
-        [WeekFolder] NVARCHAR(500) NULL,
-        [SourceFullPath] NVARCHAR(1000) NULL,
-        [FileName] NVARCHAR(500) NULL,
-        [FileType] NVARCHAR(100) NULL,
-        [RowHash] NVARCHAR(64) NULL,
-        [LabID] NVARCHAR(500) NULL,
-        [LabName] NVARCHAR(500) NULL,
-        [ClaimID] NVARCHAR(500) NULL,
-        [AccessionNumber] NVARCHAR(500) NULL,
-        [SourceFileID] NVARCHAR(1000) NULL,
-        [IngestedOn] NVARCHAR(500) NULL,
-        [CsvRowHash] NVARCHAR(500) NULL,
-        [PayerName_Raw] NVARCHAR(500) NULL,
-        [PayerName] NVARCHAR(500) NULL,
-        [Payer_Code] NVARCHAR(500) NULL,
-        [Payer_Common_Code] NVARCHAR(500) NULL,
-        [Payer_Group_Code] NVARCHAR(500) NULL,
-        [Global_Payer_ID] NVARCHAR(500) NULL,
-        [PayerType] NVARCHAR(500) NULL,
-        [BillingProvider] NVARCHAR(500) NULL,
-        [ReferringProvider] NVARCHAR(500) NULL,
-        [ClinicName] NVARCHAR(500) NULL,
-        [SalesRepname] NVARCHAR(500) NULL,
-        [PatientID] NVARCHAR(500) NULL,
-        [PatientDOB] NVARCHAR(500) NULL,
-        [DateofService] NVARCHAR(500) NULL,
-        [ChargeEnteredDate] NVARCHAR(500) NULL,
-        [FirstBilledDate] NVARCHAR(500) NULL,
-        [Panelname] NVARCHAR(500) NULL,
-        [CPTCode] NVARCHAR(max) NULL,
-        [Units] NVARCHAR(500) NULL,
-        [Modifier] NVARCHAR(500) NULL,
-        [POS] NVARCHAR(500) NULL,
-        [TOS] NVARCHAR(500) NULL,
-        [ChargeAmount] NVARCHAR(500) NULL,
-        [ChargeAmountPerUnit] NVARCHAR(500) NULL,
-        [AllowedAmount] NVARCHAR(500) NULL,
-        [AllowedAmountPerUnit] NVARCHAR(500) NULL,
-        [InsurancePayment] NVARCHAR(500) NULL,
-        [InsurancePaymentPerUnit] NVARCHAR(500) NULL,
-        [PatientPayment] NVARCHAR(500) NULL,
-        [PatientPaymentPerUnit] NVARCHAR(500) NULL,
-        [TotalPayments] NVARCHAR(500) NULL,
-        [InsuranceAdjustments] NVARCHAR(500) NULL,
-        [PatientAdjustments] NVARCHAR(500) NULL,
-        [TotalAdjustments] NVARCHAR(500) NULL,
-        [InsuranceBalance] NVARCHAR(500) NULL,
-        [PatientBalance] NVARCHAR(500) NULL,
-        [PatientBalancePerUnit] NVARCHAR(500) NULL,
-        [TotalBalance] NVARCHAR(500) NULL,
-        [CheckDate] NVARCHAR(500) NULL,
-        [PostingDate] NVARCHAR(500) NULL,
-        [ClaimStatus] NVARCHAR(500) NULL,
-        [PayStatus] NVARCHAR(500) NULL,
-        [DenialCode] NVARCHAR(max) NULL,
-        [DenialDate] NVARCHAR(500) NULL,
-        [ICDCode] NVARCHAR(500) NULL,
-        [DaystoDOS] NVARCHAR(500) NULL,
-        [RollingDays] NVARCHAR(500) NULL,
-        [DaystoBill] NVARCHAR(500) NULL,
-        [DaystoPost] NVARCHAR(500) NULL,
-        [ICDPointer] NVARCHAR(500) NULL,
-        [InsertedDateTime] DATETIME NULL,
-        [PaymentPostedDate] NVARCHAR(500) NULL,
-        [T_F] NVARCHAR(100) NULL,
-        [UID] NVARCHAR(500) NULL,
-        [Facility] NVARCHAR(500) NULL,
-        [PatientName] NVARCHAR(1000) NULL,
-        [SubscriberId] NVARCHAR(500) NULL,
-        [AgingDOS] NVARCHAR(100) NULL,
-        [EndDOS] NVARCHAR(500) NULL,
-        [AgingDOE] NVARCHAR(100) NULL,
-        [BilledWeek] NVARCHAR(500) NULL,
-        [LineLevelCPT] NVARCHAR(max) NULL,
-        [DODWeek] NVARCHAR(500) NULL,
-        [DeniedWeek] NVARCHAR(500) NULL,
-        [LineLevelDenialCode] NVARCHAR(max) NULL,
-        [PaymentPercent] NVARCHAR(100) NULL,
-        [LineLevelUID] NVARCHAR(500) NULL,
-        [Source] NVARCHAR(500) NULL,
-        [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED
-    );
+    DROP TABLE [dbo].[LineLevelData_Staging];
+    PRINT '  dropped dbo.LineLevelData_Staging (superseded by the single-transaction load)';
 END
-GO
-
-IF COL_LENGTH('dbo.LineLevelData_Staging', 'LineLevelUID') IS NULL
-    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [LineLevelUID] NVARCHAR(500) NULL;
-GO
-IF COL_LENGTH('dbo.LineLevelData_Staging', 'Source') IS NULL
-    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [Source] NVARCHAR(500) NULL;
-GO
-IF COL_LENGTH('dbo.LineLevelData_Staging', 'InsuranceBalance_Decimal') IS NULL
-   AND COL_LENGTH('dbo.LineLevelData_Staging', 'InsuranceBalance') IS NOT NULL
-    ALTER TABLE [dbo].[LineLevelData_Staging] ADD [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED;
 GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_LineLevelData_RunId' AND object_id = OBJECT_ID('dbo.LineLevelData'))
@@ -484,143 +389,13 @@ IF COL_LENGTH('dbo.ClaimLevelData', 'PanelNameBasedOnCPT') IS NULL
     ALTER TABLE [dbo].[ClaimLevelData] ADD [PanelNameBasedOnCPT] NVARCHAR(500) NULL;   -- from lab mapping
 GO
 
-/* ---------- ClaimLevelData_Staging (load target for the staging+swap strategy) ---------- */
+/* ---------- ClaimLevelData_Staging - no longer used, dropped to reclaim space ---------- */
 GO
-IF NOT EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON s.schema_id = t.schema_id
-               WHERE s.name = 'dbo' AND t.name = 'ClaimLevelData_Staging')
+IF OBJECT_ID('dbo.ClaimLevelData_Staging', 'U') IS NOT NULL
 BEGIN
-    CREATE TABLE [dbo].[ClaimLevelData_Staging](
-        [FileLogId] NVARCHAR(500) NULL,
-        [RunId] NVARCHAR(500) NULL,
-        [WeekFolder] NVARCHAR(500) NULL,
-        [SourceFullPath] NVARCHAR(1000) NULL,
-        [FileName] NVARCHAR(500) NULL,
-        [FileType] NVARCHAR(100) NULL,
-        [RowHash] NVARCHAR(64) NULL,
-        [LabID] NVARCHAR(500) NULL,
-        [LabName] NVARCHAR(500) NULL,
-        [ClaimID] NVARCHAR(500) NULL,
-        [AccessionNumber] NVARCHAR(500) NULL,
-        [SourceFileID] NVARCHAR(1000) NULL,
-        [IngestedOn] NVARCHAR(500) NULL,
-        [CsvRowHash] NVARCHAR(500) NULL,
-        [PayerName_Raw] NVARCHAR(500) NULL,
-        [PayerName] NVARCHAR(500) NULL,
-        [Payer_Code] NVARCHAR(500) NULL,
-        [Payer_Common_Code] NVARCHAR(500) NULL,
-        [Payer_Group_Code] NVARCHAR(500) NULL,
-        [Global_Payer_ID] NVARCHAR(500) NULL,
-        [PayerType] NVARCHAR(500) NULL,
-        [BillingProvider] NVARCHAR(500) NULL,
-        [ReferringProvider] NVARCHAR(500) NULL,
-        [ClinicName] NVARCHAR(500) NULL,
-        [SalesRepname] NVARCHAR(500) NULL,
-        [PatientID] NVARCHAR(500) NULL,
-        [PatientDOB] NVARCHAR(500) NULL,
-        [DateofService] NVARCHAR(500) NULL,
-        [ChargeEnteredDate] NVARCHAR(500) NULL,
-        [FirstBilledDate] NVARCHAR(500) NULL,
-        [Panelname] NVARCHAR(500) NULL,
-        [CPTCodeXUnitsXModifier] NVARCHAR(max) NULL,
-        [POS] NVARCHAR(500) NULL,
-        [TOS] NVARCHAR(500) NULL,
-        [ChargeAmount] NVARCHAR(500) NULL,
-        [AllowedAmount] NVARCHAR(500) NULL,
-        [InsurancePayment] NVARCHAR(500) NULL,
-        [PatientPayment] NVARCHAR(500) NULL,
-        [TotalPayments] NVARCHAR(500) NULL,
-        [InsuranceAdjustments] NVARCHAR(500) NULL,
-        [PatientAdjustments] NVARCHAR(500) NULL,
-        [TotalAdjustments] NVARCHAR(500) NULL,
-        [InsuranceBalance] NVARCHAR(500) NULL,
-        [PatientBalance] NVARCHAR(500) NULL,
-        [TotalBalance] NVARCHAR(500) NULL,
-        [CheckDate] NVARCHAR(500) NULL,
-        [ClaimStatus] NVARCHAR(500) NULL,
-        [DenialCode] NVARCHAR(max) NULL,
-        [ICDCode] NVARCHAR(500) NULL,
-        [DaystoDOS] NVARCHAR(500) NULL,
-        [RollingDays] NVARCHAR(500) NULL,
-        [DaystoBill] NVARCHAR(500) NULL,
-        [DaystoPost] NVARCHAR(500) NULL,
-        [ICDPointer] NVARCHAR(500) NULL,
-        [InsertedDateTime] DATETIME NULL,
-        [CPTCodeXUnitsXModifierOrginal] NVARCHAR(max) NULL,
-        [T_F] NVARCHAR(100) NULL,
-        [UID] NVARCHAR(500) NULL,
-        [Facility] NVARCHAR(500) NULL,
-        [PatientName] NVARCHAR(1000) NULL,
-        [SubscriberId] NVARCHAR(1000) NULL,
-        [AgingDOS] NVARCHAR(100) NULL,
-        [EndDOS] NVARCHAR(500) NULL,
-        [AgingDOE] NVARCHAR(100) NULL,
-        [BilledWeek] NVARCHAR(500) NULL,
-        [ProcedureField] NVARCHAR(max) NULL,
-        [Units] NVARCHAR(500) NULL,
-        [LineLevelCPT] NVARCHAR(max) NULL,
-        [DODWeek] NVARCHAR(500) NULL,
-        [DenialDate] NVARCHAR(500) NULL,
-        [DeniedWeek] NVARCHAR(500) NULL,
-        [LineLevelDenialCode] NVARCHAR(max) NULL,
-        [LineLevelICD] NVARCHAR(max) NULL,
-        [ModifierField] NVARCHAR(500) NULL,
-        [TotalWO] NVARCHAR(500) NULL,
-        [TotalPayment] NVARCHAR(500) NULL,
-        [PaymentPercent] NVARCHAR(100) NULL,
-        [BillStatus] NVARCHAR(200) NULL,
-        [FullyPaidCount] NVARCHAR(500) NULL,
-        [FullyPaidAmount] NVARCHAR(500) NULL,
-        [AdjucticatedCount] NVARCHAR(500) NULL,
-        [AdjucticatedAmount] NVARCHAR(500) NULL,
-        [Bucket30Count] NVARCHAR(500) NULL,
-        [Bucket30Amount] NVARCHAR(500) NULL,
-        [Bucket60Count] NVARCHAR(500) NULL,
-        [Bucket60Amount] NVARCHAR(500) NULL,
-        [Aging] NVARCHAR(100) NULL,
-        [LISPatientName] NVARCHAR(1000) NULL,
-        [PanelType] NVARCHAR(max) NULL,
-        [EnteredWeek] NVARCHAR(500) NULL,
-        [EnteredStatus] NVARCHAR(1000) NULL,
-        [LastActivityDate] NVARCHAR(100) NULL,
-        [EmedixSubmissionDate] NVARCHAR(100) NULL,
-        [ClaimType] NVARCHAR(max) NULL,
-        [BilledStatus] NVARCHAR(max) NULL,
-        [PostedWeek] NVARCHAR(500) NULL,
-        [ModField] NVARCHAR(100) NULL,
-        [CheqNo] NVARCHAR(500) NULL,
-        [DuplicatePaymentPosted] NVARCHAR(100) NULL,
-        [ActualPayment] NVARCHAR(500) NULL,
-        [ProcTotalBal] NVARCHAR(500) NULL,
-        [DeniedStatus] NVARCHAR(500) NULL,
-        [ScrubberEditReason] NVARCHAR(max) NULL,
-        [EmedixRejectionDate] NVARCHAR(100) NULL,
-        [EmedixRejection] NVARCHAR(max) NULL,
-        [RejectionCategory] NVARCHAR(max) NULL,
-        [TimeToPay] NVARCHAR(500) NULL,
-        [Adjudicated] NVARCHAR(500) NULL,
-        [AdjudicatedAmount] NVARCHAR(500) NULL,
-        [Bucket30] NVARCHAR(500) NULL,
-        [Bucket60] NVARCHAR(500) NULL,
-        [ClaimUID] NVARCHAR(500) NULL,
-        [PanelNameLIS] NVARCHAR(500) NULL,
-        [PanelNameBasedOnCPT] NVARCHAR(500) NULL,
-        [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED
-    );
+    DROP TABLE [dbo].[ClaimLevelData_Staging];
+    PRINT '  dropped dbo.ClaimLevelData_Staging (superseded by the single-transaction load)';
 END
-GO
-
-IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'ClaimUID') IS NULL
-    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [ClaimUID] NVARCHAR(500) NULL;
-GO
-IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PanelNameLIS') IS NULL
-    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PanelNameLIS] NVARCHAR(500) NULL;
-GO
-IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'PanelNameBasedOnCPT') IS NULL
-    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [PanelNameBasedOnCPT] NVARCHAR(500) NULL;
-GO
-IF COL_LENGTH('dbo.ClaimLevelData_Staging', 'InsuranceBalance_Decimal') IS NULL
-   AND COL_LENGTH('dbo.ClaimLevelData_Staging', 'InsuranceBalance') IS NOT NULL
-    ALTER TABLE [dbo].[ClaimLevelData_Staging] ADD [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED;
 GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_ClaimLevelData_RunId' AND object_id = OBJECT_ID('dbo.ClaimLevelData'))

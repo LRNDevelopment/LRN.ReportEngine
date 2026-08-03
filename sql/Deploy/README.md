@@ -16,8 +16,9 @@ The 12 lab bundles are built from `sql/Existing_LineLevel_ClaimLevel_DATA.sql` �
 other teams already run. Every production column is reproduced verbatim: same name, same type, same
 nullability, including the `InsuranceBalance_Decimal` computed column and the identity primary key.
 
-**Idempotent.** Creates what is missing, adds missing columns, widens undersized ones. Never drops,
-renames, narrows or retypes anything, and never deletes data. Re-running is safe.
+**Idempotent.** Creates what is missing, adds missing columns, widens undersized ones. The only DROP
+is the obsolete `*_Staging` tables (see below); it never drops a data table, renames, narrows or
+retypes anything, and never deletes lab data. Re-running is safe.
 
 ---
 
@@ -105,12 +106,16 @@ Reverting step 3 is `DROP VIEW dbo.LRNMetricsLab` plus renaming the backup table
 | `LineClaimFileLogs` | created, or `+ Status, RowsCopied, ErrorMessage, CompletedDateTime` |
 | `LineLevelData` | production schema verbatim, plus the columns in `SchemaAlignmentReport.md` |
 | `ClaimLevelData` | production schema verbatim, plus the columns in `SchemaAlignmentReport.md` |
-| `LineLevelData_Staging`, `ClaimLevelData_Staging` | same shape, minus the identity column |
+| `LineLevelData_Staging`, `ClaimLevelData_Staging` | **dropped** if present — superseded by the single-transaction load |
 | `InsuranceBalance_Decimal` | `AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED`, on all four tables |
 
-Staging tables are this worker's own — production does not have them. The load writes to staging,
-verifies the row count, then truncates and swaps into the live table in one short transaction, so a
-failed load can never leave a lab table empty.
+The load runs `TRUNCATE`, `SqlBulkCopy` and the row-count check inside **one transaction** and
+commits only when the destination count matches the CSV. A failure at any point rolls the table back
+to exactly what it held before, so a failed load can never leave a lab table empty or half-filled.
+
+An earlier design staged into a second table first. It gave the same guarantee but stored a full
+duplicate of every lab's data — on `NWL_LRN` that was 3.3 GB of a 31 GB database and helped fill the
+PRIMARY filegroup. The deployment scripts now **drop** any staging table they find.
 
 ---
 

@@ -374,8 +374,7 @@
         "SqlColumn": "PanelNameBasedOnCPT",
         "IncludeInHash": true
       }
-    ],
-    "StagingTableName": "dbo.ClaimLevelData_Staging"
+    ]
   },
   "LineLevel": {
     "Enabled": true,
@@ -740,7 +739,6 @@
         "SqlColumn": "Source",
         "IncludeInHash": true
       }
-    ],
-    "StagingTableName": "dbo.LineLevelData_Staging"
+    ]
   }
 }

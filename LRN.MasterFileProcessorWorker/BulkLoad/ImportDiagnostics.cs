@@ -166,7 +166,7 @@ public static class ImportDiagnostics
             foreach (var table in new[] { "dbo.LineClaimFileLogs" }
                          .Concat(new[] { mapping.LineLevel, mapping.ClaimLevel }
                              .Where(l => l is { Enabled: true, BulkCopyToTable: true })
-                             .SelectMany(l => new[] { l!.SqlTableName, l.ResolveStagingTableName() })))
+                             .Select(l => l!.SqlTableName)))
             {
                 var exists = await TableExistsAsync(labConn!, table, ct);
                 Report($"  {table} exists", exists, exists ? "" : $"run sql/Labs/{catalog}/*.sql");
@@ -193,7 +193,7 @@ public static class ImportDiagnostics
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
-                foreach (var table in new[] { level.SqlTableName, level.ResolveStagingTableName() })
+                foreach (var table in new[] { level.SqlTableName })
                 {
                     var actual = await ColumnNamesAsync(labConn!, table, ct);
                     if (actual.Count == 0) continue;   // table missing - already reported above

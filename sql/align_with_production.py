@@ -329,49 +329,21 @@ def write_db_bundle(deploy_dir, db, prod_tables, db_report):
                 a("GO")
             a("")
 
-        # staging mirror - identical shape minus the identity column, but WITH the computed
-        # column so a staged load can be inspected exactly like the live table
+        # The staging tables from the previous load design are dropped, not created. The loader
+        # now TRUNCATEs and bulk copies straight into the live table inside one transaction, so a
+        # second full copy of every lab's data is pure cost - on NWL_LRN it was 3.3 GB of a 31 GB
+        # database and helped fill the PRIMARY filegroup.
         staging = table + "_Staging"
-        a(f"/* ---------- {staging} (load target for the staging+swap strategy) ---------- */")
+        a(f"/* ---------- {staging} - no longer used, dropped to reclaim space ---------- */")
         a("GO")
-        a(f"IF NOT EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON s.schema_id = t.schema_id")
-        a(f"               WHERE s.name = 'dbo' AND t.name = '{staging}')")
+        a(f"IF OBJECT_ID('dbo.{staging}', 'U') IS NOT NULL")
         a("BEGIN")
-        a(f"    CREATE TABLE [dbo].[{staging}](")
-        body = []
-        for name, sqltype, nullable, identity, computed in prod_cols:
-            if identity:
-                continue
-            if computed:
-                body.append(f"        [{name}] AS {computed}")
-                continue
-            body.append(f"        [{name}] {sqltype} NULL")
-        for name, sqltype, _ in added:
-            body.append(f"        [{name}] {sqltype} NULL")
-
-        # Staging carries the computed column too, so a staged load reads exactly like the live
-        # table. Only appended when production did not already declare it (the loop above copies it
-        # verbatim in that case).
-        if not any(norm(c[0]) == norm(COMPUTED_COL) for c in prod_cols) \
-           and any(norm(c[0]) == norm(COMPUTED_SRC) for c in prod_cols):
-            body.append(computed_clause())
-
-        a(",\n".join(body))
-        a("    );")
+        a(f"    DROP TABLE [dbo].[{staging}];")
+        a(f"    PRINT '  dropped dbo.{staging} (superseded by the single-transaction load)';")
         a("END")
         a("GO")
         a("")
-        for name, sqltype, source in added:
-            a(f"IF COL_LENGTH('dbo.{staging}', '{name}') IS NULL")
-            a(f"    ALTER TABLE [dbo].[{staging}] ADD [{name}] {sqltype} NULL;")
-            a("GO")
-        for line in computed_alter(staging):
-            a(line)
-        a("")
 
-        # Production types these as nvarchar(500), so a composite key on
-        # (LabID, FileType, RunId) is 2200 bytes and exceeds the 1700-byte index key limit.
-        # LabID moves to an INCLUDE, which is not key-size constrained.
         for idx, cols, include in (("RunId", "[RunId]", ""),
                                    ("FileLogId", "[FileLogId]", ""),
                                    ("Run_FileType", "[RunId], [FileType]", " INCLUDE ([LabID])"),

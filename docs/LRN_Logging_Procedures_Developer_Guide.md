@@ -272,7 +272,16 @@ EXEC LRNMaster.dbo.usp_ReportsWorkflowTracker_Pivot;                            
 EXEC LRNMaster.dbo.usp_ReportsWorkflowTracker_Pivot @RunId = '20260801R0003';
 EXEC LRNMaster.dbo.usp_ReportsWorkflowTracker_Pivot @LabId = 18;
 EXEC LRNMaster.dbo.usp_ReportsWorkflowTracker_Pivot @ShowBlankAs = 'Not Run';
+
+-- one row per lab
+EXEC LRNMaster.dbo.usp_ReportsWorkflowTracker_Pivot @Mode = 'Latest';        -- newest run, pass or fail
+EXEC LRNMaster.dbo.usp_ReportsWorkflowTracker_Pivot @Mode = 'LatestSuccess'; -- newest clean run
 ```
+
+`@Mode = 'Latest'` is "where does every lab stand right now"; `'LatestSuccess'` is "when was each lab
+last good" — the run you compare a broken one against. A clean run has nothing `Failed` and at least
+one `Success`; `Skipped` does not disqualify it. A lab missing from `'LatestSuccess'` has never had a
+clean run in the window, which is itself worth knowing.
 
 A blank cell means that report never wrote a tracker row for the run — **not** the same as a
 failure. If your report's column is blank, it is not calling §2 yet.

@@ -80,7 +80,7 @@ then set `@Commit = 1` in section 2 of the file and run it again to apply.
 | `LRN_Step_Log` | `+ LabId`, backfilled from `dbo.Labs` by name |
 | `usp_ReportRunIdInfoLog_Insert` | created / altered — the entry point for other teams |
 | `usp_ReportsWorkflowTracker_Upsert` | created / altered — resolves lab context from RunId alone |
-| `usp_ReportsWorkflowTracker_Pivot` | created / altered — the workbook layout, one column per report |
+| `usp_ReportsWorkflowTracker_Pivot` | created / altered — the workbook layout; `@Mode` for one row per lab |
 | `usp_ReportRunIdInfoLog_Get` | created / altered — reads a run's log back; `@LogType='Error'` for triage |
 
 Existing columns on `LRN_Run_Log` and `LRN_Step_Log` are untouched.

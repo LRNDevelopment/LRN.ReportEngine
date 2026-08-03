@@ -596,6 +596,16 @@ GO
         EXEC dbo.usp_ReportsWorkflowTracker_Pivot @LabId = 4;               -- one lab
         EXEC dbo.usp_ReportsWorkflowTracker_Pivot @FromDate = '2026-07-01', @ToDate = '2026-07-31';
 
+        -- one row per lab
+        EXEC dbo.usp_ReportsWorkflowTracker_Pivot @Mode = 'Latest';         -- its newest run, pass or fail
+        EXEC dbo.usp_ReportsWorkflowTracker_Pivot @Mode = 'LatestSuccess';  -- its newest clean run
+
+    @Mode = 'Latest' answers "where does each lab stand right now"; 'LatestSuccess' answers "when was
+    each lab last good", which is the run you compare a broken one against. Both give exactly one row
+    per lab, newest first by Synced on. A lab with no qualifying run simply has no row - under
+    'LatestSuccess' that means the lab has never had a clean run in the filtered window, which is
+    itself the finding.
+
     A blank cell means that report never wrote a row for the run - which is NOT the same as a
     failure, and is worth chasing separately. Pass @ShowBlankAs to substitute a marker.
 
@@ -612,10 +622,20 @@ CREATE OR ALTER PROCEDURE [dbo].[usp_ReportsWorkflowTracker_Pivot]
     @FromDate               DATE         = NULL,   -- filters on CreatedOn
     @ToDate                 DATE         = NULL,
     @IncludeInactiveReports BIT          = 0,      -- include IsActive = 0 report types as columns
-    @ShowBlankAs            VARCHAR(50)  = NULL    -- e.g. 'Not Run'; NULL leaves the cell empty
+    @ShowBlankAs            VARCHAR(50)  = NULL,   -- e.g. 'Not Run'; NULL leaves the cell empty
+    @Mode                   VARCHAR(20)  = 'All'   -- All | Latest | LatestSuccess
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    SET @Mode = NULLIF(LTRIM(RTRIM(@Mode)), '');
+    IF @Mode IS NULL SET @Mode = 'All';
+
+    IF @Mode NOT IN ('All', 'Latest', 'LatestSuccess')
+    BEGIN
+        RAISERROR('usp_ReportsWorkflowTracker_Pivot: @Mode must be All, Latest or LatestSuccess (got ''%s'').', 16, 1, @Mode);
+        RETURN;
+    END
 
     /* ---- column list, straight from the master ---- */
     DECLARE @cols NVARCHAR(MAX);
@@ -650,18 +670,36 @@ BEGIN
         several rows, so LabName / WeekFolder / Synced on are joined back on afterwards.
     */
     DECLARE @sql NVARCHAR(MAX) = N'
-    WITH hdr AS (
+    WITH runs AS (
         SELECT  t.RunId,
                 t.LabID,
                 MAX(t.LabName)     AS LabName,
                 MAX(t.WeekFolder)  AS WeekFolder,
-                MAX(COALESCE(t.CompletedOn, t.CreatedOn)) AS SyncedOn
+                MAX(COALESCE(t.CompletedOn, t.CreatedOn)) AS SyncedOn,
+                SUM(CASE WHEN t.Status = ''Success'' THEN 1 ELSE 0 END) AS Succeeded,
+                SUM(CASE WHEN t.Status = ''Failed''  THEN 1 ELSE 0 END) AS Failed
         FROM    dbo.ReportsWorkflowTracker t
         WHERE  (@pRunId    IS NULL OR t.RunId = @pRunId)
           AND  (@pLabId    IS NULL OR t.LabID = @pLabId)
           AND  (@pFromDate IS NULL OR t.CreatedOn >= @pFromDate)
           AND  (@pToDate   IS NULL OR t.CreatedOn <  DATEADD(DAY, 1, @pToDate))
         GROUP BY t.RunId, t.LabID
+    ),
+    hdr AS (
+        /*
+            The WHERE runs before ROW_NUMBER, so under LatestSuccess rn = 1 is the newest CLEAN run
+            rather than the newest run that happens to be clean.
+
+            A clean run is one with nothing Failed and at least one Success. Skipped does not
+            disqualify it - a report that was deliberately not run is not a failure - but a run that
+            is entirely Skipped never succeeded at anything and is not a baseline worth comparing to.
+        */
+        SELECT  r.*,
+                ROW_NUMBER() OVER (PARTITION BY r.LabID
+                                   ORDER BY r.SyncedOn DESC, r.RunId DESC) AS rn
+        FROM    runs r
+        WHERE   @pMode <> ''LatestSuccess''
+             OR (r.Failed = 0 AND r.Succeeded > 0)
     ),
     src AS (
         SELECT  t.RunId, t.LabID, t.ReportName, t.Status
@@ -681,16 +719,20 @@ BEGIN
     JOIN    hdr h
             ON  h.RunId = p.RunId
             AND h.LabID = p.LabID
-    ORDER BY h.SyncedOn DESC, h.LabName;';
+            AND (@pMode = ''All'' OR h.rn = 1)   -- one row per lab in the other two modes
+    ORDER BY CASE WHEN @pMode = ''All'' THEN NULL ELSE h.LabName END ASC,
+             CASE WHEN @pMode = ''All'' THEN h.SyncedOn END DESC,
+             h.LabName;';
 
     EXEC sp_executesql
          @sql,
-         N'@pRunId VARCHAR(30), @pLabId INT, @pFromDate DATE, @pToDate DATE, @Blank VARCHAR(50)',
+         N'@pRunId VARCHAR(30), @pLabId INT, @pFromDate DATE, @pToDate DATE, @Blank VARCHAR(50), @pMode VARCHAR(20)',
          @pRunId    = @RunId,
          @pLabId    = @LabId,
          @pFromDate = @FromDate,
          @pToDate   = @ToDate,
-         @Blank     = @ShowBlankAs;
+         @Blank     = @ShowBlankAs,
+         @pMode     = @Mode;
 END
 GO
 

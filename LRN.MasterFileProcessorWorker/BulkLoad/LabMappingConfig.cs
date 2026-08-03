@@ -82,6 +82,18 @@ public sealed class LevelMapping
     /// </summary>
     public string? StagingTableName { get; set; }
 
+    /// <summary>
+    /// Keep the staged rows after a successful swap.
+    /// <para>
+    /// Default false: staging is truncated once the live table is loaded and verified. Leaving it
+    /// populated doubles the storage this feature needs - on NWL_LRN the two staging tables held
+    /// 3.3 GB of a 31 GB database and helped fill the PRIMARY filegroup. The forensic value is low,
+    /// because the standardized CSV that produced them is still on disk and is the real source.
+    /// </para>
+    /// <para>Set true only while actively debugging a specific lab's load.</para>
+    /// </summary>
+    public bool KeepStagingAfterLoad { get; set; }
+
     public string ResolveStagingTableName() =>
         string.IsNullOrWhiteSpace(StagingTableName)
             ? SqlTableName + "_Staging"

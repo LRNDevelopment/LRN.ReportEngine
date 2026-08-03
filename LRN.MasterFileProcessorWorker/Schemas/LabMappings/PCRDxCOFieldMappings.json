@@ -6,7 +6,7 @@
   "LineLevel": {
     "Enabled": true,
     "CreateCsv": true,
-    "BulkCopyToTable": false,
+    "BulkCopyToTable": true,
     "TruncateBeforeLoad": true,
     "BatchSize": 10000,
     "BulkCopyTimeoutSeconds": 900,
@@ -306,7 +306,7 @@
   "ClaimLevel": {
     "Enabled": true,
     "CreateCsv": true,
-    "BulkCopyToTable": false,
+    "BulkCopyToTable": true,
     "TruncateBeforeLoad": true,
     "BatchSize": 10000,
     "BulkCopyTimeoutSeconds": 900,

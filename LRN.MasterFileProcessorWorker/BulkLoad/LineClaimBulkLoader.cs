@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using System.Diagnostics;
 using Microsoft.Data.SqlClient;
 
@@ -161,7 +161,24 @@ public sealed class LineClaimBulkLoader
                 $"Lab {lab.LabId} [{fileType}]: {level.SqlTableName} has {finalCount} rows after load but the CSV had {rowsRead}.");
         }
 
-        // Staging is left populated deliberately: it is the cheapest forensic copy of the last load.
+        // Reclaim the staged copy now that the live table is loaded and verified. Holding a second
+        // full copy of every lab's data is what filled NWL_LRN's PRIMARY filegroup; the CSV on disk
+        // is the real forensic record. KeepStagingAfterLoad=true opts back in while debugging.
+        if (!level.KeepStagingAfterLoad)
+        {
+            try
+            {
+                await ExecuteAsync(conn, null, $"TRUNCATE TABLE {staging};", ct).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                // The load succeeded; failing to reclaim space must not fail the run.
+                _logger.LogWarning(ex,
+                    "Lab {LabId} [{FileType}]: loaded successfully but could not truncate {Staging}.",
+                    lab.LabId, fileType, level.ResolveStagingTableName());
+            }
+        }
+
         stopwatch.Stop();
 
         _logger.LogInformation(

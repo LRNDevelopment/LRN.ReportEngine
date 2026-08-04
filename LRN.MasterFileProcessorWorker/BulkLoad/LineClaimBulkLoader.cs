@@ -65,6 +65,20 @@ public sealed class LineClaimBulkLoader
 
         await EnsureTableExistsAsync(conn, level.SqlTableName, ct).ConfigureAwait(false);
 
+        // AdditionalFields is opt-in on the table, not in config: a lab database that has not had
+        // sql/Labs/_Common/03_AdditionalFields.sql applied must keep loading exactly as before
+        // rather than fail every row with 'Invalid column name'.
+        var captureAdditionalFields = level.CaptureAdditionalFields
+            && await ColumnExistsAsync(conn, level.SqlTableName, AuditColumns.AdditionalFields, ct).ConfigureAwait(false);
+
+        if (level.CaptureAdditionalFields && !captureAdditionalFields)
+        {
+            _logger.LogWarning(
+                "Lab {LabId} [{FileType}]: {Table} has no {Column} column, so unmapped CSV columns will be dropped. " +
+                "Run sql/Labs/_Common/03_AdditionalFields.sql against this database to capture them.",
+                lab.LabId, fileType, level.SqlTableName, AuditColumns.AdditionalFields);
+        }
+
         long rowsRead;
         long finalCount;
         IReadOnlyList<string> missing;
@@ -81,7 +95,8 @@ public sealed class LineClaimBulkLoader
                 if (level.TruncateBeforeLoad)
                     await ExecuteAsync(conn, tx, $"TRUNCATE TABLE {target};", ct).ConfigureAwait(false);
 
-                using (var reader = new CsvBulkDataReader(csvPath, level.Fields, audit))
+                using (var reader = new CsvBulkDataReader(csvPath, level.Fields, audit,
+                                                          captureAdditionalFields: captureAdditionalFields))
                 {
                     missing = reader.MissingCsvHeaders;
                     unmapped = reader.UnmappedCsvHeaders;
@@ -96,8 +111,10 @@ public sealed class LineClaimBulkLoader
                     if (unmapped.Count > 0)
                     {
                         _logger.LogWarning(
-                            "Lab {LabId} [{FileType}]: {Count} CSV column(s) have no mapping and will be dropped: {Columns}",
-                            lab.LabId, fileType, unmapped.Count, string.Join(", ", unmapped));
+                            "Lab {LabId} [{FileType}]: {Count} CSV column(s) have no mapping and will be {Fate}: {Columns}",
+                            lab.LabId, fileType, unmapped.Count,
+                            captureAdditionalFields ? $"captured as JSON in {AuditColumns.AdditionalFields}" : "dropped",
+                            string.Join(", ", unmapped));
                     }
 
                     // The transaction is passed in, so UseInternalTransaction must NOT be set - the
@@ -187,6 +204,28 @@ WHERE s.name = @Schema AND t.name = @Table;";
             throw new InvalidOperationException(
                 $"Table {tableName} does not exist in database '{conn.Database}'. Run the sql/ deployment scripts for this lab first.");
         }
+    }
+
+    /// <summary>True when the table carries the column. Used to keep an optional column optional.</summary>
+    private static async Task<bool> ColumnExistsAsync(SqlConnection conn, string tableName, string columnName, CancellationToken ct)
+    {
+        var parts = tableName.Replace("[", "").Replace("]", "").Split('.', 2);
+        var schema = parts.Length == 2 ? parts[0] : "dbo";
+        var table = parts.Length == 2 ? parts[1] : parts[0];
+
+        const string sql = @"
+SELECT COUNT(1)
+FROM sys.columns c
+JOIN sys.tables t  ON t.object_id = c.object_id
+JOIN sys.schemas s ON s.schema_id = t.schema_id
+WHERE s.name = @Schema AND t.name = @Table AND c.name = @Column;";
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.Add("@Schema", SqlDbType.NVarChar, 128).Value = schema;
+        cmd.Parameters.Add("@Table", SqlDbType.NVarChar, 128).Value = table;
+        cmd.Parameters.Add("@Column", SqlDbType.NVarChar, 128).Value = columnName;
+
+        return Convert.ToInt32(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false)) > 0;
     }
 
     private static async Task ExecuteAsync(SqlConnection conn, SqlTransaction? tx, string sql, CancellationToken ct, int timeoutSeconds = 120)

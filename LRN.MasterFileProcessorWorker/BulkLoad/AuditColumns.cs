@@ -31,6 +31,17 @@ public static class AuditColumns
     /// <summary>Server-defaulted load timestamp. Not stamped by the loader and never hashed.</summary>
     public const string InsertedDateTime = "InsertedDateTime";
 
+    /// <summary>
+    /// JSON catch-all for CSV columns the lab mapping does not claim.
+    /// <para>
+    /// Not part of the stamped block and never hashed: it is built per row from whatever headers the
+    /// file carried beyond the mapping, so a lab adding columns no longer needs an ALTER TABLE. Only
+    /// written when the destination table actually has the column - see
+    /// <c>sql/Labs/_Common/03_AdditionalFields.sql</c>.
+    /// </para>
+    /// </summary>
+    public const string AdditionalFields = "AdditionalFields";
+
     public sealed record AuditColumn(string Name, string SqlType, bool Nullable, Type ClrType);
 
     /// <summary>
@@ -61,7 +72,8 @@ public static class AuditColumns
         new(Names, StringComparer.OrdinalIgnoreCase)
         {
             RecordId,
-            InsertedDateTime
+            InsertedDateTime,
+            AdditionalFields
         };
 
     /// <summary>

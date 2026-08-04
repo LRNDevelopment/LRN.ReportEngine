@@ -226,6 +226,11 @@ IF COL_LENGTH('dbo.LineLevelData', 'Source') IS NULL
     ALTER TABLE [dbo].[LineLevelData] ADD [Source] NVARCHAR(500) NULL;   -- from lab mapping
 GO
 
+/* AdditionalFields - unmapped CSV columns as JSON, so a new column is never lost */
+IF COL_LENGTH('dbo.LineLevelData', 'AdditionalFields') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [AdditionalFields] NVARCHAR(MAX) NULL;
+GO
+
 /* ---------- LineLevelData_Staging - no longer used, dropped to reclaim space ---------- */
 GO
 IF OBJECT_ID('dbo.LineLevelData_Staging', 'U') IS NOT NULL
@@ -374,6 +379,11 @@ IF COL_LENGTH('dbo.ClaimLevelData', 'PanelNameLIS') IS NULL
 GO
 IF COL_LENGTH('dbo.ClaimLevelData', 'PanelNameBasedOnCPT') IS NULL
     ALTER TABLE [dbo].[ClaimLevelData] ADD [PanelNameBasedOnCPT] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+
+/* AdditionalFields - unmapped CSV columns as JSON, so a new column is never lost */
+IF COL_LENGTH('dbo.ClaimLevelData', 'AdditionalFields') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [AdditionalFields] NVARCHAR(MAX) NULL;
 GO
 
 /* ---------- ClaimLevelData_Staging - no longer used, dropped to reclaim space ---------- */

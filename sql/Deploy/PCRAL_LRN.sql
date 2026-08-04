@@ -192,6 +192,11 @@ IF NOT EXISTS (SELECT 1 FROM sys.default_constraints d
     ALTER TABLE [dbo].[LineLevelData] ADD DEFAULT (getdate()) FOR [InsertedDateTime];
 GO
 
+/* AdditionalFields - unmapped CSV columns as JSON, so a new column is never lost */
+IF COL_LENGTH('dbo.LineLevelData', 'AdditionalFields') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [AdditionalFields] NVARCHAR(MAX) NULL;
+GO
+
 /* ---------- LineLevelData_Staging - no longer used, dropped to reclaim space ---------- */
 GO
 IF OBJECT_ID('dbo.LineLevelData_Staging', 'U') IS NOT NULL
@@ -292,6 +297,11 @@ IF NOT EXISTS (SELECT 1 FROM sys.default_constraints d
                JOIN sys.columns c ON c.object_id = d.parent_object_id AND c.column_id = d.parent_column_id
                WHERE d.parent_object_id = OBJECT_ID('dbo.ClaimLevelData') AND c.name = 'InsertedDateTime')
     ALTER TABLE [dbo].[ClaimLevelData] ADD DEFAULT (getdate()) FOR [InsertedDateTime];
+GO
+
+/* AdditionalFields - unmapped CSV columns as JSON, so a new column is never lost */
+IF COL_LENGTH('dbo.ClaimLevelData', 'AdditionalFields') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [AdditionalFields] NVARCHAR(MAX) NULL;
 GO
 
 /* ---------- ClaimLevelData_Staging - no longer used, dropped to reclaim space ---------- */

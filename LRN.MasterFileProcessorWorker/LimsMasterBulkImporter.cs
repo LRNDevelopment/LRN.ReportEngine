@@ -5,6 +5,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using System.Data;
 using System.Globalization;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -12,6 +13,12 @@ public sealed class LimsMasterBulkImporter
 {
 	private readonly ILogger _logger;
 	private const int DefaultBatchSize = 50000;
+
+	/// <summary>Relaxed escaping keeps the stored JSON readable (&amp;, &lt;, quotes stay legible).</summary>
+	private static readonly JsonSerializerOptions JsonOptions = new()
+	{
+		Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+	};
 
 	public LimsMasterBulkImporter(ILogger logger)
 	{
@@ -114,11 +121,28 @@ public sealed class LimsMasterBulkImporter
 			.GroupBy(h => NormalizeName(h.Value))
 			.ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
-		var destinationByNormalized = destinationColumns.ToDictionary(c => NormalizeName(c.Name), c => c, StringComparer.OrdinalIgnoreCase);
-		var columnsToLoad = BuildLoadColumns(destinationColumns, schemaMappings, headerMap, request);
+		var plan = BuildLoadPlan(destinationColumns, schemaMappings, headerMap, request);
+		var columnsToLoad = plan.LoadColumns;
 
 		if (columnsToLoad.Count == 0)
 			throw new InvalidOperationException("No matching LIMS columns found between Excel/schema and destination table.");
+
+		if (plan.AdditionalHeaders.Count > 0)
+		{
+			_logger.LogInformation(
+				"LIMS import: {Count} sheet column(s) are not in the schema JSON and will be captured as JSON in {Column}: {Columns}",
+				plan.AdditionalHeaders.Count,
+				plan.AdditionalFieldsColumn!.Name,
+				string.Join(", ", plan.AdditionalHeaders.Select(h => h.Value)));
+		}
+		else if (request.CaptureAdditionalFields && plan.AdditionalFieldsColumn == null)
+		{
+			_logger.LogInformation(
+				"LIMS import: {TableName} has no {Column} column, so any column added to the file beyond the schema JSON is dropped. " +
+				"Run sql/Create_LIMSMaster.sql to add it.",
+				tableName,
+				request.AdditionalFieldsColumn);
+		}
 
 		var table = CreateDataTable(columnsToLoad);
 		var totalRows = 0;
@@ -158,6 +182,15 @@ public sealed class LimsMasterBulkImporter
 					value = Path.GetFileName(request.ExcelPath);
 				else if (loadColumn.SpecialColumn == LimsSpecialColumn.RunId)
 					value = request.RunId;
+				else if (loadColumn.SpecialColumn == LimsSpecialColumn.AdditionalFields)
+				{
+					value = BuildAdditionalFieldsJson(plan.AdditionalHeaders, valuesByColumnIndex, loadColumn.DestinationColumn.MaxLength);
+
+					// A row carrying only new columns is still a row. Without this it would be
+					// discarded as empty and the new data would silently never arrive.
+					if (value != null)
+						hasAnyMappedValue = true;
+				}
 				else if (loadColumn.ExcelColumnIndex.HasValue && valuesByColumnIndex.TryGetValue(loadColumn.ExcelColumnIndex.Value, out var text))
 				{
 					value = ConvertValue(text, loadColumn.DestinationColumn);
@@ -195,11 +228,21 @@ public sealed class LimsMasterBulkImporter
 			TotalRowsRead = totalRows,
 			TotalRowsCopied = copiedRows,
 			CreatedOn = runCreatedOn,
-			DestinationTable = tableName
+			DestinationTable = tableName,
+			AdditionalFieldNames = plan.AdditionalHeaders.Select(h => h.Value).ToList()
 		};
 	}
 
-	private static List<LimsLoadColumn> BuildLoadColumns(
+	/// <summary>
+	/// Works out which destination column each sheet column feeds, and which sheet columns feed none.
+	/// <para>
+	/// The leftovers are the point of this method: a lab that adds columns to its LIMS file should
+	/// not need an ALTER TABLE and a schema-JSON edit before the data can land. Anything the schema
+	/// JSON does not name and no destination column claims is written to the <c>AdditionalFields</c>
+	/// JSON column instead of being discarded.
+	/// </para>
+	/// </summary>
+	private static LimsLoadPlan BuildLoadPlan(
 		List<SqlDestinationColumn> destinationColumns,
 		List<LimsColumnMapping> schemaMappings,
 		Dictionary<string, ExcelHeaderInfo> headerMap,
@@ -209,11 +252,29 @@ public sealed class LimsMasterBulkImporter
 			.GroupBy(m => NormalizeName(m.DestinationName))
 			.ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
+		var additionalFieldsName = string.IsNullOrWhiteSpace(request.AdditionalFieldsColumn)
+			? "AdditionalFields"
+			: request.AdditionalFieldsColumn!;
+
 		var loadColumns = new List<LimsLoadColumn>();
+		var claimedHeaderIndexes = new HashSet<int>();
+		SqlDestinationColumn? additionalFieldsColumn = null;
 
 		foreach (var dest in destinationColumns.Where(c => !c.IsIdentity && !c.IsComputed))
 		{
 			var normalizedDest = NormalizeName(dest.Name);
+
+			if (normalizedDest == NormalizeName(additionalFieldsName))
+			{
+				if (request.CaptureAdditionalFields)
+				{
+					additionalFieldsColumn = dest;
+					loadColumns.Add(new LimsLoadColumn(dest, null, LimsSpecialColumn.AdditionalFields));
+				}
+
+				continue;
+			}
+
 			var special = GetSpecialColumn(dest.Name);
 
 			if (special != LimsSpecialColumn.None)
@@ -237,10 +298,83 @@ public sealed class LimsMasterBulkImporter
 			}
 
 			if (matchedHeader != null)
+			{
 				loadColumns.Add(new LimsLoadColumn(dest, matchedHeader.ColumnIndex, LimsSpecialColumn.None));
+				claimedHeaderIndexes.Add(matchedHeader.ColumnIndex);
+			}
 		}
 
-		return loadColumns;
+		var additionalHeaders = new List<ExcelHeaderInfo>();
+
+		if (additionalFieldsColumn != null)
+		{
+			// "Known to the schema" is judged on the schema JSON alone, not on what got loaded: a
+			// column the schema names but whose SQL column is missing from the table stays out of
+			// the JSON, so AdditionalFields never quietly duplicates a mapping mistake.
+			var knownToSchema = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			foreach (var m in schemaMappings)
+			{
+				knownToSchema.Add(NormalizeName(m.DestinationName));
+				foreach (var s in m.SourceNames) knownToSchema.Add(NormalizeName(s));
+			}
+
+			foreach (var header in headerMap.Values.OrderBy(h => h.ColumnIndex))
+			{
+				var normalized = NormalizeName(header.Value);
+
+				if (normalized.Length == 0
+					|| claimedHeaderIndexes.Contains(header.ColumnIndex)
+					|| knownToSchema.Contains(normalized)
+					|| GetSpecialColumn(header.Value) != LimsSpecialColumn.None
+					|| normalized == NormalizeName(additionalFieldsName))
+					continue;
+
+				additionalHeaders.Add(header);
+			}
+		}
+
+		return new LimsLoadPlan(loadColumns, additionalHeaders, additionalFieldsColumn);
+	}
+
+	/// <summary>
+	/// The row's unlisted sheet columns as one JSON object, or null when the row filled none of them.
+	/// <para>
+	/// Blank values are left out, so a column that is mostly empty costs almost nothing per row.
+	/// If the destination column is sized rather than NVARCHAR(MAX), trailing pairs are dropped
+	/// until the value fits - the stored text stays parseable JSON rather than being cut mid-string.
+	/// </para>
+	/// </summary>
+	private static string? BuildAdditionalFieldsJson(
+		IReadOnlyList<ExcelHeaderInfo> headers,
+		Dictionary<int, string> valuesByColumnIndex,
+		int maxLength)
+	{
+		if (headers.Count == 0)
+			return null;
+
+		Dictionary<string, string>? payload = null;
+
+		foreach (var header in headers)
+		{
+			if (!valuesByColumnIndex.TryGetValue(header.ColumnIndex, out var text) || string.IsNullOrWhiteSpace(text))
+				continue;
+
+			payload ??= new Dictionary<string, string>(StringComparer.Ordinal);
+			payload[header.Value] = text.Trim();
+		}
+
+		if (payload is null)
+			return null;
+
+		var json = JsonSerializer.Serialize(payload, JsonOptions);
+
+		while (maxLength > 0 && json.Length > maxLength && payload.Count > 0)
+		{
+			payload.Remove(payload.Keys.Last());
+			json = JsonSerializer.Serialize(payload, JsonOptions);
+		}
+
+		return payload.Count == 0 ? null : json;
 	}
 
 	private static LimsSpecialColumn GetSpecialColumn(string columnName)
@@ -662,7 +796,11 @@ ORDER BY c.column_id;";
 	private sealed record ExcelHeaderInfo(int ColumnIndex, string Value);
 	private sealed record SqlDestinationColumn(string Name, string SqlTypeName, int MaxLength, bool IsIdentity, bool IsComputed);
 	private sealed record LimsLoadColumn(SqlDestinationColumn DestinationColumn, int? ExcelColumnIndex, LimsSpecialColumn SpecialColumn);
-	private enum LimsSpecialColumn { None, CreatedOn, LabId, LabName, SourceFileName, RunId }
+	private sealed record LimsLoadPlan(
+		List<LimsLoadColumn> LoadColumns,
+		List<ExcelHeaderInfo> AdditionalHeaders,
+		SqlDestinationColumn? AdditionalFieldsColumn);
+	private enum LimsSpecialColumn { None, CreatedOn, LabId, LabName, SourceFileName, RunId, AdditionalFields }
 
 	private sealed class LimsSchemaMapping
 	{
@@ -747,6 +885,19 @@ public sealed class LimsImportRequest
 	public int? LabId { get; set; }
 	public string? LabName { get; set; }
 	public string? RunId { get; set; }
+
+	/// <summary>
+	/// Capture sheet columns the schema JSON does not name into <see cref="AdditionalFieldsColumn"/>
+	/// as JSON, rather than dropping them.
+	/// <para>
+	/// On by default, but it only takes effect where the destination table actually has that column,
+	/// so a database that has not run sql/Create_LIMSMaster.sql keeps loading exactly as before.
+	/// </para>
+	/// </summary>
+	public bool CaptureAdditionalFields { get; set; } = true;
+
+	/// <summary>Destination column that holds the JSON. NVARCHAR(MAX) is expected.</summary>
+	public string AdditionalFieldsColumn { get; set; } = "AdditionalFields";
 }
 
 public sealed class LimsImportResult
@@ -758,6 +909,9 @@ public sealed class LimsImportResult
 	public int TotalRowsCopied { get; set; }
 	public DateTime CreatedOn { get; set; }
 	public string DestinationTable { get; set; } = string.Empty;
+
+	/// <summary>Sheet columns that went into the AdditionalFields JSON instead of their own column.</summary>
+	public IReadOnlyList<string> AdditionalFieldNames { get; set; } = Array.Empty<string>();
 }
 
 public sealed class LimsColumnMapping

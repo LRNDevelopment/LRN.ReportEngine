@@ -76,6 +76,18 @@ public sealed class LevelMapping
     /// <summary>Seconds. Deliberately not 0 (infinite) - a hung load must fail, not block the run.</summary>
     public int BulkCopyTimeoutSeconds { get; set; } = 900;
 
+    /// <summary>
+    /// Write every CSV column this mapping does not claim into the <c>AdditionalFields</c> JSON
+    /// column, instead of dropping it.
+    /// <para>
+    /// On by default, but it only takes effect where the destination table actually has the column,
+    /// so nothing changes for a database that has not run
+    /// <c>sql/Labs/_Common/03_AdditionalFields.sql</c>. Set false for a lab that must keep its rows
+    /// strictly to the mapped columns.
+    /// </para>
+    /// </summary>
+    public bool CaptureAdditionalFields { get; set; } = true;
+
 
 }
 

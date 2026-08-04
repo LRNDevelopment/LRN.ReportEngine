@@ -41,6 +41,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 	private readonly LineClaimImportOptions _lineClaimOptions;
 	private readonly LabRegistry _labRegistry;
 	private readonly LineClaimImportService _lineClaimImport;
+	private readonly ReportRunIdInfoLogger _runInfo;
+	private readonly ReportsWorkflowTrackerRepository _workflowTracker;
 
 	private ColumnSchema? _commonLineSchema;
 	private ColumnSchema? _commonClaimSchema;
@@ -62,7 +64,9 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		IConfiguration configuration,
 		IOptions<LineClaimImportOptions> lineClaimOptions,
 		LabRegistry labRegistry,
-		LineClaimImportService lineClaimImport)
+		LineClaimImportService lineClaimImport,
+		ReportRunIdInfoLogger runInfo,
+		ReportsWorkflowTrackerRepository workflowTracker)
 	{
 		_logger = logger;
 		_fileLog = fileLog;
@@ -79,6 +83,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 		_lineClaimOptions = lineClaimOptions.Value;
 		_labRegistry = labRegistry;
 		_lineClaimImport = lineClaimImport;
+		_runInfo = runInfo;
+		_workflowTracker = workflowTracker;
 
 	}
 
@@ -381,7 +387,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 						_logger.LogInformation("Lab {LabId}: master file already processed, but LIMS SQL import is enabled. Checking sibling LIMS file.", lab.LabId);
 						_fileLog.Info($"Lab {lab.LabId}: master file already processed, but LIMS SQL import is enabled. Checking sibling LIMS file.");
 
-						await TryDownloadSiblingRawMasterAsync(lab, selected, limsRawMasterFolder, runCtx.RunId, ct);
+						await TryDownloadSiblingRawMasterAsync(lab, selected, limsRawMasterFolder, runCtx.RunId, limsWeekFolder, ct);
 					}
 
 					var (clientPaidMonthFolder, clientPaidWeekFolder) = ParseMonthAndDateFolder(selected.SharePointPath);
@@ -492,7 +498,7 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				_fileLog.Info($"Lab {lab.LabId}: Production raw master copied to WatchFolder week folder -> {productionRawMasterPath}");
 
-				if (!await TryDownloadSiblingRawMasterAsync(lab, selected, rawMasterFolder, runCtx.RunId, ct))
+				if (!await TryDownloadSiblingRawMasterAsync(lab, selected, rawMasterFolder, runCtx.RunId, weekFolder, ct))
 					throw new InvalidOperationException("Required LIMS master file was not available in the same SharePoint week folder as the production master file.");
 
 				await TrySyncClientPaidFileAsync(lab, selected, processedOutFolder, runCtx.RunId, ct);
@@ -2330,6 +2336,7 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		SharePointDownloader.SelectedFile selected,
 		string rawMasterFolder,
 		string? runId,
+		string? weekFolder,
 		CancellationToken ct)
 	{
 		var limsPattern = GetLabConfigValue(lab, "LimsMasterFilePattern");
@@ -2362,7 +2369,7 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 
 			_fileLog.Info($"Lab {lab.LabId}: LIMS raw master downloaded -> {limsRawMasterPath}");
 
-			await TryImportLimsMasterAsync(lab, limsRawMasterPath, runId, ct);
+			await TryImportLimsMasterAsync(lab, limsRawMasterPath, runId, weekFolder, ct);
 			return true;
 		}
 		catch (Exception ex)
@@ -2422,25 +2429,66 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		}
 	}
 
-	private async Task TryImportLimsMasterAsync(LabFileMap lab, string limsRawMasterPath, string? runId, CancellationToken ct)
+	/// <summary>
+	/// Loads the lab's LIMS master workbook into its LIMSMaster table and records the outcome as the
+	/// "LIS Summary" report for this run.
+	/// <para>
+	/// The workflow tracker and ReportRunIdInfoLog entries are written here rather than inside the
+	/// importer so that a run which never reaches the import - no sibling file, import switched off -
+	/// still leaves a Skipped row instead of a silent gap. Both log writers swallow their own
+	/// failures, so tracking can never be what breaks a load.
+	/// </para>
+	/// </summary>
+	private async Task TryImportLimsMasterAsync(
+		LabFileMap lab,
+		string limsRawMasterPath,
+		string? runId,
+		string? weekFolder,
+		CancellationToken ct)
 	{
+		var startedOn = ReportRunIdInfoLogger.IstNow();
+		var sourceFileName = Path.GetFileName(limsRawMasterPath);
 		var enabled = _configuration.GetValue<bool?>("MasterFileProcessor:LimsSqlImportEnabled") ?? true;
+
 		if (!enabled)
 		{
+			const string reason = "MasterFileProcessor:LimsSqlImportEnabled is false";
 			_logger.LogInformation("Lab {LabId}: LIMS SQL import disabled by MasterFileProcessor:LimsSqlImportEnabled.", lab.LabId);
+
+			await _runInfo.InfoAsync(runId ?? string.Empty, WorkflowReportNames.LisSummary, lab.LabName,
+				$"LIS Summary skipped for lab {lab.LabName} ({lab.LabId}): {reason}.", ct, sourceFileName);
+
+			await _workflowTracker.UpsertAsync(runId ?? string.Empty, lab.LabId, lab.LabName, weekFolder,
+				WorkflowReportNames.LisSummary, WorkflowReportNames.LisSummary, WorkflowStatus.Skipped,
+				null, startedOn, ReportRunIdInfoLogger.IstNow(), reason, ct);
+
 			return;
 		}
 
 		try
 		{
+			await _runInfo.StartAsync(runId ?? string.Empty, WorkflowReportNames.LisSummary, lab.LabName,
+				$"LIMS master import started for lab {lab.LabName} ({lab.LabId}). Source: {sourceFileName}", ct, sourceFileName);
+
+			await _workflowTracker.UpsertAsync(runId ?? string.Empty, lab.LabId, lab.LabName, weekFolder,
+				WorkflowReportNames.LisSummary, WorkflowReportNames.LisSummary, WorkflowStatus.InProgress,
+				null, startedOn, null, null, ct);
+
+			// Deliberately NO fallback to DefaultConnection. That fallback used to sit at the end of
+			// this chain, which meant a lab with a missing or misspelt connection key silently
+			// loaded its LIMS master into LRNMaster instead of failing. A lab's data must land in
+			// that lab's database or nowhere at all.
 			var connectionString =
 				GetLabConfigValue(lab, "LabDbConnectionString")
 				?? GetLabConfigValue(lab, "LimsDbConnectionString")
-				?? _configuration.GetConnectionString(GetLabConfigValue(lab, "LabDbConnectionKey") ?? string.Empty)
-				?? _configuration.GetConnectionString("DefaultConnection");
+				?? _configuration.GetConnectionString(GetLabConfigValue(lab, "LabDbConnectionKey") ?? string.Empty);
 
 			if (string.IsNullOrWhiteSpace(connectionString))
-				throw new InvalidOperationException($"Lab {lab.LabId}: LIMS connection string missing.");
+			{
+				throw new InvalidOperationException(
+					$"Lab {lab.LabId} ({lab.LabName}): no LIMS connection string. Set LabDbConnectionKey on this lab " +
+					"in appsettings.json and add a matching entry under ConnectionStrings in appsettings.Secrets.json.");
+			}
 
 			var schemaPath = GetLabConfigValue(lab, "LIMSSchemaJsonPath");
 			if (!string.IsNullOrWhiteSpace(schemaPath))
@@ -2462,7 +2510,9 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 				CreatedOn = DateTime.Now,
 				LabId = lab.LabId,
 				LabName = lab.LabName,
-				RunId = runId
+				RunId = runId,
+				CaptureAdditionalFields = _configuration.GetValue<bool?>("MasterFileProcessor:LimsCaptureAdditionalFields") ?? true,
+				AdditionalFieldsColumn = _configuration["MasterFileProcessor:LimsAdditionalFieldsColumn"] ?? "AdditionalFields"
 			}, ct);
 
 			_logger.LogInformation(
@@ -2473,11 +2523,41 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 				result.CreatedOn);
 
 			_fileLog.Info($"Lab {lab.LabId}: LIMS SQL import completed. Sheet={result.SheetName}, RowsCopied={result.TotalRowsCopied}, CreatedOn={result.CreatedOn:yyyy-MM-dd HH:mm:ss.fffffff}");
+
+			await _runInfo.InfoAsync(runId ?? string.Empty, WorkflowReportNames.LisSummary, lab.LabName,
+				$"LIMS master import completed. Sheet={result.SheetName}, RowsRead={result.TotalRowsRead}, " +
+				$"RowsCopied={result.TotalRowsCopied}, Table={result.DestinationTable}.", ct, sourceFileName);
+
+			if (result.AdditionalFieldNames.Count > 0)
+			{
+				// Named rather than counted: this is the list someone needs to decide which of the
+				// lab's new columns deserves a real column of its own.
+				await _runInfo.WarningAsync(runId ?? string.Empty, WorkflowReportNames.LisSummary, lab.LabName,
+					$"{result.AdditionalFieldNames.Count} column(s) are absent from the LIMS schema JSON and were stored in AdditionalFields: " +
+					$"[{string.Join("; ", result.AdditionalFieldNames)}].", ct, sourceFileName);
+			}
+
+			await _workflowTracker.UpsertAsync(runId ?? string.Empty, lab.LabId, lab.LabName, weekFolder,
+				WorkflowReportNames.LisSummary, WorkflowReportNames.LisSummary, WorkflowStatus.Success,
+				result.TotalRowsCopied, startedOn, ReportRunIdInfoLogger.IstNow(), null, ct);
+
+			await _runInfo.EndAsync(runId ?? string.Empty, WorkflowReportNames.LisSummary, lab.LabName,
+				$"LIS Summary processing ended for lab {lab.LabName} ({lab.LabId}).", ct, sourceFileName);
 		}
 		catch (Exception ex)
 		{
 			_logger.LogError(ex, "Lab {LabId}: LIMS SQL import failed for {Path}", lab.LabId, limsRawMasterPath);
 			_fileLog.Error($"Lab {lab.LabId}: LIMS SQL import failed for {limsRawMasterPath}", ex);
+
+			// Full exception into ReportRunIdInfoLog, the short message into the tracker's Remarks.
+			await _runInfo.ErrorAsync(runId ?? string.Empty, WorkflowReportNames.LisSummary, lab.LabName, ex, ct, sourceFileName);
+
+			await _workflowTracker.UpsertAsync(runId ?? string.Empty, lab.LabId, lab.LabName, weekFolder,
+				WorkflowReportNames.LisSummary, WorkflowReportNames.LisSummary, WorkflowStatus.Failed,
+				null, startedOn, ReportRunIdInfoLogger.IstNow(), ex.Message, ct);
+
+			await _runInfo.EndAsync(runId ?? string.Empty, WorkflowReportNames.LisSummary, lab.LabName,
+				$"LIS Summary processing ended with failure for lab {lab.LabName} ({lab.LabId}).", ct, sourceFileName);
 		}
 	}
 

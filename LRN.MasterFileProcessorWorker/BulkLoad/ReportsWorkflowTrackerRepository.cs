@@ -7,6 +7,12 @@ public static class WorkflowReportNames
 {
     public const string LineLevelMaster = "Line Level Master";
     public const string ClaimLevelMaster = "Claim Level Master";
+
+    /// <summary>
+    /// The LIMS master load. Spelled exactly as dbo.ReportTypeMaster holds it - the upsert procedure
+    /// resolves ReportTypeId from this name and rejects anything not in that table.
+    /// </summary>
+    public const string LisSummary = "LIS Summary";
 }
 
 public static class WorkflowStatus

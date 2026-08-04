@@ -1,4 +1,6 @@
 ﻿using System.Data;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using Microsoft.VisualBasic.FileIO;
 
 namespace LRN.MasterFileProcessorWorker.BulkLoad;
@@ -13,12 +15,24 @@ namespace LRN.MasterFileProcessorWorker.BulkLoad;
 /// </para>
 /// <para>
 /// Column order presented to SqlBulkCopy is: the level's mapped fields in lab-JSON order, then the
-/// nine audit columns. Callers must still add explicit ColumnMappings by NAME; nothing here relies
-/// on ordinal alignment with the destination table.
+/// nine audit columns, then <c>AdditionalFields</c> when it is enabled. Callers must still add
+/// explicit ColumnMappings by NAME; nothing here relies on ordinal alignment with the destination
+/// table.
+/// </para>
+/// <para>
+/// <b>AdditionalFields</b> is the answer to labs adding columns to their files: every CSV header no
+/// mapped field claimed is written into one JSON object per row instead of forcing an ALTER TABLE
+/// for each new column. It is off unless the caller confirms the destination has the column.
 /// </para>
 /// </summary>
 public sealed class CsvBulkDataReader : IDataReader
 {
+    /// <summary>Relaxed escaping keeps the stored JSON readable (&amp;, &lt;, quotes stay legible).</summary>
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+
     private readonly IReadOnlyList<FieldMapping> _fields;
     private readonly AuditColumns.AuditValues _audit;
     private readonly RowHasher _hasher;
@@ -26,8 +40,14 @@ public sealed class CsvBulkDataReader : IDataReader
     private readonly int[] _csvIndexByField;
     private readonly TextFieldParser _parser;
 
+    /// <summary>Header name + CSV ordinal for every column that goes into the AdditionalFields JSON.</summary>
+    private readonly (string Header, int CsvIndex)[] _additionalColumns;
+    private readonly bool _captureAdditionalFields;
+    private readonly int _auditCount = AuditColumns.Names.Count;
+
     private string?[] _current;
     private string _currentHash = "";
+    private string? _currentAdditional;
     private bool _closed;
 
     /// <summary>Data rows returned so far. Compared against the destination count after the load.</summary>
@@ -43,7 +63,8 @@ public sealed class CsvBulkDataReader : IDataReader
         string csvPath,
         IReadOnlyList<FieldMapping> fields,
         AuditColumns.AuditValues audit,
-        int headerRow = 1)
+        int headerRow = 1,
+        bool captureAdditionalFields = false)
     {
         ArgumentNullException.ThrowIfNull(fields);
 
@@ -118,8 +139,16 @@ public sealed class CsvBulkDataReader : IDataReader
             .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
+        // The unmapped headers are exactly what AdditionalFields captures - same list, so a column
+        // is either mapped to its own SQL column or lands in the JSON, never both and never dropped.
+        _captureAdditionalFields = captureAdditionalFields;
+        _additionalColumns = captureAdditionalFields
+            ? UnmappedCsvHeaders.Select(h => (Header: h, CsvIndex: headerIndex[h])).ToArray()
+            : Array.Empty<(string, int)>();
+
         _columnNames = _fields.Select(f => f.SqlColumn)
             .Concat(AuditColumns.Names)
+            .Concat(captureAdditionalFields ? new[] { AuditColumns.AdditionalFields } : Array.Empty<string>())
             .ToArray();
 
         _current = new string?[_fields.Count];
@@ -160,6 +189,7 @@ public sealed class CsvBulkDataReader : IDataReader
             }
 
             _currentHash = _hasher.Compute(_current);
+            _currentAdditional = BuildAdditionalFields(row);
             RowsRead++;
             return true;
         }
@@ -167,10 +197,38 @@ public sealed class CsvBulkDataReader : IDataReader
         return false;
     }
 
+    /// <summary>
+    /// The row's unmapped columns as one JSON object, or null when the row filled none of them.
+    /// Empty values are left out so a mostly-empty extra column costs nothing per row.
+    /// </summary>
+    private string? BuildAdditionalFields(string[] row)
+    {
+        if (!_captureAdditionalFields || _additionalColumns.Length == 0)
+            return null;
+
+        Dictionary<string, string>? payload = null;
+
+        foreach (var (header, csvIndex) in _additionalColumns)
+        {
+            if (csvIndex >= row.Length) continue;
+
+            var value = row[csvIndex];
+            if (string.IsNullOrWhiteSpace(value)) continue;
+
+            payload ??= new Dictionary<string, string>(StringComparer.Ordinal);
+            payload[header] = value.Trim();
+        }
+
+        return payload is null ? null : JsonSerializer.Serialize(payload, JsonOptions);
+    }
+
     public object GetValue(int i)
     {
         if (i < _fields.Count)
             return (object?)_current[i] ?? DBNull.Value;
+
+        if (_captureAdditionalFields && i == _fields.Count + _auditCount)
+            return (object?)_currentAdditional ?? DBNull.Value;
 
         // Audit block, in AuditColumns.All order.
         return (i - _fields.Count) switch
@@ -227,7 +285,10 @@ public sealed class CsvBulkDataReader : IDataReader
         return n;
     }
 
-    public Type GetFieldType(int i) => i < _fields.Count ? typeof(string) : AuditColumns.All[i - _fields.Count].ClrType;
+    public Type GetFieldType(int i) =>
+        i < _fields.Count || i >= _fields.Count + _auditCount
+            ? typeof(string)
+            : AuditColumns.All[i - _fields.Count].ClrType;
     public string GetDataTypeName(int i) => GetFieldType(i).Name;
 
     public bool GetBoolean(int i) => Convert.ToBoolean(GetValue(i));

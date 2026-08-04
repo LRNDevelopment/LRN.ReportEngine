@@ -32,6 +32,7 @@ public static class SelfTests
         MappingValidationAcceptsGoodConfig();
         DisabledLevelIsNotValidated();
         AuditStampingAndCsvBinding();
+        AdditionalFieldsCaptureUnmappedColumns();
         ToggleSkipReasons();
         PerLevelCsvToggles();
 
@@ -297,6 +298,68 @@ public static class SelfTests
 
             Check("No third data row", !reader.Read());
             Check("RowsRead counts data rows only", reader.RowsRead == 2);
+        }
+        finally
+        {
+            TryDelete(folder);
+        }
+    }
+
+    // ---------------- AdditionalFields ----------------
+
+    /// <summary>
+    /// A lab adding columns to its file must not lose them, and must not change anything for a
+    /// database that has not got the column yet.
+    /// </summary>
+    private static void AdditionalFieldsCaptureUnmappedColumns()
+    {
+        var folder = TempFolder();
+        var csv = Path.Combine(folder, "line.csv");
+
+        File.WriteAllText(csv,
+            "Claim ID,Charge Amount,New Column A,New Column B\r\n" +
+            "C-1,37.00,alpha,\r\n" +          // B empty - must be left out of the JSON
+            "C-2,53.00,,\r\n",                // neither filled - the whole value must be NULL
+            new UTF8Encoding(true));
+
+        var fields = new List<FieldMapping>
+        {
+            new() { CsvHeader = "Claim ID",      SqlColumn = "ClaimID",      IncludeInHash = true },
+            new() { CsvHeader = "Charge Amount", SqlColumn = "ChargeAmount", IncludeInHash = true }
+        };
+
+        var audit = new AuditColumns.AuditValues(1, "20260724R0044", "W1", "/sp/path", "line.csv",
+            FileTypes.LineLevel, 20, "NorthWest");
+
+        try
+        {
+            using (var off = new CsvBulkDataReader(csv, fields, audit))
+            {
+                Check("AdditionalFields off: column count is unchanged",
+                    off.FieldCount == fields.Count + AuditColumns.Names.Count);
+            }
+
+            using var reader = new CsvBulkDataReader(csv, fields, audit, captureAdditionalFields: true);
+
+            var additionalIndex = fields.Count + AuditColumns.Names.Count;
+
+            Check("AdditionalFields on: one extra column is exposed",
+                reader.FieldCount == additionalIndex + 1);
+            Check("AdditionalFields is named to match the table",
+                reader.GetName(additionalIndex) == AuditColumns.AdditionalFields);
+
+            reader.Read();
+            var json = (string?)reader.GetValue(additionalIndex);
+
+            Check("Unmapped column value is captured",
+                json != null && json.Contains("\"New Column A\":\"alpha\"", StringComparison.Ordinal));
+            Check("Blank unmapped column is left out of the JSON",
+                json != null && !json.Contains("New Column B", StringComparison.Ordinal));
+            Check("Mapped columns still bind to their own SQL column",
+                (string?)reader.GetValue(0) == "C-1");
+
+            reader.Read();
+            Check("A row with no extra values stores NULL, not '{}'", reader.IsDBNull(additionalIndex));
         }
         finally
         {

@@ -329,6 +329,16 @@ def write_db_bundle(deploy_dir, db, prod_tables, db_report):
                 a("GO")
             a("")
 
+        # AdditionalFields: the JSON catch-all for CSV columns the lab mapping does not claim.
+        # Labs add columns to their files constantly; without this each one needs an ALTER TABLE
+        # before the data can land, and is dropped in the meantime. Same column as
+        # sql/Labs/_Common/03_AdditionalFields.sql - see BulkLoad/AuditColumns.cs for the name.
+        a(f"/* AdditionalFields - unmapped CSV columns as JSON, so a new column is never lost */")
+        a(f"IF COL_LENGTH('dbo.{table}', 'AdditionalFields') IS NULL")
+        a(f"    ALTER TABLE [dbo].[{table}] ADD [AdditionalFields] NVARCHAR(MAX) NULL;")
+        a("GO")
+        a("")
+
         # The staging tables from the previous load design are dropped, not created. The loader
         # now TRUNCATEs and bulk copies straight into the live table inside one transaction, so a
         # second full copy of every lab's data is pure cost - on NWL_LRN it was 3.3 GB of a 31 GB

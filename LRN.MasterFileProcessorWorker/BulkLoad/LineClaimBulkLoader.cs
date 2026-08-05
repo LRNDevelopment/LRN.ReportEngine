@@ -108,6 +108,14 @@ public sealed class LineClaimBulkLoader
                             lab.LabId, fileType, missing.Count, string.Join(", ", missing));
                     }
 
+                    if (reader.ExcludedSensitiveHeaders.Count > 0)
+                    {
+                        _logger.LogWarning(
+                            "Lab {LabId} [{FileType}]: {Count} CSV column(s) DROPPED and not captured, per the sensitive-column policy: {Columns}",
+                            lab.LabId, fileType, reader.ExcludedSensitiveHeaders.Count,
+                            string.Join(", ", reader.ExcludedSensitiveHeaders));
+                    }
+
                     if (unmapped.Count > 0)
                     {
                         _logger.LogWarning(

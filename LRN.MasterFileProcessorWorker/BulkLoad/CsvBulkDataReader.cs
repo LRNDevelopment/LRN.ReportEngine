@@ -42,6 +42,10 @@ public sealed class CsvBulkDataReader : IDataReader
 
     /// <summary>Header name + CSV ordinal for every column that goes into the AdditionalFields JSON.</summary>
     private readonly (string Header, int CsvIndex)[] _additionalColumns;
+
+    /// <summary>CSV headers refused by <see cref="SensitiveColumns"/>. Never read, never stored.</summary>
+    public IReadOnlyList<string> ExcludedSensitiveHeaders { get; } = Array.Empty<string>();
+
     private readonly bool _captureAdditionalFields;
     private readonly int _auditCount = AuditColumns.Names.Count;
 
@@ -141,10 +145,22 @@ public sealed class CsvBulkDataReader : IDataReader
 
         // The unmapped headers are exactly what AdditionalFields captures - same list, so a column
         // is either mapped to its own SQL column or lands in the JSON, never both and never dropped.
+        // The one exception is the policy deny-list: those are refused outright rather than captured.
         _captureAdditionalFields = captureAdditionalFields;
-        _additionalColumns = captureAdditionalFields
-            ? UnmappedCsvHeaders.Select(h => (Header: h, CsvIndex: headerIndex[h])).ToArray()
-            : Array.Empty<(string, int)>();
+
+        if (captureAdditionalFields)
+        {
+            _additionalColumns = UnmappedCsvHeaders
+                .Where(h => !SensitiveColumns.IsBlocked(h))
+                .Select(h => (Header: h, CsvIndex: headerIndex[h]))
+                .ToArray();
+
+            ExcludedSensitiveHeaders = UnmappedCsvHeaders.Where(SensitiveColumns.IsBlocked).ToList();
+        }
+        else
+        {
+            _additionalColumns = Array.Empty<(string, int)>();
+        }
 
         _columnNames = _fields.Select(f => f.SqlColumn)
             .Concat(AuditColumns.Names)

@@ -233,6 +233,11 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 			StepLogRow? activeStep = null;
 			ModeMedianReportPublisher.ModeMedianPublishResult? modeMedianPublishResult = null;
 
+			// Declared out here so the finally below can remove it however this lab's run ends.
+			// It holds only work-in-progress copies: everything worth keeping has already been moved
+			// into the week folder by then.
+			string? stagingFolder = null;
+
 			try
 			{
 				// STEP 10: Find latest eligible SharePoint file
@@ -441,7 +446,8 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 
 				// PROCESSED OUTPUTS (Claim/Line) go under WatchFolder (LRN-Input):
 				// D:\LRN\Automation\LRN-Input\Beech_Tree\2026\02.February\02.06.2026 - 02.12.2026\Beech_Tree_LineLevel.csv
-				var processedOutFolder = Path.Combine(_opt.WatchFolder, labPrefix, yearFolder, monthFolder, weekFolder);
+				var labBaseFolder = Path.Combine(_opt.WatchFolder, labPrefix);
+				var processedOutFolder = Path.Combine(labBaseFolder, yearFolder, monthFolder, weekFolder);
 				Directory.CreateDirectory(processedOutFolder);
 
 				var rawMasterFolder = processedOutFolder;
@@ -459,14 +465,23 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				var lineOutPath = Path.Combine(processedOutFolder, lineOutFileName);
 				var modeMedianOutPath = Path.Combine(processedOutFolder, modeMedianOutFileName);
 
-				// Build all standardized outputs inside a temporary staging subfolder first.
-				// A downstream watcher scans processedOutFolder and can grab a CSV the instant it
+				// Build all standardized outputs inside a temporary staging folder first.
+				// A downstream watcher scans the week folder and can grab a CSV the instant it
 				// appears, locking it while we are still enriching/reading it back. To avoid that,
 				// we generate + enrich + cross-copy entirely in staging and only move the finished
 				// files into processedOutFolder (an atomic rename on the same volume), then delete
 				// the staging folder.
-				var stagingFolder = Path.Combine(processedOutFolder, $"~staging_{runCtx.RunId}");
-				// Remove any leftover staging folders (e.g. from a prior run that was skipped due to a lock).
+				//
+				// Staging sits at the LAB BASE folder, not inside the week folder:
+				//   D:\LRN\Automation\LRN-Input\Beech_Tree\~staging_<RunId>\
+				// so nothing half-written ever appears beneath the week folder the watcher reads.
+				// Still under WatchFolder, so the publish step remains a same-volume rename.
+				stagingFolder = Path.Combine(labBaseFolder, $"~staging_{runCtx.RunId}");
+
+				// Remove any leftover staging folders (e.g. from a prior run that was skipped due to
+				// a lock). The week folder is swept too, to clear folders left by the previous
+				// layout, when staging lived inside it.
+				CleanupStaleStagingFolders(labBaseFolder);
 				CleanupStaleStagingFolders(processedOutFolder);
 				Directory.CreateDirectory(stagingFolder);
 
@@ -932,8 +947,10 @@ public sealed class MasterFileProcessorWorker : BackgroundService
 				await _processLog.StepEndAsync(runCtx, step85, ct);
 				activeStep = null;
 
-				// Safe now: the load has finished with the staged files.
+				// The load has finished with the staged files, so the folder can go now rather than
+				// waiting for the finally - the rest of this run has no use for it.
 				TryDeleteDirectory(stagingFolder);
+				stagingFolder = null;
 
 				// Cleanup RAW CSVs unless configured to keep
 				if (!_opt.KeepRawCsvExports)
@@ -1302,6 +1319,17 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 					lineOutput: "");
 
 				await NotifyProcessingErrorAsync(lab, ex.Message, selected?.Name, selected?.SharePointPath, ct);
+			}
+			finally
+			{
+				// Whatever happened above - success, skip, lock, failure - the staging folder does
+				// not outlive the run. It is set to null once the normal path has already removed
+				// it, so this only fires when the run ended early and left it behind.
+				if (stagingFolder != null)
+				{
+					_fileLog.Info($"Lab {lab.LabId}: removing staging folder left by an incomplete run -> {stagingFolder}");
+					TryDeleteDirectory(stagingFolder);
+				}
 			}
 		}
 
@@ -2528,6 +2556,15 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 				$"LIMS master import completed. Sheet={result.SheetName}, RowsRead={result.TotalRowsRead}, " +
 				$"RowsCopied={result.TotalRowsCopied}, Table={result.DestinationTable}.", ct, sourceFileName);
 
+			if (result.ExcludedSensitiveColumns.Count > 0)
+			{
+				// Logged so an audit can see the pipeline met the column and refused it, rather than
+				// having to prove a negative from the absence of data.
+				await _runInfo.WarningAsync(runId ?? string.Empty, WorkflowReportNames.LisSummary, lab.LabName,
+					$"{result.ExcludedSensitiveColumns.Count} column(s) present in the LIMS file were NOT captured, per the sensitive-column policy: " +
+					$"[{string.Join("; ", result.ExcludedSensitiveColumns)}].", ct, sourceFileName);
+			}
+
 			if (result.AdditionalFieldNames.Count > 0)
 			{
 				// Named rather than counted: this is the list someone needs to decide which of the
@@ -3137,22 +3174,25 @@ message: $"imported; ModeMedian='{modeMedianOutPath}'; {outputUploadResult.Summa
 		}
 	}
 
-	// Removes any leftover "~staging_*" temp folders in the output folder. These can remain if a
-	// prior run was skipped mid-flight because a file was locked; sweeping them keeps the output
-	// folder clean and avoids stale partial files lingering on disk.
-	private void CleanupStaleStagingFolders(string processedOutFolder)
+	// Removes any leftover "~staging_*" temp folders directly under the given folder. These can
+	// remain if a prior run was skipped mid-flight because a file was locked; sweeping them keeps
+	// the folder clean and avoids stale partial files lingering on disk.
+	//
+	// Called for the lab base folder (where staging lives now) and for the week folder (where it
+	// used to live), so an upgrade leaves nothing behind.
+	private void CleanupStaleStagingFolders(string parentFolder)
 	{
 		try
 		{
-			if (!Directory.Exists(processedOutFolder))
+			if (!Directory.Exists(parentFolder))
 				return;
 
-			foreach (var dir in Directory.EnumerateDirectories(processedOutFolder, "~staging_*", SearchOption.TopDirectoryOnly))
+			foreach (var dir in Directory.EnumerateDirectories(parentFolder, "~staging_*", SearchOption.TopDirectoryOnly))
 				TryDeleteDirectory(dir);
 		}
 		catch (Exception ex)
 		{
-			_fileLog.Warn($"Failed to sweep stale staging folders under '{processedOutFolder}': {ex.Message}");
+			_fileLog.Warn($"Failed to sweep stale staging folders under '{parentFolder}': {ex.Message}");
 		}
 	}
 

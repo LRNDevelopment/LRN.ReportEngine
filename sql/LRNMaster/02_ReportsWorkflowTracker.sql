@@ -62,11 +62,19 @@ GO
 /*
     Wide projection matching Reports_Workflow_Tracker_v1.0.xlsx column-for-column.
     Report names not yet produced by any pipeline simply come back NULL.
+
+    GROUPED ON RunId ALONE. A RunId belongs to exactly one lab by construction - it carries the lab
+    short name - so RunId already identifies both the run and the lab.
+
+    LabID and LabName must NOT be in the GROUP BY. Producers do not all resolve LabID: some write
+    the sentinel -1 when the lab is unknown to them, and grouping on it split one run across two
+    rows - the real LabID carrying the reports it wrote, -1 carrying the rest. LabName is aggregated
+    for the same reason: one spelling drift would split the run again.
 */
 CREATE OR ALTER VIEW [dbo].[vw_ReportsWorkflowTracker_Wide]
 AS
 SELECT
-    t.LabName                                                        AS [Lab],
+    MAX(t.LabName)                                                   AS [Lab],
     MAX(t.CompletedOn)                                               AS [Synced on],
     t.RunId                                                          AS [RunID],
     MAX(t.WeekFolder)                                                AS [Week],
@@ -85,5 +93,5 @@ SELECT
     MAX(CASE WHEN t.ReportName = 'Prediction Analysis'      THEN t.Status END) AS [Prediction Analysis],
     MAX(CASE WHEN t.ReportName = 'Error Log'                THEN t.Status END) AS [Error Log]
 FROM dbo.ReportsWorkflowTracker AS t
-GROUP BY t.RunId, t.LabID, t.LabName;
+GROUP BY t.RunId;
 GO

@@ -91,8 +91,17 @@ BEGIN
     */
     DECLARE @sql NVARCHAR(MAX) = N'
     WITH runs AS (
+        /*
+            Keyed on RunId ALONE. A RunId belongs to exactly one lab by construction - it carries the
+            lab short name - so RunId already identifies the run and the lab.
+
+            LabID must NOT be part of this key. Producers do not all resolve it: some write the
+            sentinel -1 when the lab is unknown to them, which used to split a single run into two
+            "runs" (one per LabID) and show the lab twice. LabID is now derived, and -1 is discarded
+            rather than treated as a lab of its own.
+        */
         SELECT  t.RunId,
-                t.LabID,
+                MAX(NULLIF(t.LabID, -1))                  AS LabID,
                 MAX(t.LabName)     AS LabName,
                 MAX(t.WeekFolder)  AS WeekFolder,
                 MAX(COALESCE(t.CompletedOn, t.CreatedOn)) AS SyncedOn,
@@ -100,10 +109,9 @@ BEGIN
                 SUM(CASE WHEN t.Status = ''Failed''  THEN 1 ELSE 0 END) AS Failed
         FROM    dbo.ReportsWorkflowTracker t
         WHERE  (@pRunId    IS NULL OR t.RunId = @pRunId)
-          AND  (@pLabId    IS NULL OR t.LabID = @pLabId)
           AND  (@pFromDate IS NULL OR t.CreatedOn >= @pFromDate)
           AND  (@pToDate   IS NULL OR t.CreatedOn <  DATEADD(DAY, 1, @pToDate))
-        GROUP BY t.RunId, t.LabID
+        GROUP BY t.RunId
     ),
     hdr AS (
         /*
@@ -113,19 +121,28 @@ BEGIN
             A clean run is one with nothing Failed and at least one Success. Skipped does not
             disqualify it - a report that was deliberately not run is not a failure - but a run that
             is entirely Skipped never succeeded at anything and is not a baseline worth comparing to.
+
+            Partitioned on the lab NAME, normalized. It is the one value every producer writes
+            consistently - the upsert resolves it from dbo.LRN_Run_Log - whereas LabID can still be
+            NULL here when every row of a run carried the -1 sentinel.
         */
         SELECT  r.*,
-                ROW_NUMBER() OVER (PARTITION BY r.LabID
-                                   ORDER BY r.SyncedOn DESC, r.RunId DESC) AS rn
+                ROW_NUMBER() OVER (
+                    PARTITION BY UPPER(REPLACE(REPLACE(REPLACE(ISNULL(r.LabName, ''''), '' '', ''''), ''_'', ''''), ''-'', ''''))
+                    ORDER BY r.SyncedOn DESC, r.RunId DESC) AS rn
         FROM    runs r
-        WHERE   @pMode <> ''LatestSuccess''
-             OR (r.Failed = 0 AND r.Succeeded > 0)
+        WHERE  (@pMode <> ''LatestSuccess''
+             OR (r.Failed = 0 AND r.Succeeded > 0))
+          AND  (@pLabId IS NULL OR r.LabID = @pLabId)   -- filtered on the run''s resolved LabID
     ),
     src AS (
-        SELECT  t.RunId, t.LabID, t.ReportName, t.Status
+        /*
+            No LabID here either: it is not needed to line the pivot up with hdr, and including it
+            would put it in the implicit GROUP BY and re-split the run it was just merged out of.
+        */
+        SELECT  t.RunId, t.ReportName, t.Status
         FROM    dbo.ReportsWorkflowTracker t
         WHERE  (@pRunId    IS NULL OR t.RunId = @pRunId)
-          AND  (@pLabId    IS NULL OR t.LabID = @pLabId)
           AND  (@pFromDate IS NULL OR t.CreatedOn >= @pFromDate)
           AND  (@pToDate   IS NULL OR t.CreatedOn <  DATEADD(DAY, 1, @pToDate))
     )
@@ -138,7 +155,6 @@ BEGIN
     PIVOT  (MAX(Status) FOR ReportName IN (' + @cols + N')) AS p
     JOIN    hdr h
             ON  h.RunId = p.RunId
-            AND h.LabID = p.LabID
             AND (@pMode = ''All'' OR h.rn = 1)   -- one row per lab in the other two modes
     ORDER BY CASE WHEN @pMode = ''All'' THEN NULL ELSE h.LabName END ASC,
              CASE WHEN @pMode = ''All'' THEN h.SyncedOn END DESC,

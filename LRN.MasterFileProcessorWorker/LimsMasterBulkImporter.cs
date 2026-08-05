@@ -1,6 +1,7 @@
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using LRN.MasterFileProcessorWorker.BulkLoad;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using System.Data;
@@ -127,6 +128,14 @@ public sealed class LimsMasterBulkImporter
 		if (columnsToLoad.Count == 0)
 			throw new InvalidOperationException("No matching LIMS columns found between Excel/schema and destination table.");
 
+		if (plan.ExcludedSensitiveHeaders.Count > 0)
+		{
+			_logger.LogWarning(
+				"LIMS import: {Count} sheet column(s) were DROPPED and not captured, per the sensitive-column policy: {Columns}",
+				plan.ExcludedSensitiveHeaders.Count,
+				string.Join(", ", plan.ExcludedSensitiveHeaders));
+		}
+
 		if (plan.AdditionalHeaders.Count > 0)
 		{
 			_logger.LogInformation(
@@ -229,7 +238,8 @@ public sealed class LimsMasterBulkImporter
 			TotalRowsCopied = copiedRows,
 			CreatedOn = runCreatedOn,
 			DestinationTable = tableName,
-			AdditionalFieldNames = plan.AdditionalHeaders.Select(h => h.Value).ToList()
+			AdditionalFieldNames = plan.AdditionalHeaders.Select(h => h.Value).ToList(),
+			ExcludedSensitiveColumns = plan.ExcludedSensitiveHeaders
 		};
 	}
 
@@ -305,6 +315,7 @@ public sealed class LimsMasterBulkImporter
 		}
 
 		var additionalHeaders = new List<ExcelHeaderInfo>();
+		var excludedHeaders = new List<string>();
 
 		if (additionalFieldsColumn != null)
 		{
@@ -329,11 +340,19 @@ public sealed class LimsMasterBulkImporter
 					|| normalized == NormalizeName(additionalFieldsName))
 					continue;
 
+				// Policy deny-list wins over "capture everything we do not recognise". Dropped here,
+				// at plan time, so the value is never read into a row in the first place.
+				if (SensitiveColumns.IsBlocked(header.Value))
+				{
+					excludedHeaders.Add(header.Value);
+					continue;
+				}
+
 				additionalHeaders.Add(header);
 			}
 		}
 
-		return new LimsLoadPlan(loadColumns, additionalHeaders, additionalFieldsColumn);
+		return new LimsLoadPlan(loadColumns, additionalHeaders, additionalFieldsColumn, excludedHeaders);
 	}
 
 	/// <summary>
@@ -799,7 +818,8 @@ ORDER BY c.column_id;";
 	private sealed record LimsLoadPlan(
 		List<LimsLoadColumn> LoadColumns,
 		List<ExcelHeaderInfo> AdditionalHeaders,
-		SqlDestinationColumn? AdditionalFieldsColumn);
+		SqlDestinationColumn? AdditionalFieldsColumn,
+		List<string> ExcludedSensitiveHeaders);
 	private enum LimsSpecialColumn { None, CreatedOn, LabId, LabName, SourceFileName, RunId, AdditionalFields }
 
 	private sealed class LimsSchemaMapping
@@ -912,6 +932,12 @@ public sealed class LimsImportResult
 
 	/// <summary>Sheet columns that went into the AdditionalFields JSON instead of their own column.</summary>
 	public IReadOnlyList<string> AdditionalFieldNames { get; set; } = Array.Empty<string>();
+
+	/// <summary>
+	/// Sheet columns dropped by the sensitive-column policy - present in the file, deliberately not
+	/// stored. Reported so an audit can show the pipeline saw them and refused them.
+	/// </summary>
+	public IReadOnlyList<string> ExcludedSensitiveColumns { get; set; } = Array.Empty<string>();
 }
 
 public sealed class LimsColumnMapping

@@ -33,6 +33,7 @@ public static class SelfTests
         DisabledLevelIsNotValidated();
         AuditStampingAndCsvBinding();
         AdditionalFieldsCaptureUnmappedColumns();
+        SensitiveColumnsAreNeverCaptured();
         ToggleSkipReasons();
         PerLevelCsvToggles();
 
@@ -360,6 +361,69 @@ public static class SelfTests
 
             reader.Read();
             Check("A row with no extra values stores NULL, not '{}'", reader.IsDBNull(additionalIndex));
+        }
+        finally
+        {
+            TryDelete(folder);
+        }
+    }
+
+    // ---------------- sensitive columns ----------------
+
+    /// <summary>
+    /// The SSN must never reach a row, however the lab spells the header. These assertions are the
+    /// policy: if one fails, the pipeline is capturing something it must not.
+    /// </summary>
+    private static void SensitiveColumnsAreNeverCaptured()
+    {
+        foreach (var spelling in new[]
+                 {
+                     "SocialSecurityNumber", "Social Security Number", "social_security_number",
+                     "SOCIAL SECURITY NO", "Patient Social Security #", "SSN", "ssn", "Patient SSN",
+                     "SSN#", "Subscriber SSN"
+                 })
+        {
+            Check($"blocked: '{spelling}'", SensitiveColumns.IsBlocked(spelling));
+        }
+
+        // Must not over-block: "ssn" appears inside these, and they are ordinary columns.
+        foreach (var innocent in new[] { "ClassNumber", "Accession", "PatientName", "NPI", "Panel" })
+            Check($"not blocked: '{innocent}'", !SensitiveColumns.IsBlocked(innocent));
+
+        // End to end: an SSN column in the CSV must be absent from the JSON AND reported as excluded.
+        var folder = TempFolder();
+        var csv = Path.Combine(folder, "line.csv");
+
+        File.WriteAllText(csv,
+            "Claim ID,SocialSecurityNumber,New Column A\r\n" +
+            "C-1,123-45-6789,alpha\r\n",
+            new UTF8Encoding(true));
+
+        var fields = new List<FieldMapping>
+        {
+            new() { CsvHeader = "Claim ID", SqlColumn = "ClaimID", IncludeInHash = true }
+        };
+
+        var audit = new AuditColumns.AuditValues(1, "20260804R0001", "W1", "/sp/path", "line.csv",
+            FileTypes.LineLevel, 20, "NorthWest");
+
+        try
+        {
+            using var reader = new CsvBulkDataReader(csv, fields, audit, captureAdditionalFields: true);
+            var additionalIndex = fields.Count + AuditColumns.Names.Count;
+
+            reader.Read();
+            var json = (string?)reader.GetValue(additionalIndex);
+
+            Check("SSN value is absent from the captured JSON",
+                json != null && !json.Contains("123-45-6789", StringComparison.Ordinal));
+            Check("SSN column name is absent from the captured JSON",
+                json != null && !json.Contains("SocialSecurityNumber", StringComparison.Ordinal));
+            Check("the other new column is still captured",
+                json != null && json.Contains("New Column A", StringComparison.Ordinal));
+            Check("the SSN column is reported as excluded",
+                reader.ExcludedSensitiveHeaders.Count == 1 &&
+                reader.ExcludedSensitiveHeaders[0] == "SocialSecurityNumber");
         }
         finally
         {

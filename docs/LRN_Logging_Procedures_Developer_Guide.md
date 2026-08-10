@@ -120,6 +120,7 @@ EXEC dbo.usp_ReportsWorkflowTracker_Upsert
 | `@CreatedBy` | `varchar(100)` | ✔ | Your service or job name. |
 | `@LabId` | `int` | | Only if `LRN_Run_Log` has no lab for this run yet. |
 | `@WeekFolder` | `varchar(200)` | | Resolved for you — see below. Pass it only to override. |
+| `@LabName` | `varchar(200)` | | Only if `LRN_Run_Log` has no lab for this run yet. |
 
 **You do not pass LabId, LabName or WeekFolder.** They are read from `dbo.LRN_Run_Log` by `RunId`,
 and `ReportTypeId` from `dbo.ReportTypeMaster` by `@ReportName`.
@@ -141,6 +142,20 @@ the week folder was known get corrected. Only NULLs are touched — a value you 
 overwritten.
 
 Nothing fails if the week folder cannot be found anywhere; the column simply stays NULL.
+
+### Derived reports
+
+`Clinic Summary` and `Sales Rep Summary` are built from the line-level and claim-level data rather
+than run on their own, so the master file processor marks them `Success` against the same RunId once
+**both** of those have actually loaded for that lab. `Remarks` records why:
+*Derived from Line Level Master and Claim Level Master.*
+
+Clinic Summary is marked for every lab; Sales Rep Summary only for the labs that have the data
+(currently Cove and Elixir). The list lives in `appsettings.json` under
+`LineClaimImport:DerivedReports` — an empty `LabIds` means every lab.
+
+If either level fails or is skipped, neither is marked and the reason goes to `ReportRunIdInfoLog`.
+Do not write these two yourself for those labs; you would be overwriting a row the processor owns.
 
 ### Upsert behaviour
 

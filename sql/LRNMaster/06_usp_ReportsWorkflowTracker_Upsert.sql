@@ -57,7 +57,8 @@ CREATE OR ALTER PROCEDURE [dbo].[usp_ReportsWorkflowTracker_Upsert]
     @Remarks     NVARCHAR(MAX) = NULL,
     @CreatedBy   VARCHAR(100),
     @LabId       INT           = NULL,   -- optional override when the run log has no lab yet
-    @WeekFolder  VARCHAR(200)  = NULL    -- optional override
+    @WeekFolder  VARCHAR(200)  = NULL,   -- optional override
+    @LabName     VARCHAR(200)  = NULL    -- optional override; see the note on the fallback below
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -65,6 +66,7 @@ BEGIN
     -- An empty string is 'not supplied', not a week folder. Without this the fallback below is
     -- skipped and the row stores '' - which reads as data and is harder to spot than NULL.
     SET @WeekFolder = NULLIF(LTRIM(RTRIM(@WeekFolder)), '');
+    SET @LabName    = NULLIF(LTRIM(RTRIM(@LabName)), '');
 
     IF NULLIF(LTRIM(RTRIM(@RunId)), '') IS NULL
     BEGIN
@@ -92,15 +94,28 @@ BEGIN
     END
 
     /* ---- lab context, from the run log ---- */
-    DECLARE @LabName VARCHAR(200);
+
+    /*
+        The run log is preferred, but the caller's @LabName is kept when it has none. This used to be
+        dropped, and a NULL LabName is not cosmetic: the workflow dashboard groups labs by name, so
+        two runs that both lack one collapse into a single lab and one of them disappears from the
+        'one row per lab' modes entirely.
+    */
+    DECLARE @RunLogLabName VARCHAR(200);
 
     SELECT TOP (1)
-           @LabId      = COALESCE(@LabId, r.LabId),
-           @LabName    = r.LabName,
-           @WeekFolder = COALESCE(@WeekFolder, r.WeekFolder)
+           @LabId         = COALESCE(@LabId, r.LabId),
+           @RunLogLabName = r.LabName,
+           @WeekFolder    = COALESCE(@WeekFolder, r.WeekFolder)
     FROM   dbo.LRN_Run_Log r
     WHERE  r.RunID = @RunId
     ORDER BY r.StartTimeIST DESC;
+
+    SET @LabName = COALESCE(@RunLogLabName, @LabName);
+
+    -- Last resort: the global lab registry.
+    IF @LabName IS NULL AND @LabId IS NOT NULL
+        SELECT @LabName = LabName FROM dbo.Labs WHERE LabId = @LabId;
 
     IF @LabName IS NULL AND @LabId IS NULL
     BEGIN

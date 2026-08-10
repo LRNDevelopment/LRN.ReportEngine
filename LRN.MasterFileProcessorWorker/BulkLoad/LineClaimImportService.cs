@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Microsoft.Extensions.Options;
 
 namespace LRN.MasterFileProcessorWorker.BulkLoad;
 
@@ -31,6 +32,7 @@ public sealed class LineClaimImportService
     private readonly LineClaimFileLogRepository _fileLog;
     private readonly ReportRunIdInfoLogger _runInfo;
     private readonly ReportsWorkflowTrackerRepository _tracker;
+    private readonly LineClaimImportOptions _options;
     private readonly ILogger<LineClaimImportService> _logger;
 
     public LineClaimImportService(
@@ -38,12 +40,14 @@ public sealed class LineClaimImportService
         LineClaimFileLogRepository fileLog,
         ReportRunIdInfoLogger runInfo,
         ReportsWorkflowTrackerRepository tracker,
+        IOptions<LineClaimImportOptions> options,
         ILogger<LineClaimImportService> logger)
     {
         _loader = loader;
         _fileLog = fileLog;
         _runInfo = runInfo;
         _tracker = tracker;
+        _options = options.Value ?? new LineClaimImportOptions();
         _logger = logger;
     }
 
@@ -93,7 +97,91 @@ public sealed class LineClaimImportService
         results.Add(await ImportLevelAsync(lab, request, FileTypes.ClaimLevel, lab.Mapping.ClaimLevel,
             request.ClaimLevelCsvPath, WorkflowReportNames.ClaimLevelMaster, ct).ConfigureAwait(false));
 
+        await MarkDerivedReportsAsync(lab, request, results, ct).ConfigureAwait(false);
+
         return results;
+    }
+
+    /// <summary>How derived rows label themselves in the log and tracker.</summary>
+    private const string DerivedReportType = "Derived";
+
+    /// <summary>
+    /// Marks the reports that are built FROM the line-level and claim-level data - Clinic Summary,
+    /// Sales Rep Summary - as Success once both of those have loaded, against the same RunId.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Both levels must have genuinely loaded. A skipped level reports Succeeded = true (a skip is
+    /// not a failure of the run), so "no exception" is not the test - <c>Skipped</c> has to be
+    /// checked as well, or a lab with the load switched off would show a green Clinic Summary built
+    /// on data that never arrived.
+    /// </para>
+    /// <para>
+    /// Nothing is written when the base did not load. The absence is logged instead, because
+    /// inventing a Failed row here would blame these reports for something that happened upstream.
+    /// </para>
+    /// <para>
+    /// RowCount is deliberately left NULL. These rows are an assertion that the source data is in
+    /// place, not a count of anything this worker produced.
+    /// </para>
+    /// </remarks>
+    private async Task MarkDerivedReportsAsync(
+        ResolvedLab lab,
+        LineClaimImportRequest request,
+        IReadOnlyList<LineClaimImportOutcome> results,
+        CancellationToken ct)
+    {
+        var configured = _options.DerivedReports
+            .Where(d => d.Enabled && !string.IsNullOrWhiteSpace(d.ReportName))
+            .ToList();
+
+        if (configured.Count == 0)
+            return;
+
+        var notLoaded = results.Where(r => !r.Succeeded || r.Skipped).Select(r => r.FileType).ToList();
+
+        if (notLoaded.Count > 0)
+        {
+            var reason = $"Derived reports not marked for lab {lab.LabName} ({lab.LabId}): "
+                       + $"{string.Join(" and ", notLoaded)} did not load.";
+
+            _logger.LogInformation("Lab {LabId}: {Reason}", lab.LabId, reason);
+            await _runInfo.InfoAsync(request.RunId, DerivedReportType, lab.LabName, reason, ct)
+                          .ConfigureAwait(false);
+            return;
+        }
+
+        var completedOn = ReportRunIdInfoLogger.IstNow();
+
+        foreach (var derived in configured)
+        {
+            if (!derived.AppliesTo(lab.LabId))
+            {
+                _logger.LogDebug("Lab {LabId}: '{Report}' is not produced by this lab.", lab.LabId, derived.ReportName);
+                continue;
+            }
+
+            try
+            {
+                await _tracker.UpsertAsync(request.RunId, lab.LabId, lab.LabName, request.WeekFolder,
+                    derived.ReportName, DerivedReportType, WorkflowStatus.Success, null, null,
+                    completedOn, "Derived from Line Level Master and Claim Level Master.", ct)
+                    .ConfigureAwait(false);
+
+                _logger.LogInformation("Lab {LabId}: '{Report}' marked Success for run {RunId}.",
+                    lab.LabId, derived.ReportName, request.RunId);
+            }
+            catch (Exception ex)
+            {
+                // A dashboard row is never worth failing a completed load over. The data is already
+                // committed at this point; losing the marker is a reporting gap, not a data problem.
+                _logger.LogWarning(ex, "Lab {LabId}: could not mark '{Report}'.", lab.LabId, derived.ReportName);
+
+                await _runInfo.WarningAsync(request.RunId, DerivedReportType, lab.LabName,
+                    $"Could not mark '{derived.ReportName}' for lab {lab.LabName}: {ex.Message}", ct)
+                    .ConfigureAwait(false);
+            }
+        }
     }
 
     private async Task<LineClaimImportOutcome> ImportLevelAsync(

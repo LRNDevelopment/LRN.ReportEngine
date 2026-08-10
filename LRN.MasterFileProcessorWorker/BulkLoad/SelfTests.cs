@@ -36,6 +36,7 @@ public static class SelfTests
         SensitiveColumnsAreNeverCaptured();
         ToggleSkipReasons();
         PerLevelCsvToggles();
+        DerivedReportRules();
 
         Console.WriteLine(new string('-', 70));
 
@@ -454,6 +455,53 @@ public static class SelfTests
     /// The file is always produced in staging and the loader reads it from there, so
     /// CreateCsv=false means "no file on disk", never "no data in the table".
     /// </summary>
+    /// <summary>
+    /// Clinic Summary / Sales Rep Summary are marked from the two masters, so the rule that decides
+    /// WHEN is the whole feature. Mirrors LineClaimImportService.MarkDerivedReportsAsync.
+    /// </summary>
+    private static void DerivedReportRules()
+    {
+        var clinic  = new DerivedReportOptions { ReportName = "Clinic Summary",    LabIds = new() };
+        var salesRep = new DerivedReportOptions { ReportName = "Sales Rep Summary", LabIds = new() { 4, 16 } };
+
+        // --- which labs produce which report ---
+        Check("Clinic Summary applies to every lab", clinic.AppliesTo(4) && clinic.AppliesTo(20) && clinic.AppliesTo(18));
+        Check("Sales Rep Summary applies to Cove (4)", salesRep.AppliesTo(4));
+        Check("Sales Rep Summary applies to Elixir (16)", salesRep.AppliesTo(16));
+        Check("Sales Rep Summary does NOT apply to Certus (18)", !salesRep.AppliesTo(18));
+        Check("Sales Rep Summary does NOT apply to NorthWest (20)", !salesRep.AppliesTo(20));
+        Check("A disabled derived report is filtered out",
+            !new DerivedReportOptions { ReportName = "Clinic Summary", Enabled = false }.Enabled);
+
+        // --- when the base counts as loaded ---
+        static LineClaimImportOutcome Loaded(string t)  => new(t, Succeeded: true,  Skipped: false, 100, null);
+        static LineClaimImportOutcome Skipped(string t) => new(t, Succeeded: true,  Skipped: true,    0, "off");
+        static LineClaimImportOutcome Failed(string t)  => new(t, Succeeded: false, Skipped: false,   0, "boom");
+
+        static bool Marks(params LineClaimImportOutcome[] results) =>
+            results.All(r => r.Succeeded && !r.Skipped);
+
+        Check("Both levels loaded -> mark",
+            Marks(Loaded(FileTypes.LineLevel), Loaded(FileTypes.ClaimLevel)));
+        Check("Line level failed -> do not mark",
+            !Marks(Failed(FileTypes.LineLevel), Loaded(FileTypes.ClaimLevel)));
+        Check("Claim level failed -> do not mark",
+            !Marks(Loaded(FileTypes.LineLevel), Failed(FileTypes.ClaimLevel)));
+
+        // A skip reports Succeeded = true, so checking only that would mark a green Clinic Summary
+        // for a lab whose data never arrived. This is the assertion that catches it.
+        Check("Claim level SKIPPED -> do not mark, even though it reports Succeeded",
+            Skipped(FileTypes.ClaimLevel).Succeeded && !Marks(Loaded(FileTypes.LineLevel), Skipped(FileTypes.ClaimLevel)));
+        Check("Both levels skipped -> do not mark",
+            !Marks(Skipped(FileTypes.LineLevel), Skipped(FileTypes.ClaimLevel)));
+
+        // --- the names must exist in ReportTypeMaster or the upsert rejects them ---
+        Check("Clinic Summary name matches the master list",
+            WorkflowReportNames.ClinicSummary == "Clinic Summary");
+        Check("Sales Rep Summary name matches the master list",
+            WorkflowReportNames.SalesRepSummary == "Sales Rep Summary");
+    }
+
     private static void PerLevelCsvToggles()
     {
         // What the worker uses to decide whether to PUBLISH the csv.

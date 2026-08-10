@@ -13,6 +13,10 @@ public static class WorkflowReportNames
     /// resolves ReportTypeId from this name and rejects anything not in that table.
     /// </summary>
     public const string LisSummary = "LIS Summary";
+
+    // Derived from the two masters rather than run separately - see LineClaimImportService.
+    public const string ClinicSummary = "Clinic Summary";
+    public const string SalesRepSummary = "Sales Rep Summary";
 }
 
 public static class WorkflowStatus
@@ -88,9 +92,13 @@ public sealed class ReportsWorkflowTrackerRepository
             cmd.Parameters.Add("@CreatedBy", SqlDbType.VarChar, 100).Value = _createdBy;
 
             // Passed as a fallback: the procedure prefers dbo.LRN_Run_Log, and uses these only when
-            // the run log has no lab context yet.
+            // the run log has no lab context yet. LabName matters more than it looks - the workflow
+            // dashboard groups labs by name, so a row that ends up with a NULL one merges with every
+            // other nameless row and drops out of the one-row-per-lab views.
             cmd.Parameters.Add("@LabId", SqlDbType.Int).Value = labId;
             cmd.Parameters.Add("@WeekFolder", SqlDbType.VarChar, 200).Value = (object?)weekFolder ?? DBNull.Value;
+            cmd.Parameters.Add("@LabName", SqlDbType.VarChar, 200).Value =
+                string.IsNullOrWhiteSpace(labName) ? DBNull.Value : labName;
 
             await conn.OpenAsync(ct).ConfigureAwait(false);
             await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);

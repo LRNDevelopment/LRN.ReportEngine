@@ -397,6 +397,31 @@
         "CsvHeader": "ClaimUID",
         "SqlColumn": "ClaimUID",
         "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Denial Date",
+        "SqlColumn": "DenialDate",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "30 Bucket #",
+        "SqlColumn": "Bucket30Count",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "30 Bucket $",
+        "SqlColumn": "Bucket30Amount",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "60 Bucket #",
+        "SqlColumn": "Bucket60Count",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "60 Bucket $",
+        "SqlColumn": "Bucket60Amount",
+        "IncludeInHash": false
       }
     ]
   },
@@ -772,6 +797,11 @@
         "CsvHeader": "Source",
         "SqlColumn": "Source",
         "IncludeInHash": true
+      },
+      {
+        "CsvHeader": "CPTUnits",
+        "SqlColumn": "CPTUnits",
+        "IncludeInHash": false
       }
     ]
   }

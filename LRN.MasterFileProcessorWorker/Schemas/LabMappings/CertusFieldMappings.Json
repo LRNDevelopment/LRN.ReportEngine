@@ -851,6 +851,11 @@
         "CsvHeader": "Source",
         "SqlColumn": "Source",
         "IncludeInHash": true
+      },
+      {
+        "CsvHeader": "Claim Amount",
+        "SqlColumn": "ClaimAmount",
+        "IncludeInHash": false
       }
     ]
   }

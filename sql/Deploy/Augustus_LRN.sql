@@ -201,6 +201,7 @@ BEGIN
         [LBilledDate] NVARCHAR(100) NULL,
         [BProcessDate] NVARCHAR(100) NULL,
         [LineLevelUID] NVARCHAR(500) NULL,
+        [ICDLineLevel] NVARCHAR(MAX) NULL,
         [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED,
         PRIMARY KEY CLUSTERED ([RecordId] ASC)
     );
@@ -222,6 +223,9 @@ GO
 /* columns added on top of the production baseline for LineLevelData */
 IF COL_LENGTH('dbo.LineLevelData', 'LineLevelUID') IS NULL
     ALTER TABLE [dbo].[LineLevelData] ADD [LineLevelUID] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ICDLineLevel') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ICDLineLevel] NVARCHAR(MAX) NULL;   -- from lab mapping
 GO
 
 /* AdditionalFields - unmapped CSV columns as JSON, so a new column is never lost */

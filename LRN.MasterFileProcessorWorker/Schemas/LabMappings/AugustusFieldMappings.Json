@@ -861,6 +861,11 @@
         "CsvHeader": "LineLevelUID",
         "SqlColumn": "LineLevelUID",
         "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "ICD Line level",
+        "SqlColumn": "ICDLineLevel",
+        "IncludeInHash": false
       }
     ]
   }

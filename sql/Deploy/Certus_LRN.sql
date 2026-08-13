@@ -195,6 +195,7 @@ BEGIN
         [PaymentPercent] NVARCHAR(100) NULL,
         [LineLevelUID] NVARCHAR(500) NULL,
         [Source] NVARCHAR(500) NULL,
+        [ClaimAmount] NVARCHAR(500) NULL,
         [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED,
         PRIMARY KEY CLUSTERED ([RecordId] ASC)
     );
@@ -219,6 +220,9 @@ IF COL_LENGTH('dbo.LineLevelData', 'LineLevelUID') IS NULL
 GO
 IF COL_LENGTH('dbo.LineLevelData', 'Source') IS NULL
     ALTER TABLE [dbo].[LineLevelData] ADD [Source] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ClaimAmount') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ClaimAmount] NVARCHAR(500) NULL;   -- from lab mapping
 GO
 
 /* AdditionalFields - unmapped CSV columns as JSON, so a new column is never lost */

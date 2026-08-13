@@ -352,6 +352,12 @@ BEGIN
         [ClaimUID] NVARCHAR(500) NULL,
         [PanelNameLIS] NVARCHAR(500) NULL,
         [PanelNameBasedOnCPT] NVARCHAR(500) NULL,
+        [Modifiers] NVARCHAR(500) NULL,
+        [Units] NVARCHAR(500) NULL,
+        [CptXModXUnits] NVARCHAR(MAX) NULL,
+        [ServiceChargeAmount] NVARCHAR(500) NULL,
+        [DenialDate] NVARCHAR(500) NULL,
+        [LineLevelDenialCode] NVARCHAR(500) NULL,
         [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED,
         PRIMARY KEY CLUSTERED ([RecordId] ASC)
     );
@@ -379,6 +385,24 @@ IF COL_LENGTH('dbo.ClaimLevelData', 'PanelNameLIS') IS NULL
 GO
 IF COL_LENGTH('dbo.ClaimLevelData', 'PanelNameBasedOnCPT') IS NULL
     ALTER TABLE [dbo].[ClaimLevelData] ADD [PanelNameBasedOnCPT] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Modifiers') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Modifiers] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Units') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Units] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'CptXModXUnits') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [CptXModXUnits] NVARCHAR(MAX) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ServiceChargeAmount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ServiceChargeAmount] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'DenialDate') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [DenialDate] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'LineLevelDenialCode') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [LineLevelDenialCode] NVARCHAR(500) NULL;   -- from lab mapping
 GO
 
 /* AdditionalFields - unmapped CSV columns as JSON, so a new column is never lost */

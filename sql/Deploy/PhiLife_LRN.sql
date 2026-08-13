@@ -188,6 +188,8 @@ BEGIN
         [AgingBucket] NVARCHAR(200) NULL,
         [LineLevelUID] NVARCHAR(500) NULL,
         [Source] NVARCHAR(500) NULL,
+        [Facility] NVARCHAR(500) NULL,
+        [ClientAccNum] NVARCHAR(500) NULL,
         [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED,
         PRIMARY KEY CLUSTERED ([RecordId] ASC)
     );
@@ -212,6 +214,12 @@ IF COL_LENGTH('dbo.LineLevelData', 'LineLevelUID') IS NULL
 GO
 IF COL_LENGTH('dbo.LineLevelData', 'Source') IS NULL
     ALTER TABLE [dbo].[LineLevelData] ADD [Source] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'Facility') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [Facility] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ClientAccNum') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ClientAccNum] NVARCHAR(500) NULL;   -- from lab mapping
 GO
 
 /* AdditionalFields - unmapped CSV columns as JSON, so a new column is never lost */
@@ -330,6 +338,7 @@ BEGIN
         [AgingDOS] NVARCHAR(500) NULL,
         [PanelNameLIS] NVARCHAR(500) NULL,
         [PanelNameBasedOnCPT] NVARCHAR(500) NULL,
+        [Facility] NVARCHAR(500) NULL,
         [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED,
         PRIMARY KEY CLUSTERED ([RecordId] ASC)
     );
@@ -363,6 +372,9 @@ IF COL_LENGTH('dbo.ClaimLevelData', 'PanelNameLIS') IS NULL
 GO
 IF COL_LENGTH('dbo.ClaimLevelData', 'PanelNameBasedOnCPT') IS NULL
     ALTER TABLE [dbo].[ClaimLevelData] ADD [PanelNameBasedOnCPT] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Facility') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Facility] NVARCHAR(500) NULL;   -- from lab mapping
 GO
 
 /* AdditionalFields - unmapped CSV columns as JSON, so a new column is never lost */

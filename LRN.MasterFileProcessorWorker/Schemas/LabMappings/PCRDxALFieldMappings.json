@@ -299,6 +299,91 @@
         "CsvHeader": "ICD Pointer",
         "SqlColumn": "ICDPointer",
         "IncludeInHash": true
+      },
+      {
+        "CsvHeader": "ENC/CPT/TC",
+        "SqlColumn": "EncCptTc",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "UID",
+        "SqlColumn": "UID",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Facility",
+        "SqlColumn": "Facility",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "PatientName",
+        "SqlColumn": "PatientName",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "ResponsibleParty",
+        "SqlColumn": "ResponsibleParty",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "SubscriberID",
+        "SqlColumn": "SubscriberID",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Aging DOS",
+        "SqlColumn": "AgingDOS",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "EndDOS",
+        "SqlColumn": "EndDOS",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Aging DOE",
+        "SqlColumn": "AgingDOE",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Billed Week",
+        "SqlColumn": "BilledWeek",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "BillOccurance",
+        "SqlColumn": "BillOccurance",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "EntryUser",
+        "SqlColumn": "EntryUser",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Line Level CPT",
+        "SqlColumn": "LineLevelCPT",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "DOD Week",
+        "SqlColumn": "DODWeek",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Check Number",
+        "SqlColumn": "CheckNumber",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Line Level Denial Code",
+        "SqlColumn": "LineLevelDenialCode",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Payment %",
+        "SqlColumn": "PaymentPercent",
+        "IncludeInHash": false
       }
     ]
   },
@@ -548,6 +633,161 @@
         "CsvHeader": "ICD Pointer",
         "SqlColumn": "ICDPointer",
         "IncludeInHash": true
+      },
+      {
+        "CsvHeader": "ENC/CPT/TC",
+        "SqlColumn": "EncCptTc",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "UID",
+        "SqlColumn": "UID",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Facility",
+        "SqlColumn": "Facility",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "PatientName",
+        "SqlColumn": "PatientName",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "ResponsibleParty",
+        "SqlColumn": "ResponsibleParty",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "SubscriberID",
+        "SqlColumn": "SubscriberID",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "EndDOS",
+        "SqlColumn": "EndDOS",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Billed Week",
+        "SqlColumn": "BilledWeek",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "BillOccurance",
+        "SqlColumn": "BillOccurance",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "EntryUser",
+        "SqlColumn": "EntryUser",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Procedure",
+        "SqlColumn": "ProcedureName",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Units",
+        "SqlColumn": "Units",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Line Level CPT",
+        "SqlColumn": "LineLevelCPT",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "DOD Week",
+        "SqlColumn": "DODWeek",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Check Number",
+        "SqlColumn": "CheckNumber",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Denial Date",
+        "SqlColumn": "DenialDate",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Line Level Denial Code",
+        "SqlColumn": "LineLevelDenialCode",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "ICD",
+        "SqlColumn": "ICD",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Line Level ICD",
+        "SqlColumn": "LineLevelICD",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Modifier",
+        "SqlColumn": "Modifier",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Total WO",
+        "SqlColumn": "TotalWO",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Payment %",
+        "SqlColumn": "PaymentPercent",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Bill Status",
+        "SqlColumn": "BillStatus",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Fully Paid #",
+        "SqlColumn": "FullyPaidCount",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Fully Paid $",
+        "SqlColumn": "FullyPaidAmount",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Adjucticated #",
+        "SqlColumn": "AdjudicatedCount",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Adjucticated $",
+        "SqlColumn": "AdjudicatedAmount",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "30 Bucket #",
+        "SqlColumn": "Bucket30Count",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "30 Bucket $",
+        "SqlColumn": "Bucket30Amount",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "60 Bucket #",
+        "SqlColumn": "Bucket60Count",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "60 Bucket $",
+        "SqlColumn": "Bucket60Amount",
+        "IncludeInHash": false
       }
     ]
   }

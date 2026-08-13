@@ -371,6 +371,11 @@
         "CsvHeader": "Panel Name Based on CPT",
         "SqlColumn": "PanelNameBasedOnCPT",
         "IncludeInHash": true
+      },
+      {
+        "CsvHeader": "Facility",
+        "SqlColumn": "Facility",
+        "IncludeInHash": false
       }
     ]
   },
@@ -747,6 +752,11 @@
         "CsvHeader": "Source",
         "SqlColumn": "Source",
         "IncludeInHash": true
+      },
+      {
+        "CsvHeader": "Facility",
+        "SqlColumn": "Facility",
+        "IncludeInHash": false
       }
     ]
   }

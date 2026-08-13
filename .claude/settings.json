@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(& 'C:\\\\Users\\\\lrndev2\\\\AppData\\\\Local\\\\Temp\\\\2\\\\claude\\\\c--Users-lrndev2-source-repos-LRNDevelopment-LRN-ReportEngine\\\\6eefacc0-fddb-4ecb-a5bb-203e5721b90d\\\\scratchpad\\\\dupcheck.ps1' 2>&1)",
+      "PowerShell(& 'C:\\\\Users\\\\lrndev2\\\\AppData\\\\Local\\\\Temp\\\\2\\\\claude\\\\c--Users-lrndev2-source-repos-LRNDevelopment-LRN-ReportEngine\\\\6eefacc0-fddb-4ecb-a5bb-203e5721b90d\\\\scratchpad\\\\remove_dupes.ps1')"
+    ]
+  }
+}

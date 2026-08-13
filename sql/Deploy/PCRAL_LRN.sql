@@ -174,6 +174,23 @@ BEGIN
         [DaystoPost] NVARCHAR(500) NULL,
         [ICDPointer] NVARCHAR(500) NULL,
         [InsertedDateTime] DATETIME NOT NULL,
+        [EncCptTc] NVARCHAR(500) NULL,
+        [UID] NVARCHAR(500) NULL,
+        [Facility] NVARCHAR(500) NULL,
+        [PatientName] NVARCHAR(500) NULL,
+        [ResponsibleParty] NVARCHAR(500) NULL,
+        [SubscriberID] NVARCHAR(500) NULL,
+        [AgingDOS] NVARCHAR(500) NULL,
+        [EndDOS] NVARCHAR(500) NULL,
+        [AgingDOE] NVARCHAR(500) NULL,
+        [BilledWeek] NVARCHAR(500) NULL,
+        [BillOccurance] NVARCHAR(500) NULL,
+        [EntryUser] NVARCHAR(500) NULL,
+        [LineLevelCPT] NVARCHAR(500) NULL,
+        [DODWeek] NVARCHAR(500) NULL,
+        [CheckNumber] NVARCHAR(500) NULL,
+        [LineLevelDenialCode] NVARCHAR(500) NULL,
+        [PaymentPercent] NVARCHAR(500) NULL,
         [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED,
         PRIMARY KEY CLUSTERED ([RecordId] ASC)
     );
@@ -190,6 +207,59 @@ IF NOT EXISTS (SELECT 1 FROM sys.default_constraints d
                JOIN sys.columns c ON c.object_id = d.parent_object_id AND c.column_id = d.parent_column_id
                WHERE d.parent_object_id = OBJECT_ID('dbo.LineLevelData') AND c.name = 'InsertedDateTime')
     ALTER TABLE [dbo].[LineLevelData] ADD DEFAULT (getdate()) FOR [InsertedDateTime];
+GO
+
+/* columns added on top of the production baseline for LineLevelData */
+IF COL_LENGTH('dbo.LineLevelData', 'EncCptTc') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [EncCptTc] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'UID') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [UID] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'Facility') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [Facility] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'PatientName') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [PatientName] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'ResponsibleParty') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [ResponsibleParty] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'SubscriberID') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [SubscriberID] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'AgingDOS') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [AgingDOS] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'EndDOS') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [EndDOS] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'AgingDOE') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [AgingDOE] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'BilledWeek') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [BilledWeek] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'BillOccurance') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [BillOccurance] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'EntryUser') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [EntryUser] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'LineLevelCPT') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [LineLevelCPT] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'DODWeek') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [DODWeek] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'CheckNumber') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [CheckNumber] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'LineLevelDenialCode') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [LineLevelDenialCode] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.LineLevelData', 'PaymentPercent') IS NULL
+    ALTER TABLE [dbo].[LineLevelData] ADD [PaymentPercent] NVARCHAR(500) NULL;   -- from lab mapping
 GO
 
 /* AdditionalFields - unmapped CSV columns as JSON, so a new column is never lost */
@@ -281,6 +351,37 @@ BEGIN
         [DaystoPost] NVARCHAR(500) NULL,
         [ICDPointer] NVARCHAR(500) NULL,
         [InsertedDateTime] DATETIME NOT NULL,
+        [EncCptTc] NVARCHAR(500) NULL,
+        [UID] NVARCHAR(500) NULL,
+        [Facility] NVARCHAR(500) NULL,
+        [PatientName] NVARCHAR(500) NULL,
+        [ResponsibleParty] NVARCHAR(500) NULL,
+        [SubscriberID] NVARCHAR(500) NULL,
+        [EndDOS] NVARCHAR(500) NULL,
+        [BilledWeek] NVARCHAR(500) NULL,
+        [BillOccurance] NVARCHAR(500) NULL,
+        [EntryUser] NVARCHAR(500) NULL,
+        [ProcedureName] NVARCHAR(500) NULL,
+        [Units] NVARCHAR(500) NULL,
+        [LineLevelCPT] NVARCHAR(500) NULL,
+        [DODWeek] NVARCHAR(500) NULL,
+        [CheckNumber] NVARCHAR(500) NULL,
+        [DenialDate] NVARCHAR(500) NULL,
+        [LineLevelDenialCode] NVARCHAR(500) NULL,
+        [ICD] NVARCHAR(MAX) NULL,
+        [LineLevelICD] NVARCHAR(MAX) NULL,
+        [Modifier] NVARCHAR(500) NULL,
+        [TotalWO] NVARCHAR(500) NULL,
+        [PaymentPercent] NVARCHAR(500) NULL,
+        [BillStatus] NVARCHAR(500) NULL,
+        [FullyPaidCount] NVARCHAR(500) NULL,
+        [FullyPaidAmount] NVARCHAR(500) NULL,
+        [AdjudicatedCount] NVARCHAR(500) NULL,
+        [AdjudicatedAmount] NVARCHAR(500) NULL,
+        [Bucket30Count] NVARCHAR(500) NULL,
+        [Bucket30Amount] NVARCHAR(500) NULL,
+        [Bucket60Count] NVARCHAR(500) NULL,
+        [Bucket60Amount] NVARCHAR(500) NULL,
         [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED,
         PRIMARY KEY CLUSTERED ([RecordId] ASC)
     );
@@ -297,6 +398,101 @@ IF NOT EXISTS (SELECT 1 FROM sys.default_constraints d
                JOIN sys.columns c ON c.object_id = d.parent_object_id AND c.column_id = d.parent_column_id
                WHERE d.parent_object_id = OBJECT_ID('dbo.ClaimLevelData') AND c.name = 'InsertedDateTime')
     ALTER TABLE [dbo].[ClaimLevelData] ADD DEFAULT (getdate()) FOR [InsertedDateTime];
+GO
+
+/* columns added on top of the production baseline for ClaimLevelData */
+IF COL_LENGTH('dbo.ClaimLevelData', 'EncCptTc') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [EncCptTc] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'UID') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [UID] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Facility') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Facility] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PatientName') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PatientName] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ResponsibleParty') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ResponsibleParty] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'SubscriberID') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [SubscriberID] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'EndDOS') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [EndDOS] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'BilledWeek') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [BilledWeek] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'BillOccurance') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [BillOccurance] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'EntryUser') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [EntryUser] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ProcedureName') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ProcedureName] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Units') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Units] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'LineLevelCPT') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [LineLevelCPT] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'DODWeek') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [DODWeek] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'CheckNumber') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [CheckNumber] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'DenialDate') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [DenialDate] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'LineLevelDenialCode') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [LineLevelDenialCode] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'ICD') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [ICD] NVARCHAR(MAX) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'LineLevelICD') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [LineLevelICD] NVARCHAR(MAX) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Modifier') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Modifier] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'TotalWO') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [TotalWO] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'PaymentPercent') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [PaymentPercent] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'BillStatus') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [BillStatus] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'FullyPaidCount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [FullyPaidCount] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'FullyPaidAmount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [FullyPaidAmount] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'AdjudicatedCount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [AdjudicatedCount] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'AdjudicatedAmount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [AdjudicatedAmount] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Bucket30Count') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Bucket30Count] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Bucket30Amount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Bucket30Amount] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Bucket60Count') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Bucket60Count] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Bucket60Amount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Bucket60Amount] NVARCHAR(500) NULL;   -- from lab mapping
 GO
 
 /* AdditionalFields - unmapped CSV columns as JSON, so a new column is never lost */

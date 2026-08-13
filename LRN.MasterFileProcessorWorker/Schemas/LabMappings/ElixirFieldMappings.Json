@@ -436,6 +436,36 @@
         "CsvHeader": "Panel Name Based on CPT",
         "SqlColumn": "PanelNameBasedOnCPT",
         "IncludeInHash": true
+      },
+      {
+        "CsvHeader": "Modifiers",
+        "SqlColumn": "Modifiers",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Units",
+        "SqlColumn": "Units",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "CPT X MOD X UNITS",
+        "SqlColumn": "CptXModXUnits",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Service Charge Amount",
+        "SqlColumn": "ServiceChargeAmount",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Denial Date",
+        "SqlColumn": "DenialDate",
+        "IncludeInHash": false
+      },
+      {
+        "CsvHeader": "Line Level Denial Code",
+        "SqlColumn": "LineLevelDenialCode",
+        "IncludeInHash": false
       }
     ]
   },

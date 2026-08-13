@@ -22,28 +22,28 @@ ones to check: each is a column production expects that we are not currently pop
 
 | Database | Table | Production cols | + from BillingFrequency | + from lab mapping | Production cols we load as NULL |
 |---|---|---:|---:|---:|---:|
-| Augustus_LRN | LineLevelData | 92 | 0 | 1 | 0 |
+| Augustus_LRN | LineLevelData | 92 | 0 | 2 | 0 |
 | Augustus_LRN | ClaimLevelData | 86 | 0 | 5 | **1** |
-| BeechTree_LRN | LineLevelData | 76 | 0 | 2 | 0 |
-| BeechTree_LRN | ClaimLevelData | 74 | 0 | 5 | 0 |
-| Certus_LRN | LineLevelData | 85 | 0 | 2 | 0 |
+| BeechTree_LRN | LineLevelData | 76 | 0 | 4 | 0 |
+| BeechTree_LRN | ClaimLevelData | 74 | 0 | 7 | 0 |
+| Certus_LRN | LineLevelData | 85 | 0 | 3 | 0 |
 | Certus_LRN | ClaimLevelData | 90 | 0 | 5 | **1** |
 | CoveLRN | LineLevelData | 81 | 0 | 2 | 0 |
 | CoveLRN | ClaimLevelData | 112 | 0 | 3 | **25** |
 | Elixir_LRN | LineLevelData | 90 | 0 | 2 | 0 |
-| Elixir_LRN | ClaimLevelData | 90 | 0 | 3 | 0 |
-| InHealthDTRLRN | LineLevelData | 81 | 0 | 2 | **3** |
-| InHealthDTRLRN | ClaimLevelData | 90 | 0 | 1 | **6** |
+| Elixir_LRN | ClaimLevelData | 90 | 0 | 9 | 0 |
+| InHealthDTRLRN | LineLevelData | 81 | 0 | 2 | **2** |
+| InHealthDTRLRN | ClaimLevelData | 90 | 0 | 6 | **6** |
 | NWL_LRN | LineLevelData | 84 | 0 | 2 | 0 |
 | NWL_LRN | ClaimLevelData | 91 | 0 | 6 | **1** |
-| PCRAL_LRN | LineLevelData | 66 | 0 | 0 | 0 |
-| PCRAL_LRN | ClaimLevelData | 56 | 0 | 0 | 0 |
-| PCRCO_LRN | LineLevelData | 66 | 0 | 0 | 0 |
-| PCRCO_LRN | ClaimLevelData | 56 | 0 | 0 | 0 |
-| PCRLOA_LRN | LineLevelData | 78 | 0 | 2 | 0 |
-| PCRLOA_LRN | ClaimLevelData | 75 | 0 | 5 | 0 |
-| PhiLife_LRN | LineLevelData | 78 | 0 | 2 | **2** |
-| PhiLife_LRN | ClaimLevelData | 78 | 0 | 5 | **3** |
+| PCRAL_LRN | LineLevelData | 66 | 0 | 17 | 0 |
+| PCRAL_LRN | ClaimLevelData | 56 | 0 | 31 | 0 |
+| PCRCO_LRN | LineLevelData | 66 | 0 | 18 | 0 |
+| PCRCO_LRN | ClaimLevelData | 56 | 0 | 31 | 0 |
+| PCRLOA_LRN | LineLevelData | 78 | 0 | 3 | 0 |
+| PCRLOA_LRN | ClaimLevelData | 75 | 0 | 6 | 0 |
+| PhiLife_LRN | LineLevelData | 78 | 0 | 4 | **2** |
+| PhiLife_LRN | ClaimLevelData | 78 | 0 | 6 | **3** |
 | RisingTides | LineLevelData | 79 | 0 | 2 | 0 |
 | RisingTides | ClaimLevelData | 76 | 0 | 5 | 0 |
 
@@ -60,12 +60,12 @@ Mapping file: `AugustusFieldMappings.Json`
 ### LineLevelData
 
 - production columns: **92**
-- columns this worker maps: **84**
+- columns this worker maps: **85**
 
-**Adding 1 column(s) from the lab mapping** (this worker loads them, production has no such column):
+**Adding 2 column(s) from the lab mapping** (this worker loads them, production has no such column):
 
 ```
-LineLevelUID
+LineLevelUID, ICDLineLevel
 ```
 
 ✅ Every production column is mapped.
@@ -98,12 +98,12 @@ Mapping file: `BeechTreeFieldMappings.json`
 ### LineLevelData
 
 - production columns: **76**
-- columns this worker maps: **69**
+- columns this worker maps: **71**
 
-**Adding 2 column(s) from the lab mapping** (this worker loads them, production has no such column):
+**Adding 4 column(s) from the lab mapping** (this worker loads them, production has no such column):
 
 ```
-LineLevelUID, Source
+LineLevelUID, Source, Facility, CPTs
 ```
 
 ✅ Every production column is mapped.
@@ -111,12 +111,12 @@ LineLevelUID, Source
 ### ClaimLevelData
 
 - production columns: **74**
-- columns this worker maps: **70**
+- columns this worker maps: **72**
 
-**Adding 5 column(s) from the lab mapping** (this worker loads them, production has no such column):
+**Adding 7 column(s) from the lab mapping** (this worker loads them, production has no such column):
 
 ```
-ClaimUID, AgingDOE, AgingDOS, PanelNameLIS, PanelNameBasedOnCPT
+ClaimUID, AgingDOE, AgingDOS, PanelNameLIS, PanelNameBasedOnCPT, Facility, Modifier
 ```
 
 ✅ Every production column is mapped.
@@ -130,12 +130,12 @@ Mapping file: `CertusFieldMappings.Json`
 ### LineLevelData
 
 - production columns: **85**
-- columns this worker maps: **78**
+- columns this worker maps: **79**
 
-**Adding 2 column(s) from the lab mapping** (this worker loads them, production has no such column):
+**Adding 3 column(s) from the lab mapping** (this worker loads them, production has no such column):
 
 ```
-LineLevelUID, Source
+LineLevelUID, Source, ClaimAmount
 ```
 
 ✅ Every production column is mapped.
@@ -219,12 +219,12 @@ LineLevelUID, Source
 ### ClaimLevelData
 
 - production columns: **90**
-- columns this worker maps: **84**
+- columns this worker maps: **90**
 
-**Adding 3 column(s) from the lab mapping** (this worker loads them, production has no such column):
+**Adding 9 column(s) from the lab mapping** (this worker loads them, production has no such column):
 
 ```
-ClaimUID, PanelNameLIS, PanelNameBasedOnCPT
+ClaimUID, PanelNameLIS, PanelNameBasedOnCPT, Modifiers, Units, CptXModXUnits, ServiceChargeAmount, DenialDate, LineLevelDenialCode
 ```
 
 ✅ Every production column is mapped.
@@ -238,7 +238,7 @@ Mapping file: `InHealthDTRFieldMappings.json`
 ### LineLevelData
 
 - production columns: **81**
-- columns this worker maps: **71**
+- columns this worker maps: **72**
 
 **Adding 2 column(s) from the lab mapping** (this worker loads them, production has no such column):
 
@@ -246,10 +246,10 @@ Mapping file: `InHealthDTRFieldMappings.json`
 LineLevelUID, Source
 ```
 
-**⚠ 3 production column(s) we do NOT map — these load NULL:**
+**⚠ 2 production column(s) we do NOT map — these load NULL:**
 
 ```
-PostingDate, CPTUnits, PostedWeek
+PostingDate, PostedWeek
 ```
 
 To populate any of these, add a `{ "CsvHeader": "...", "SqlColumn": "<name>", "IncludeInHash": true|false }` entry to the lab's mapping JSON.
@@ -257,12 +257,12 @@ To populate any of these, add a `{ "CsvHeader": "...", "SqlColumn": "<name>", "I
 ### ClaimLevelData
 
 - production columns: **90**
-- columns this worker maps: **76**
+- columns this worker maps: **81**
 
-**Adding 1 column(s) from the lab mapping** (this worker loads them, production has no such column):
+**Adding 6 column(s) from the lab mapping** (this worker loads them, production has no such column):
 
 ```
-ClaimUID
+ClaimUID, DenialDate, Bucket30Count, Bucket30Amount, Bucket60Count, Bucket60Amount
 ```
 
 **⚠ 6 production column(s) we do NOT map — these load NULL:**
@@ -320,14 +320,26 @@ Mapping file: `PCRDxALFieldMappings.json`
 ### LineLevelData
 
 - production columns: **66**
-- columns this worker maps: **57**
+- columns this worker maps: **74**
+
+**Adding 17 column(s) from the lab mapping** (this worker loads them, production has no such column):
+
+```
+EncCptTc, UID, Facility, PatientName, ResponsibleParty, SubscriberID, AgingDOS, EndDOS, AgingDOE, BilledWeek, BillOccurance, EntryUser, LineLevelCPT, DODWeek, CheckNumber, LineLevelDenialCode, PaymentPercent
+```
 
 ✅ Every production column is mapped.
 
 ### ClaimLevelData
 
 - production columns: **56**
-- columns this worker maps: **47**
+- columns this worker maps: **78**
+
+**Adding 31 column(s) from the lab mapping** (this worker loads them, production has no such column):
+
+```
+EncCptTc, UID, Facility, PatientName, ResponsibleParty, SubscriberID, EndDOS, BilledWeek, BillOccurance, EntryUser, ProcedureName, Units, LineLevelCPT, DODWeek, CheckNumber, DenialDate, LineLevelDenialCode, ICD, LineLevelICD, Modifier, TotalWO, PaymentPercent, BillStatus, FullyPaidCount, FullyPaidAmount, AdjudicatedCount, AdjudicatedAmount, Bucket30Count, Bucket30Amount, Bucket60Count, Bucket60Amount
+```
 
 ✅ Every production column is mapped.
 
@@ -340,14 +352,26 @@ Mapping file: `PCRDxCOFieldMappings.json`
 ### LineLevelData
 
 - production columns: **66**
-- columns this worker maps: **57**
+- columns this worker maps: **75**
+
+**Adding 18 column(s) from the lab mapping** (this worker loads them, production has no such column):
+
+```
+EncCptTc, UID, Facility, PatientName, ResponsibleParty, SubscriberID, AgingDOS, EndDOS, AgingDOE, BilledWeek, BillOccurance, EntryUser, LineLevelCPT, DODWeek, CheckNumber, DeniedWeek, LineLevelDenialCode, PaymentPercent
+```
 
 ✅ Every production column is mapped.
 
 ### ClaimLevelData
 
 - production columns: **56**
-- columns this worker maps: **47**
+- columns this worker maps: **78**
+
+**Adding 31 column(s) from the lab mapping** (this worker loads them, production has no such column):
+
+```
+EncCptTc, UID, Facility, PatientName, ResponsibleParty, SubscriberID, EndDOS, BilledWeek, BillOccurance, EntryUser, ProcedureName, Units, LineLevelCPT, DODWeek, CheckNumber, DenialDate, DeniedWeek, LineLevelDenialCode, LineLevelICD, Modifier, TotalWO, PaymentPercent, BillStatus, FullyPaidCount, FullyPaidAmount, AdjudicatedCount, AdjudicatedAmount, Bucket30Count, Bucket30Amount, Bucket60Count, Bucket60Amount
+```
 
 ✅ Every production column is mapped.
 
@@ -360,12 +384,12 @@ Mapping file: `PCRLabsofAmericaFieldMappings.Json`
 ### LineLevelData
 
 - production columns: **78**
-- columns this worker maps: **71**
+- columns this worker maps: **72**
 
-**Adding 2 column(s) from the lab mapping** (this worker loads them, production has no such column):
+**Adding 3 column(s) from the lab mapping** (this worker loads them, production has no such column):
 
 ```
-LineLevelUID, Source
+LineLevelUID, Source, Facility
 ```
 
 ✅ Every production column is mapped.
@@ -373,12 +397,12 @@ LineLevelUID, Source
 ### ClaimLevelData
 
 - production columns: **75**
-- columns this worker maps: **71**
+- columns this worker maps: **72**
 
-**Adding 5 column(s) from the lab mapping** (this worker loads them, production has no such column):
+**Adding 6 column(s) from the lab mapping** (this worker loads them, production has no such column):
 
 ```
-ClaimUID, AgingDOE, AgingDOS, PanelNameLIS, PanelNameBasedOnCPT
+ClaimUID, AgingDOE, AgingDOS, PanelNameLIS, PanelNameBasedOnCPT, Facility
 ```
 
 ✅ Every production column is mapped.
@@ -392,12 +416,12 @@ Mapping file: `PhiLifeFieldMappings.json`
 ### LineLevelData
 
 - production columns: **78**
-- columns this worker maps: **69**
+- columns this worker maps: **71**
 
-**Adding 2 column(s) from the lab mapping** (this worker loads them, production has no such column):
+**Adding 4 column(s) from the lab mapping** (this worker loads them, production has no such column):
 
 ```
-LineLevelUID, Source
+LineLevelUID, Source, Facility, ClientAccNum
 ```
 
 **⚠ 2 production column(s) we do NOT map — these load NULL:**
@@ -411,12 +435,12 @@ To populate any of these, add a `{ "CsvHeader": "...", "SqlColumn": "<name>", "I
 ### ClaimLevelData
 
 - production columns: **78**
-- columns this worker maps: **71**
+- columns this worker maps: **72**
 
-**Adding 5 column(s) from the lab mapping** (this worker loads them, production has no such column):
+**Adding 6 column(s) from the lab mapping** (this worker loads them, production has no such column):
 
 ```
-ClaimUID, AgingDOE, AgingDOS, PanelNameLIS, PanelNameBasedOnCPT
+ClaimUID, AgingDOE, AgingDOS, PanelNameLIS, PanelNameBasedOnCPT, Facility
 ```
 
 **⚠ 3 production column(s) we do NOT map — these load NULL:**

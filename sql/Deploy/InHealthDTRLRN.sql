@@ -341,6 +341,11 @@ BEGIN
         [LineLevelICD] NVARCHAR(max) NULL,
         [Facility] NVARCHAR(500) NULL,
         [ClaimUID] NVARCHAR(500) NULL,
+        [DenialDate] NVARCHAR(500) NULL,
+        [Bucket30Count] NVARCHAR(500) NULL,
+        [Bucket30Amount] NVARCHAR(500) NULL,
+        [Bucket60Count] NVARCHAR(500) NULL,
+        [Bucket60Amount] NVARCHAR(500) NULL,
         [InsuranceBalance_Decimal] AS (TRY_CAST([InsuranceBalance] AS [decimal](18,2))) PERSISTED,
         PRIMARY KEY CLUSTERED ([RecordId] ASC)
     );
@@ -362,6 +367,21 @@ GO
 /* columns added on top of the production baseline for ClaimLevelData */
 IF COL_LENGTH('dbo.ClaimLevelData', 'ClaimUID') IS NULL
     ALTER TABLE [dbo].[ClaimLevelData] ADD [ClaimUID] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'DenialDate') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [DenialDate] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Bucket30Count') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Bucket30Count] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Bucket30Amount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Bucket30Amount] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Bucket60Count') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Bucket60Count] NVARCHAR(500) NULL;   -- from lab mapping
+GO
+IF COL_LENGTH('dbo.ClaimLevelData', 'Bucket60Amount') IS NULL
+    ALTER TABLE [dbo].[ClaimLevelData] ADD [Bucket60Amount] NVARCHAR(500) NULL;   -- from lab mapping
 GO
 
 /* AdditionalFields - unmapped CSV columns as JSON, so a new column is never lost */

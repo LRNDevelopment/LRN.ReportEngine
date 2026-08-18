@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using LRN.ExcelValidator.Models;
 
 namespace LRN.MasterFileProcessorWorker.BulkLoad;
 
@@ -37,6 +38,7 @@ public static class SelfTests
         ToggleSkipReasons();
         PerLevelCsvToggles();
         DerivedReportRules();
+        AugustusPanelNewComesFromSourceColumn();
 
         Console.WriteLine(new string('-', 70));
 
@@ -500,6 +502,116 @@ public static class SelfTests
             WorkflowReportNames.ClinicSummary == "Clinic Summary");
         Check("Sales Rep Summary name matches the master list",
             WorkflowReportNames.SalesRepSummary == "Sales Rep Summary");
+    }
+
+    /// <summary>
+    /// Augustus PanelNew is taken from the source file's "Panel Category" column, not from the panel
+    /// master workbook. Runs the real exporter over a real CSV for both levels.
+    /// </summary>
+    private static void AugustusPanelNewComesFromSourceColumn()
+    {
+        var folder = TempFolder();
+
+        try
+        {
+            var source = Path.Combine(folder, "augustus_src.csv");
+            File.WriteAllText(source,
+                "Claim ID,Panel Name,Panel Category\r\n" +
+                "C-1,STI Panel,Blood\r\n" +
+                "C-2,Tox Screen,Toxicology\r\n" +
+                "C-3,Unlisted,\r\n");
+
+            var schema = new ColumnSchema
+            {
+                SchemaName = "test",
+                HeaderRow = 1,
+                Columns = new List<ColumnSpec> { new() { Name = "Claim ID" } }
+            };
+
+            // No panel master file at all - proves nothing is being read from one.
+            foreach (var (level, isLineLevel) in new[] { ("line", true), ("claim", false) })
+            {
+                var outPath = Path.Combine(folder, $"out_{level}.csv");
+
+                StandardCsvExporter.Generate(
+                    sourceCsvPath: source,
+                    headerRow: 1,
+                    outputCsvPath: outPath,
+                    commonSchema: schema,
+                    labId: 24,
+                    labName: "Augustus Labs",
+                    sourceFileName: "augustus_src.csv",
+                    ingestedOnLocal: DateTime.Now,
+                    augmentation: StandardCsvExporter.BuildAugmentationContext("Augustus Labs", isLineLevel, null));
+
+                var lines = File.ReadAllLines(outPath);
+                var header = SplitCsv(lines[0]);
+                var panelNew = Array.FindIndex(header, h => h.Equals("PanelNew", StringComparison.OrdinalIgnoreCase));
+
+                Check($"[{level}] PanelNew column is emitted", panelNew >= 0);
+                if (panelNew < 0) continue;
+
+                Check($"[{level}] PanelNew takes the Panel Category value",
+                    SplitCsv(lines[1])[panelNew] == "Blood");
+                Check($"[{level}] PanelNew follows Panel Category row by row",
+                    SplitCsv(lines[2])[panelNew] == "Toxicology");
+                Check($"[{level}] Blank Panel Category gives a blank PanelNew",
+                    SplitCsv(lines[3])[panelNew] == "");
+            }
+
+            // A file without the column must not fall back to a panel-name lookup.
+            var noCategory = Path.Combine(folder, "no_category.csv");
+            File.WriteAllText(noCategory, "Claim ID,Panel Name\r\nC-1,STI Panel\r\n");
+
+            var noCatOut = Path.Combine(folder, "out_nocat.csv");
+            StandardCsvExporter.Generate(
+                sourceCsvPath: noCategory,
+                headerRow: 1,
+                outputCsvPath: noCatOut,
+                commonSchema: schema,
+                labId: 24,
+                labName: "Augustus Labs",
+                sourceFileName: "no_category.csv",
+                ingestedOnLocal: DateTime.Now,
+                augmentation: StandardCsvExporter.BuildAugmentationContext("Augustus Labs", true, null));
+
+            var nlines = File.ReadAllLines(noCatOut);
+            var nheader = SplitCsv(nlines[0]);
+            var nIdx = Array.FindIndex(nheader, h => h.Equals("PanelNew", StringComparison.OrdinalIgnoreCase));
+
+            Check("No Panel Category column -> PanelNew is blank, not a mapped guess",
+                nIdx >= 0 && SplitCsv(nlines[1])[nIdx] == "");
+        }
+        finally
+        {
+            TryDelete(folder);
+        }
+    }
+
+    /// <summary>Minimal CSV field splitter for the assertions above.</summary>
+    private static string[] SplitCsv(string line)
+    {
+        var fields = new List<string>();
+        var sb = new StringBuilder();
+        bool quoted = false;
+
+        for (int i = 0; i < line.Length; i++)
+        {
+            var c = line[i];
+
+            if (quoted)
+            {
+                if (c == '"' && i + 1 < line.Length && line[i + 1] == '"') { sb.Append('"'); i++; }
+                else if (c == '"') quoted = false;
+                else sb.Append(c);
+            }
+            else if (c == '"') quoted = true;
+            else if (c == ',') { fields.Add(sb.ToString()); sb.Clear(); }
+            else sb.Append(c);
+        }
+
+        fields.Add(sb.ToString());
+        return fields.ToArray();
     }
 
     private static void PerLevelCsvToggles()

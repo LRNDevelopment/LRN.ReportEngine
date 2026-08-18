@@ -176,6 +176,14 @@ public static class StandardCsvExporter
 				finalOutputHeaders.Add("Encounter + PaymentPostedDate");
 
 			finalOutputHeaders.Add("PanelNew");
+
+			// PanelNew comes from the source file now, so a missing column means the whole output
+			// column is blank. Say so once, here, rather than leaving it to be noticed downstream.
+			var hasPanelCategory = AugustusPanelNewSourceColumns.Any(c =>
+				headerExact.ContainsKey(c) || headerNorm.ContainsKey(NormKey(c)));
+
+			if (!hasPanelCategory)
+				log?.Invoke($"WARNING: Augustus source '{sourceFileName}' has no 'Panel Category' column; PanelNew will be empty.");
 		}
 
 		if (augmentation?.IsNorthWest == true)
@@ -2397,7 +2405,6 @@ public static class StandardCsvExporter
 		if (!headers.TryGetValue("Panel Name", out var panelNameCol))
 			return ctx;
 
-		headers.TryGetValue("Panel New", out var panelNewCol);
 		headers.TryGetValue("Panel Type", out var panelTypeCol);
 
 		foreach (var row in used.RowsUsed().Skip(1))
@@ -2406,11 +2413,9 @@ public static class StandardCsvExporter
 			if (string.IsNullOrWhiteSpace(panelName))
 				continue;
 
-			if (isAugustus && panelNewCol > 0)
-			{
-				var panelNew = row.Cell(panelNewCol).GetString()?.Trim() ?? "";
-				AddPanelMapping(ctx.PanelNewMapping, panelName, panelNew);
-			}
+			// PanelNew is NOT built here any more - Augustus sends it in the source file's
+			// "Panel Category" column and ResolvePanelNew reads it from there. The workbook read
+			// stays because PanelTypeMapping below is built from the same sheet.
 
 			if (isNorthWest && panelTypeCol > 0)
 			{
@@ -2455,20 +2460,43 @@ public static class StandardCsvExporter
 		return enc;
 	}
 
+	/// <summary>
+	/// Source column names that carry PanelNew for Augustus, in preference order.
+	/// </summary>
+	private static readonly string[] AugustusPanelNewSourceColumns =
+	{
+		"Panel Category",
+		"PanelCategory",
+		"Panel_Category"
+	};
+
+	/// <summary>
+	/// PanelNew for Augustus, taken straight from the source file's "Panel Category" column.
+	/// </summary>
+	/// <remarks>
+	/// This used to be looked up in the panel master workbook, keyed on the row's panel name. The lab
+	/// now sends the value itself, so the file is no longer consulted for PanelNew - a lookup can only
+	/// disagree with the data it is describing, and the source column cannot.
+	///
+	/// Applies to both levels: line and claim level share this exporter, so both pick the value up.
+	/// </remarks>
 	private static string ResolvePanelNew(
 		string[] row,
 		Dictionary<string, int> headerExact,
 		Dictionary<string, int> headerNorm,
 		ExportAugmentationContext? augmentation)
 	{
-		if (augmentation == null || !augmentation.IsAugustus || augmentation.PanelNewMapping.Count == 0)
+		if (augmentation == null || !augmentation.IsAugustus)
 			return "";
 
-		var panelName = GetPanelNameFromSource(row, headerExact, headerNorm);
-		if (string.IsNullOrWhiteSpace(panelName))
-			return "";
+		foreach (var candidate in AugustusPanelNewSourceColumns)
+		{
+			var value = GetSourceValue(row, headerExact, headerNorm, candidate)?.Trim() ?? "";
+			if (!string.IsNullOrWhiteSpace(value))
+				return value;
+		}
 
-		return ResolvePanelMapping(augmentation.PanelNewMapping, panelName);
+		return "";
 	}
 
 	private static string ResolvePanelType(

@@ -17,8 +17,8 @@ Generates the idempotent deployment scripts under sql/ from the lab mapping JSON
     python sql/generate_sql.py
 
 Driven by:
-  * LRN.MasterFileProcessorWorker/Schemas/LabMappings/*.json   - which columns each lab loads
-  * LRN.MasterFileProcessorWorker/Schemas/ClaimLevelLineLevel_Fields.xlsx - declared types
+  * services/LRN.MasterFileProcessorWorker/Schemas/LabMappings/*.json   - which columns each lab loads
+  * services/LRN.MasterFileProcessorWorker/Schemas/ClaimLevelLineLevel_Fields.xlsx - declared types
   * LABS below - LabId / database name, which must match LRNMaster.dbo.LabMaster
 
 Adding a lab = add a row to LABS (and its mapping JSON) and re-run. Do not hand-edit sql/Labs/**.
@@ -37,7 +37,7 @@ import zipfile
 from xml.etree import ElementTree as ET
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-WORKER = os.path.join(ROOT, "LRN.MasterFileProcessorWorker")
+WORKER = os.path.join(ROOT, "services", "LRN.MasterFileProcessorWorker")
 MAPPINGS = os.path.join(WORKER, "Schemas", "LabMappings")
 FIELDS_XLSX = os.path.join(WORKER, "Schemas", "ClaimLevelLineLevel_Fields.xlsx")
 OUT = os.path.join(ROOT, "sql")

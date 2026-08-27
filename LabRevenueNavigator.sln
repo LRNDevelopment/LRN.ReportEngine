@@ -39,7 +39,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.BillingFrequencyWorker"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.ExcelValidator", "LRN.ExcelValidator\LRN.ExcelValidator.csproj", "{C6B457A2-D62C-1A9A-E3EE-7A3A168DA68C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.MasterFileProcessorWorker", "LRN.MasterFileProcessorWorker\LRN.MasterFileProcessorWorker.csproj", "{E493F605-CC88-15D2-3A43-16076F70CF7C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.MasterFileProcessorWorker", "services\LRN.MasterFileProcessorWorker\LRN.MasterFileProcessorWorker.csproj", "{E493F605-CC88-15D2-3A43-16076F70CF7C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRN.Shared", "LRN.Shared\LRN.Shared.csproj", "{0A1DF4CC-89FD-E3AD-3BED-B76FACB04249}"
 EndProject

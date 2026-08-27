@@ -4,7 +4,7 @@ Requirement 7 of the import rework. For every mapped field this compares three d
 
 | Source | What it says |
 |---|---|
-| **Spreadsheet** | `LRN.MasterFileProcessorWorker/Schemas/ClaimLevelLineLevel_Fields.xlsx`, column `Type` |
+| **Spreadsheet** | `services/LRN.MasterFileProcessorWorker/Schemas/ClaimLevelLineLevel_Fields.xlsx`, column `Type` |
 | **Source schema** | the value actually produced in the standardized CSV, i.e. always **text** |
 | **Target** | the column type in the generated `sql/Labs/**` DDL |
 

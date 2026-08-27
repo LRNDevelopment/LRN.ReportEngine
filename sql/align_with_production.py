@@ -27,7 +27,7 @@ import os
 import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-WORKER = os.path.join(ROOT, "LRN.MasterFileProcessorWorker")
+WORKER = os.path.join(ROOT, "services", "LRN.MasterFileProcessorWorker")
 BILLING = os.path.join(ROOT, "LRN.BillingFrequencyWorker", "Schemas")
 MAPPINGS = os.path.join(WORKER, "Schemas", "LabMappings")
 PROD_SQL = os.path.join(ROOT, "sql", "Existing_LineLevel_ClaimLevel_DATA.sql")
